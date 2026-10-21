@@ -141,17 +141,27 @@ th{color:#7a6aa8;font-size:13px}
 
     <!-- TAB 1: DÁN TỪ WORD / EXCEL -->
     <div id="tPaste">
-     <!-- TÍNH NĂNG TỰ ĐỘNG CÀO ĐỀ TỪ LINK BÀI TẬP CỦA CÔ -->
-     <div style="background:#eef7ff;border:2px dashed #38bdf8;border-radius:16px;padding:12px 14px;margin-bottom:12px">
-      <div style="font-weight:800;color:#0284c7;font-size:14px;margin-bottom:6px">🤖 Tự động lấy câu hỏi từ link bài tập (github.io của cô):</div>
-      <div style="display:flex;gap:8px;flex-wrap:wrap">
-       <input id="inpWebLink" class="inp" style="flex:1;min-width:200px;padding:8px 12px;font-size:14px" placeholder="Dán link bài tập (VD: link voca p2.html...)">
-       <button class="btn g" id="bFetchLink" style="font-size:13px;padding:8px 14px">⚡ Tự động nạp đề</button>
+     <!-- TÍNH NĂNG TỰ ĐỘNG CÀO ĐỀ TỪ LINK BÀI TẬP CỦA CÔ & AI GEMINI -->
+      <div style="background:#eef7ff;border:2px dashed #38bdf8;border-radius:16px;padding:12px 14px;margin-bottom:12px">
+       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
+        <span style="font-weight:800;color:#0284c7;font-size:14px">🤖 Lấy câu hỏi tự động từ link bài tập (hoặc dùng AI đọc đề):</span>
+        <button class="btn w" id="bToggleGeminiBox" style="padding:2px 8px;font-size:11px" onclick="$('geminiKeyBox').hidden=!$('geminiKeyBox').hidden">⚙️ Cài đặt AI Key</button>
+       </div>
+       <div style="display:flex;gap:8px;flex-wrap:wrap">
+        <input id="inpWebLink" class="inp" style="flex:1;min-width:200px;padding:8px 12px;font-size:14px" placeholder="Dán link bài tập (VD: link test 1 p1.html hoặc voca p2.html...)">
+        <button class="btn g" id="bFetchLink" style="font-size:13px;padding:8px 14px" title="Đọc tức thì các dạng bài tập có sẵn">⚡ Tự động nạp đề</button>
+        <button class="btn b" id="bGeminiAi" style="font-size:13px;padding:8px 14px" title="Dùng AI Gemini phân tích bài tập phức tạp">🧠 AI Gemini đọc đề</button>
+       </div>
+       <div class="hint" id="linkFetchStatus" style="margin-top:6px;color:#0369a1;font-size:13px"></div>
+       <div id="geminiKeyBox" hidden style="margin-top:8px;padding-top:8px;border-top:1px dashed #bae6fd;display:flex;gap:8px;align-items:center;flex-wrap:wrap;background:#f8fcff;padding:8px;border-radius:8px">
+        <span style="font-size:12px;font-weight:700;color:#0369a1">🔑 Gemini API Key:</span>
+        <input id="inpGeminiKey" class="inp" style="flex:1;min-width:180px;padding:4px 8px;font-size:12px" placeholder="Dán API Key miễn phí từ Google AI Studio">
+        <button class="btn" id="bSaveGeminiKey" style="padding:4px 10px;font-size:12px">Lưu Key</button>
+        <a href="https://aistudio.google.com/app/apikey" target="_blank" style="font-size:12px;color:#2563eb;text-decoration:underline">Lấy Key miễn phí tại đây (10 giây) ↗</a>
+       </div>
       </div>
-      <div class="hint" id="linkFetchStatus" style="margin-top:4px;color:#0369a1"></div>
-     </div>
 
-     <textarea id="pTxt" placeholder="Cách 1 — Copy các ô từ Excel rồi dán vào (cột: Câu hỏi | A | B | C | D | Đáp án | Giải thích)
+      <textarea id="pTxt"<textarea id="pTxt" placeholder="Cách 1 — Copy các ô từ Excel rồi dán vào (cột: Câu hỏi | A | B | C | D | Đáp án | Giải thích)
 
 Cách 2 — Dán từ Word theo mẫu:
 1. She ___ to school every day.
@@ -873,42 +883,78 @@ $('bAgain').onclick = async () => { const saved = JSON.parse(store.get('gHost') 
 $('bClose').onclick = async () => { await net.remove('rooms/' + code); showEnd.done = 0; leave() };
 
 
-/* ═════ TỰ ĐỘNG CÀO ĐỀ TỪ LINK BÀI TẬP GITHUB.IO ═════ */
-if ($('bFetchLink')) {
-  $('bFetchLink').onclick = async () => {
-    const url = clean($('inpWebLink').value);
-    if (!url) return toast('Cô dán link bài tập vào ô trước nhé!', 2200);
-    const status = $('linkFetchStatus');
-    status.textContent = '⏳ Đang kết nối và đọc câu hỏi từ link…';
-    $('bFetchLink').disabled = true;
+/* ═════ TỰ ĐỘNG CÀO ĐỀ TỪ LINK BÀI TẬP GITHUB.IO & GEMINI AI ═════ */
+// Lưu & tải Gemini API Key
+if ($('inpGeminiKey')) {
+  $('inpGeminiKey').value = localStorage.getItem('gemini_api_key') || '';
+}
+if ($('bSaveGeminiKey')) {
+  $('bSaveGeminiKey').onclick = () => {
+    const k = clean($('inpGeminiKey').value);
+    localStorage.setItem('gemini_api_key', k);
+    toast(k ? '✅ Đã lưu Google Gemini API Key!' : 'ℹ️ Đã xóa Gemini API Key.', 2000);
+  };
+}
 
-    try {
-      const res = await fetch(url);
-      if (!res.ok) throw new Error('Không mở được link (Mã lỗi ' + res.status + ')');
-      const html = await res.text();
+// Hàm trích xuất Universal Parser (hỗ trợ Q, SECS, quizData, DOM)
+function parseQuestionsUniversal(html) {
+  let titleMatch = html.match(/<title>(.*?)<\/title>/i);
+  let title = titleMatch ? titleMatch[1].replace(/<[^>]+>/g, '').trim() : 'Bài tập tiếng Anh';
+  title = title.replace(/\|.*$/, '').replace(/–.*$/, '').replace(/-.*$/, '').trim();
 
-      // 1. Lấy tiêu đề bài tập
-      const titleMatch = html.match(/<title>(.*?)<\/title>/i);
-      let title = titleMatch ? titleMatch[1].replace(/<[^>]+>/g, '').trim() : 'Bài tập ôn tập';
-      title = title.replace(/\|.*$/, '').trim(); // Bỏ đuôi | Ms. Chí Nên
+  let extractedQs = [];
+  const scriptMatches = html.match(/<script[^>]*>([\s\S]*?)<\/script>/gi) || [];
 
-      // 2. Tìm mảng câu hỏi (SECS hoặc quizData)
-      let extractedQs = [];
-      const scriptMatch = html.match(/<script[^>]*>([\s\S]*?)<\/script>/i);
-      
-      if (scriptMatch) {
-        const code = scriptMatch[1];
+  for (const scriptTag of scriptMatches) {
+    const code = scriptTag.replace(/<\/?script[^>]*>/gi, '');
 
-        // Trường hợp 1: Có mảng SECS (như các file voca, grammar của cô)
-        if (code.includes('SECS=')) {
-          const idx = code.search(/(?:const|let|var)\s+SECS\s*=/);
-          const sub = code.substring(idx).replace(/(?:const|let|var)\s+SECS\s*=/, 'const SECS_PARSED=');
-          const endIdx = sub.indexOf('];');
-          if (endIdx > -1) {
+    // Định dạng 1: Q = [...] (đề thi cuối kỳ, giữa kỳ như test 1 p1.html)
+    if (/const\s+Q\s*=|let\s+Q\s*=|var\s+Q\s*=|Q\s*=\s*\[/.test(code)) {
+      const idx = code.search(/(?:const|let|var)?\s*Q\s*=\s*\[/);
+      if (idx > -1) {
+        const sub = code.substring(idx).replace(/(?:const|let|var)?\s*Q\s*=/, 'const Q_PARSED=');
+        const endIdx = sub.indexOf('];');
+        if (endIdx > -1) {
+          try {
+            const evalCode = sub.substring(0, endIdx + 2) + '; return Q_PARSED;';
+            const fn = new Function(evalCode);
+            const qList = fn();
+            if (Array.isArray(qList) && qList.length) {
+              qList.forEach(item => {
+                const opts = (item.opts || []).map(o => (typeof o === 'string' ? o : (o.h || o.text || '')));
+                let correctIdx = 0;
+                if (item.opts && Array.isArray(item.opts)) {
+                  const found = item.opts.findIndex(o => typeof o === 'object' && (o.c === true || o.correct === true));
+                  if (found > -1) correctIdx = found;
+                }
+                extractedQs.push({
+                  q: (item.sec ? '<b>[' + item.sec + ']</b><br>' : '') + (item.q || 'Chọn đáp án đúng:'),
+                  o: opts,
+                  a: correctIdx,
+                  e: item.exp || item.explain || '',
+                  s: item.sec || ''
+                });
+              });
+              if (extractedQs.length) break;
+            }
+          } catch (e) {
+            console.error('Error evaluating Q:', e);
+          }
+        }
+      }
+    }
+
+    // Định dạng 2: SECS = [...] (bài tập Unit như voca p2.html)
+    if (/const\s+SECS\s*=|let\s+SECS\s*=|var\s+SECS\s*=|SECS\s*=\s*\[/.test(code)) {
+      const idx = code.search(/(?:const|let|var)?\s*SECS\s*=\s*\[/);
+      if (idx > -1) {
+        const sub = code.substring(idx).replace(/(?:const|let|var)?\s*SECS\s*=/, 'const SECS_PARSED=');
+        const endIdx = sub.indexOf('];');
+        if (endIdx > -1) {
+          try {
             const evalCode = sub.substring(0, endIdx + 2) + '; return SECS_PARSED;';
             const fn = new Function(evalCode);
             const secs = fn();
-
             secs.forEach(sec => {
               if (sec.type === 'mcq' && sec.items) {
                 sec.items.forEach(it => {
@@ -936,34 +982,183 @@ if ($('bFetchLink')) {
                 });
               }
             });
-          }
-        } 
-        // Trường hợp 2: Có mảng quizData
-        else if (code.includes('quizData')) {
-          const idx = code.search(/(?:const|let|var)\s+quizData\s*=/);
-          const sub = code.substring(idx).replace(/(?:const|let|var)\s+quizData\s*=/, 'const QUIZ_PARSED=');
-          const endIdx = sub.indexOf('];');
-          if (endIdx > -1) {
-            const evalCode = sub.substring(0, endIdx + 2) + '; return QUIZ_PARSED;';
-            const fn = new Function(evalCode);
-            const qList = fn();
-            extractedQs = qList.map(GC.fromOld);
+            if (extractedQs.length) break;
+          } catch (e) {
+            console.error('Error evaluating SECS:', e);
           }
         }
       }
+    }
+
+    // Định dạng 3: quizData = [...]
+    if (/const\s+quizData\s*=|let\s+quizData\s*=|var\s+quizData\s*=|quizData\s*=\s*\[/.test(code)) {
+      const idx = code.search(/(?:const|let|var)?\s*quizData\s*=\s*\[/);
+      if (idx > -1) {
+        const sub = code.substring(idx).replace(/(?:const|let|var)?\s*quizData\s*=/, 'const QUIZ_PARSED=');
+        const endIdx = sub.indexOf('];');
+        if (endIdx > -1) {
+          try {
+            const evalCode = sub.substring(0, endIdx + 2) + '; return QUIZ_PARSED;';
+            const fn = new Function(evalCode);
+            const qList = fn();
+            if (Array.isArray(qList) && qList.length) {
+              extractedQs = qList.map(GC.fromOld);
+              if (extractedQs.length) break;
+            }
+          } catch (e) {
+            console.error('Error evaluating quizData:', e);
+          }
+        }
+      }
+    }
+  }
+
+  return { title, questions: extractedQs };
+}
+
+// Hàm gọi AI Gemini đọc hiểu & trích xuất câu hỏi
+async function callGeminiAiExtract(htmlOrText, apiKey) {
+  let key = apiKey || localStorage.getItem('gemini_api_key');
+  if (!key) {
+    key = prompt('Nhập Google Gemini API Key để AI đọc đề (Lấy miễn phí tại aistudio.google.com):');
+    if (!key) throw new Error('Cần có Gemini API Key để dùng chế độ AI phân tích.');
+    localStorage.setItem('gemini_api_key', key.trim());
+    if ($('inpGeminiKey')) $('inpGeminiKey').value = key.trim();
+  }
+
+  // Tách văn bản sạch
+  let cleanText = htmlOrText;
+  if (htmlOrText.includes('<html') || htmlOrText.includes('<body') || htmlOrText.includes('</div>')) {
+    const d = document.createElement('div');
+    d.innerHTML = htmlOrText;
+    d.querySelectorAll('script, style, svg, iframe, noscript, nav, header, footer').forEach(e => e.remove());
+    cleanText = d.innerText;
+  }
+  cleanText = cleanText.substring(0, 32000);
+
+  const promptText = `Bạn là trợ lý giáo viên tiếng Anh chuyên nghiệp. Dưới đây là nội dung bài tập / đề thi tiếng Anh:
+---
+${cleanText}
+---
+Hãy đọc hiểu toàn bộ nội dung và trích xuất thành danh sách câu hỏi trắc nghiệm tiếng Anh (tối đa 30 câu). Với mỗi câu hỏi:
+- "q": Nội dung câu hỏi (giữ lại các định dạng <u> hoặc <b> nếu là câu hỏi phát âm/trọng âm)
+- "o": Mảng 4 phương án lựa chọn ["A", "B", "C", "D"]
+- "a": Chỉ số (0, 1, 2, hoặc 3) của phương án đúng trong mảng "o"
+- "e": Lời giải thích ngắn gọn, phân tích ngữ pháp hoặc phát âm để học sinh hiểu vì sao chọn đáp án đó
+- "s": Chủ đề hoặc phần thi (ví dụ: Pronunciation, Grammar, Vocabulary, Reading)
+
+Trả về kết quả bằng JSON hợp lệ dạng danh sách:
+[
+  { "q": "...", "o": ["...", "...", "...", "..."], "a": 0, "e": "...", "s": "..." }
+]`;
+
+  const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${key}`;
+  const resp = await fetch(url, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      contents: [{ parts: [{ text: promptText }] }],
+      generationConfig: {
+        responseMimeType: 'application/json'
+      }
+    })
+  });
+
+  if (!resp.ok) {
+    const errObj = await resp.json().catch(() => ({}));
+    throw new Error('Lỗi từ Gemini AI: ' + (errObj.error?.message || resp.statusText));
+  }
+
+  const data = await resp.json();
+  const textOut = data.candidates?.[0]?.content?.parts?.[0]?.text;
+  if (!textOut) throw new Error('AI không trả về kết quả.');
+
+  const parsed = JSON.parse(textOut);
+  if (!Array.isArray(parsed) || !parsed.length) throw new Error('Không tìm thấy danh sách câu hỏi trong phản hồi AI.');
+  return parsed;
+}
+
+// 1. Nút Tự động nạp đề (Universal Fast Parser)
+if ($('bFetchLink')) {
+  $('bFetchLink').onclick = async () => {
+    const url = clean($('inpWebLink').value);
+    if (!url) return toast('Cô dán link bài tập vào ô trước nhé!', 2200);
+    const status = $('linkFetchStatus');
+    status.innerHTML = '⏳ Đang kết nối và đọc câu hỏi từ link…';
+    $('bFetchLink').disabled = true;
+
+    try {
+      const res = await fetch(url);
+      if (!res.ok) throw new Error('Không mở được link (Mã lỗi ' + res.status + ')');
+      const html = await res.text();
+
+      const parsed = parseQuestionsUniversal(html);
+      let extractedQs = parsed.questions;
 
       if (!extractedQs.length) {
-        throw new Error('Đã kết nối được trang nhưng không tìm thấy cấu trúc câu hỏi tự động. Cô copy đề dán vào ô bên dưới nhé.');
+        if (confirm('Bộ đọc nhanh không tìm thấy mảng câu hỏi cố định trong trang này. Cô có muốn dùng Trí tuệ Nhân tạo (Gemini AI) để tự động đọc hiểu toàn trang và bóc tách đề không?')) {
+          status.innerHTML = '🧠 Đang gửi cho AI Gemini đọc hiểu và phân tích câu hỏi…';
+          extractedQs = await callGeminiAiExtract(html);
+        } else {
+          throw new Error('Chưa tìm thấy câu hỏi tự động. Cô dán nội dung vào ô soạn thảo bên dưới nhé.');
+        }
       }
 
-      setQs(extractedQs, title, []);
+      setQs(extractedQs, parsed.title, []);
       status.innerHTML = '🎉 <b>Thành công!</b> Đã tự động đọc được <b>' + extractedQs.length + ' câu hỏi</b> từ link bài tập.';
-      toast('🎉 Tự động nạp thành công ' + extractedQs.length + ' câu hỏi!', 3500);
+      toast('🎉 Nạp thành công ' + extractedQs.length + ' câu hỏi!', 3500);
     } catch (err) {
-      status.textContent = '❌ ' + err.message;
+      status.innerHTML = '❌ ' + err.message;
       toast('❌ ' + err.message, 3500);
     } finally {
       $('bFetchLink').disabled = false;
+    }
+  };
+}
+
+// 2. Nút AI Gemini đọc đề chuyên sâu
+if ($('bGeminiAi')) {
+  $('bGeminiAi').onclick = async () => {
+    const url = clean($('inpWebLink').value);
+    const pasteTxt = clean($('pTxt')?.value || '');
+    const status = $('linkFetchStatus');
+
+    let contentToAnalyze = '';
+    let docTitle = 'Bài tập tiếng Anh (AI tạo)';
+
+    if (url) {
+      status.innerHTML = '⏳ Đang tải link bài tập…';
+      $('bGeminiAi').disabled = true;
+      try {
+        const res = await fetch(url);
+        if (!res.ok) throw new Error('Không mở được link: ' + res.status);
+        contentToAnalyze = await res.text();
+        const tm = contentToAnalyze.match(/<title>(.*?)<\/title>/i);
+        if (tm) docTitle = tm[1].replace(/<[^>]+>/g, '').trim();
+      } catch (e) {
+        status.innerHTML = '❌ ' + e.message;
+        $('bGeminiAi').disabled = false;
+        return toast('❌ ' + e.message, 3500);
+      }
+    } else if (pasteTxt) {
+      contentToAnalyze = pasteTxt;
+    } else {
+      return toast('Cô dán link bài tập hoặc dán nội dung văn bản vào ô trước nhé!', 2500);
+    }
+
+    status.innerHTML = '🧠 <b>AI Gemini đang đọc hiểu bài tập & trích xuất câu hỏi…</b>';
+    $('bGeminiAi').disabled = true;
+
+    try {
+      const extractedQs = await callGeminiAiExtract(contentToAnalyze);
+      setQs(extractedQs, docTitle, []);
+      status.innerHTML = '🎉 <b>AI Gemini phân tích thành công!</b> Đã bóc tách <b>' + extractedQs.length + ' câu hỏi</b>.';
+      toast('🎉 AI đã trích xuất ' + extractedQs.length + ' câu hỏi!', 3500);
+    } catch (err) {
+      status.innerHTML = '❌ ' + err.message;
+      toast('❌ ' + err.message, 3500);
+    } finally {
+      $('bGeminiAi').disabled = false;
     }
   };
 }
