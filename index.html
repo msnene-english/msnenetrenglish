@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Ms Nenet English – Trò Chơi Học Tập Tương Tác</title>
+<link rel="stylesheet" href="assets/fonts.css">
+<link rel="stylesheet" href="assets/game.css">
+<style>
+body {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(160deg, #ffe4f2, #e6efff 45%, #efe6ff);
+  padding: 20px;
+}
+.portal-card {
+  background: #fff;
+  border-radius: 28px;
+  padding: 36px 28px;
+  max-width: 680px;
+  width: 100%;
+  box-shadow: 0 16px 40px rgba(91, 75, 176, 0.18);
+  border-top: 8px solid var(--purple);
+  text-align: center;
+}
+.portal-title {
+  font: 800 clamp(28px, 5vw, 42px)/1.2 'Baloo 2', Nunito, sans-serif;
+  background: linear-gradient(90deg, #ff7eb6, #9b7bff, #5ab0ff);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  margin-bottom: 6px;
+}
+.portal-sub {
+  font-size: 17px;
+  font-weight: 700;
+  color: #7a6aa8;
+  margin-bottom: 28px;
+}
+.role-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  margin-bottom: 24px;
+}
+@media (max-width: 580px) {
+  .role-grid { grid-template-columns: 1fr; }
+}
+.role-box {
+  background: #faf8ff;
+  border: 3px solid #e4dcff;
+  border-radius: 22px;
+  padding: 24px 18px;
+  cursor: pointer;
+  text-decoration: none;
+  color: inherit;
+  transition: all 0.2s ease;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+.role-box:hover {
+  transform: translateY(-4px);
+  border-color: #9b7bff;
+  box-shadow: 0 8px 24px rgba(155, 123, 255, 0.2);
+}
+.role-box.host { background: linear-gradient(180deg, #fff, #f6f1ff); }
+.role-box.play { background: linear-gradient(180deg, #fff, #eef7ff); }
+.role-icon {
+  font-size: 50px;
+  margin-bottom: 10px;
+  line-height: 1;
+}
+.role-name {
+  font: 800 20px 'Baloo 2', Nunito, sans-serif;
+  color: #2d2350;
+  margin-bottom: 6px;
+}
+.role-desc {
+  font-size: 13px;
+  font-weight: 700;
+  color: #7a6aa8;
+  line-height: 1.4;
+}
+.footer-info {
+  margin-top: 18px;
+  font-size: 14px;
+  font-weight: 700;
+  color: #7a6aa8;
+}
+.footer-info a {
+  color: #9b7bff;
+  text-decoration: none;
+}
+.badge-pro {
+  display: inline-block;
+  background: #e3f9ee;
+  color: #1d8a5a;
+  border-radius: 20px;
+  padding: 4px 14px;
+  font-weight: 800;
+  font-size: 13px;
+  margin-bottom: 20px;
+}
+</style>
+</head>
+<body>
+
+<div class="portal-card">
+  <div class="badge-pro">✨ Phiên bản Ms Nenet English · Đầy đủ 4 Game</div>
+  <h1 class="portal-title">Ms Nenet English</h1>
+  <div class="portal-sub">Hệ thống Trò chơi Học tập Tương tác · Cô Chí Nên</div>
+
+  <div class="role-grid">
+    <a href="host.html" class="role-box host">
+      <div class="role-icon">👩‍🏫</div>
+      <div class="role-name">Dành cho Giáo viên</div>
+      <div class="role-desc">Tạo phòng chơi, quản lý kho đề, chiếu máy chiếu & vinh danh bục xếp hạng.</div>
+      <button class="btn" style="margin-top:14px;width:100%">Mở phòng ngay</button>
+    </a>
+
+    <a href="play.html" class="role-box play">
+      <div class="role-icon">🎒</div>
+      <div class="role-name">Dành cho Học sinh</div>
+      <div class="role-desc">Nhập mã PIN 6 số hoặc quét mã QR của cô để tham gia thi đua cùng cả lớp.</div>
+      <button class="btn b" style="margin-top:14px;width:100%">Vào phòng chơi</button>
+    </a>
+  </div>
+
+  <div class="footer-info">
+    🎮 Bộ sưu tập 4 game: <b>🧗 Leo núi · 🍄 Nấm Mario · 🛡 Xe tăng · 💣 Đặt bom</b><br>
+    Hỗ trợ giáo viên: Zalo <b>0852639652</b> · <a href="https://zalo.me/0852639652" target="_blank" rel="noopener">Nhắn Zalo cô Chí Nên</a>
+  </div>
+</div>
+
+</body>
+</html>

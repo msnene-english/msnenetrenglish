@@ -1,0 +1,480 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<title>Ms Nenet English – Phòng Chơi Học Sinh</title>
+<link rel="stylesheet" href="assets/fonts.css">
+<link rel="stylesheet" href="assets/game.css">
+<style>
+body{display:flex;flex-direction:column;overflow:hidden}
+#hud{height:62px;flex:0 0 62px;display:flex;align-items:center;gap:7px;padding:0 10px;background:linear-gradient(90deg,#ffe3f1,#e3efff 50%,#efe6ff);box-shadow:0 2px 12px #0004;z-index:5}
+.ttl{font:800 18px/1.05 'Baloo 2',Nunito,sans-serif;white-space:nowrap;max-width:240px;overflow:hidden;text-overflow:ellipsis}
+.ttl small{display:block;font:700 11px Nunito,sans-serif;opacity:.6;overflow:hidden;text-overflow:ellipsis}
+.en{flex:1;min-width:80px;max-width:320px;height:28px;border-radius:15px;background:#fff;border:2px solid #c9b8ff;position:relative;overflow:hidden}
+.en i{position:absolute;left:0;top:0;bottom:0;width:0;background:linear-gradient(90deg,#7ee0b5,#5ab0ff,#b59cff);transition:width .25s}
+.en b{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:800}
+.en.low{animation:glow 1s infinite}
+@keyframes glow{50%{border-color:#ff7eb6;box-shadow:0 0 0 4px #ff7eb655}}
+#hud .btn{padding:8px 11px;font-size:14px}
+@media(max-width:760px){.hm{display:none}.chip{padding:4px 6px;font-size:12px}#hud{gap:5px;padding:0 6px}}
+#stage{flex:1;position:relative;overflow:hidden;touch-action:none;user-select:none;-webkit-user-select:none}
+#cv{display:block;width:100%;height:100%}
+#eBtn{position:absolute;left:50%;bottom:18px;transform:translateX(-50%);font-size:16px;padding:12px 18px;z-index:3}
+#eBtn.pulse{animation:bob 1s infinite}
+@keyframes bob{50%{transform:translateX(-50%) scale(1.08)}}
+#pad{display:none}
+#pad.on{display:block}
+.pb{position:absolute;bottom:16px;width:74px;height:74px;border-radius:50%;border:0;background:#ffffffcc;font-size:30px;font-weight:800;color:#6b4fc0;box-shadow:0 4px 0 #b9a6e8;touch-action:none;z-index:3}
+.pb.dn{background:#d9ccff;transform:translateY(3px);box-shadow:0 1px 0 #b9a6e8}
+#bL{left:14px}#bR{left:100px}#bJ{right:44px;width:86px;height:86px;background:#ffe0ef;color:#e0569a;box-shadow:0 4px 0 #f3a5c8}
+#pad.on~#eBtn{bottom:106px}
+#bD{display:none;right:142px;width:66px;height:66px;font-size:26px;background:#e3f1ff;color:#3d7fd6;box-shadow:0 4px 0 #a9cdf5}
+.brick #bD{display:block}
+#bF{display:none;right:44px;bottom:112px;width:66px;height:66px;font-size:26px;background:#ffe3cf;color:#e45c10;box-shadow:0 4px 0 #f3b38a}
+.fire #bF{display:block}
+.tank #bD,.tank #bF{display:block}
+.tank #bL{left:8px;bottom:58px;width:62px;height:62px;font-size:26px}
+.tank #bR{left:118px;bottom:58px;width:62px;height:62px;font-size:26px}
+.tank #bJ{left:63px;right:auto;bottom:112px;width:62px;height:62px;font-size:26px;background:#ffffffcc;color:#6b4fc0;box-shadow:0 4px 0 #b9a6e8}
+.tank #bD{left:63px;right:auto;bottom:4px;width:62px;height:62px;font-size:26px;background:#ffffffcc;color:#6b4fc0;box-shadow:0 4px 0 #b9a6e8}
+.tank #bF{right:22px;bottom:34px;width:100px;height:100px;font-size:40px}
+.tank #stage{background:#0E1424}
+.bomb #stage{background:#1C2A1E}
+#bX{display:none}
+.remote #bX{display:block;right:132px;bottom:46px;width:64px;height:64px;font-size:26px;background:#fff3c4;color:#c2410c;box-shadow:0 4px 0 #f0c674}
+.tank #pad.on~#eBtn{bottom:190px}
+.en b{white-space:nowrap}
+@media(max-width:760px){.en b{font-size:11px}}
+.locked #pad,.locked #eBtn,.locked #hShop,.locked #hEnd{display:none!important}
+.lockmsg{background:#1a1033;color:#fff;border-radius:14px;padding:10px 14px;font-weight:800;text-align:center;margin-top:10px}
+#wTips{list-style:none;display:grid;gap:6px;margin:10px 0}#wTips li{border-radius:12px;padding:7px 11px;font-weight:700;font-size:14px;background:#f6f3ff}#wTips li:nth-child(odd){background:#eaf4ff}
+#keys{position:absolute;left:12px;bottom:12px;z-index:3;background:linear-gradient(90deg,#ff7eb6,#9b7bff,#5ab0ff);color:#fff;border:2px solid #fff;border-radius:16px;padding:8px 12px;font-size:13px;font-weight:800;box-shadow:0 4px 0 #6b4fc0,0 6px 18px #0006;cursor:pointer;animation:kpop 1.1s ease-in-out 5;max-width:calc(100% - 24px)}
+#keys kbd{display:inline-block;min-width:24px;text-align:center;background:#fff;color:#5b4bb0;border-radius:7px;padding:1px 6px;margin:0 2px;box-shadow:0 2px 0 #c9b8ff;font:900 12px Nunito,sans-serif}
+#keys.mini{padding:6px 10px;font-size:12px}#keys .full{display:inline}#keys .short{display:none}#keys.mini .full{display:none}#keys.mini .short{display:inline}
+@keyframes kpop{50%{transform:scale(1.07)}}
+#feed{position:absolute;left:10px;top:10px;display:flex;flex-direction:column;gap:5px;z-index:2;max-width:min(60%,340px);pointer-events:none}
+#feed div{background:#ffffffe0;border-radius:12px;padding:5px 10px;font-weight:800;font-size:13px;box-shadow:0 2px 8px #0002;animation:fin .3s}
+@keyframes fin{from{opacity:0;transform:translateX(-20px)}}
+.lab{font-weight:800;font-size:14px;color:#7a6aa8;margin:12px 0 6px}
+.cols{display:flex;gap:10px;flex-wrap:wrap;justify-content:center}
+.cols button{width:44px;height:44px;border-radius:50%;border:4px solid #fff;box-shadow:0 0 0 2px #e4dcff;cursor:pointer}
+.cols button.on{box-shadow:0 0 0 4px #2d2350}
+.rules{list-style:none;display:grid;gap:6px;margin:14px 0 4px}
+.rules li{border-radius:12px;padding:7px 11px;font-weight:700;font-size:14px;background:#f6f3ff}
+.rules li:nth-child(4n+1){background:#ffeef6}.rules li:nth-child(4n+2){background:#eaf4ff}.rules li:nth-child(4n+3){background:#e8f8f0}
+.plist{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;margin:12px 0}
+.plist span{background:#f6f3ff;border-radius:20px;padding:6px 12px;font-weight:800;font-size:15px}
+.shop{display:grid;gap:10px;margin-top:10px}
+.item{display:flex;align-items:center;gap:12px;border:2px solid var(--line);border-radius:16px;padding:10px 12px;background:#faf8ff;text-align:left;cursor:pointer;font-weight:700}
+.item:disabled{opacity:.5;cursor:default}
+.item b{font-size:16px}.item .ic{font-size:30px}.item .cost{margin-left:auto;font-weight:800;background:#fff;border-radius:10px;padding:4px 9px;white-space:nowrap}
+.item small{display:block;font-size:13px;color:#7a6aa8}
+</style>
+</head>
+<body>
+<div id="hud">
+ <div class="ttl hm"><span id="hName">🧗 Đừng Nhìn Xuống!</span><small id="hSet"></small></div>
+ <div class="en" id="en"><i id="enI"></i><b id="enT">⚡ 0</b></div>
+ <span class="chip" id="hStreak">🔥 0</span>
+ <span class="chip" id="hAlt">⛰ 0 m</span>
+ <span class="chip" id="hRank" hidden>🏅 #1</span>
+ <span class="chip hm" id="hOk">✅ 0/0</span>
+ <span class="chip" id="hTime">⏱ 00:00</span>
+ <button class="btn b" id="hShop" hidden title="Vật phẩm trêu bạn">🎒</button>
+ <button class="btn w" id="hEnd" hidden>🏁 Nộp</button>
+</div>
+<div id="stage">
+ <canvas id="cv"></canvas>
+ <div id="feed"></div>
+ <div id="keys" class="hm" title="Bấm để xem / thu gọn hướng dẫn phím"><span class="full" id="keysT">🎮 <kbd>←</kbd><kbd>→</kbd> đi · <kbd>↑</kbd> / <kbd>Space</kbd> nhảy · <kbd>E</kbd> trả lời</span><span class="short">🎮 Phím</span></div>
+ <div id="pad"><button class="pb" id="bL" aria-label="Sang trái">◀</button><button class="pb" id="bR" aria-label="Sang phải">▶</button><button class="pb" id="bD" aria-label="Chui xuống ống">⤓</button><button class="pb" id="bF" aria-label="Bắn lửa">🔥</button><button class="pb" id="bX" aria-label="Kích nổ bom">💥</button><button class="pb" id="bJ" aria-label="Nhảy">⤒</button></div>
+ <button class="btn g" id="eBtn" hidden>⚡ Trả lời để nạp năng lượng</button>
+</div>
+<div id="toast"></div>
+
+<div class="ov on" id="ovJoin"><div class="card">
+ <div class="big">🧗 Đừng Nhìn Xuống!</div>
+ <div class="sub" id="jSub">Vào phòng của cô để tham gia trò chơi cùng cả lớp</div>
+ <div id="jCodeBox"><div class="lab">🔢 Mã phòng</div><input id="jCode" class="fld" inputmode="numeric" maxlength="6" placeholder="6 chữ số trên màn hình của cô" autocomplete="off"></div>
+ <div class="lab">👤 Họ tên</div><input id="jName" class="fld" maxlength="30" placeholder="✏️ Nhập họ tên của em" autocomplete="off">
+ <div class="lab">🎨 Chọn màu nhân vật</div><div id="jCols" class="cols"></div>
+ <ul class="rules">
+  <li>⚡ Trả lời ĐÚNG để nạp năng lượng · đúng liên tiếp 🔥 được thưởng thêm</li>
+  <li>🏃 Đi và nhảy đều tốn ⚡ — hết ⚡ là đứng im, phải trả lời tiếp</li>
+  <li>🍄 Nhảy lên đầu nấm để giẫm bẹp (+10⚡) · đụng ngang bị hất văng, mất ⚡ · 🦔 nhím gai phải né</li>
+  <li>👸 Công chúa đang bị nhốt ở cuối đường — về đích trước để giải cứu nàng!</li>
+ </ul>
+ <div class="err-msg" id="jErr"></div>
+ <div class="row"><button class="btn" id="jGo" style="font-size:18px;padding:12px 26px">🚀 Vào chơi!</button></div>
+</div></div>
+
+<div class="ov" id="ovWait"><div class="card">
+ <div class="big">⏳ Chờ cô bấm bắt đầu…</div>
+ <div class="sub" id="wSub"></div>
+ <div class="plist" id="wList"></div>
+ <ul id="wTips"></ul>
+ <div class="sub">🔥 Khởi động ngón tay đi — chuẩn bị bứt tốc nào!</div>
+</div></div>
+<div class="ov" id="ovQ"><div class="card" id="qCard"></div></div>
+<div class="ov" id="ovShop"><div class="card" id="sCard"></div></div>
+<div class="ov" id="ovRes"><div class="card" id="rCard"></div></div>
+
+<script src="assets/mqtt.min.js"></script>
+<script src="assets/config.js"></script>
+<script src="assets/core.js"></script>
+<script src="assets/mau.js"></script>
+<script src="assets/climb.js"></script>
+<script src="assets/brick.js"></script>
+<script src="assets/tank.js"></script>
+<script src="assets/bomb.js"></script>
+<script>
+const { $, esc, fmt, stamp, clean, pick, shuffle, COLORS, BADGE, sfx, toast, confetti } = GC;
+const U = new URLSearchParams(location.search), HWP = U.get('hw'), QUIZ_ID = U.get('quiz') || U.get('id'); let SOLO = U.get('solo') || (HWP || QUIZ_ID ? 'hw' : null);   // solo = "mau:0" · hw = bài tập về nhà (đề nén trong link)
+let HW = null;
+const GNAME = { climb: '🧗 Leo núi', brick: '🍄 Nấm Mario', tank: '🛡 Xe tăng', bomb: '💣 Đặt bom' };
+const GAIN = { correct: 100, streakBonus: 15, streakMax: 5, cap: 1000, scale: 1 };
+/* cô cài: mỗi câu đúng được eq ⚡ (100/200/300), bình đầy em ⚡ (0 = không giới hạn) */
+function setGain(eq, em) { eq = +eq || 100; GAIN.correct = eq; GAIN.streakBonus = Math.round(eq * .15); GAIN.scale = eq / 100; GAIN.cap = em === undefined || em === null || em === '' ? 1000 : +em; Climb.S.cap = GAIN.cap }
+const cost = it => Math.round(it.cost * GAIN.scale);
+const ITEMS = [
+  { k: 'fz', ic: '❄️', name: 'Đóng băng', cost: 60, desc: 'Đóng băng bạn đang ở ngay trên em trong 4 giây' },
+  { k: 'st', ic: '🧲', name: 'Hút năng lượng', cost: 40, desc: 'Hút tới 60⚡ từ bạn đang có nhiều năng lượng nhất' },
+  { k: 'sh', ic: '🛡', name: 'Khiên', cost: 50, desc: 'Chặn mọi chiêu trêu trong 40 giây' }];
+const CP_MSG = ['🔥 Trạm 1 trong tay! Bài kiểm tra chỉ là ngọn đồi nhỏ với em thôi!', '💪 Trạm 2! Mỗi câu đúng là thêm một bậc lên điểm 10!',
+  '⚡ Trạm 3 rồi! Ai kiên trì người đó lên đỉnh — và đó là em!', '🚀 Trạm 4! Đỉnh núi ngay trên đầu — đừng nhìn xuống, chỉ nhìn lên!'];
+const OK_MSG = ['Quá đỉnh! Bình năng lượng căng đầy, leo thôi! 🧗', 'Chuẩn không cần chỉnh! Điểm 10 đang vẫy tay kìa! ✨',
+  'Não bộ đang bốc lửa! 🔥 Giữ nhịp này tới đỉnh nhé!', 'Thêm một câu đúng = thêm một bước tới đỉnh! 💪', 'Siêu sao leo núi là đây chứ đâu! 🌟'];
+const BAD_MSG = ['Vấp một hòn đá thôi! Nhớ kĩ lời giải — lần sau câu này là của em! 💪', 'Sai hôm nay để đúng ngày thi! Xem giải thích rồi bứt tốc nào! 🔥',
+  'Nhà leo núi giỏi nhất cũng có lúc trượt chân — đứng dậy leo tiếp! 🧗'];
+let S = Climb.S, MODE = 'climb';
+const TIPS = {
+  climb: ['🧗 Leo từ chân núi lên đỉnh · 🚩 chạm cờ để lưu trạm', '🪨 Bậc đá nứt sẽ sụp · 🧊 bậc băng trơn trượt · 🍄 nấm hồng là lò xo', '👸 Công chúa bị nhốt trong lồng trên đỉnh lâu đài'],
+  bomb: ['💣 Đặt bom phá gạch, hạ hết quái rồi tìm 🚪 cửa ra giấu dưới gạch để qua màn', '🎮 Mũi tên / WASD để đi · Space hoặc B đặt bom (iPad: chữ thập ◀▲▼▶ + nút 💣)', '🎁 Phá gạch là có thể rơi đồ: 💣 thêm bom · 🔥 lửa dài · 🔴 lửa tối đa · 🍎🍓🍌 trái cây (+5⚡) · 👟 chạy nhanh · 📡 bom điều khiển · 🦶 đá bom · 👻 xuyên gạch · 🧯 chống lửa · 🦺 bất tử', '⚠️ Cẩn thận lửa của chính mình! Bom trúng cửa ra là quái mới chui ra đó', '🏆 8 màn: đồng cỏ → sa mạc → băng tuyết → núi lửa · có cả MÀN THƯỞNG săn ⚡'],
+  tank: ['🛡 Lái xe tăng bảo vệ căn cứ 🦅 — hạ hết xe tăng địch để qua STAGE', '🎮 Mũi tên / WASD để lái · Space hoặc F để bắn (iPad: chữ thập ◀▲▼▶ + nút 🔥)', '🌸 Hạ xe địch nhấp nháy hồng sẽ rơi vật phẩm: ⭐ nâng súng · ⛑ khiên · 🛠 tường thép · 💣 bom · ⏰ đóng băng · ⚡ năng lượng', '🌳 Núp dưới rừng để địch khó thấy · 🌊 nước không đi qua được nhưng đạn bay qua', '💥 STAGE 4: trùm SIÊU TĂNG bắn toả 3 hướng — hạ nó để phá đảo!'],
+  brick: ['🧱 4 màn: Đồng cỏ → Hang ngầm → Xứ mây → Lâu đài dung nham', '❓ Hộp ? ra: 🪙 xu (+3⚡) · 🍄 nấm xanh (+20⚡) · 🍄 nấm đỏ hoá TO · 🌸 hoa lửa (bắn được) · ⭐ sao bất tử', '⬆ Giữ nút nhảy càng lâu thì nhảy càng cao — đội được cả khối ? trên cao!', '⬇ Ống có mũi tên: đứng lên + bấm ↓ để chui xuống hầm bí mật đầy xu!', '🌸 Hoa ăn thịt chui ra từ ống · 🔥 thanh lửa xoay · 🌋 dung nham — né hết nhé', '🏁 Chạm cột cờ để qua màn · màn 4: 🐉 rồng phun lửa canh công chúa — bắn 🔥 (phím F) hoặc chạm rìu 🪓 để hạ nó!']
+};
+const BST_MSG = ['🏁 Qua màn 1! Quái củ hành bắt đầu chạy nhanh hơn — đặt bom chặn đường nó!', '🏁 Qua màn 2! Vào sa mạc nóng bỏng nào!', '🏁 Qua màn 3! Thùng gỗ đổi hướng liên tục — canh cho chuẩn!', '🏁 Qua màn 4! MÀN THƯỞNG: bất tử 25 giây, săn quái lấy ⚡!', '🎁 Hết màn thưởng! Vào băng tuyết — ma đi xuyên gạch được đấy!', '🏁 Qua màn 5! Quái đỏ biết đuổi theo em — đừng để bị dồn góc!', '🏁 Qua màn 6! Núi lửa phía trước — 2 màn cuối rồi!', '🏁 Qua màn 7! Màn cuối cùng — phá đảo thôi!', '🏆 Phá đảo!'];
+const ST_MSG = ['🏁 STAGE 1 CLEAR! Sông xanh rừng thẳm phía trước — núp rừng mà bắn nhé!', '🏁 STAGE 2 CLEAR! Pháo đài thép đang chờ — ăn ⭐ để súng bắn thủng thép!', '🏁 STAGE 3 CLEAR! Trận cuối: SIÊU TĂNG xuất hiện — giữ chặt căn cứ!'];
+const LV_MSG = ['🏁 Qua Màn 1! Hang ngầm đang chờ — nhớ chui ống tìm xu nhé!', '🏁 Qua Màn 2! Lên xứ mây hồng — nhảy cho khéo nha!', '🏁 Qua Màn 3! Lâu đài dung nham phía trước — công chúa đang đợi em!'];
+let net = null, code = '', pid = '', info = null, players = {}, QS = [], setTitle = '', path = '', evp = '';
+let LVL = 2, started = false, over = false, joined = false, kicked = false, t0 = 0, tEnd = 0, joinT = 0, tt = 0, cool = 0, lastSent = '', lastT = 0, subN = 0;
+let streak = 0, best = 0, ans = 0, okN = 0, order = [], cur = null, answered = false, nameV = '', myColor = pick(COLORS);
+const solved = new Set();
+const anyOpen = () => !!document.querySelector('#ovQ.on,#ovShop.on,#ovRes.on');
+
+/* ═════ vào phòng ═════ */
+$('jCols').innerHTML = COLORS.map(c => '<button style="background:' + c + '" data-c="' + c + '" aria-label="Màu ' + c + '"></button>').join('');
+const paintCols = () => [...$('jCols').children].forEach(b => b.classList.toggle('on', b.dataset.c === myColor)); paintCols();
+$('jCols').onclick = e => { const c = e.target.dataset.c; if (c) { myColor = c; paintCols(); sfx('pop') } };
+if (SOLO) { $('jCodeBox').hidden = true; $('jSub').textContent = U.get('m') === 'brick' ? 'Luyện tập một mình — vượt 4 màn, giải cứu công chúa!' : 'Luyện tập một mình — leo lên đỉnh nhanh nhất có thể!'; $('jGo').textContent = '🚀 Bắt đầu!' }
+if (SOLO === 'hw') {
+  if (HWP) {
+    $('jSub').textContent = '📚 Đang mở bài tập…'; $('jGo').disabled = true;
+    GC.unpackHw(HWP).then(h => {
+      HW = h; const late = h.dl && Date.now() > h.dl;
+      $('jSub').innerHTML = '📚 <b>Bài tập về nhà</b>: ' + esc(h.t) + '<br>' + (GNAME[h.m] || '') + ' · ⏱ mỗi lượt ' + (h.dur ? h.dur + ' phút' : 'không giới hạn') + (h.dl ? '<br>⏰ Hạn nộp: <b>' + stamp(h.dl) + '</b>' : '') + (h.lic ? '<br>🏫 ' + esc(h.lic) : '');
+      if (late) $('jErr').textContent = '⏰ Đã hết hạn nộp bài (' + stamp(h.dl) + '). Em liên hệ cô nhé!'; else $('jGo').disabled = false;
+    }).catch(e => { $('jErr').textContent = '❌ Link bài tập bị lỗi hoặc bị cắt mất — em xin cô gửi lại link nhé' });
+  } else if (QUIZ_ID) {
+    $('jSub').textContent = '⏳ Đang tải bài tập từ Thư viện chung…'; $('jGo').disabled = true;
+    GC.getQuizById(QUIZ_ID).then(q => {
+      if (!q || !q.qs || !q.qs.length) throw new Error('Không tìm thấy mã đề ' + QUIZ_ID);
+      HW = {
+        v: 1,
+        t: q.title || 'Bài tập ôn tập',
+        m: q.m || 'climb',
+        lv: q.lv || 2,
+        eq: q.eq || 100,
+        em: q.em || 1000,
+        mu: true,
+        dl: q.dl || 0,
+        dur: q.dur || 10,
+        lic: q.author || 'Cô Chí Nên (Ms Nenet)',
+        qs: q.qs
+      };
+      const late = HW.dl && Date.now() > HW.dl;
+      $('jSub').innerHTML = '📚 <b>Bài tập về nhà</b>: ' + esc(HW.t) + '<br>' + (GNAME[HW.m] || '') + ' · ⏱ ' + (HW.dur ? HW.dur + ' phút' : 'không giới hạn') + '<br>🏷 Mã đề: <b>' + esc(q.id || QUIZ_ID) + '</b>' + (q.author ? ' · Tác giả: ' + esc(q.author) : '');
+      if (late) $('jErr').textContent = '⏰ Đã hết hạn nộp bài (' + stamp(HW.dl) + '). Em liên hệ cô nhé!'; else $('jGo').disabled = false;
+    }).catch(e => {
+      $('jErr').textContent = '❌ ' + e.message + ' — Em kiểm tra lại mã đề nhé';
+    });
+  }
+}
+if (U.get('room')) $('jCode').value = U.get('room').replace(/\D/g, '').slice(0, 6);
+['jCode', 'jName'].forEach(id => $(id).addEventListener('keydown', e => { if (e.key === 'Enter') $('jGo').click() }));
+function bad(el, msg) { el.classList.remove('err'); void el.offsetWidth; el.classList.add('err'); el.focus(); $('jErr').textContent = msg }
+$('jGo').onclick = async () => {
+  nameV = clean($('jName').value);
+  if (nameV.length < 2) return bad($('jName'), '✏️ Em nhập họ tên nhé (ít nhất 2 chữ)');
+  GC.tone(1, .01);
+  $('jGo').disabled = true; $('jErr').textContent = '⏳ Đang tải…';
+  try { SOLO ? await joinSolo() : await joinRoom() }
+  catch (e) { $('jErr').textContent = '❌ ' + e.message; $('jGo').disabled = false }
+};
+async function joinSolo() {
+  let set;
+  if (SOLO === 'hw') { if (!HW) throw new Error('Link bài tập chưa đọc được'); if (HW.dl && Date.now() > HW.dl) throw new Error('Đã hết hạn nộp bài (' + stamp(HW.dl) + ')'); set = { title: HW.t, qs: HW.qs } }
+  else if (SOLO.startsWith('mau:')) set = GC.sampleSet(+SOLO.slice(4));
+  else if (SOLO.startsWith('sheet:')) { const name = SOLO.slice(6), r = await GC.sheetSet(name); set = { title: name, qs: r.qs } }
+  if (!set || !set.qs.length) throw new Error('Không tìm thấy bộ câu hỏi này. Em báo cô kiểm tra lại link nhé!');
+  QS = GC.prep(set.qs); setTitle = set.title;
+  const P = HW || { eq: U.get('eq'), em: U.get('em'), lv: U.get('lv'), m: U.get('m') };
+  setGain(P.eq, P.em); LVL = +P.lv || 2; MODE = ['brick', 'tank', 'bomb'].includes(P.m) ? P.m : 'climb'; boot(20261019); begin();
+}
+function myPid(c) {
+  if (window.top !== window) return 'p' + Math.random().toString(36).slice(2, 10);   // trang nhúng (thử nghiệm): mỗi khung một bạn
+  try { const k = 'gpid:' + c; let v = sessionStorage.getItem(k); if (!v) { v = 'p' + Math.random().toString(36).slice(2, 10); sessionStorage.setItem(k, v) } return v }
+  catch (e) { return 'p' + Math.random().toString(36).slice(2, 10) }
+}
+async function joinRoom() {
+  code = clean($('jCode').value).replace(/\D/g, '');
+  if (code.length !== 6) { $('jGo').disabled = false; return bad($('jCode'), '🔢 Mã phòng gồm 6 chữ số') }
+  net = net || await GC.makeNet();
+  info = await net.once('rooms/' + code + '/info');
+  if (!info) throw new Error('Không thấy phòng ' + code + '. Em xem lại mã trên màn hình của cô nhé!' + (net.mode === 'local' ? ' (Chế độ thử: phải mở trên cùng máy với trang của cô.)' : ''));
+  if (info.st === 'end') throw new Error('Phòng này đã kết thúc rồi.');
+  const raw = await net.once('rooms/' + code + '/qs');
+  QS = GC.prep(Array.isArray(raw) ? raw : Object.values(raw || {}));
+  if (!QS.length) throw new Error('Phòng chưa có câu hỏi.');
+  pid = myPid(code); path = 'rooms/' + code + '/players/' + pid; evp = 'rooms/' + code + '/ev';
+  joinT = net.now(); setTitle = info.t || ''; setGain(info.eq, info.em); LVL = info.lv || 2; MODE = ['brick', 'tank', 'bomb'].includes(info.m) ? info.m : 'climb';
+  const old = await net.once(path);
+  boot(info.seed);
+  if (old && old.n) {   // lỡ tải lại trang → giữ nguyên thành tích
+    okN = old.ok || 0; ans = old.ans || 0; best = old.bs || 0; streak = old.st || 0; S.energy = old.en || 0; S.falls = old.fl || 0; S.stomps = old.sp || 0; tt = old.tt || 0;
+    if (old.y != null) Climb.place(old.x, old.y, old);
+  }
+  await net.update(path, { n: nameV, c: myColor, j: old && old.j || joinT, on: 1, x: Math.round(Climb.pl.x), y: Math.round(Climb.pl.y), alt: Climb.alt(), ok: okN, ans });
+  net.onDisconnect(path, { on: 0 });
+  joined = true; listen();
+  $('ovJoin').classList.remove('on');
+  if (info.st === 'play') begin(); else { $('wSub').textContent = '📘 ' + setTitle + ' · Phòng ' + code + (info.lic ? ' · 🏫 ' + info.lic : ''); $('wTips').innerHTML = TIPS[MODE].map(t => '<li>' + t + '</li>').join(''); $('ovWait').classList.add('on') }
+}
+function boot(seed) {
+  if (MODE === 'brick') {   // game Nấm Mario: dùng engine brick.js thay cho leo núi
+    window.Climb = Brick; S = Brick.S; document.body.classList.add('brick');
+    $('hName').textContent = '🍄 Nấm Mario'; $('keysT').innerHTML = '🎮 <kbd>←</kbd><kbd>→</kbd> chạy · giữ <kbd>↑</kbd> nhảy cao · <kbd>↓</kbd> chui ống · <kbd>F</kbd> bắn lửa · <kbd>E</kbd> trả lời'; document.title = 'Nấm Mario';
+  }
+  if (MODE === 'tank') {   // game Xe Tăng 1990
+    window.Climb = Tank; S = Tank.S; document.body.classList.add('tank'); $('bJ').textContent = '▲'; $('bD').textContent = '▼';
+    $('hName').textContent = '🛡 Xe Tăng 1990'; $('keysT').innerHTML = '🎮 <kbd>↑</kbd><kbd>↓</kbd><kbd>←</kbd><kbd>→</kbd> lái xe · <kbd>Space</kbd> / <kbd>F</kbd> bắn · <kbd>E</kbd> trả lời'; document.title = 'Xe Tăng 1990';
+  }
+  if (MODE === 'bomb') {   // game Đặt Bom Cổ Điển (dùng chung bố cục nút chữ thập với xe tăng)
+    window.Climb = Bomb; S = Bomb.S; document.body.classList.add('tank', 'bomb'); $('bJ').textContent = '▲'; $('bD').textContent = '▼'; $('bF').textContent = '💣';
+    $('hName').textContent = '💣 Đặt Bom Cổ Điển'; $('keysT').innerHTML = '🎮 <kbd>↑</kbd><kbd>↓</kbd><kbd>←</kbd><kbd>→</kbd> đi · <kbd>Space</kbd> / <kbd>B</kbd> đặt bom · <kbd>X</kbd> kích nổ · <kbd>E</kbd> trả lời'; document.title = 'Đặt Bom Cổ Điển';
+  }
+  S.cap = GAIN.cap; if (net) S.now = net.now;
+  S.color = myColor; S.name = nameV; $('hSet').textContent = setTitle;
+  if ('ontouchstart' in window || matchMedia('(pointer:coarse)').matches) { $('pad').classList.add('on'); $('keys').hidden = true }   // bật nút cảm ứng trước khi dựng game để game chừa chỗ
+  Climb.init($('cv'), $('stage'), seed, { onCP, onWin, onFall, onBat: (n, k) => toast(k === 'mush' ? '🍄 Nấm năng lượng! +' + n + ' ⚡' : '🔋 +' + n + ' ⚡ — nhặt pin xịn ghê!', 1500), onStomp: n => toast('🍄 BẸP! +' + n + ' ⚡', 1100), onHurt: n => toast('💥 Ui da! Bị hất văng, mất ' + n + ' ⚡ — giẫm lên đầu nó mới đúng chiêu!', 1800), onEmpty: openQ, onAsk: openQ, onFrame, onBonus: n => toast((n || '🪙 Hầm bí mật') + '! Nhặt hết xu rồi chui ống ⬇ để ra nhé!', 2600),
+    onPower: k => toast({ b_bomb: '💣 Thêm 1 quả bom! Đặt được nhiều bom cùng lúc', b_fire: '🔥 Lửa dài thêm 1 ô!', b_speed: '👟 Giày nhanh — chạy vèo vèo!', b_remote: '📡 Bom điều khiển! Bom chỉ nổ khi em bấm X (nút 💥)', b_kick: '🦶 Đá bom! Đi thẳng vào quả bom để đá nó trượt đi', b_wall: '👻 Đi xuyên gạch được rồi!', b_flame: '🧯 Chống lửa 30 giây — không sợ bom của mình!', b_vest: '🦺 BẤT TỬ 10 giây!', b_full: '🔴 LỬA TỐI ĐA! Bom nổ dài hết cỡ luôn!', b_fruit: '🍎 Ngon quá! +5⚡', b_found: '🚪 Tìm thấy cửa ra! Hạ hết quái rồi bước vào nhé', b_door: '😱 Bom trúng cửa — quái mới chui ra rồi!', t_star: '⭐ Nâng cấp súng! Đạn nhanh hơn — đủ 3 sao bắn thủng cả thép!', t_helmet: '⛑ Khiên bảo vệ 10 giây — xông lên!', t_shovel: '🛠 Tường căn cứ hoá THÉP 15 giây!', t_bomb: '💣 BÙM! Nổ tung hết xe địch trên sân!', t_clock: '⏰ Đóng băng toàn bộ xe địch 8 giây!', t_bolt: '⚡ Năng lượng +20!', grow: '🍄 Lớn rồi! Đội vỡ được gạch · bị quái đụng chỉ thu nhỏ lại, không mất ⚡', flower: '🌸 Hoa lửa! Bấm F (hoặc nút 🔥) để bắn cầu lửa!', star: '⭐ BẤT TỬ 10 giây! Lao vào quái thôi!', shrink: '😵 Bị đụng — thu nhỏ lại rồi, cẩn thận nhé!' }[k] || '', 2400),
+    onBoss: k => toast({ appear: '🐉 RỒNG LỬA xuất hiện! Bắn 🔥 6 phát hoặc lách qua chạm cái RÌU sau lưng nó!', axe: '🪓 Chặt cầu! Rồng rơi xuống dung nham rồi!', tankdown: '💥 HẠ GỤC SIÊU TĂNG! Dọn nốt xe địch còn lại để phá đảo!', down: '🐉 HẠ ĐƯỢC RỒNG! Mau chạy tới cứu công chúa!' }[k] || '', 3200) }, LVL);
+  if (SOLO) $('hEnd').hidden = false; else $('hRank').hidden = false;
+}
+
+/* ═════ nghe phòng ═════ */
+function listen() {
+  net.on('rooms/' + code + '/info', v => {
+    if (!v) { if (!over) { over = true; S.running = false; showRes('gone') } return }
+    info = v; $('hShop').hidden = !v.ia;
+    if (v.st === 'play' && !started) begin();
+    if (v.st === 'end' && !over) finish('teacher');
+  });
+  net.on('rooms/' + code + '/players', v => {
+    players = v || {};
+    if (joined && !players[pid] && !kicked) { kicked = true; over = true; S.running = false; closeAll(); showRes('kick'); return }
+    for (const id in S.ghosts) if (!players[id] || !players[id].on) delete S.ghosts[id];
+    for (const [id, p] of Object.entries(players)) {
+      if (id === pid || !p.on) continue;
+      const g = S.ghosts[id] || (S.ghosts[id] = {});
+      g.n = p.n || '?'; g.c = p.c || '#ccc'; g.tx = p.x ?? Climb.W / 2 - 17; g.ty = p.y ?? -40; g.f = p.f || 1; g.fz = p.fz || 0; g.sh = p.sh || 0; g.wk = p.wk; g.pw = p.pw || 0;
+    }
+    if (!started) $('wList').innerHTML = Object.values(players).map(p => '<span><i class="dot" style="background:' + esc(p.c) + '"></i> ' + esc(p.n) + '</span>').join('');
+    if (over && $('ovRes').classList.contains('on') && $('rRank')) $('rRank').textContent = rankText();
+  });
+  net.onAdded(evp, (k, e) => { if (e && e.t >= joinT - 1000) onEv(e) });
+  setInterval(sync, 300);
+}
+function sync() {
+  if (!joined || kicked || !net) return;
+  const d = { x: Math.round(Climb.pl.x), y: Math.round(Climb.pl.y), f: Climb.pl.face, alt: Climb.alt(), en: Math.round(S.energy), ok: okN, ans, st: streak, bs: best, fl: S.falls, sp: S.stomps, cp: S.cpAt ? S.cpAt.cp || 0 : 0, tt: tt || 0, fz: S.fz || 0, sh: S.sh || 0, on: 1 };
+  if (Climb.extra) Object.assign(d, Climb.extra());
+  const s = JSON.stringify(d); if (s !== lastSent || Date.now() - lastT > 5000) { lastSent = s; lastT = Date.now(); net.update(path, d) }   // ≥ 5 giây/lần để cô biết em vẫn đang chơi
+}
+function feed(t) { const f = $('feed'), d = document.createElement('div'); d.textContent = t; f.prepend(d); while (f.children.length > 4) f.lastChild.remove(); setTimeout(() => d.remove(), 6000) }
+function onEv(e) {
+  const mine = e.to === pid, from = e.nm || 'Một bạn', now = net.now();
+  if (e.ty === 'end') { if (!over) finish('teacher'); return }   // cô bấm kết thúc → khoá ngay
+  if (e.ty === 'cp' && e.fr !== pid) feed('🚩 ' + from + ' lên Trạm ' + e.n);
+  else if (e.ty === 'lv' && e.fr !== pid) feed('🏁 ' + from + (e.k === 'stage' ? ' qua Stage ' : ' qua Màn ') + e.n);
+  else if (e.ty === 'win' && e.fr !== pid) feed('👸 ' + from + ' đã giải cứu công chúa!');
+  else if (e.ty === 'fz' || e.ty === 'st') { if (e.fr !== pid && !mine) feed((e.ty === 'fz' ? '❄️ ' + from + ' đóng băng ' : '🧲 ' + from + ' hút ⚡ của ') + e.tn) }
+  if (!mine) return;
+  if ((e.ty === 'fz' || e.ty === 'st') && now < S.sh) { net.push(evp, { ty: 'blk', to: e.fr, fr: pid, nm: nameV, t: now }); toast('🛡 Khiên đã chặn chiêu của ' + from + '!'); return }
+  if (e.ty === 'fz') { S.fz = now + 4000; Climb.release(); sfx('ice'); toast('❄️ ' + from + ' đóng băng em 4 giây! Tranh thủ trả lời câu hỏi nạp ⚡ nào!', 3500) }
+  else if (e.ty === 'st') { const lose = Math.min(Math.floor(S.energy), e.amt || 60); S.energy -= lose; sfx('zap'); toast('🧲 ' + from + ' hút mất ' + lose + '⚡! Trả lời đúng để lấy lại ngay!', 3000); net.push(evp, { ty: 'got', to: e.fr, fr: pid, nm: nameV, amt: lose, t: now }) }
+  else if (e.ty === 'got') { S.energy += e.amt || 0; if (GAIN.cap) S.energy = Math.min(GAIN.cap, S.energy); sfx('bat'); toast('🧲 Hút được ' + (e.amt || 0) + '⚡ từ ' + from + '!', 2200) }
+  else if (e.ty === 'blk') toast('🛡 ' + from + ' có khiên — chiêu của em bị chặn rồi!', 2400);
+}
+
+/* ═════ diễn biến game ═════ */
+function begin() {
+  if (started) return; started = true; t0 = Date.now();
+  $('ovJoin').classList.remove('on'); $('ovWait').classList.remove('on');
+  S.running = true; $('eBtn').hidden = false;
+  if (HW ? HW.mu !== false : (SOLO || !info || info.mu !== false)) GC.music.start(true, MODE);   // mỗi game một bản nhạc
+  setTimeout(() => $('keys').classList.add('mini'), 25000);   // sau 25 giây thu gọn hướng dẫn phím   // cô quyết định bật/tắt nhạc, học sinh không có nút tắt
+  toast('💪 Chào ' + nameV + (MODE === 'brick' ? '! Trả lời đúng để nạp ⚡ rồi xông qua 4 màn cứu công chúa nào!' : '! Trả lời đúng để nạp ⚡ rồi leo lên đỉnh nào!'), 2600);
+  if (S.energy <= 0) setTimeout(openQ, 700);
+}
+function onCP(n, kind) {
+  if (kind === 'stage') { toast(MODE === 'bomb' ? BST_MSG[Math.min(n - 1, BST_MSG.length - 1)] : ST_MSG[(n - 1) % ST_MSG.length], 3200); confetti(50); if (net) net.push(evp, { ty: 'lv', k: 'stage', fr: pid, nm: nameV, n, t: net.now() }); return }
+  if (kind === 'mid') { toast('🚩 Cờ giữa màn! Lỡ rơi sẽ quay lại đây — cứ thế xông lên!', 2200); return }
+  if (kind === 'lv') { toast(LV_MSG[(n - 1) % LV_MSG.length], 3200); confetti(50); if (net) net.push(evp, { ty: 'lv', fr: pid, nm: nameV, n, t: net.now() }); return }
+  toast(CP_MSG[(n - 1) % CP_MSG.length], 3200); if (net) net.push(evp, { ty: 'cp', fr: pid, nm: nameV, n, t: net.now() }) }
+function onFall(n, txt) { if (txt) return toast(txt, 2600); toast('😱 Đừng nhìn xuống! Quay về ' + (n ? 'Trạm ' + n : 'chân núi') + ' — leo lại nào, em làm được!', 2600) }
+function onWin() {
+  tt = net ? net.now() : Date.now(); GC.music.stop(); sfx('fanfare'); confetti(120); setTimeout(() => confetti(80), 900); toast(Climb.winToast || '👸 EM ĐÃ GIẢI CỨU CÔNG CHÚA! Người hùng của cả lâu đài!', 3800);
+  if (net) { net.push(evp, { ty: 'win', fr: pid, nm: nameV, t: tt }); sync() }
+  setTimeout(() => finish('win'), 3200);
+}
+function finish(why) {
+  if (over) return; over = true; S.running = false; Climb.release(); document.body.classList.add('locked'); GC.music.stop(); tEnd = Date.now(); closeAll(); sync(); showRes(why);
+}
+function closeAll() { ['ovQ', 'ovShop'].forEach(id => $(id).classList.remove('on')); if (cur !== null && !answered) order.unshift(cur); cur = null }
+let hudT = 0;
+function onFrame(ts) {
+  if (ts - hudT < 150) return; hudT = ts;
+  $('enI').style.width = Math.min(100, S.energy / (GAIN.cap || 1000) * 100) + '%'; $('enT').textContent = '⚡ ' + Math.ceil(S.energy) + (GAIN.cap ? ' / ' + GAIN.cap : '');
+  $('en').classList.toggle('low', started && S.energy < 30);
+  $('eBtn').classList.toggle('pulse', S.energy < 30); $('eBtn').hidden = !started || over || anyOpen();
+  $('hStreak').textContent = '🔥 ' + streak; $('hAlt').textContent = Climb.hud ? Climb.hud() : '⛰ ' + Climb.alt() + ' m'; $('hOk').textContent = '✅ ' + okN + '/' + ans;
+  if (!SOLO && joined) { const r = GC.rank(players).findIndex(([id]) => id === pid); $('hRank').textContent = '🏅 #' + (r + 1) + '/' + Object.keys(players).length }
+  if (!started) return;
+  if (!SOLO && info && info.ea) {
+    const left = info.ea - net.now(); $('hTime').textContent = '⏳ ' + fmt(left);
+    if (left <= 0 && !over) finish('time');
+  } else if (HW && HW.dur) {   // bài tập về nhà: đếm ngược thời gian mỗi lượt
+    const left = t0 + HW.dur * 60000 - Date.now(); $('hTime').textContent = '⏳ ' + fmt(over ? HW.dur * 60000 - (tEnd - t0) : left);
+    if (left <= 0 && !over) finish('time');
+  } else $('hTime').textContent = '⏱ ' + fmt((tEnd || Date.now()) - t0);
+}
+$('eBtn').onclick = openQ;
+$('keys').onclick = () => $('keys').classList.toggle('mini');
+$('hShop').onclick = openShop;
+$('hEnd').onclick = () => { if (started && !over) finish('submit') };
+
+/* ═════ câu hỏi ═════ */
+function openQ() {
+  if (over || !started || anyOpen()) return;
+  if (!order.length) order = shuffle(QS.map((_, i) => i));
+  cur = order.shift(); answered = false; S.running = false; Climb.release(); GC.music.duck(true);
+  const q = QS[cur], long = q.o.some(o => o.replace(/<[^>]+>/g, '').length > 32), col = BADGE[cur % 4], c = $('qCard'), full = GAIN.cap && S.energy >= GAIN.cap;
+  c.classList.remove('shake'); c.style.borderTopColor = col;
+  c.innerHTML = '<div class="qtop"><span class="qn" style="background:' + col + '">Câu ' + q.n + '</span>' + (q.s ? '<span class="qsec">' + q.s + '</span>' : '') +
+    '<span class="qsec">🔥 ' + streak + '</span>' + (full ? '<span class="qsec">🔋 Bình đầy — trả lời để luyện, ⚡ không tăng</span>' : '<span class="qsec">⚡ +' + GAIN.correct + '</span>') + '<button class="qx" title="Đóng" onclick="closeQ()">✕</button></div>' +
+    '<div class="qtext">' + q.q + '</div><div class="opts' + (long ? ' one' : '') + '">' +
+    q.o.map((o, i) => '<button class="op" onclick="answer(' + i + ')"><span class="lt c' + i + '">' + 'ABCD'[i] + '</span><span>' + o + '</span></button>').join('') + '</div><div class="fb" id="fb"></div>';
+  $('ovQ').classList.add('on'); c.scrollTop = 0;
+}
+function answer(i) {
+  if (answered || cur === null) return; answered = true; ans++;
+  const q = QS[cur], ok = i === q.a, bs = $('qCard').querySelectorAll('.op');
+  bs.forEach((b, k) => { b.disabled = true; b.classList.add(k === q.a ? 'ok' : k === i ? 'bad' : 'dim') });
+  let h;
+  if (!ok && net && q && q.n) {
+    try { net.push(evp, { ty: 'wrong', q: q.n, fr: pid, nm: nameV, t: net.now() }); } catch(e){}
+  }
+  if (ok) {
+    okN++; streak++; best = Math.max(best, streak); solved.add(q.n);
+    let gain = GAIN.correct + GAIN.streakBonus * Math.min(streak - 1, GAIN.streakMax), capped = false;
+    if (GAIN.cap && S.energy + gain >= GAIN.cap) { gain = Math.max(0, Math.floor(GAIN.cap - S.energy)); capped = true }
+    S.energy += gain; sfx('ok'); confetti(36);
+    h = '<div class="msg good">✅ Chính xác! ' + (gain ? '+' + gain + ' ⚡' : '') + (capped ? ' 🔋 Bình đầy rồi — đi leo thôi!' : '') + (streak > 1 ? ' · 🔥 Chuỗi ' + streak : '') + '<small>' + pick(OK_MSG) + '</small></div>' +
+      (q.e ? '<details class="exp"><summary>📖 Xem giải thích</summary>' + q.e + '</details>' : '');
+  } else {
+    streak = 0; order.splice(Math.min(3, order.length), 0, cur); sfx('bad'); $('qCard').classList.add('shake');
+    h = '<div class="msg bad">❌ Chưa đúng! Đáp án: ' + q.o[q.a] + '<small>' + pick(BAD_MSG) + '</small></div>' +
+      (q.e ? '<details class="exp" open><summary>📖 Giải thích</summary>' + q.e + '</details>' : '');
+  }
+  const full = GAIN.cap && S.energy >= GAIN.cap;
+  h += '<div class="row"><button class="btn' + (full ? ' w' : '') + '" onclick="nextQ()">' + (full ? '📝 Luyện thêm câu nữa' : '⚡ Câu tiếp (nạp thêm)') + '</button><button class="btn g" onclick="closeQ()"' + (S.energy > 0 ? '' : ' disabled') + '>🧗 Leo tiếp</button></div>';
+  $('fb').innerHTML = h; sync();
+  setTimeout(() => { const f = $('fb'); if (f) f.scrollIntoView({ block: 'nearest', behavior: 'smooth' }) }, 60);
+}
+function nextQ() { $('ovQ').classList.remove('on'); cur = null; openQ() }
+function closeQ() { if (cur !== null && !answered) order.unshift(cur); $('ovQ').classList.remove('on'); cur = null; GC.music.duck(false); if (!over) S.running = true }
+addEventListener('keydown', e => {
+  if (!$('ovQ').classList.contains('on') || cur === null) return;
+  const i = '1234'.indexOf(e.key) >= 0 ? '1234'.indexOf(e.key) : 'abcd'.indexOf(e.key.toLowerCase());
+  if (!answered && e.key.length === 1 && i >= 0 && i < QS[cur].o.length) { e.preventDefault(); answer(i) }
+  else if (answered && e.key === 'Enter') { e.preventDefault(); nextQ() }
+  else if (e.key === 'Escape') closeQ();
+});
+
+/* ═════ vật phẩm trêu nhau ═════ */
+function openShop() {
+  if (!started || over || !info || !info.ia || anyOpen()) return;
+  S.running = false; Climb.release();
+  const now = net.now(), wait = Math.max(0, Math.ceil((cool - now) / 1000));
+  $('sCard').innerHTML = '<div class="qtop"><span class="qn" style="background:#5ab0ff">🎒 Vật phẩm</span><span class="qsec">⚡ ' + Math.floor(S.energy) + '</span>' +
+    (wait ? '<span class="qsec">⏳ trêu tiếp sau ' + wait + ' giây</span>' : '') + '<button class="qx" title="Đóng" onclick="closeShop()">✕</button></div><div class="shop">' +
+    ITEMS.map(it => '<button class="item" onclick="buy(\'' + it.k + '\')"' + (S.energy < cost(it) || (wait && it.k !== 'sh') ? ' disabled' : '') + '><span class="ic">' + it.ic + '</span><span><b>' + it.name + '</b><small>' + it.desc.replace('60', Math.round(60 * GAIN.scale)) + '</small></span><span class="cost">' + cost(it) + ' ⚡</span></button>').join('') +
+    '</div><div class="sub" style="margin-top:12px">Dùng ⚡ để trêu thì leo chậm hơn — chọn khôn ngoan nhé! 😉</div>';
+  $('ovShop').classList.add('on');
+}
+function closeShop() { $('ovShop').classList.remove('on'); if (!over) S.running = true }
+function buy(k) {
+  const it = ITEMS.find(i => i.k === k), now = net.now();
+  if (S.energy < cost(it)) return toast('Chưa đủ ⚡ — trả lời thêm câu hỏi nhé!');
+  if (k === 'sh') { S.energy -= cost(it); S.sh = now + 40000; sfx('pop'); toast('🛡 Khiên bật 40 giây — hết sợ bị trêu!'); closeShop(); sync(); return }
+  if (now < cool) return;
+  const others = Object.entries(players).filter(([id, p]) => id !== pid && p.on && !p.tt), me = Climb.alt();
+  if (!others.length) return toast('Chưa có bạn nào để trêu 😄');
+  let tgt;
+  if (k === 'fz') { const free = others.filter(([, p]) => !(p.fz > now)); tgt = free.filter(([, p]) => (p.alt || 0) >= me).sort((a, b) => a[1].alt - b[1].alt)[0] || free.sort((a, b) => (b[1].alt || 0) - (a[1].alt || 0))[0] }
+  else tgt = others.sort((a, b) => (b[1].en || 0) - (a[1].en || 0))[0];
+  if (!tgt) return toast('Các bạn đều đang bị đóng băng rồi 😄');
+  const [tid, tp] = tgt;
+  if (tp.sh > now) return toast('🛡 ' + tp.n + ' đang bật khiên — đợi lát nữa nhé!');
+  S.energy -= cost(it); cool = now + 10000;
+  net.push(evp, { ty: k, to: tid, fr: pid, nm: nameV, tn: tp.n, amt: Math.round(60 * GAIN.scale), t: now }); sfx(k === 'fz' ? 'ice' : 'zap');
+  toast((k === 'fz' ? '❄️ Đã đóng băng ' : '🧲 Đang hút ⚡ của ') + tp.n + '!'); closeShop();
+}
+
+/* ═════ kết quả ═════ */
+function rankText() { const r = GC.rank(players), i = r.findIndex(([id]) => id === pid); return '🏅 Hạng: ' + (i + 1) + ' / ' + r.length }
+function showRes(why) {
+  if (why === 'kick' || why === 'gone') {
+    $('rCard').innerHTML = '<div class="big">👋 Hẹn gặp lại!</div><div class="sub">' + (why === 'kick' ? 'Cô đã cho em rời phòng.' : 'Phòng chơi đã đóng.') + '</div>';
+    $('ovRes').classList.add('on'); return;
+  }
+  if (!subN) { try { const k = 'att:' + decodeURIComponent(location.pathname) + (SOLO === 'hw' ? 'hw' + HWP.length + HWP.slice(-16) : SOLO || ''); subN = (+localStorage.getItem(k) || 0) + 1; localStorage.setItem(k, subN) } catch (e) { subN = 1 } }
+  const hwLate = HW && HW.dl && tEnd > HW.dl;
+  const won = !!tt, pct = ans ? Math.round(okN / ans * 100) : 0, T = Climb.topAlt();
+  const head = won ? (Climb.winTitle || '👸 Giải cứu công chúa thành công!') : why === 'time' ? (HW ? '⏰ Hết thời gian làm bài!' : '⏰ Hết giờ rồi!') : why === 'teacher' ? '🏁 Cô đã kết thúc trò chơi' : '🏁 Kết quả leo núi';
+  $('rCard').innerHTML = '<div class="big">' + head + '</div><div class="sub">' + esc(setTitle) + '</div><div class="res">' +
+    '<div class="wide">👤 ' + esc(nameV) + (SOLO ? '' : ' · <span id="rRank">' + rankText() + '</span>') + '</div>' +
+    '<div>⏱ Thời gian: ' + fmt(tEnd - t0) + '</div><div>⏰ Nộp: ' + stamp(tEnd) + '</div>' +
+    '<div>✅ Đúng: ' + okN + '/' + ans + ' (' + pct + '%)</div><div>🧩 Câu đã chinh phục: ' + solved.size + '/' + QS.length + '</div>' +
+    (Climb.kind === 'bomb' ? '<div>💣 Tiến độ: ' + (won ? 'Phá đảo 8/8 màn 🏆' : Climb.label()) + '</div><div>👾 Hạ quái: ' + S.stomps + '</div>' : Climb.kind === 'tank' ? '<div>🎯 Tiến độ: ' + (won ? 'Phá đảo ' + Climb.NL + '/' + Climb.NL + ' stage 🏆' : Climb.label()) + '</div><div>💥 Hạ xe tăng: ' + S.stomps + '</div>' : Climb.kind === 'brick' ? '<div>🗺 Tiến độ: ' + (won ? 'Phá đảo ' + Climb.NL + '/' + Climb.NL + ' màn 👸' : Climb.label()) + '</div><div>🪙 Xu: ' + S.coins + '</div>' : '<div>⛰ Độ cao: ' + (won ? 'ĐỈNH (' + T + ' m)' : S.maxAlt + ' / ' + T + ' m') + '</div>') + '<div>🔥 Chuỗi dài nhất: ' + best + '</div>' +
+    (Climb.kind === 'bomb' ? '<div>💣 Bom: ' + Climb.pl.bombs + ' · 🔥 Lửa: ' + Climb.pl.fire + '</div><div>😵 Bị trúng: ' + S.hits + '</div>' : Climb.kind === 'tank' ? '<div>⭐ Nâng cấp súng: ' + Climb.pl.up + '/3</div><div>🦅 Căn cứ bị phá: ' + S.falls + '</div>' : '<div>🍄 Giẫm bẹp: ' + S.stomps + '</div><div>😱 Số lần rơi: ' + S.falls + '</div>') +
+    (HW ? '<div class="wide">📚 Hạn nộp: ' + (HW.dl ? stamp(HW.dl) + (hwLate ? ' · ⚠️ <b>nộp trễ</b>' : ' · ✅ <b>đúng hạn</b>') : 'không đặt hạn') + '</div>' : '') +
+    '<div class="wide">🔁 Lần nộp thứ ' + subN + ' trên máy này</div></div>' +
+    (HW ? '<div class="row"><button class="btn g" onclick="copyResult()" style="font-size:17px;padding:12px 22px">📋 Copy kết quả gửi cô</button>' + (!HW.dl || Date.now() < HW.dl ? '<button class="btn w" onclick="location.reload()">🔄 Làm lại</button>' : '') + '</div><div class="sub">👉 Bấm copy rồi mở Zalo dán gửi cô nhé!</div>'
+      : SOLO ? '<div class="row">' + (won ? '' : '<button class="btn g" onclick="resume()">🏃 Chơi tiếp</button>') + '<button class="btn" onclick="location.reload()">🔄 Chơi lại</button></div>'
+      : '<div class="sub">' + (won && why === 'win' ? '🎉 Chờ cả lớp về đích nhé — xem bảng xếp hạng trên màn hình của cô!' : '📺 Nhìn lên màn hình của cô để xem bảng vinh danh!') + '</div>' + (why === 'teacher' || why === 'time' ? '<div class="lockmsg">🔒 ' + (why === 'time' ? 'Hết giờ' : 'Cô đã kết thúc trò chơi') + ' — màn chơi đã khoá, em không chơi tiếp được nữa.</div>' : ''));
+  $('ovRes').classList.add('on');
+}
+function resultText() {
+  const pct = ans ? Math.round(okN / ans * 100) : 0, prog = tt ? 'Phá đảo 🏆' : Climb.label ? Climb.label() : '⛰ ' + S.maxAlt + ' m';
+  return '📚 KẾT QUẢ BTVN: ' + setTitle + '\n👤 ' + nameV + '\n🎮 ' + (GNAME[MODE] || '') + ' · độ khó ' + ({ 1: 'Dễ', 2: 'Vừa', 3: 'Khó' }[LVL] || '') +
+    '\n✅ Đúng ' + okN + '/' + ans + ' câu (' + pct + '%) · 🧩 chinh phục ' + solved.size + '/' + QS.length + ' câu\n🏁 ' + prog + '\n🔥 Chuỗi đúng dài nhất: ' + best +
+    '\n⏱ Thời gian: ' + fmt(tEnd - t0) + ' · ⏰ Nộp: ' + stamp(tEnd) + (HW && HW.dl ? (tEnd > HW.dl ? ' (⚠️ trễ hạn)' : ' (✅ đúng hạn)') : '') + '\n🔁 Lần làm thứ ' + subN;
+}
+function copyResult() { const t = resultText(); navigator.clipboard.writeText(t).then(() => toast('📋 Đã copy! Mở Zalo dán gửi cô nhé', 2800)).catch(() => prompt('Copy đoạn này gửi cô:', t)) }
+function resume() { $('ovRes').classList.remove('on'); over = false; t0 += Date.now() - tEnd; tEnd = 0; S.running = true }
+</script>
+</body>
+</html>

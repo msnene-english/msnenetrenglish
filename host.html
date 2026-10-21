@@ -1,0 +1,878 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Ms Nenet English – Phòng Game của Cô Chí Nên</title>
+<link rel="stylesheet" href="assets/fonts.css">
+<link rel="stylesheet" href="assets/game.css">
+<style>
+body{background:linear-gradient(160deg,#ffe4f2,#e6efff 45%,#efe6ff);min-height:100%;overflow-x:hidden}
+.wrap{max-width:1180px;margin:0 auto;padding:18px max(16px,env(safe-area-inset-right,0px)) 40px max(16px,env(safe-area-inset-left,0px))}
+.top{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:14px}
+.top h1{font:800 30px/1.1 'Baloo 2',Nunito,sans-serif;color:#5b4bb0}
+.badge{border-radius:20px;padding:6px 14px;font-weight:800;font-size:13px;background:#fff;box-shadow:0 2px 8px #5b4bb015}
+.badge.ok{color:#1d8a5a;background:#e3f9ee}.badge.warn{color:#b0670b;background:#fff7e0}
+.panel{background:#fff;border-radius:22px;padding:18px;box-shadow:0 8px 26px #5b4bb022;min-width:0}
+.grid2{display:grid;grid-template-columns:1.25fr 1fr;gap:16px}
+@media(max-width:900px){.grid2{grid-template-columns:1fr}}
+h2{font:800 20px 'Baloo 2',Nunito,sans-serif;margin-bottom:10px;color:#2d2350}
+.tabs{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px}
+.tab{border:2px solid var(--line);background:#faf8ff;border-radius:14px;padding:8px 14px;font-weight:800;cursor:pointer;transition:.15s}
+.tab.on{border-color:var(--purple);background:#efe8ff;color:#5b4bb0}
+textarea{width:100%;min-height:210px;border:2px solid var(--line);border-radius:14px;padding:10px 12px;font:600 14px/1.5 Nunito,sans-serif;resize:vertical}
+select,.inp{width:100%;border:2px solid var(--line);border-radius:12px;padding:9px 11px;font-weight:700;font-size:15px;background:#fff}
+.hint{font-size:13px;color:#7a6aa8;font-weight:700;line-height:1.5;margin-top:6px}
+.hint code{background:#f3eeff;border-radius:6px;padding:1px 5px}
+.stat{margin-top:10px;font-weight:800}
+.stat.ok{color:#1d8a5a}.stat.bad{color:#c23a55}
+.errs{font-size:13px;color:#c23a55;font-weight:700;margin-top:4px;max-height:110px;overflow:auto}
+.prev{margin-top:10px;display:grid;gap:6px;max-height:230px;overflow:auto}
+.prev div{background:#f6f3ff;border-radius:12px;padding:8px 12px;font-size:14px;font-weight:700}
+.prev div:nth-child(3n+1){background:#ffeef6}.prev div:nth-child(3n+2){background:#eaf4ff}
+.lab{font-weight:800;font-size:14px;color:#7a6aa8;margin:12px 0 6px}
+.modes{display:grid;grid-template-columns:repeat(2,1fr);gap:8px}
+.mode{display:flex;align-items:center;gap:10px;text-align:left;border:3px solid transparent;border-radius:16px;padding:10px 12px;font-weight:800;font-size:16px;cursor:pointer;color:#2d2350;box-shadow:0 3px 0 #5b4bb022;transition:.15s}
+.mode b{font-size:30px;line-height:1;flex:none}
+.mode[data-m=climb]{background:linear-gradient(135deg,#e3f6ff,#efe6ff)}.mode[data-m=brick]{background:linear-gradient(135deg,#fff3e0,#ffe4f2)}
+.mode[data-m=tank]{background:linear-gradient(135deg,#e8f6ff,#e2fff2)}.mode[data-m=bomb]{background:linear-gradient(135deg,#fff7d6,#e8f8f0)}
+.mode:hover{transform:translateY(-2px)}
+.mode.on{border-color:#ff7eb6;box-shadow:0 0 0 3px #ffd6ea,0 4px 0 #ff7eb6}
+.mode small{display:block;font-size:12px;color:#7a6aa8;font-weight:700}
+.hero{background:#fff;border-radius:24px;overflow:hidden;margin-bottom:14px;box-shadow:0 10px 30px #5b4bb033;border:4px solid #fff}
+.heroTxt{padding:16px 18px 10px;text-align:center;background:linear-gradient(180deg,#fff,#fbf8ff)}
+.hello{font-weight:800;color:#7a6aa8;font-size:16px}
+.brand{font:800 clamp(24px,3.6vw,40px)/1.15 'Baloo 2',Nunito,sans-serif;background:linear-gradient(90deg,#ff7eb6,#9b7bff,#5ab0ff);-webkit-background-clip:text;background-clip:text;color:transparent;text-wrap:balance}
+.hchips{display:flex;gap:8px;flex-wrap:wrap;justify-content:center;margin-top:8px}
+.hchips span{border-radius:14px;padding:4px 12px;font-weight:800;font-size:14px;box-shadow:0 2px 0 #0001}
+.hchips span:nth-child(1){background:#e3f6ff}.hchips span:nth-child(2){background:#ffe9d6}.hchips span:nth-child(3){background:#e2fff2}.hchips span:nth-child(4){background:#fff3c4}
+#heroCv{display:block;width:100%;height:190px}
+.licbar{display:flex;align-items:center;gap:12px;flex-wrap:wrap;border-radius:18px;padding:12px 16px;margin-bottom:14px;font-weight:700;font-size:15px;line-height:1.5;background:linear-gradient(90deg,#e3f9ee,#e3f1ff);border:3px solid #3fbf86}
+.licbar .li{font-size:28px;line-height:1}.licbar .lic-t{flex:1;min-width:220px;color:#2d2350}
+.sw{display:flex;align-items:center;gap:10px;font-weight:800;cursor:pointer;background:#f6f3ff;border-radius:14px;padding:10px 12px}
+.sw input{width:22px;height:22px;accent-color:#9b7bff}
+.sw small{display:block;font-weight:700;font-size:12px;color:#7a6aa8}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.sw+.sw{margin-top:8px}
+.lobby{display:grid;grid-template-columns:auto 1fr;gap:20px;align-items:start}
+@media(max-width:800px){.lobby{grid-template-columns:1fr}}
+.code{font:800 min(16vw,96px)/1 'Baloo 2',Nunito,sans-serif;letter-spacing:.08em;color:#5b4bb0;text-align:center}
+#qr{background:#fff;padding:10px;border-radius:16px;display:flex;justify-content:center}
+#qr img,#qr canvas{max-width:100%;height:auto}
+.url{font-weight:800;font-size:14px;word-break:break-all;text-align:center;color:#7a6aa8;margin-top:8px}
+.plist{display:flex;flex-wrap:wrap;gap:8px}
+.pp{display:flex;align-items:center;gap:7px;background:#f6f3ff;border-radius:20px;padding:6px 8px 6px 12px;font-weight:800;font-size:16px;animation:pop .3s}
+@keyframes pop{from{transform:scale(.6);opacity:0}}
+.pp button{border:0;background:#fff;border-radius:50%;width:24px;height:24px;cursor:pointer;font-size:12px}
+.pp.off{opacity:.5}
+.live{display:grid;grid-template-columns:1fr 300px;gap:16px}
+@media(max-width:960px){.live{grid-template-columns:1fr}}
+.timer{font:800 44px/1 'Baloo 2',Nunito,sans-serif;color:#5b4bb0;font-variant-numeric:tabular-nums}
+.timer.low{color:#e0457a;animation:pulse 1s infinite}
+@keyframes pulse{50%{opacity:.55}}
+.board{display:grid;gap:7px}
+.lr{display:grid;grid-template-columns:44px minmax(90px,200px) 1fr auto;gap:10px;align-items:center;background:#faf8ff;border-radius:14px;padding:7px 10px;transition:.3s}
+.lr:nth-child(1){background:#fff6d6}.lr:nth-child(2){background:#f1f1fb}.lr:nth-child(3){background:#ffeee2}
+.rk{font:800 20px 'Baloo 2',Nunito,sans-serif;text-align:center}
+.nm{font-weight:800;font-size:17px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.bar{height:18px;border-radius:10px;background:#ece6ff;position:relative;overflow:hidden}
+.bar i{position:absolute;left:0;top:0;bottom:0;border-radius:10px;transition:width .5s}
+.bar b{position:absolute;top:0;bottom:0;width:2px;background:#ffffffcc}
+.meta{font-weight:800;font-size:14px;white-space:nowrap;font-variant-numeric:tabular-nums}
+.feed{display:flex;flex-direction:column;gap:6px;max-height:60vh;overflow:auto}
+.feed div{background:#f6f3ff;border-radius:12px;padding:7px 10px;font-weight:800;font-size:14px;animation:pop .3s}
+.confirm{display:none;background:#fff0f3;border:3px solid #ff8fa8;border-radius:16px;padding:12px 14px;margin-top:10px;font-weight:800}
+.confirm.on{display:block}
+.podium{display:flex;justify-content:center;align-items:flex-end;gap:14px;margin:18px 0}
+.pod{text-align:center;width:min(30%,200px)}
+.pod .av{width:64px;height:64px;border-radius:50%;margin:0 auto 6px;border:5px solid #fff;box-shadow:0 4px 12px #0002}
+.pod .nm{font-size:18px;white-space:normal}
+.pod .st{border-radius:14px 14px 0 0;color:#fff;font:800 34px 'Baloo 2',Nunito,sans-serif;display:flex;align-items:flex-start;justify-content:center;padding-top:8px}
+table{width:100%;border-collapse:collapse;font-weight:700}
+th,td{padding:8px 10px;text-align:left;border-bottom:2px solid #f0ebff;white-space:nowrap}
+th{color:#7a6aa8;font-size:13px}
+.tw{overflow-x:auto}
+.bank-item{display:flex;justify-content:space-between;align-items:center;background:#f6f3ff;border-radius:12px;padding:10px 14px;font-weight:800;margin-bottom:8px}
+.bank-item .binfo{cursor:pointer;flex:1}
+.bank-item .bacts{display:flex;gap:6px}
+.review-box{background:#fff8f0;border:2px solid #ffcb80;border-radius:18px;padding:16px;margin:18px 0}
+.mistake-row{background:#fff;border-radius:12px;padding:10px 14px;margin-top:8px;display:flex;justify-content:space-between;align-items:center;font-weight:800}
+.mistake-row b{color:#c23a55}
+[hidden]{display:none!important}
+</style>
+</head>
+<body>
+<div class="wrap">
+ <div class="top">
+  <h1>🎮 Phòng game Cô Chí Nên</h1>
+  <span class="badge" id="netB">⏳ Đang kết nối…</span>
+  <span class="badge ok" id="licTag">✅ Bản quyền: Cô Chí Nên · Mở trọn bộ 4 Game</span>
+ </div>
+
+ <!-- 1. CÀI ĐẶT -->
+ <section id="vSetup">
+  <div class="hero">
+   <div class="heroTxt">
+    <div class="hello">🌟 Chào mừng các con và các thầy cô đến với</div>
+    <div class="brand">Ms Nenet English · Bộ Game của Cô Chí Nên</div>
+    <div class="hchips"><span>🧗 Leo núi</span><span>🍄 Nấm Mario</span><span>🛡 Xe tăng</span><span>💣 Đặt bom</span></div>
+   </div>
+   <canvas id="heroCv" aria-label="Tranh pixel động: cảnh nhỏ của 4 game"></canvas>
+  </div>
+
+  <div class="licbar">
+   <span class="li">🎁</span>
+   <div class="lic-t">
+    <b>Bản đầy đủ vĩnh viễn:</b> Đã kích hoạt trọn vẹn cả 4 game: 🧗 Leo núi, 🍄 Nấm Mario, 🛡 Xe tăng, 💣 Đặt bom cho <b>Cô Chí Nên (Ms Nenet English)</b>.
+   </div>
+  </div>
+
+  <div id="resumeBox" class="panel" hidden style="margin-bottom:14px"></div>
+
+  <div class="grid2">
+   <!-- CỘT 1: CHỌN CÂU HỎI & KHO ĐỀ -->
+   <div class="panel">
+    <h2>① Quản lý Bộ câu hỏi</h2>
+    <div class="tabs">
+     <button class="tab on" data-t="paste">📋 Dán câu hỏi</button>
+     <button class="tab" data-t="mau">⭐ Bộ đề mẫu</button>
+     <button class="tab" data-t="bank">📚 Thư viện đề thi</button>
+    </div>
+
+    <!-- TAB 1: DÁN TỪ WORD / EXCEL -->
+    <div id="tPaste">
+     <textarea id="pTxt" placeholder="Cách 1 — Copy các ô từ Excel rồi dán vào (cột: Câu hỏi | A | B | C | D | Đáp án | Giải thích)
+
+Cách 2 — Dán từ Word theo mẫu:
+1. She ___ to school every day.
+A. go
+*B. goes
+C. going
+D. gone
+Giải thích: Chủ ngữ số ít đi với goes"></textarea>
+     <div class="hint">Đánh dấu đáp án đúng bằng <code>*</code> trước chữ cái, hoặc thêm dòng <code>Đáp án: B</code>. Bài phát âm gạch chân dùng <code>&lt;u&gt;ea&lt;/u&gt;</code>.</div>
+     <div class="row" style="justify-content:flex-start;margin-top:8px">
+      <button class="btn g" id="bSaveToBank" disabled style="font-size:13px;padding:6px 12px">🌐 Chia sẻ lên Thư viện chung</button>
+      <button class="btn b" id="bSaveLocal" disabled style="font-size:13px;padding:6px 12px">🔒 Lưu riêng máy này</button>
+      <button class="btn w" id="bClearPaste" style="font-size:13px;padding:6px 12px">🧹 Xóa trắng</button>
+     </div>
+    </div>
+
+    <!-- TAB 2: BỘ ĐỀ MẪU CÓ SẴN (ĐỀ CŨ LỚP 7 + IELTS) -->
+    <div id="tMau" hidden>
+     <div id="mList" class="prev"></div>
+    </div>
+
+    <!-- TAB 3: KHO ĐỀ CỦA CÔ (LƯU LOCAL + EXPORT/IMPORT FILE + CLOUD) -->
+    <div id="tBank" hidden>
+     <div style="display:flex;gap:8px;margin-bottom:10px;flex-wrap:wrap;align-items:center">
+      <input id="searchBank" class="inp" style="flex:1;min-width:160px;padding:7px 12px;font-size:13px" placeholder="🔍 Tìm kiếm đề thi...">
+      <button class="btn g" id="bExportBank" style="font-size:12px;padding:7px 10px">⬇️ Xuất file</button>
+      <label class="btn w" style="font-size:12px;padding:7px 10px;cursor:pointer">
+       ⬆️ Nạp file
+       <input type="file" id="fImportBank" accept=".json" hidden>
+      </label>
+     </div>
+     <div style="font-weight:800;font-size:13px;color:#5b4bb0;margin:6px 0">🌐 THƯ VIỆN ĐỀ CHUNG (Mọi thầy cô đều dùng được)</div>
+     <div id="commBankList" class="prev" style="max-height:220px"></div>
+     <div style="font-weight:800;font-size:13px;color:#7a6aa8;margin:12px 0 6px">🔒 KHO ĐỀ RIÊNG CỦA MÁY NÀY</div>
+     <div id="bankList" class="prev" style="max-height:160px"></div>
+    </div>
+
+    <div class="stat" id="qStat"></div>
+    <div class="errs" id="qErr"></div>
+    <div class="prev" id="qPrev"></div>
+
+    <div class="steps">
+     <div class="sh">🚀 4 bước tổ chức chơi</div>
+     <div><b>1</b><span>Chọn <i>bộ câu hỏi</i>: dán từ Word/Excel, chọn bộ mẫu, hoặc mở từ Kho đề</span></div>
+     <div><b>2</b><span>Chọn <i>game</i> (Leo núi / Mario / Xe tăng / Đặt bom), độ khó, thời gian và năng lượng</span></div>
+     <div><b>3</b><span>Bấm <i>Mở phòng</i> → chiếu mã QR lên bảng, học sinh quét là vào chơi</span></div>
+     <div><b>4</b><span>Theo dõi BXH trực tiếp · bấm <i>⏹ Kết thúc cả lớp</i> khi đủ giờ</span></div>
+    </div>
+   </div>
+
+   <!-- CỘT 2: CÀI ĐẶT TRÒ CHƠI -->
+   <div class="panel">
+    <h2>② Cài đặt trò chơi</h2>
+    <div class="lab">Tên bộ đề (hiện cho học sinh)</div>
+    <input id="gTitle" class="inp" maxlength="60" placeholder="VD: English 7 · Unit 5 hoặc IELTS Reading">
+
+    <div class="lab">Kiểu game (Đã mở full cả 4 game)</div>
+    <div class="modes" id="gModes">
+     <button class="mode on" data-m="climb"><b>🧗</b><span>Leo núi<small>Leo lên đỉnh · cứu công chúa</small></span></button>
+     <button class="mode" data-m="brick"><b>🍄</b><span>Nấm Mario<small>4 màn · chui ống · đánh rồng</small></span></button>
+     <button class="mode" data-m="tank"><b>🛡</b><span>Xe tăng<small>4 stage · bảo vệ căn cứ</small></span></button>
+     <button class="mode" data-m="bomb"><b>💣</b><span>Đặt bom<small>8 màn · Bomberman cổ điển</small></span></button>
+    </div>
+
+    <div class="lab">🎚 Độ khó</div>
+    <select id="gLv">
+     <option value="1">😊 Dễ — núi thấp, ít quái</option>
+     <option value="2" selected>🔥 Vừa — nhiều quái, bậc hẹp, có băng trơn</option>
+     <option value="3">💀 Khó — núi rất cao, quái dày đặc, bậc sụp nhanh</option>
+    </select>
+
+    <div class="lab">Thời gian chơi</div>
+    <select id="gDur">
+     <option value="5">5 phút</option>
+     <option value="7">7 phút</option>
+     <option value="10" selected>10 phút</option>
+     <option value="15">15 phút</option>
+     <option value="20">20 phút</option>
+     <option value="30">30 phút</option>
+    </select>
+
+    <div class="two">
+     <div><div class="lab">⚡ Mỗi câu đúng được</div><select id="gEq"><option value="100" selected>100 năng lượng</option><option value="200">200 năng lượng</option><option value="300">300 năng lượng</option></select></div>
+     <div><div class="lab">🔋 Bình năng lượng đầy</div><select id="gEm"><option value="500">500</option><option value="1000" selected>1000</option><option value="1500">1500</option><option value="2000">2000</option><option value="0">Không giới hạn</option></select></div>
+    </div>
+    <div class="hint">Mỗi bước nhảy tốn 6 ⚡, đi bộ tốn liên tục. Đầy bình thì phải đi leo để tiêu hao bớt năng lượng.</div>
+
+    <div class="lab">Tương tác &amp; âm thanh</div>
+    <label class="sw"><input type="checkbox" id="gIa" checked><span>🎒 Cho phép trêu nhau<small>❄️ đóng băng · 🧲 hút năng lượng · 🛡 khiên (tốn ⚡)</small></span></label>
+    <label class="sw"><input type="checkbox" id="gMu" checked><span>🎵 Nhạc nền trên máy học sinh<small>Bỏ tick nếu cả lớp ồn quá · máy chiếu bật/tắt bằng nút 🎵</small></span></label>
+
+    <div class="row" style="justify-content:stretch">
+     <button class="btn" id="bOpen" style="flex:1;font-size:17px;padding:13px" disabled>🚪 Mở phòng chơi chung</button>
+     <button class="btn w" id="bSolo" disabled>📚 Giao bài về nhà</button>
+    </div>
+    <div class="hint" id="soloHint"></div>
+   </div>
+  </div>
+ </section>
+
+ <!-- 2. SẢNH CHỜ -->
+ <section id="vLobby" hidden>
+  <div class="panel lobby">
+   <div style="min-width:260px">
+    <div class="lab" style="text-align:center;margin-top:0">Mã phòng</div>
+    <div class="code" id="lCode"></div>
+    <div id="qr"></div>
+    <div class="url" id="lUrl"></div>
+    <div class="row" style="margin-top:8px">
+     <button class="btn w" onclick="copyLink()">📋 Copy link gửi Zalo</button>
+    </div>
+   </div>
+   <div>
+    <h2 id="lTitle"></h2>
+    <div class="sub" style="text-align:left" id="lCount">Chưa có bạn nào vào phòng…</div>
+    <div class="plist" id="lList"></div>
+    <div class="row" style="justify-content:flex-start;margin-top:18px">
+     <button class="btn g" id="bStart" style="font-size:19px;padding:14px 28px">▶️ Bắt đầu cho cả lớp</button>
+     <button class="btn w" id="bCancel">✖ Huỷ phòng</button>
+    </div>
+   </div>
+  </div>
+ </section>
+
+ <!-- 3. ĐANG CHƠI TRỰC TIẾP -->
+ <section id="vLive" hidden>
+  <div class="panel" style="margin-bottom:14px;display:flex;align-items:center;gap:14px;flex-wrap:wrap">
+   <div><div class="lab" style="margin:0">⏳ Còn lại</div><div class="timer" id="tLeft">10:00</div></div>
+   <div style="flex:1;min-width:180px"><h2 id="vTitle" style="margin:0"></h2><div class="hint">Mã phòng <b id="vCode"></b> · vào muộn vẫn chơi được · <span id="vEn"></span></div></div>
+   <button class="btn g" id="bInvite">📲 Mời bạn vào muộn</button>
+   <button class="btn w" id="bMusic">🎵 Nhạc: bật</button>
+   <button class="btn b" id="bPlus">➕ 1 phút</button>
+   <button class="btn r" id="bEnd" style="font-size:17px;padding:12px 20px">⏹ Kết thúc cả lớp</button>
+   <div class="confirm" id="cEnd" style="flex-basis:100%">
+    Kết thúc trò chơi cho <b>cả lớp</b> ngay bây giờ? Màn hình các em sẽ dừng lại và hiện kết quả.
+    <div class="row" style="justify-content:flex-start">
+     <button class="btn r" id="bEndYes">⏹ Kết thúc ngay</button>
+     <button class="btn w" id="bEndNo">Chơi tiếp</button>
+    </div>
+   </div>
+  </div>
+  <div class="live">
+   <div class="panel"><h2>🏔 Bảng xếp hạng trực tiếp</h2><div class="board" id="board"></div></div>
+   <div class="panel"><h2>📣 Diễn biến</h2><div class="feed" id="feed"></div></div>
+  </div>
+ </section>
+
+ <!-- 4. VINH DANH & REVIEW BÀI HỌC -->
+ <section id="vEnd" hidden>
+  <div class="panel">
+   <div class="big">🏆 Bảng Vinh Danh</div>
+   <div class="sub" id="eTitle"></div>
+   <div class="podium" id="podium"></div>
+
+   <!-- MỤC NÂNG CẤP MỚI: PHÂN TÍCH CÂU HỎI SAI NHIỀU NHẤT -->
+   <div class="review-box" id="revBox" hidden>
+    <h3 style="color:#c2410c;font-size:18px;margin-bottom:6px">⚠️ Các câu hỏi học sinh làm sai nhiều nhất (Cần giải thích lại):</h3>
+    <div class="hint" style="margin-bottom:10px">Bấm vào nút "🔍 Xem lời giải" để chiếu câu hỏi và đáp án chi tiết lên máy chiếu cho cả lớp.</div>
+    <div id="mistakeList"></div>
+   </div>
+
+   <div class="tw"><table id="eTable"></table></div>
+   <div class="row" style="margin-top:20px">
+    <button class="btn g" id="bCsv">⬇️ Tải bảng điểm (Excel)</button>
+    <button class="btn" id="bAgain">🔁 Chơi lại bộ này</button>
+    <button class="btn w" id="bClose">🧹 Xoá phòng · về trang đầu</button>
+   </div>
+  </div>
+ </section>
+</div>
+
+<div class="wrap" style="padding-top:0">
+ <div class="foot">🎮 Ms Nenet English · Cô Chí Nên · Zalo 0852639652</div>
+</div>
+<div id="toast"></div>
+
+<!-- MODAL GIAO BÀI VỀ NHÀ -->
+<div class="ov" id="ovHw"><div class="card" style="max-width:640px">
+ <div class="big">📚 Giao bài tập về nhà</div>
+ <div class="sub" id="hwSum"></div>
+ <div class="two">
+  <div><div class="lab">⏰ Hạn nộp</div><input type="datetime-local" id="hwDl" class="inp"></div>
+  <div><div class="lab">⏱ Thời gian mỗi lượt chơi</div><select id="hwDur" class="inp"><option value="5">5 phút</option><option value="10" selected>10 phút</option><option value="15">15 phút</option><option value="20">20 phút</option><option value="30">30 phút</option><option value="0">Không giới hạn</option></select></div>
+ </div>
+ <label class="sw" style="margin-top:10px"><input type="checkbox" id="hwNoDl"><span>Không đặt hạn nộp</span></label>
+ <label class="sw"><input type="checkbox" id="hwExp" checked><span>Kèm lời giải thích sau mỗi câu<small>Bỏ tick nếu link dài quá</small></span></label>
+ 
+ <!-- QUYẾT ĐỊNH CỦA GIÁO VIÊN: LƯU VÀO THƯ VIỆN CHUNG HAY KHÔNG -->
+ <div style="background:#f4f0ff;border-radius:14px;padding:12px;margin-top:12px">
+  <label class="sw" style="background:#fff">
+   <input type="checkbox" id="hwShareCloud" checked>
+   <span>🌐 Lưu &amp; Chia sẻ lên Thư viện chung<small>Bật để lưu lại đề & tạo Link ngắn (gửi Zalo không bao giờ bị cắt link)</small></span>
+  </label>
+  <div id="hwAuthorRow" style="margin-top:8px;display:flex;gap:8px;align-items:center">
+   <span style="font-size:13px;font-weight:800;color:#7a6aa8;white-space:nowrap">Tác giả / Nguồn đề:</span>
+   <input id="hwAuthor" class="inp" style="padding:6px 10px;font-size:14px" placeholder="Cô Chí Nên" value="Cô Chí Nên">
+  </div>
+ </div>
+
+ <div class="row"><button class="btn g" id="bHwMake">🔗 Tạo link bài tập</button><button class="btn w" onclick="$('ovHw').classList.remove('on')">Đóng</button></div>
+ 
+ <div id="hwOut" hidden>
+  <div id="hwMsg" style="white-space:pre-wrap;word-break:break-all;background:#e8f8f0;border-radius:14px;padding:12px;font-weight:700;font-size:14px;margin-top:12px;max-height:220px;overflow:auto"></div>
+  <div class="row">
+   <button class="btn" id="bHwCopy">📋 Copy tin nhắn gửi Zalo</button>
+   <button class="btn b" id="bHwShortLink">🔗 Copy Link Ngắn</button>
+   <button class="btn w" id="bHwLink">📋 Copy Link Đầy Đủ</button>
+  </div>
+  <div class="hint" id="hwLen" style="text-align:center"></div>
+ </div>
+</div></div>
+
+<!-- MODAL CHIẾU LỜI GIẢI CHI TIẾT (REVIEW CÂU SAI) -->
+<div class="ov" id="ovExp"><div class="card" style="max-width:720px">
+ <div class="big" style="font-size:24px">📖 Chiếu Lời Giải Chi Tiết Cho Cả Lớp</div>
+ <div class="sub" id="expSub"></div>
+ <div id="expBody" style="background:#f8f6ff;border-radius:14px;padding:14px;line-height:1.6;font-size:16px;max-height:60vh;overflow:auto;margin:10px 0"></div>
+ <div class="row"><button class="btn g" onclick="$('ovExp').classList.remove('on')">Đóng lời giải</button></div>
+</div></div>
+
+<!-- MODAL MỜI BẠN VÀO MUỘN -->
+<div class="ov" id="ovInv"><div class="card" style="max-width:560px;text-align:center">
+ <div class="big">📲 Vào muộn vẫn chơi được!</div>
+ <div class="sub">Quét mã QR hoặc mở link, gõ tên là vào chơi ngay</div>
+ <div class="code" id="iCode"></div>
+ <div id="qr2" style="display:flex;justify-content:center;margin:10px 0"></div>
+ <div class="url" id="iUrl"></div>
+ <div class="row"><button class="btn" onclick="copyLink()">📋 Copy link gửi Zalo</button><button class="btn w" onclick="$('ovInv').classList.remove('on')">Đóng</button></div>
+</div></div>
+
+<!-- SCRIPTS HỆ THỐNG -->
+<script src="assets/qrcode.min.js"></script>
+<script src="assets/config.js"></script>
+<script src="assets/core.js"></script>
+<script src="assets/mau.js"></script>
+<script src="assets/climb.js"></script>
+<script src="assets/brick.js"></script>
+<script src="assets/tank.js"></script>
+<script src="assets/bomb.js"></script>
+<script src="assets/hero.js"></script>
+<script src="assets/license.js"></script>
+
+<script>
+const { $, esc, fmt, stamp, clean, toast, confetti, sfx } = GC;
+const C = window.GAME_CONFIG || {};
+let net = null, src = 'paste', qs = [], code = '', info = null, players = {}, TOP = 1, offs = [], timerI = 0, mauI = -1;
+let mistakeStats = {}; // Theo dõi thống kê câu làm sai
+
+const show = v => ['vSetup', 'vLobby', 'vLive', 'vEnd'].forEach(id => $(id).hidden = id !== v);
+const store = {
+  get: k => { try { return localStorage.getItem(k) } catch (e) { return null } },
+  set: (k, v) => { try { v == null ? localStorage.removeItem(k) : localStorage.setItem(k, v) } catch (e) { } }
+};
+
+/* ═════ ① QUẢN LÝ BỘ CÂU HỎI ═════ */
+document.querySelectorAll('.tab').forEach(b => b.onclick = () => {
+  document.querySelectorAll('.tab').forEach(x => x.classList.toggle('on', x === b));
+  src = b.dataset.t;
+  $('tPaste').hidden = src !== 'paste';
+  $('tMau').hidden = src !== 'mau';
+  $('tBank').hidden = src !== 'bank';
+  if (src === 'bank') renderBank();
+});
+
+function setQs(list, title, errs) {
+  qs = list;
+  $('qStat').className = 'stat ' + (list.length ? 'ok' : errs.length ? 'bad' : '');
+  $('qStat').textContent = list.length ? '✅ Đọc được ' + list.length + ' câu hỏi' + (errs.length ? ' · ⚠️ ' + errs.length + ' dòng bị bỏ qua' : '') : errs.length ? '❌ Chưa đọc được câu nào' : '';
+  $('qErr').innerHTML = errs.slice(0, 30).map(esc).join('<br>');
+  $('qPrev').innerHTML = list.slice(0, 40).map((q, i) => '<div>' + (i + 1) + '. ' + GC.safe(q.q).replace(/<br>/g, ' ') + ' <span style="color:#1d8a5a">→ ' + GC.safe(q.o[q.a]) + '</span></div>').join('');
+  if (title && !$('gTitle').value) $('gTitle').value = title.replace(/<[^>]+>/g, '');
+  $('bOpen').disabled = !list.length;
+  $('bSolo').disabled = !list.length;
+  $('bSaveToBank').disabled = !list.length;
+  $('soloHint').textContent = list.length ? '📚 Giao bài về nhà: tạo link có hạn nộp + thời gian chơi để gửi các em qua Zalo.' : '';
+}
+
+let pT = 0;
+$('pTxt').oninput = () => {
+  clearTimeout(pT);
+  pT = setTimeout(() => {
+    const t = $('pTxt').value;
+    if (!t.trim()) return setQs([], '', []);
+    const r = GC.parsePaste(t);
+    setQs(r.qs, '', r.errs);
+  }, 350);
+};
+
+$('bClearPaste').onclick = () => { $('pTxt').value = ''; setQs([], '', []); };
+
+/* Render danh sách đề mẫu (Đề người trước tạo) */
+$('mList').innerHTML = (window.SAMPLE_SETS || []).map((s, i) =>
+  '<div><label style="cursor:pointer;display:block"><input type="radio" name="mau" value="' + i + '"> <b>' + esc(s.title) + '</b> (' + (s.raw ? s.raw.length : 0) + ' câu)</label></div>'
+).join('');
+
+$('mList').onchange = e => {
+  mauI = +e.target.value;
+  const s = GC.sampleSet(mauI);
+  if (s) setQs(s.qs, s.title, []);
+};
+
+/* ═════ THƯ VIỆN ĐỀ THI (CHIA SẺ CỘNG ĐỒNG + KHO RIÊNG) ═════ */
+let cachedCommunity = [];
+
+function getBank() {
+  try { return JSON.parse(store.get('msnenet_bank') || '[]'); } catch (e) { return []; }
+}
+function saveBank(list) {
+  store.set('msnenet_bank', JSON.stringify(list));
+  renderBank();
+}
+
+async function renderBank() {
+  const query = ($('searchBank') ? $('searchBank').value : '').toLowerCase().trim();
+  
+  // 1. Render Thư viện đề chung
+  cachedCommunity = await GC.getCommunityLibrary();
+  let commList = cachedCommunity;
+  if (query) {
+    commList = commList.filter(q => (q.title + ' ' + (q.author || '') + ' ' + (q.id || '')).toLowerCase().includes(query));
+  }
+
+  if (!commList.length) {
+    $('commBankList').innerHTML = '<div class="hint" style="text-align:center;padding:12px">Không tìm thấy đề nào phù hợp.</div>';
+  } else {
+    $('commBankList').innerHTML = commList.map(item => `
+      <div class="bank-item" style="border-left:4px solid #5ab0ff">
+        <div class="binfo" onclick="loadQuizData('${item.id}')">
+          <span style="font-size:15px;color:#2d2350">📘 ${esc(item.title)}</span>
+          <span style="font-size:12px;color:#7a6aa8;display:block">
+            Mã: <code style="color:#5b4bb0">${esc(item.id)}</code> · ${item.qs ? item.qs.length : 0} câu · Tác giả: <b>${esc(item.author || 'Ms Nenet')}</b> · ${esc(item.date || '')}
+          </span>
+        </div>
+        <div class="bacts">
+          <button class="btn g" style="padding:5px 9px;font-size:12px" title="Dùng đề này mở phòng" onclick="loadQuizData('${item.id}')">🎯 Mở phòng</button>
+          <button class="btn b" style="padding:5px 9px;font-size:12px" title="Copy link ngắn bài tập về nhà" onclick="copyShortLinkFor('${item.id}')">🔗 Link ngắn</button>
+        </div>
+      </div>
+    `).join('');
+  }
+
+  // 2. Render Kho riêng
+  const bank = getBank();
+  let localFiltered = bank;
+  if (query) {
+    localFiltered = localFiltered.filter(q => q.title.toLowerCase().includes(query));
+  }
+  if (!localFiltered.length) {
+    $('bankList').innerHTML = '<div class="hint" style="text-align:center;padding:10px">Kho riêng trên máy này chưa có đề nào.</div>';
+  } else {
+    $('bankList').innerHTML = localFiltered.map((item, idx) => `
+      <div class="bank-item">
+        <div class="binfo" onclick="loadFromBank(${idx})">
+          <span style="font-size:15px">🔒 ${esc(item.title)}</span>
+          <span style="font-size:12px;color:#7a6aa8;display:block">${item.qs.length} câu · ${item.date || ''}</span>
+        </div>
+        <div class="bacts">
+          <button class="btn" style="padding:4px 8px;font-size:12px" onclick="loadFromBank(${idx})">Chọn đề</button>
+          <button class="btn g" style="padding:4px 8px;font-size:12px" title="Chia sẻ lên Thư viện chung" onclick="shareLocalToCommunity(${idx})">🌐 Chia sẻ</button>
+          <button class="btn r" style="padding:4px 8px;font-size:12px" onclick="deleteFromBank(${idx})">✕</button>
+        </div>
+      </div>
+    `).join('');
+  }
+}
+
+if ($('searchBank')) {
+  $('searchBank').oninput = () => renderBank();
+}
+
+window.loadQuizData = async function(id) {
+  const quiz = await GC.getQuizById(id);
+  if (quiz && quiz.qs) {
+    setQs(quiz.qs, quiz.title, []);
+    toast('✅ Đã nạp đề: ' + quiz.title + ' (' + quiz.qs.length + ' câu)');
+  }
+};
+
+window.copyShortLinkFor = function(id) {
+  const u = new URL('play.html', location.href);
+  u.searchParams.set('quiz', id);
+  navigator.clipboard.writeText(u.href).then(() => {
+    toast('📋 Đã copy link ngắn: ' + u.href + ' (Dán vào Zalo/Messenger)');
+  }).catch(() => prompt('Link bài tập:', u.href));
+};
+
+window.shareLocalToCommunity = async function(idx) {
+  const bank = getBank();
+  const item = bank[idx];
+  if (!item) return;
+  const author = prompt('Nhập tên giáo viên / nguồn đề chia sẻ:', 'Cô Chí Nên') || 'Cô Chí Nên';
+  const saved = await GC.saveCommunityQuiz({
+    title: item.title,
+    author,
+    qs: item.qs,
+    m: gMode,
+    lv: +$('gLv').value
+  });
+  toast('🎉 Đã chia sẻ đề "' + item.title + '" lên Thư viện chung với mã: ' + saved.id, 3500);
+  renderBank();
+};
+
+window.loadFromBank = function(idx) {
+  const bank = getBank();
+  if (bank[idx]) {
+    setQs(bank[idx].qs, bank[idx].title, []);
+    toast('✅ Đã nạp đề từ kho riêng: ' + bank[idx].title);
+  }
+};
+
+window.deleteFromBank = function(idx) {
+  if (confirm('Cô có chắc muốn xóa bộ đề này khỏi kho riêng?')) {
+    const bank = getBank();
+    bank.splice(idx, 1);
+    saveBank(bank);
+    toast('🗑 Đã xóa bộ đề');
+  }
+};
+
+/* Nút lưu lên Thư viện chung */
+$('bSaveToBank').onclick = async () => {
+  if (!qs.length) return;
+  const title = clean($('gTitle').value) || prompt('Nhập tên bộ đề chia sẻ:') || 'Bài ôn tập';
+  const author = prompt('Tên giáo viên / Nguồn đề:', 'Cô Chí Nên') || 'Cô Chí Nên';
+  const saved = await GC.saveCommunityQuiz({
+    title,
+    author,
+    qs,
+    m: gMode,
+    lv: +$('gLv').value
+  });
+  toast('🎉 Đã lưu & chia sẻ thành công lên Thư viện chung! Mã đề: ' + saved.id, 3500);
+  renderBank();
+};
+
+/* Nút lưu riêng máy này */
+if ($('bSaveLocal')) {
+  $('bSaveLocal').onclick = () => {
+    if (!qs.length) return;
+    const title = clean($('gTitle').value) || prompt('Nhập tên bộ đề lưu riêng:') || 'Bài ôn tập';
+    const bank = getBank();
+    const d = new Date();
+    bank.unshift({ title, qs, date: d.toLocaleDateString('vi-VN') });
+    saveBank(bank);
+    toast('🔒 Đã lưu đề vào kho riêng trên máy này!', 2500);
+  };
+}
+
+$('bExportBank').onclick = async () => {
+  const comm = await GC.getCommunityLibrary();
+  const bank = getBank();
+  const all = { community: comm, local: bank };
+  const blob = new Blob([JSON.stringify(all, null, 2)], { type: 'application/json' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'Thu_Vien_De_MsNenetEnglish_' + new Date().toISOString().slice(0,10) + '.json';
+  a.click();
+};
+
+$('fImportBank').onchange = e => {
+  const file = e.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = async ev => {
+    try {
+      const data = JSON.parse(ev.target.result);
+      if (Array.isArray(data)) {
+        const bank = getBank().concat(data);
+        saveBank(bank);
+        toast('🎉 Đã nạp thành công ' + data.length + ' bộ đề!');
+      } else if (data && typeof data === 'object') {
+        if (data.local && Array.isArray(data.local)) saveBank(getBank().concat(data.local));
+        if (data.community && Array.isArray(data.community)) {
+          for (const q of data.community) await GC.saveCommunityQuiz(q);
+        }
+        toast('🎉 Đã nạp dữ liệu thư viện thành công!');
+        renderBank();
+      }
+    } catch (err) { toast('❌ Lỗi đọc file: ' + err.message); }
+  };
+  reader.readAsText(file);
+};
+/* ═════ GIAO BÀI TẬP VỀ NHÀ ═════ */
+const LVN = { 1: 'Dễ', 2: 'Vừa', 3: 'Khó' };
+let hwLink = '', hwShortLink = '', hwText = '';
+$('bSolo').onclick = () => {
+  const d = new Date(); d.setDate(d.getDate() + 1); d.setHours(21, 0, 0, 0);
+  const p2 = x => String(x).padStart(2, '0');
+  if (!$('hwDl').value) $('hwDl').value = d.getFullYear() + '-' + p2(d.getMonth() + 1) + '-' + p2(d.getDate()) + 'T21:00';
+  $('hwSum').textContent = '📘 ' + (clean($('gTitle').value) || 'Bài ôn tập') + ' · ' + MNAME[gMode] + ' · ' + LVN[$('gLv').value] + ' · ' + qs.length + ' câu';
+  $('hwOut').hidden = true; $('ovHw').classList.add('on');
+};
+$('hwNoDl').onchange = () => { $('hwDl').disabled = $('hwNoDl').checked };
+
+$('bHwMake').onclick = async () => {
+  const dl = $('hwNoDl').checked ? 0 : Date.parse($('hwDl').value);
+  if (!$('hwNoDl').checked && (!dl || dl < Date.now())) return toast('⏰ Cô chọn hạn nộp ở tương lai nhé', 2400);
+  const title = clean($('gTitle').value) || 'Bài ôn tập', dur = +$('hwDur').value, withE = $('hwExp').checked;
+  const payload = { v: 1, t: title, m: gMode, lv: +$('gLv').value, eq: +$('gEq').value, em: +$('gEm').value, mu: $('gMu').checked, dl, dur, lic: 'Cô Chí Nên (Ms Nenet)',
+    qs: qs.map(q => ({ q: q.q, o: q.o, a: q.a, e: withE ? q.e || '' : '', s: q.s || '' })) };
+  
+  const u = new URL('play.html', location.href);
+  hwLink = u.href + '?hw=' + await GC.packHw(payload);
+
+  // XỬ LÝ QUYẾT ĐỊNH CỦA GIÁO VIÊN: LƯU VÀO THƯ VIỆN CHUNG & TẠO LINK RÚT GỌN
+  hwShortLink = '';
+  if ($('hwShareCloud') && $('hwShareCloud').checked) {
+    const author = clean($('hwAuthor').value) || 'Cô Chí Nên';
+    const saved = await GC.saveCommunityQuiz({
+      title,
+      author,
+      qs: payload.qs,
+      m: gMode,
+      lv: payload.lv,
+      dur,
+      dl,
+      hwLink
+    });
+    const su = new URL('play.html', location.href);
+    su.searchParams.set('quiz', saved.id);
+    hwShortLink = su.href;
+    toast('🌐 Đã lưu & chia sẻ vào Thư viện chung với mã: ' + saved.id, 3500);
+    renderBank();
+  }
+
+  const finalLink = hwShortLink || hwLink;
+  hwText = `📚 BÀI TẬP VỀ NHÀ — Ms Nenet English
+📘 ' + title + '
+🎮 Game: ' + MNAME[gMode] + ' · độ khó ' + LVN[payload.lv] + ' · ' + qs.length + ' câu
+⏱ Mỗi lượt chơi: ' + (dur ? dur + ' phút' : 'không giới hạn') + '
+⏰ Hạn nộp: ' + (dl ? stamp(dl) : 'không đặt hạn') + '
+👉 Link vào làm: ' + finalLink + '
+
+✍️ Chơi xong các con bấm "📋 Copy kết quả gửi cô" rồi dán vào Zalo nhé!`;
+  
+  $('hwMsg').textContent = hwText;
+  $('hwOut').hidden = false;
+  $('hwLen').textContent = hwShortLink ? '✅ Link ngắn (' + hwShortLink.length + ' ký tự) — Đã lưu vào Thư viện chung, gửi Zalo/Facebook thoải mái không bao giờ bị cắt link!' : '⚠️ Link tự thân (' + hwLink.length + ' ký tự).';
+};
+
+$('bHwCopy').onclick = () => navigator.clipboard.writeText(hwText).then(() => toast('📋 Đã copy tin nhắn — dán vào nhóm Zalo lớp nhé!', 2800)).catch(() => prompt('Copy:', hwText));
+if ($('bHwShortLink')) {
+  $('bHwShortLink').onclick = () => {
+    const linkToCopy = hwShortLink || hwLink;
+    navigator.clipboard.writeText(linkToCopy).then(() => toast('📋 Đã copy link: ' + linkToCopy, 2200)).catch(() => prompt('Copy link:', linkToCopy));
+  };
+}
+$('bHwLink').onclick = () => navigator.clipboard.writeText(hwLink).then(() => toast('📋 Đã copy link đầy đủ', 2000)).catch(() => prompt('Copy:', hwLink));
+
+/* Chọn chế độ game (Mở full cả 4 game) */
+let gMode = 'climb';
+const MNAME = { climb: '🧗 Leo núi', brick: '🍄 Nấm Mario', tank: '🛡 Xe tăng', bomb: '💣 Đặt bom' };
+$('gModes').onclick = e => {
+  const b = e.target.closest('[data-m]'); if (!b) return;
+  gMode = b.dataset.m;
+  document.querySelectorAll('#gModes .mode').forEach(x => x.classList.toggle('on', x === b));
+};
+
+/* ═════ ② MỞ PHÒNG CHƠI CHUNG ═════ */
+$('bOpen').onclick = async () => {
+  $('bOpen').disabled = true;
+  try {
+    code = await net.newCode(); await net.host(code);
+    info = { t: clean($('gTitle').value) || 'Game ôn tập', m: gMode, st: 'lobby', seed: Math.floor(Math.random() * 1e9) + 1, dur: +$('gDur').value, ia: $('gIa').checked, lic: 'Cô Chí Nên (Ms Nenet)', eq: +$('gEq').value, em: +$('gEm').value, lv: +$('gLv').value, mu: $('gMu').checked, cr: net.now() };
+    const clean_qs = qs.map(q => ({ q: q.q, o: q.o, a: q.a, e: q.e || '', s: q.s || '' }));
+    await net.set('rooms/' + code, { info, qs: clean_qs });
+    store.set('gHost', JSON.stringify({ code, qs: clean_qs }));
+    enterRoom();
+  } catch (e) { toast('❌ ' + e.message, 4000) } finally { $('bOpen').disabled = !qs.length }
+};
+
+let joinUrl = '';
+function enterRoom() {
+  mistakeStats = {};
+  TOP = (info.m === 'brick' ? Brick : info.m === 'tank' ? Tank : info.m === 'bomb' ? Bomb : Climb).measure(info.seed, info.lv || 2) || 1;
+  offs.forEach(f => f()); offs = [];
+  const url = new URL('play.html', location.href); url.searchParams.set('room', code);
+  $('lCode').textContent = code; $('vCode').textContent = code; $('lUrl').textContent = url.href; $('lTitle').textContent = '📘 ' + info.t; $('vTitle').textContent = '📘 ' + info.t;
+  joinUrl = url.href;
+  $('qr').innerHTML = '';
+  if (window.QRCode) new QRCode($('qr'), { text: url.href, width: 240, height: 240, colorDark: '#2d2350', colorLight: '#ffffff' });
+  else $('qr').hidden = true;
+
+  offs.push(net.on('rooms/' + code + '/info', v => {
+    if (!v) return; info = v;
+    $('vEn').textContent = '⚡ ' + (v.eq || 100) + '/câu · 🔋 ' + (v.em ? 'đầy ' + v.em : 'không giới hạn');
+    if (v.st === 'lobby') show('vLobby');
+    else if (v.st === 'play') { show('vLive'); tick(); GC.music.start(false, v.m || 'climb'); paintMusic(); }
+    else if (v.st === 'end') { GC.music.stop(); showEnd(); }
+  }));
+  offs.push(net.on('rooms/' + code + '/players', v => { players = v || {}; renderLobby(); renderBoard(); if (info && info.st === 'end') showEnd(); }));
+  offs.push(net.onAdded('rooms/' + code + '/ev', (k, e) => {
+    if (!e) return;
+    feedLine(e);
+    // Ghi nhận nếu học sinh làm sai câu nào
+    if (e.ty === 'wrong' && e.q != null) {
+      mistakeStats[e.q] = (mistakeStats[e.q] || 0) + 1;
+    }
+  }));
+  clearInterval(timerI); timerI = setInterval(tick, 500);
+}
+
+function renderLobby() {
+  const L = Object.entries(players);
+  $('lCount').textContent = L.length ? '🙌 ' + L.length + ' bạn đã vào phòng' : 'Chưa có bạn nào vào phòng…';
+  $('lList').innerHTML = L.map(([id, p]) => '<span class="pp' + (p.on ? '' : ' off') + '"><i class="dot" style="background:' + esc(p.c) + '"></i>' + esc(p.n) + '<button title="Mời ra khỏi phòng" onclick="kick(\'" + id + "\')">✕</button></span>').join('');
+}
+function kick(id) { net.remove('rooms/' + code + '/players/' + id) }
+$('bStart').onclick = () => { const now = net.now(); net.update('rooms/' + code + '/info', { st: 'play', sa: now, ea: now + info.dur * 60000 }); sfx('cp') };
+$('bCancel').onclick = async () => { await net.remove('rooms/' + code); leave() };
+function leave() { GC.music.stop(); offs.forEach(f => f()); offs = []; clearInterval(timerI); store.set('gHost', null); code = ''; players = {}; $('feed').innerHTML = ''; show('vSetup'); checkResume() }
+
+/* ═════ ③ ĐANG CHƠI ═════ */
+function tick() {
+  if (!info || info.st !== 'play') return;
+  const left = info.ea - net.now();
+  $('tLeft').textContent = fmt(left);
+  $('tLeft').classList.toggle('low', left < 60000);
+  const L = Object.values(players);
+  if (left <= 0 || (L.length && L.every(p => p.tt))) endGame();
+}
+function renderBoard() {
+  if (!info || info.st === 'lobby') return;
+  const now = net.now(), cps = [1, 2, 3, 4].map(i => i / 5 * 100);
+  $('board').innerHTML = GC.rank(players).map(([id, p], i) => {
+    const pct = p.tt ? 100 : Math.min(100, (p.alt || 0) / TOP * 100);
+    const icons = (p.tt ? '👸' : '') + (p.fz > now ? '❄️' : '') + (p.sh > now ? '🛡' : '') + (p.on ? '' : '💤');
+    return '<div class="lr"><div class="rk">' + (['🥇', '🥈', '🥉'][i] || i + 1) + '</div><div class="nm"><i class="dot" style="background:' + esc(p.c) + '"></i> ' + esc(p.n) + ' ' + icons + '</div>' +
+      '<div class="bar"><i style="width:' + pct + '%;background:linear-gradient(90deg,' + esc(p.c) + ',#9b7bff)"></i>' + cps.map(c => '<b style="left:' + c + '%"></b>').join('') + '</div>' +
+      '<div class="meta">' + (p.tt ? '👸 CỨU' : p.lb ? '🏁 ' + esc(p.lb) + (p.cn != null ? ' · 🪙 ' + p.cn : '') : '⛰ ' + (p.alt || 0) + 'm') + ' · ✅ ' + (p.ok || 0) + '/' + (p.ans || 0) + ' · 🔥' + (p.st || 0) + '</div></div>';
+  }).join('') || '<div class="sub">Chưa có bạn nào…</div>';
+}
+setInterval(() => { if (info && info.st === 'play') renderBoard() }, 1000);
+
+function feedLine(e) {
+  const t = e.ty === 'cp' ? '🚩 ' + e.nm + ' lên Trạm ' + e.n : e.ty === 'lv' ? '🏁 ' + e.nm + (e.k === 'stage' ? ' qua Stage ' : ' qua Màn ') + e.n : e.ty === 'win' ? '👸 ' + e.nm + ' đã giải cứu công chúa!' : e.ty === 'fz' ? '❄️ ' + e.nm + ' đóng băng ' + e.tn : e.ty === 'st' ? '🧲 ' + e.nm + ' hút ⚡ của ' + e.tn : e.ty === 'blk' ? '🛡 ' + e.nm + ' chặn được chiêu trêu' : '';
+  if (!t) return; const d = document.createElement('div'); d.textContent = t; $('feed').prepend(d); while ($('feed').children.length > 40) $('feed').lastChild.remove();
+  if (e.ty === 'win') { sfx('fanfare'); confetti(60); }
+}
+const paintMusic = () => { $('bMusic').textContent = GC.music.pref() ? '🎵 Nhạc: bật' : '🔇 Nhạc: tắt' };
+$('bMusic').onclick = () => { GC.music.toggle(); paintMusic() };
+
+function copyLink() { navigator.clipboard.writeText(joinUrl).then(() => toast('📋 Đã copy link phòng — dán vào Zalo/Messenger cho các em!', 2600)).catch(() => prompt('Copy link này:', joinUrl)) }
+$('bInvite').onclick = () => {
+  $('iCode').textContent = code; $('iUrl').textContent = joinUrl; $('qr2').innerHTML = '';
+  if (window.QRCode) new QRCode($('qr2'), { text: joinUrl, width: 260, height: 260, colorDark: '#2d2350', colorLight: '#ffffff' });
+  $('ovInv').classList.add('on');
+};
+$('ovInv').onclick = e => { if (e.target.id === 'ovInv') $('ovInv').classList.remove('on') };
+$('bPlus').onclick = () => { net.update('rooms/' + code + '/info', { ea: info.ea + 60000 }); toast('➕ Thêm 1 phút cho cả lớp!') };
+$('bEnd').onclick = () => $('cEnd').classList.add('on');
+$('bEndNo').onclick = () => $('cEnd').classList.remove('on');
+$('bEndYes').onclick = () => { $('cEnd').classList.remove('on'); endGame() };
+function endGame() { if (info && info.st !== 'end') { net.update('rooms/' + code + '/info', { st: 'end', en: net.now() }); net.push('rooms/' + code + '/ev', { ty: 'end', t: net.now() }) } }
+
+/* ═════ ④ VINH DANH & REVIEW BÀI HỌC ═════ */
+function showEnd() {
+  show('vEnd'); clearInterval(timerI);
+  if (!showEnd.done) { showEnd.done = code; sfx('fanfare'); confetti(120); }
+  const R = GC.rank(players);
+  $('eTitle').textContent = '📘 ' + info.t + ' · ' + R.length + ' bạn tham gia';
+  const H = [150, 115, 90], COL = ['#f5b942', '#a7a7c9', '#e39a6a'];
+  $('podium').innerHTML = [1, 0, 2].filter(i => R[i]).map(i => {
+    const p = R[i][1];
+    return '<div class="pod"><div class="av" style="background:' + esc(p.c) + '"></div><div class="nm">' + esc(p.n) + '</div><div class="meta">' + (p.tt ? '👸 Cứu công chúa' : p.lb ? esc(p.lb) : '⛰ ' + (p.alt || 0) + 'm') + ' · ✅ ' + (p.ok || 0) + '</div><div class="st" style="height:' + H[i] + 'px;background:' + COL[i] + '">' + (i + 1) + '</div></div>'
+  }).join('');
+
+  $('eTable').innerHTML = '<tr><th>Hạng</th><th>Họ tên</th><th>Tiến độ</th><th>Đúng</th><th>% đúng</th><th>🔥 Chuỗi</th><th>🍄 Giẫm</th><th>😱 Rơi</th></tr>' +
+    R.map(([, p], i) => '<tr><td>' + (i + 1) + '</td><td>' + esc(p.n) + '</td><td>' + (p.tt ? '👸 Phá đảo' : p.lb ? esc(p.lb) + (p.cn != null ? ' · 🪙 ' + p.cn : '') : (p.alt || 0) + ' m') + '</td><td>' + (p.ok || 0) + '/' + (p.ans || 0) + '</td><td>' + (p.ans ? Math.round(p.ok / p.ans * 100) : 0) + '%</td><td>' + (p.bs || 0) + '</td><td>' + (p.sp || 0) + '</td><td>' + (p.fl || 0) + '</td></tr>').join('');
+
+  // PHÂN TÍCH CÂU LÀM SAI NHIỀU NHẤT
+  const mEntries = Object.entries(mistakeStats).sort((a,b) => b[1] - a[1]);
+  if (mEntries.length && qs.length) {
+    $('revBox').hidden = false;
+    $('mistakeList').innerHTML = mEntries.slice(0, 5).map(([qIdx, count]) => {
+      const qNum = +qIdx;
+      const question = qs[qNum - 1] || qs[qNum] || { q: 'Câu hỏi ' + qNum };
+      return `
+        <div class="mistake-row">
+          <div style="flex:1;margin-right:12px">
+            <b>⚠️ Câu ${qNum}:</b> ${GC.safe(question.q).slice(0, 90)}... 
+            <span style="color:#c23a55;font-size:13px">(${count} lượt làm sai)</span>
+          </div>
+          <button class="btn" style="padding:6px 12px;font-size:13px" onclick="showExplanation(${qNum})">🔍 Xem lời giải</button>
+        </div>
+      `;
+    }).join('');
+  } else {
+    $('revBox').hidden = true;
+  }
+}
+
+window.showExplanation = function(qNum) {
+  const q = qs[qNum - 1] || qs[qNum];
+  if (!q) return;
+  $('expSub').textContent = 'Câu ' + qNum + ' · Đáp án đúng: ' + (q.o ? q.o[q.a] : '');
+  $('expBody').innerHTML = '<h3>' + GC.safe(q.q) + '</h3><br>' +
+    '<div style="color:#1d8a5a;font-weight:800;font-size:17px;margin-bottom:10px">✅ Đáp án chính xác: ' + GC.safe(q.o[q.a]) + '</div>' +
+    (q.e ? '<div style="margin-top:8px"><b>📖 Lời giải chi tiết:</b><br>' + q.e + '</div>' : '<div class="hint">Chưa có phần giải thích riêng cho câu này.</div>');
+  $('ovExp').classList.add('on');
+};
+
+$('bCsv').onclick = () => {
+  const R = GC.rank(players), q = s => '"' + String(s).replace(/"/g, '""') + '"';
+  const rows = [['Hạng', 'Họ tên', 'Về đích', 'Tiến độ', 'Đúng', 'Đã trả lời', '% đúng', 'Chuỗi dài nhất', 'Giẫm bẹp', 'Số lần rơi']].concat(
+    R.map(([, p], i) => [i + 1, p.n, p.tt ? 'Có' : '', p.tt ? 'Phá đảo' : p.lb || (p.alt || 0) + ' m', p.ok || 0, p.ans || 0, p.ans ? Math.round(p.ok / p.ans * 100) : 0, p.bs || 0, p.sp || 0, p.fl || 0]));
+  const blob = new Blob(['\ufeff' + 'Bộ đề:,' + q(info.t) + ',Ngày:,' + q(stamp(info.en || Date.now())) + '\n' + rows.map(r => r.map(q).join(',')).join('\n')], { type: 'text/csv;charset=utf-8' });
+  const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'Bang diem - ' + info.t.replace(/[\\/:*?"<>|]/g, '') + ' - ' + code + '.csv'; a.click();
+};
+$('bAgain').onclick = async () => { const saved = JSON.parse(store.get('gHost') || '{}'); qs = saved.qs || qs; showEnd.done = 0; await net.remove('rooms/' + code); leave(); if (qs.length) { $('bOpen').disabled = false; $('bOpen').click() } };
+$('bClose').onclick = async () => { await net.remove('rooms/' + code); showEnd.done = 0; leave() };
+
+/* ═════ KHỞI ĐỘNG ═════ */
+async function checkResume() {
+  const s = JSON.parse(store.get('gHost') || 'null'); $('resumeBox').hidden = true; if (!s || !s.code) return;
+  let v = null; try { await net.host(s.code); v = await net.once('rooms/' + s.code + '/info') } catch (e) { }
+  if (!v) { store.set('gHost', null); return }
+  $('resumeBox').hidden = false;
+  $('resumeBox').innerHTML = '↩️ Cô đang có phòng <b>' + s.code + '</b> (' + esc(v.t) + ' · ' + (v.st === 'lobby' ? 'đang chờ' : v.st === 'play' ? 'đang chơi' : 'đã kết thúc') + ') <button class="btn b" id="bResume" style="margin-left:8px">Quay lại phòng</button>';
+  $('bResume').onclick = () => { code = s.code; info = v; qs = s.qs || []; enterRoom() };
+}
+
+(async () => {
+  try {
+    net = await GC.makeNet();
+    if (net.mode === 'mqtt') { $('netB').className = 'badge ok'; $('netB').textContent = '🟢 Sẵn sàng — học sinh vào bằng điện thoại/iPad' }
+    else if (net.mode === 'firebase') { $('netB').className = 'badge ok'; $('netB').textContent = '🟢 Đã kết nối Firebase' }
+    else { $('netB').className = 'badge warn'; $('netB').textContent = '🟡 Chế độ thử: tab trên máy này' }
+    checkResume();
+  } catch (e) { $('netB').className = 'badge warn'; $('netB').textContent = '❌ ' + e.message }
+})();
+</script>
+</body>
+</html>
