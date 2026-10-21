@@ -141,6 +141,16 @@ th{color:#7a6aa8;font-size:13px}
 
     <!-- TAB 1: DÁN TỪ WORD / EXCEL -->
     <div id="tPaste">
+     <!-- TÍNH NĂNG TỰ ĐỘNG CÀO ĐỀ TỪ LINK BÀI TẬP CỦA CÔ -->
+     <div style="background:#eef7ff;border:2px dashed #38bdf8;border-radius:16px;padding:12px 14px;margin-bottom:12px">
+      <div style="font-weight:800;color:#0284c7;font-size:14px;margin-bottom:6px">🤖 Tự động lấy câu hỏi từ link bài tập (github.io của cô):</div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap">
+       <input id="inpWebLink" class="inp" style="flex:1;min-width:200px;padding:8px 12px;font-size:14px" placeholder="Dán link bài tập (VD: link voca p2.html...)">
+       <button class="btn g" id="bFetchLink" style="font-size:13px;padding:8px 14px">⚡ Tự động nạp đề</button>
+      </div>
+      <div class="hint" id="linkFetchStatus" style="margin-top:4px;color:#0369a1"></div>
+     </div>
+
      <textarea id="pTxt" placeholder="Cách 1 — Copy các ô từ Excel rồi dán vào (cột: Câu hỏi | A | B | C | D | Đáp án | Giải thích)
 
 Cách 2 — Dán từ Word theo mẫu:
@@ -347,8 +357,7 @@ Giải thích: Chủ ngữ số ít đi với goes"></textarea>
   <div id="hwMsg" style="white-space:pre-wrap;word-break:break-all;background:#e8f8f0;border-radius:14px;padding:12px;font-weight:700;font-size:14px;margin-top:12px;max-height:220px;overflow:auto"></div>
   <div class="row">
    <button class="btn" id="bHwCopy">📋 Copy tin nhắn gửi Zalo</button>
-   <button class="btn b" id="bHwShortLink">🔗 Copy Link Ngắn</button>
-   <button class="btn w" id="bHwLink">📋 Copy Link Đầy Đủ</button>
+   <button class="btn g" id="bHwLink">🔗 Copy link bài tập</button>
   </div>
   <div class="hint" id="hwLen" style="text-align:center"></div>
  </div>
@@ -477,7 +486,7 @@ async function renderBank() {
         </div>
         <div class="bacts">
           <button class="btn g" style="padding:5px 9px;font-size:12px" title="Dùng đề này mở phòng" onclick="loadQuizData('${item.id}')">🎯 Mở phòng</button>
-          <button class="btn b" style="padding:5px 9px;font-size:12px" title="Copy link ngắn bài tập về nhà" onclick="copyShortLinkFor('${item.id}')">🔗 Link ngắn</button>
+          <button class="btn w" style="padding:5px 9px;font-size:12px" title="Giao bài về nhà" onclick="assignHwFor('${item.id}')">📚 Giao bài</button>
         </div>
       </div>
     `).join('');
@@ -517,6 +526,15 @@ window.loadQuizData = async function(id) {
   if (quiz && quiz.qs) {
     setQs(quiz.qs, quiz.title, []);
     toast('✅ Đã nạp đề: ' + quiz.title + ' (' + quiz.qs.length + ' câu)');
+  }
+};
+
+
+window.assignHwFor = async function(id) {
+  const quiz = await GC.getQuizById(id);
+  if (quiz && quiz.qs) {
+    setQs(quiz.qs, quiz.title, []);
+    $('bSolo').click();
   }
 };
 
@@ -853,6 +871,102 @@ $('bCsv').onclick = () => {
 };
 $('bAgain').onclick = async () => { const saved = JSON.parse(store.get('gHost') || '{}'); qs = saved.qs || qs; showEnd.done = 0; await net.remove('rooms/' + code); leave(); if (qs.length) { $('bOpen').disabled = false; $('bOpen').click() } };
 $('bClose').onclick = async () => { await net.remove('rooms/' + code); showEnd.done = 0; leave() };
+
+
+/* ═════ TỰ ĐỘNG CÀO ĐỀ TỪ LINK BÀI TẬP GITHUB.IO ═════ */
+if ($('bFetchLink')) {
+  $('bFetchLink').onclick = async () => {
+    const url = clean($('inpWebLink').value);
+    if (!url) return toast('Cô dán link bài tập vào ô trước nhé!', 2200);
+    const status = $('linkFetchStatus');
+    status.textContent = '⏳ Đang kết nối và đọc câu hỏi từ link…';
+    $('bFetchLink').disabled = true;
+
+    try {
+      const res = await fetch(url);
+      if (!res.ok) throw new Error('Không mở được link (Mã lỗi ' + res.status + ')');
+      const html = await res.text();
+
+      // 1. Lấy tiêu đề bài tập
+      const titleMatch = html.match(/<title>(.*?)<\/title>/i);
+      let title = titleMatch ? titleMatch[1].replace(/<[^>]+>/g, '').trim() : 'Bài tập ôn tập';
+      title = title.replace(/\|.*$/, '').trim(); // Bỏ đuôi | Ms. Chí Nên
+
+      // 2. Tìm mảng câu hỏi (SECS hoặc quizData)
+      let extractedQs = [];
+      const scriptMatch = html.match(/<script[^>]*>([\s\S]*?)<\/script>/i);
+      
+      if (scriptMatch) {
+        const code = scriptMatch[1];
+
+        // Trường hợp 1: Có mảng SECS (như các file voca, grammar của cô)
+        if (code.includes('SECS=')) {
+          const idx = code.search(/(?:const|let|var)\s+SECS\s*=/);
+          const sub = code.substring(idx).replace(/(?:const|let|var)\s+SECS\s*=/, 'const SECS_PARSED=');
+          const endIdx = sub.indexOf('];');
+          if (endIdx > -1) {
+            const evalCode = sub.substring(0, endIdx + 2) + '; return SECS_PARSED;';
+            const fn = new Function(evalCode);
+            const secs = fn();
+
+            secs.forEach(sec => {
+              if (sec.type === 'mcq' && sec.items) {
+                sec.items.forEach(it => {
+                  extractedQs.push({
+                    q: (sec.title ? '<b>' + sec.title + '</b><br>' : '') + (it.text || 'Chọn đáp án đúng:'),
+                    o: it.opts || [],
+                    a: it.correct != null ? it.correct : 0,
+                    e: it.explain || '',
+                    s: sec.short || sec.title || ''
+                  });
+                });
+              } else if (sec.type === 'fill' && sec.items) {
+                sec.items.forEach(it => {
+                  const correctWord = it.ans && it.ans[0] ? it.ans[0][0] : '';
+                  if (correctWord) {
+                    const qPart = it.parts ? it.parts.filter(p => p.trim() && !p.startsWith('<input')).join(' ') : (it.text || sec.title);
+                    extractedQs.push({
+                      q: (sec.title ? '<b>' + sec.title + '</b><br>' : '') + qPart,
+                      o: [correctWord, 'Teacher', 'Student', 'School'],
+                      a: 0,
+                      e: it.explain || '',
+                      s: sec.short || ''
+                    });
+                  }
+                });
+              }
+            });
+          }
+        } 
+        // Trường hợp 2: Có mảng quizData
+        else if (code.includes('quizData')) {
+          const idx = code.search(/(?:const|let|var)\s+quizData\s*=/);
+          const sub = code.substring(idx).replace(/(?:const|let|var)\s+quizData\s*=/, 'const QUIZ_PARSED=');
+          const endIdx = sub.indexOf('];');
+          if (endIdx > -1) {
+            const evalCode = sub.substring(0, endIdx + 2) + '; return QUIZ_PARSED;';
+            const fn = new Function(evalCode);
+            const qList = fn();
+            extractedQs = qList.map(GC.fromOld);
+          }
+        }
+      }
+
+      if (!extractedQs.length) {
+        throw new Error('Đã kết nối được trang nhưng không tìm thấy cấu trúc câu hỏi tự động. Cô copy đề dán vào ô bên dưới nhé.');
+      }
+
+      setQs(extractedQs, title, []);
+      status.innerHTML = '🎉 <b>Thành công!</b> Đã tự động đọc được <b>' + extractedQs.length + ' câu hỏi</b> từ link bài tập.';
+      toast('🎉 Tự động nạp thành công ' + extractedQs.length + ' câu hỏi!', 3500);
+    } catch (err) {
+      status.textContent = '❌ ' + err.message;
+      toast('❌ ' + err.message, 3500);
+    } finally {
+      $('bFetchLink').disabled = false;
+    }
+  };
+}
 
 /* ═════ KHỞI ĐỘNG ═════ */
 async function checkResume() {
