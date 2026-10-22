@@ -240,7 +240,7 @@ Giải thích: Chủ ngữ số ít đi với goes"></textarea>
    <div class="panel">
     <h2>② Cài đặt trò chơi</h2>
     <div class="lab">Tên bộ đề (hiện cho học sinh)</div>
-    <input id="gTitle" class="inp" maxlength="60" placeholder="VD: English 7 · Unit 5 hoặc IELTS Reading">
+    <input id="gTitle" class="inp" maxlength="60" placeholder="VD: English 7 · Unit 5 hoặc Đề kiểm tra học kỳ">
 
     <div class="lab">Kiểu game &amp; Kiểm tra (Đã mở full)</div>
     <div class="modes" id="gModes">
@@ -248,7 +248,7 @@ Giải thích: Chủ ngữ số ít đi với goes"></textarea>
      <button class="mode" data-m="brick"><b>🍄</b><span>Nấm Mario<small>4 màn · chui ống</small></span></button>
      <button class="mode" data-m="tank"><b>🛡</b><span>Xe tăng<small>4 stage · bảo vệ cứ điểm</small></span></button>
      <button class="mode" data-m="bomb"><b>💣</b><span>Đặt bom<small>8 màn · Bomberman cổ điển</small></span></button>
-     <button class="mode" data-m="test" style="border:2px solid #8b5cf6"><b>📝</b><span>Bài kiểm tra<small>Đầy đủ Reading · Listening</small></span></button>
+     <button class="mode" data-m="test" style="border:2px solid #8b5cf6"><b>📝</b><span>Bài kiểm tra<small>Đề thi tổng hợp · Khảo thí</small></span></button>
     </div>
 
     <!-- CẤU HÌNH 1: DÀNH CHO GAME ARCADE (LEO NÚI, MARIO, XE TĂNG, ĐẶT BOM) -->
@@ -282,7 +282,7 @@ Giải thích: Chủ ngữ số ít đi với goes"></textarea>
     </div>
 
     <!-- CẤU HÌNH 2: DÀNH CHO BÀI KIỂM TRA (TEST MODE) -->
-    <div id="testSettings" hidden style="background:#f5f3ff;border:2px solid #ddd6fe;border-radius:16px;padding:12px;margin:10px 0">
+    <div id="testSettings" style="display:none;background:#f5f3ff;border:2px solid #ddd6fe;border-radius:16px;padding:12px;margin:10px 0">
      <div style="font-weight:800;color:#6d28d9;font-size:14px;margin-bottom:8px">⚙️ Cấu hình Bài Kiểm Tra:</div>
      <div class="lab" style="margin-top:4px">🎨 Theme giao diện bài test</div>
      <select id="testTheme" class="inp">
@@ -1514,8 +1514,14 @@ function updateModeView() {
   const isTest = gMode === 'test';
   const arcadeBox = $('arcadeSettings');
   const testBox = $('testSettings');
-  if (arcadeBox) arcadeBox.style.display = isTest ? 'none' : 'block';
-  if (testBox) testBox.style.display = isTest ? 'block' : 'none';
+  if (arcadeBox) {
+    arcadeBox.hidden = isTest;
+    arcadeBox.style.display = isTest ? 'none' : 'block';
+  }
+  if (testBox) {
+    testBox.hidden = !isTest;
+    testBox.style.display = isTest ? 'block' : 'none';
+  }
   if ($('bOpen')) $('bOpen').textContent = isTest ? '📝 Mở phòng kiểm tra' : '🚪 Mở phòng chơi chung';
   if ($('bSolo')) $('bSolo').textContent = isTest ? '📋 Giao bài kiểm tra về nhà' : '📚 Giao bài về nhà';
 }
