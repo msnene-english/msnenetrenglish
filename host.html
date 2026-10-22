@@ -148,7 +148,7 @@ th{color:#7a6aa8;font-size:13px}
         <div style="display:flex;gap:6px">
          <button class="btn w" id="bPickImg" style="padding:3px 8px;font-size:12px" title="Chọn ảnh chụp đề từ máy tính">📷 Chọn ảnh</button>
          <button class="btn w" id="bPickDoc" style="padding:3px 8px;font-size:12px" title="Nạp file văn bản / Word / Text">📄 Nạp file</button>
-         <input type="file" id="inpFileImg" accept="image/*" hidden>
+         <input type="file" id="inpFileImg" accept="image/*" multiple hidden>
          <input type="file" id="inpFileDoc" accept=".txt,.html,.md,.json" hidden>
         </div>
        </div>
@@ -160,17 +160,22 @@ th{color:#7a6aa8;font-size:13px}
         <button class="btn g" id="bLoadTest" style="font-size:13px;padding:9px 14px;font-weight:800" title="Giữ NGUYÊN VẸN bài đọc, audio, hình ảnh, bài nối để làm bài kiểm tra chuẩn">📝 Nạp đề tạo Test</button>
        </div>
 
-       <!-- Khung preview ảnh chụp màn hình dán qua Ctrl + V -->
-       <div id="pasteImgPreview" hidden style="margin-top:8px;background:#fff;border:1px solid #7dd3fc;border-radius:12px;padding:8px 12px;display:flex;align-items:center;gap:12px">
-        <img id="thumbPaste" style="max-height:55px;max-width:90px;border-radius:6px;border:1px solid #e2e8f0;object-fit:cover">
-        <div style="flex:1">
-         <div style="font-weight:700;font-size:13px;color:#0369a1">📸 Đã nhận ảnh chụp màn hình bài tập!</div>
-         <div style="font-size:12px;color:#64748b">Bấm "🎮 Nạp đề tạo Game" hoặc "📝 Nạp đề tạo Test" để AI đọc chữ từ ảnh</div>
+       <!-- Khung preview danh sách ảnh chụp màn hình dán qua Ctrl + V hoặc chọn file -->
+       <div id="pasteImgPreview" hidden style="margin-top:10px;background:#f0f9ff;border:2px dashed #38bdf8;border-radius:14px;padding:12px">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+         <span style="font-weight:800;font-size:13px;color:#0284c7" id="pastedImgCount">📸 Đã nhận 1 ảnh chụp màn hình</span>
+         <div style="display:flex;gap:6px">
+          <button class="btn b" id="bAddMoreImg" style="padding:3px 10px;font-size:12px" title="Chụp thêm ảnh màn hình và dán Ctrl+V hoặc bấm vào đây">➕ Thêm ảnh</button>
+          <button class="btn r" id="bClearAllImg" style="padding:3px 8px;font-size:12px">✕ Xóa tất cả</button>
+         </div>
         </div>
-        <button class="btn r" id="bClearPasteImg" style="padding:3px 8px;font-size:12px">✕ Bỏ ảnh</button>
+        <div id="pastedImgGallery" style="display:flex;gap:8px;overflow-x:auto;padding-bottom:4px"></div>
+        <div style="font-size:12px;color:#0369a1;margin-top:6px">
+         💡 Cô có thể chụp nhiều trang/phần của đề thi (Win + Shift + S) rồi <b>Ctrl + V</b> từng ảnh vào đây. AI sẽ tự động đọc gộp tất cả ảnh lại thành một bài thi hoàn chỉnh!
+        </div>
        </div>
 
-       <div class="hint" id="linkFetchStatus" style="margin-top:6px;color:#0369a1;font-size:13px">
+       <div class="hint" id="linkFetchStatus"<div class="hint" id="linkFetchStatus" style="margin-top:6px;color:#0369a1;font-size:13px">
         💡 <b>Mẹo:</b> Cô có thể chụp màn hình (Win + Shift + S) rồi nhấn <b>Ctrl + V</b> ngay vào đây để AI đọc đề!
        </div>
       </div>
@@ -671,13 +676,16 @@ window.deleteFromBank = function(idx) {
 /* Nút lưu lên Thư viện chung */
 $('bSaveToBank').onclick = async () => {
   if (!qs.length) return;
-  const title = clean($('gTitle').value) || prompt('Nhập tên bộ đề chia sẻ:') || 'Bài ôn tập';
+  const isTest = gMode === 'test';
+  const title = clean($('gTitle').value) || prompt('Nhập tên bộ đề chia sẻ:') || (isTest ? 'Bài kiểm tra tiếng Anh' : 'Bài ôn tập');
   const author = prompt('Tên giáo viên / Nguồn đề:', 'Cô Chí Nên') || 'Cô Chí Nên';
   const saved = await GC.saveCommunityQuiz({
     title,
     author,
     qs,
     m: gMode,
+    type: isTest ? 'test' : 'game',
+    theme: $('testTheme')?.value || 'pastel',
     lv: +$('gLv').value
   });
   toast('🎉 Đã lưu & chia sẻ thành công lên Thư viện chung! Mã đề: ' + saved.id, 3500);
@@ -688,10 +696,18 @@ $('bSaveToBank').onclick = async () => {
 if ($('bSaveLocal')) {
   $('bSaveLocal').onclick = () => {
     if (!qs.length) return;
-    const title = clean($('gTitle').value) || prompt('Nhập tên bộ đề lưu riêng:') || 'Bài ôn tập';
+    const isTest = gMode === 'test';
+    const title = clean($('gTitle').value) || prompt('Nhập tên bộ đề lưu riêng:') || (isTest ? 'Bài kiểm tra tiếng Anh' : 'Bài ôn tập');
     const bank = getBank();
     const d = new Date();
-    bank.unshift({ title, qs, date: d.toLocaleDateString('vi-VN') });
+    bank.unshift({
+      title,
+      qs,
+      m: gMode,
+      type: isTest ? 'test' : 'game',
+      theme: $('testTheme')?.value || 'pastel',
+      date: d.toLocaleDateString('vi-VN')
+    });
     saveBank(bank);
     toast('🔒 Đã lưu đề vào kho riêng trên máy này!', 2500);
   };
@@ -746,9 +762,33 @@ $('hwNoDl').onchange = () => { $('hwDl').disabled = $('hwNoDl').checked };
 $('bHwMake').onclick = async () => {
   const dl = $('hwNoDl').checked ? 0 : Date.parse($('hwDl').value);
   if (!$('hwNoDl').checked && (!dl || dl < Date.now())) return toast('⏰ Cô chọn hạn nộp ở tương lai nhé', 2400);
-  const title = clean($('gTitle').value) || 'Bài ôn tập', dur = +$('hwDur').value, withE = $('hwExp').checked;
-  const payload = { v: 1, t: title, m: gMode, lv: +$('gLv').value, eq: +$('gEq').value, em: +$('gEm').value, mu: $('gMu').checked, dl, dur, lic: 'Cô Chí Nên (Ms Nenet)',
-    qs: qs.map(q => ({ q: q.q, o: q.o, a: q.a, e: withE ? q.e || '' : '', s: q.s || '' })) };
+  const isTest = gMode === 'test';
+  const title = clean($('gTitle').value) || (isTest ? 'Bài kiểm tra tiếng Anh' : 'Bài ôn tập');
+  const dur = isTest ? +($('testDur')?.value || 45) : +$('hwDur').value;
+  const withE = $('hwExp').checked;
+  const payload = {
+    v: 1,
+    t: title,
+    m: gMode,
+    theme: $('testTheme')?.value || 'pastel',
+    lv: +$('gLv').value,
+    eq: +$('gEq').value,
+    em: +$('gEm').value,
+    mu: $('gMu')?.checked ?? false,
+    dl,
+    dur,
+    lic: 'Cô Chí Nên (Ms Nenet)',
+    qs: qs.map(q => ({
+      q: q.q,
+      o: q.o,
+      a: q.a,
+      e: withE ? q.e || '' : '',
+      s: q.s || '',
+      passage: q.passage || '',
+      audio: q.audio || '',
+      img: q.img || ''
+    }))
+  };
   
   const u = new URL('play.html', location.href);
   hwLink = u.href + '?hw=' + await GC.packHw(payload);
@@ -762,6 +802,8 @@ $('bHwMake').onclick = async () => {
       author,
       qs: payload.qs,
       m: gMode,
+      type: isTest ? 'test' : 'game',
+      theme: payload.theme,
       lv: payload.lv,
       dur,
       dl,
@@ -775,14 +817,22 @@ $('bHwMake').onclick = async () => {
   }
 
   const finalLink = hwShortLink || hwLink;
-  hwText = `📚 BÀI TẬP VỀ NHÀ — Ms Nenet English
-📘 ' + title + '
-🎮 Game: ' + MNAME[gMode] + ' · độ khó ' + LVN[payload.lv] + ' · ' + qs.length + ' câu
-⏱ Mỗi lượt chơi: ' + (dur ? dur + ' phút' : 'không giới hạn') + '
-⏰ Hạn nộp: ' + (dl ? stamp(dl) : 'không đặt hạn') + '
-👉 Link vào làm: ' + finalLink + '
-
-✍️ Chơi xong các con bấm "📋 Copy kết quả gửi cô" rồi dán vào Zalo nhé!`;
+  if (isTest) {
+    hwText = `📝 BÀI KIỂM TRA — Ms Nenet English\n` +
+      `📘 ` + title + `\n` +
+      `⏱ Thời gian làm bài: ` + (dur ? dur + ' phút' : 'không giới hạn') + `\n` +
+      `⏰ Hạn nộp: ` + (dl ? stamp(dl) : 'không đặt hạn') + `\n` +
+      `👉 Link vào thi: ` + finalLink + `\n\n` +
+      `✍️ Các con bấm link, nhập họ tên rồi làm bài thi. Làm xong bấm "Nộp bài" để nộp kết quả cho cô nhé!`;
+  } else {
+    hwText = `📚 BÀI TẬP VỀ NHÀ — Ms Nenet English\n` +
+      `📘 ` + title + `\n` +
+      `🎮 Game: ` + (MNAME[gMode] || 'Trò chơi') + ` · độ khó ` + (LVN[payload.lv] || 'Vừa') + ` · ` + qs.length + ` câu\n` +
+      `⏱ Mỗi lượt chơi: ` + (dur ? dur + ' phút' : 'không giới hạn') + `\n` +
+      `⏰ Hạn nộp: ` + (dl ? stamp(dl) : 'không đặt hạn') + `\n` +
+      `👉 Link vào làm: ` + finalLink + `\n\n` +
+      `✍️ Chơi xong các con bấm "📋 Copy kết quả gửi cô" rồi dán vào Zalo nhé!`;
+  }
   
   $('hwMsg').textContent = hwText;
   $('hwOut').hidden = false;
@@ -803,17 +853,44 @@ let gMode = 'climb';
 const MNAME = { climb: '🧗 Leo núi', brick: '🍄 Nấm Mario', tank: '🛡 Xe tăng', bomb: '💣 Đặt bom' };
 $('gModes').onclick = e => {
   const b = e.target.closest('[data-m]'); if (!b) return;
-  gMode = b.dataset.m;
-  document.querySelectorAll('#gModes .mode').forEach(x => x.classList.toggle('on', x === b));
+  selectMode(b.dataset.m);
 };
 
-/* ═════ ② MỞ PHÒNG CHƠI CHUNG ═════ */
+/* ═════ ② MỞ PHÒNG CHƠI CHUNG ═════ *//* ═════ ② MỞ PHÒNG CHƠI CHUNG ═════ */
 $('bOpen').onclick = async () => {
   $('bOpen').disabled = true;
   try {
     code = await net.newCode(); await net.host(code);
-    info = { t: clean($('gTitle').value) || 'Game ôn tập', m: gMode, st: 'lobby', seed: Math.floor(Math.random() * 1e9) + 1, dur: +$('gDur').value, ia: $('gIa').checked, lic: 'Cô Chí Nên (Ms Nenet)', eq: +$('gEq').value, em: +$('gEm').value, lv: +$('gLv').value, mu: $('gMu').checked, cr: net.now() };
-    const clean_qs = qs.map(q => ({ q: q.q, o: q.o, a: q.a, e: q.e || '', s: q.s || '' }));
+    const isTest = gMode === 'test';
+    const tDur = isTest ? +($('testDur')?.value || 45) : +$('gDur').value;
+    info = {
+      t: clean($('gTitle').value) || (isTest ? 'Bài kiểm tra tiếng Anh' : 'Game ôn tập'),
+      m: gMode,
+      theme: $('testTheme')?.value || 'pastel',
+      testDur: tDur,
+      testShuffle: $('testShuffle')?.checked ?? true,
+      testReview: $('testReview')?.checked ?? true,
+      st: 'lobby',
+      seed: Math.floor(Math.random() * 1e9) + 1,
+      dur: tDur,
+      ia: $('gIa') ? $('gIa').checked : false,
+      lic: 'Cô Chí Nên (Ms Nenet)',
+      eq: +$('gEq').value,
+      em: +$('gEm').value,
+      lv: +$('gLv').value,
+      mu: $('gMu') ? $('gMu').checked : false,
+      cr: net.now()
+    };
+    const clean_qs = qs.map(q => ({
+      q: q.q,
+      o: q.o,
+      a: q.a,
+      e: q.e || '',
+      s: q.s || '',
+      passage: q.passage || '',
+      audio: q.audio || '',
+      img: q.img || ''
+    }));
     await net.set('rooms/' + code, { info, qs: clean_qs });
     store.set('gHost', JSON.stringify({ code, qs: clean_qs }));
     enterRoom();
@@ -823,7 +900,7 @@ $('bOpen').onclick = async () => {
 let joinUrl = '';
 function enterRoom() {
   mistakeStats = {};
-  TOP = (info.m === 'brick' ? Brick : info.m === 'tank' ? Tank : info.m === 'bomb' ? Bomb : Climb).measure(info.seed, info.lv || 2) || 1;
+  TOP = info.m === 'test' ? 100 : ((info.m === 'brick' ? Brick : info.m === 'tank' ? Tank : info.m === 'bomb' ? Bomb : Climb).measure(info.seed, info.lv || 2) || 1);
   offs.forEach(f => f()); offs = [];
   const url = new URL('play.html', location.href); url.searchParams.set('room', code);
   $('lCode').textContent = code; $('vCode').textContent = code; $('lUrl').textContent = url.href; $('lTitle').textContent = '📘 ' + info.t; $('vTitle').textContent = '📘 ' + info.t;
@@ -1094,24 +1171,29 @@ function parseQuestionsUniversal(html) {
   return { title, questions: extractedQs };
 }
 
-// Hàm gọi AI Gemini đọc hiểu & trích xuất câu hỏi tự động (hỗ trợ cả ảnh chụp màn hình base64 & văn bản)
-async function callGeminiAiExtract(contentOrImage, isTestMode) {
+// Hàm gọi AI Gemini đọc hiểu & trích xuất câu hỏi tự động (hỗ trợ nhiều ảnh chụp màn hình & văn bản)
+async function callGeminiAiExtract(contentOrImages, isTestMode) {
   const key = systemAiKey || DEFAULT_AI_KEY;
-  const isImage = typeof contentOrImage === 'string' && contentOrImage.startsWith('data:image/');
+  const isImageList = Array.isArray(contentOrImages) && contentOrImages.length > 0;
+  const isSingleImage = typeof contentOrImages === 'string' && contentOrImages.startsWith('data:image/');
 
   let promptText = '';
   if (isTestMode) {
-    promptText = `Bạn là chuyên gia khảo thí tiếng Anh quốc tế (Cambridge / IELTS). Dưới đây là đề bài kiểm tra (bằng văn bản hoặc ảnh chụp).
-Hãy đọc hiểu cốt lõi và trích xuất thành danh sách câu hỏi kiểm tra đầy đủ, GIỮ NGUYÊN VẸN BÀI ĐỌC (Reading), ĐOẠN NGHE (Listening), BÀI NỐI (Matching), KHÔNG CẮT XÉN.
-Yêu cầu định dạng JSON cho Test Mode:
-- "q": Câu hỏi cụ thể
-- "passage": Toàn bộ bài đọc ngữ cảnh đầy đủ (nếu bài đọc chung cho nhiều câu, giữ nguyên toàn bộ bài đọc ở trường 'passage' này)
-- "audio": Link file âm thanh nghe (nếu tìm thấy trong đề)
-- "img": Link ảnh hoặc ghi chú ảnh minh họa nếu có
-- "o": Mảng 4 phương án lựa chọn ["A", "B", "C", "D"]
-- "a": Chỉ số (0, 1, 2, 3) của đáp án đúng
-- "e": Lời giải thích chi tiết, dẫn chứng câu chữ trong bài đọc (evidence)
-- "s": Dạng bài (Reading, Listening, Matching, Grammar, Vocabulary)
+    promptText = `Bạn là chuyên gia khảo thí tiếng Anh quốc tế (Cambridge / IELTS). Dưới đây là nội dung bài thi kiểm tra (bằng các ảnh chụp hoặc văn bản).
+QUY TẮC BẮT BUỘC CHO TEST MODE:
+1. TUYỆT ĐỐI KHÔNG ép bài thi về dạng điền từ ngô nghê với các đáp án bịa đặt như 'Teacher', 'Student', 'School'.
+2. GIỮ NGUYÊN VẸN 100% hình thức câu hỏi gốc của đề thi:
+   - Các câu hỏi trắc nghiệm A, B, C, D: Giữ nguyên văn các phương án A, B, C, D thực tế của đề thi.
+   - Các câu đọc hiểu (Reading Comprehension): Lưu toàn bộ bài đọc gốc vào trường 'passage', các câu hỏi trắc nghiệm A, B, C, D đi kèm bài đọc.
+   - Các câu đọc nối thông tin (Matching): Mỗi câu hỏi là 1 người/đoạn cần ghép, 4 phương án là các đối tượng đối chiếu (kèm tóm tắt nội dung để học sinh có căn cứ suy luận).
+   - Nếu có nhiều ảnh chụp màn hình (nhiều trang đề): Hãy đọc kết nối toàn bộ các ảnh (ví dụ ảnh 1 là bài đọc, ảnh 2 là câu hỏi) để tạo thành bài thi thống nhất hoàn chỉnh.
+   - Nếu có file nghe (Listening audio link) hoặc ảnh minh họa trong đề: ghi vào trường 'audio' hoặc 'img'.
+3. 'q': Nội dung câu hỏi cụ thể
+4. 'passage': Bài đọc đầy đủ (nếu bài đọc chung cho nhiều câu hỏi, giữ nguyên toàn bộ bài đọc ở trường 'passage' này; nếu không có bài đọc thì để rỗng "")
+5. 'o': Mảng 4 phương án lựa chọn ["A", "B", "C", "D"]
+6. 'a': Chỉ số (0, 1, 2, 3) của đáp án đúng thực tế
+7. 'e': Lời giải thích chi tiết, dẫn chứng câu chữ trong bài đọc (evidence)
+8. 's': Dạng bài (Reading, Listening, Matching, Grammar, Vocabulary, Pronunciation)
 
 Trả về strictly JSON danh sách:
 [
@@ -1119,15 +1201,16 @@ Trả về strictly JSON danh sách:
 ]`;
   } else {
     // Game mode: Áp dụng Giải pháp C - Context Focus (trích đoạn ngắn gọn cho game phản xạ nhanh)
-    promptText = `Bạn là chuyên gia giáo dục tiếng Anh. Dưới đây là nội dung bài tập (bằng văn bản hoặc ảnh chụp).
+    promptText = `Bạn là chuyên gia giáo dục tiếng Anh. Dưới đây là nội dung bài tập (bằng ảnh chụp hoặc văn bản).
 Hãy trích xuất thành danh sách câu hỏi trắc nghiệm tiếng Anh TỐI ƯU CHO GAME ĐỐI KHÁNG NHANH (tối đa 25 câu).
-YÊU CẦU ĐẶC BIỆT (Giải pháp C - Context Focus):
-- Với bài đọc dài hoặc bài nối Matching: Trích đoạn ngữ cảnh trọng tâm (2-3 câu ngắn gọn chứa manh mối) ghép thẳng vào câu hỏi 'q' để học sinh dễ đọc nhanh trên điện thoại mà không bị tràn màn hình.
-- "q": Câu hỏi ngắn gọn (kèm ngữ cảnh ngắn nếu cần; giữ lại <u>, <b> nếu là câu phát âm/trọng âm)
-- "o": Mảng 4 phương án lựa chọn ["A", "B", "C", "D"]
-- "a": Chỉ số (0, 1, 2, 3) của đáp án đúng
-- "e": Lời giải thích ngắn gọn, từ khóa đối chiếu
-- "s": Dạng bài (Pronunciation, Grammar, Vocabulary, Reading)
+QUY TẮC ĐẶC BIỆT:
+1. TUYỆT ĐỐI KHÔNG tự ý bịa ra các phương án điền từ ngô nghê như 'Teacher', 'Student', 'School'. Phải dùng phương án và nội dung thực tế của đề thi.
+2. ÁP DỤNG GIẢI PHÁP C (Context Focus): Với bài đọc dài hoặc bài nối Matching, hãy trích đoạn ngữ cảnh trọng tâm (2-3 câu ngắn gọn chứa manh mối then chốt) ghép thẳng vào câu hỏi 'q' để học sinh dễ đọc nhanh trên điện thoại mà không bị tràn màn hình.
+3. 'q': Câu hỏi ngắn gọn (kèm ngữ cảnh ngắn nếu cần; giữ lại <u>, <b> nếu là câu phát âm/trọng âm)
+4. 'o': Mảng 4 phương án lựa chọn ["A", "B", "C", "D"]
+5. 'a': Chỉ số (0, 1, 2, 3) của đáp án đúng
+6. 'e': Lời giải thích ngắn gọn, từ khóa đối chiếu
+7. 's': Dạng bài (Pronunciation, Grammar, Vocabulary, Reading)
 
 Trả về strictly JSON danh sách:
 [
@@ -1136,21 +1219,21 @@ Trả về strictly JSON danh sách:
   }
 
   let requestBody = {};
-  if (isImage) {
-    const commaIdx = contentOrImage.indexOf(',');
-    const mimeType = contentOrImage.substring(5, contentOrImage.indexOf(';'));
-    const b64Data = contentOrImage.substring(commaIdx + 1);
+  if (isImageList || isSingleImage) {
+    const imgArray = isImageList ? contentOrImages : [contentOrImages];
+    const parts = [{ text: promptText }];
+    imgArray.forEach(imgData => {
+      const commaIdx = imgData.indexOf(',');
+      const mimeType = imgData.substring(5, imgData.indexOf(';'));
+      const b64Data = imgData.substring(commaIdx + 1);
+      parts.push({ inlineData: { mimeType, data: b64Data } });
+    });
     requestBody = {
-      contents: [{
-        parts: [
-          { text: promptText },
-          { inlineData: { mimeType, data: b64Data } }
-        ]
-      }],
+      contents: [{ parts }],
       generationConfig: { responseMimeType: 'application/json' }
     };
   } else {
-    let cleanText = contentOrImage;
+    let cleanText = contentOrImages;
     if (cleanText.includes('<html') || cleanText.includes('<body') || cleanText.includes('</div>')) {
       const d = document.createElement('div');
       d.innerHTML = cleanText;
@@ -1202,10 +1285,50 @@ Trả về strictly JSON danh sách:
   throw new Error('Lỗi khi gọi AI: ' + (lastError ? lastError.message : 'Không nhận diện được phản hồi.'));
 }
 
-// Biến lưu ảnh chụp màn hình từ Ctrl + V
-let pastedImageBase64 = null;
+// Mảng lưu nhiều ảnh chụp màn hình từ Ctrl + V hoặc chọn file
+let pastedImages = [];
 
-// Lắng nghe Ctrl + V dán ảnh trên toàn trang
+function addPastedImage(dataUrl) {
+  pastedImages.push(dataUrl);
+  renderPastedImages();
+}
+
+window.removePastedImage = function(idx) {
+  pastedImages.splice(idx, 1);
+  renderPastedImages();
+};
+
+function clearAllPastedImages() {
+  pastedImages = [];
+  renderPastedImages();
+}
+
+function renderPastedImages() {
+  const box = $('pasteImgPreview');
+  const gallery = $('pastedImgGallery');
+  const countLabel = $('pastedImgCount');
+  if (!pastedImages.length) {
+    if (box) box.hidden = true;
+    if ($('linkFetchStatus')) $('linkFetchStatus').innerHTML = '💡 <b>Mẹo:</b> Cô có thể chụp màn hình (Win + Shift + S) rồi nhấn <b>Ctrl + V</b> ngay vào đây để AI đọc đề!';
+    return;
+  }
+  if (box) box.hidden = false;
+  if (countLabel) countLabel.innerHTML = '📸 <b>Đã nhận ' + pastedImages.length + ' ảnh chụp màn hình</b> (AI sẽ đọc gộp tất cả ảnh)';
+
+  if (gallery) {
+    gallery.innerHTML = pastedImages.map((src, idx) => `
+      <div style="position:relative;flex-shrink:0;border:2px solid #38bdf8;border-radius:10px;overflow:hidden;background:#fff">
+        <img src="${src}" style="height:70px;width:110px;object-fit:cover;display:block">
+        <button onclick="removePastedImage(${idx})" style="position:absolute;top:2px;right:2px;background:#ef4444;color:#fff;border:none;border-radius:50%;width:20px;height:20px;font-size:11px;font-weight:900;cursor:pointer;line-height:20px;padding:0">✕</button>
+        <span style="position:absolute;bottom:2px;left:4px;background:#0009;color:#fff;font-size:10px;padding:1px 5px;border-radius:4px;font-weight:700">Trang ${idx + 1}</span>
+      </div>
+    `).join('');
+  }
+
+  $('linkFetchStatus').innerHTML = '📸 Đã có <b>' + pastedImages.length + ' ảnh chụp màn hình</b>! Bấm nút <b>"🎮 Nạp đề tạo Game"</b> hoặc <b>"📝 Nạp đề tạo Test"</b> bên trên để AI xử lý.';
+}
+
+// Lắng nghe Ctrl + V dán ảnh trên toàn trang (hỗ trợ dán nhiều ảnh liên tục)
 window.addEventListener('paste', e => {
   const items = (e.clipboardData || e.originalEvent?.clipboardData)?.items;
   if (!items) return;
@@ -1214,13 +1337,8 @@ window.addEventListener('paste', e => {
       const blob = item.getAsFile();
       const reader = new FileReader();
       reader.onload = evt => {
-        pastedImageBase64 = evt.target.result;
-        if ($('pasteImgPreview')) {
-          $('pasteImgPreview').hidden = false;
-          $('thumbPaste').src = pastedImageBase64;
-          $('linkFetchStatus').innerHTML = '📸 <b>Đã nhận ảnh chụp màn hình!</b> Bấm nút <b>"🎮 Nạp đề tạo Game"</b> hoặc <b>"📝 Nạp đề tạo Test"</b> bên trên.';
-          toast('📸 Đã dán ảnh chụp màn hình!', 2500);
-        }
+        addPastedImage(evt.target.result);
+        toast('📸 Đã thêm ảnh chụp thứ ' + pastedImages.length + '!', 2000);
       };
       reader.readAsDataURL(blob);
       e.preventDefault();
@@ -1231,30 +1349,30 @@ window.addEventListener('paste', e => {
 
 // Nút chọn ảnh và file tài liệu
 if ($('bPickImg')) $('bPickImg').onclick = () => $('inpFileImg').click();
+if ($('bAddMoreImg')) $('bAddMoreImg').onclick = () => $('inpFileImg').click();
+if ($('bClearAllImg')) $('bClearAllImg').onclick = () => clearAllPastedImages();
+
 if ($('inpFileImg')) {
   $('inpFileImg').onchange = e => {
-    const file = e.target.files[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onload = evt => {
-        pastedImageBase64 = evt.target.result;
-        $('pasteImgPreview').hidden = false;
-        $('thumbPaste').src = pastedImageBase64;
-        $('linkFetchStatus').innerHTML = '📸 <b>Đã chọn ảnh: ' + esc(file.name) + '!</b> Bấm nút tạo Game hoặc Test để AI đọc.';
-        toast('📸 Đã chọn ảnh: ' + file.name, 2200);
-      };
-      reader.readAsDataURL(file);
+    const files = Array.from(e.target.files || []);
+    if (files.length) {
+      let loaded = 0;
+      files.forEach(f => {
+        const reader = new FileReader();
+        reader.onload = evt => {
+          addPastedImage(evt.target.result);
+          loaded++;
+          if (loaded === files.length) {
+            toast('📸 Đã thêm ' + files.length + ' ảnh chụp!', 2500);
+          }
+        };
+        reader.readAsDataURL(f);
+      });
+      $('inpFileImg').value = '';
     }
   };
 }
-if ($('bClearPasteImg')) {
-  $('bClearPasteImg').onclick = () => {
-    pastedImageBase64 = null;
-    $('pasteImgPreview').hidden = true;
-    if ($('inpFileImg')) $('inpFileImg').value = '';
-    $('linkFetchStatus').innerHTML = '💡 <b>Mẹo:</b> Cô có thể chụp màn hình (Win + Shift + S) rồi nhấn <b>Ctrl + V</b> ngay vào đây để AI đọc đề!';
-  };
-}
+
 if ($('bPickDoc')) $('bPickDoc').onclick = () => $('inpFileDoc').click();
 if ($('inpFileDoc')) {
   $('inpFileDoc').onchange = e => {
@@ -1277,7 +1395,7 @@ async function processLoadQuiz(isTestMode) {
   const pasteTxt = clean($('pTxt')?.value || '');
   const status = $('linkFetchStatus');
 
-  if (!pastedImageBase64 && !url && !pasteTxt) {
+  if (!pastedImages.length && !url && !pasteTxt) {
     return toast('Cô dán link bài tập, dán ảnh chụp (Ctrl+V) hoặc dán văn bản trước nhé!', 2500);
   }
 
@@ -1289,11 +1407,11 @@ async function processLoadQuiz(isTestMode) {
     let extractedQs = [];
     let docTitle = isTestMode ? 'Bài kiểm tra tiếng Anh' : 'Game ôn tập tiếng Anh';
 
-    // 1. Trường hợp có ảnh chụp màn hình (Ctrl + V)
-    if (pastedImageBase64) {
-      status.innerHTML = '🧠 <b>AI Gemini đang đọc chữ và câu hỏi từ ảnh chụp màn hình…</b>';
-      extractedQs = await callGeminiAiExtract(pastedImageBase64, isTestMode);
-      docTitle = (isTestMode ? 'Bài kiểm tra' : 'Game') + ' (Ảnh chụp màn hình)';
+    // 1. Trường hợp có ảnh chụp màn hình (Ctrl + V hoặc chọn file ảnh)
+    if (pastedImages.length > 0) {
+      status.innerHTML = '🧠 <b>AI Gemini đang đọc chữ và câu hỏi từ ' + pastedImages.length + ' ảnh chụp màn hình…</b>';
+      extractedQs = await callGeminiAiExtract(pastedImages, isTestMode);
+      docTitle = (isTestMode ? 'Bài kiểm tra' : 'Game') + ' (Từ ' + pastedImages.length + ' ảnh chụp)';
     }
     // 2. Trường hợp có Link web
     else if (url) {
@@ -1310,7 +1428,7 @@ async function processLoadQuiz(isTestMode) {
         }
       }
 
-      // Nếu chưa có câu hỏi hoặc là chế độ Test (cần giữ trọn bài đọc/listening): dùng AI
+      // Nếu chưa có câu hỏi hoặc là chế độ Test (cần giữ trọn bài đọc/listening/matching): dùng AI
       if (!extractedQs.length) {
         status.innerHTML = '🧠 <b>AI Gemini đang đọc hiểu ngữ nghĩa & phân tích bài tập…</b>';
         extractedQs = await callGeminiAiExtract(html, isTestMode);
@@ -1335,7 +1453,6 @@ async function processLoadQuiz(isTestMode) {
       selectMode('climb');
     }
 
-    // Đánh dấu type cho bộ đề
     window.currentQuizType = isTestMode ? 'test' : 'game';
 
     setQs(extractedQs, docTitle, []);
@@ -1353,7 +1470,7 @@ async function processLoadQuiz(isTestMode) {
 if ($('bLoadGame')) $('bLoadGame').onclick = () => processLoadQuiz(false);
 if ($('bLoadTest')) $('bLoadTest').onclick = () => processLoadQuiz(true);
 
-// Chuyển đổi Kiểu game & Cấu hình (Ảnh 1 & Ảnh 2)
+// Chuyển đổi Kiểu game & Cấu hình (Ẩn/Hiện triệt để bằng style.display)
 function selectMode(m) {
   gMode = m;
   document.querySelectorAll('#gModes .mode').forEach(b => {
@@ -1364,11 +1481,15 @@ function selectMode(m) {
 
 function updateModeView() {
   const isTest = gMode === 'test';
-  if ($('arcadeSettings')) $('arcadeSettings').hidden = isTest;
-  if ($('testSettings')) $('testSettings').hidden = !isTest;
+  const arcadeBox = $('arcadeSettings');
+  const testBox = $('testSettings');
+  if (arcadeBox) arcadeBox.style.display = isTest ? 'none' : 'block';
+  if (testBox) testBox.style.display = isTest ? 'block' : 'none';
   if ($('bOpen')) $('bOpen').textContent = isTest ? '📝 Mở phòng kiểm tra' : '🚪 Mở phòng chơi chung';
   if ($('bSolo')) $('bSolo').textContent = isTest ? '📋 Giao bài kiểm tra về nhà' : '📚 Giao bài về nhà';
 }
+
+
 
 /* ═════ KHỞI ĐỘNG ═════ */
 async function checkResume() {
@@ -1386,6 +1507,7 @@ async function checkResume() {
     if (net.mode === 'mqtt') { $('netB').className = 'badge ok'; $('netB').textContent = '🟢 Sẵn sàng — học sinh vào bằng điện thoại/iPad' }
     else if (net.mode === 'firebase') { $('netB').className = 'badge ok'; $('netB').textContent = '🟢 Đã kết nối Firebase' }
     else { $('netB').className = 'badge warn'; $('netB').textContent = '🟡 Chế độ thử: tab trên máy này' }
+    selectMode(gMode);
     checkResume();
   } catch (e) { $('netB').className = 'badge warn'; $('netB').textContent = '❌ ' + e.message }
 })();
