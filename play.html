@@ -72,7 +72,7 @@ body{display:flex;flex-direction:column;overflow:hidden}
 .item small{display:block;font-size:13px;color:#7a6aa8}
 
 /* ═════ STYLES BÀI KIỂM TRA (TEST MODE) ═════ */
-#testApp{display:flex;flex-direction:column;height:100vh;width:100vw;position:fixed;inset:0;z-index:100;background:var(--t-bg,#f8fafc);font-family:'Nunito',sans-serif;overflow:hidden}
+#testApp{display:none;flex-direction:column;height:100vh;width:100vw;position:fixed;inset:0;z-index:100;background:var(--t-bg,#f8fafc);font-family:'Nunito',sans-serif;overflow:hidden}
 .test-pastel{--t-bg:#fdf4ff;--t-card:#fff;--t-primary:#8b5cf6;--t-border:#f0abfc}
 .test-cambridge{--t-bg:#f8fafc;--t-card:#fff;--t-primary:#1e3a8a;--t-border:#cbd5e1}
 .test-cyber{--t-bg:#0b0f19;--t-card:#151b2b;--t-primary:#a855f7;--t-border:#2d3748;color:#f1f5f9}
@@ -205,7 +205,8 @@ let trSubmitted = false;
 
 function startTestMode() {
   document.body.classList.add('test-mode');
-  // Ẩn arcade HUD và Canvas
+  // Ẩn màn hình đăng nhập, arcade HUD và Canvas
+  if ($('vJoin')) $('vJoin').hidden = true;
   if ($('hud')) $('hud').style.display = 'none';
   if ($('stage')) $('stage').style.display = 'none';
   if ($('keys')) $('keys').style.display = 'none';
@@ -213,6 +214,7 @@ function startTestMode() {
 
   const theme = (info && info.theme) || (HW && HW.theme) || 'pastel';
   $('testApp').className = 'test-' + theme;
+  $('testApp').style.display = 'flex';
   $('testApp').hidden = false;
 
   const testTitle = (info && info.t) || (HW && HW.t) || 'Bài kiểm tra tiếng Anh';
@@ -482,7 +484,13 @@ async function joinSolo() {
   if (!set || !set.qs.length) throw new Error('Không tìm thấy bộ câu hỏi này. Em báo cô kiểm tra lại link nhé!');
   QS = GC.prep(set.qs); setTitle = set.title;
   const P = HW || { eq: U.get('eq'), em: U.get('em'), lv: U.get('lv'), m: U.get('m') };
-  setGain(P.eq, P.em); LVL = +P.lv || 2; MODE = ['brick', 'tank', 'bomb', 'test'].includes(P.m) ? P.m : 'climb'; boot(20261019); if (MODE !== 'test') begin();
+  setGain(P.eq, P.em); LVL = +P.lv || 2; MODE = ['brick', 'tank', 'bomb', 'test'].includes(P.m) ? P.m : 'climb';
+  boot(20261019);
+  if (MODE === 'test') {
+    show('vPlay');
+    return;
+  }
+  begin();
 }
 function myPid(c) {
   if (window.top !== window) return 'p' + Math.random().toString(36).slice(2, 10);   // trang nhúng (thử nghiệm): mỗi khung một bạn
@@ -503,6 +511,11 @@ async function joinRoom() {
   joinT = net.now(); setTitle = info.t || ''; setGain(info.eq, info.em); LVL = info.lv || 2; MODE = ['brick', 'tank', 'bomb', 'test'].includes(info.m) ? info.m : (info.m === 'test' ? 'test' : 'climb');
   const old = await net.once(path);
   boot(info.seed);
+  if (MODE === 'test') {
+    await net.update(path, { n: nameV, c: myColor, j: (old && old.j) || joinT, on: 1, ans: 0, ok: 0, tot: QS.length, alt: 0, st: 'playing' });
+    show('vPlay');
+    return;
+  }
   if (old && old.n) {   // lỡ tải lại trang → giữ nguyên thành tích
     okN = old.ok || 0; ans = old.ans || 0; best = old.bs || 0; streak = old.st || 0; S.energy = old.en || 0; S.falls = old.fl || 0; S.stomps = old.sp || 0; tt = old.tt || 0;
     if (old.y != null) Climb.place(old.x, old.y, old);

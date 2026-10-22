@@ -1179,21 +1179,45 @@ async function callGeminiAiExtract(contentOrImages, isTestMode) {
 
   let promptText = '';
   if (isTestMode) {
-    promptText = `Bạn là chuyên gia khảo thí tiếng Anh quốc tế (Cambridge / IELTS). Dưới đây là nội dung bài thi kiểm tra (bằng các ảnh chụp hoặc văn bản).
-QUY TẮC BẮT BUỘC CHO TEST MODE:
-1. TUYỆT ĐỐI KHÔNG ép bài thi về dạng điền từ ngô nghê với các đáp án bịa đặt như 'Teacher', 'Student', 'School'.
-2. GIỮ NGUYÊN VẸN 100% hình thức câu hỏi gốc của đề thi:
-   - Các câu hỏi trắc nghiệm A, B, C, D: Giữ nguyên văn các phương án A, B, C, D thực tế của đề thi.
-   - Các câu đọc hiểu (Reading Comprehension): Lưu toàn bộ bài đọc gốc vào trường 'passage', các câu hỏi trắc nghiệm A, B, C, D đi kèm bài đọc.
-   - Các câu đọc nối thông tin (Matching): Mỗi câu hỏi là 1 người/đoạn cần ghép, 4 phương án là các đối tượng đối chiếu (kèm tóm tắt nội dung để học sinh có căn cứ suy luận).
-   - Nếu có nhiều ảnh chụp màn hình (nhiều trang đề): Hãy đọc kết nối toàn bộ các ảnh (ví dụ ảnh 1 là bài đọc, ảnh 2 là câu hỏi) để tạo thành bài thi thống nhất hoàn chỉnh.
-   - Nếu có file nghe (Listening audio link) hoặc ảnh minh họa trong đề: ghi vào trường 'audio' hoặc 'img'.
-3. 'q': Nội dung câu hỏi cụ thể
-4. 'passage': Bài đọc đầy đủ (nếu bài đọc chung cho nhiều câu hỏi, giữ nguyên toàn bộ bài đọc ở trường 'passage' này; nếu không có bài đọc thì để rỗng "")
-5. 'o': Mảng 4 phương án lựa chọn ["A", "B", "C", "D"]
-6. 'a': Chỉ số (0, 1, 2, 3) của đáp án đúng thực tế
-7. 'e': Lời giải thích chi tiết, dẫn chứng câu chữ trong bài đọc (evidence)
-8. 's': Dạng bài (Reading, Listening, Matching, Grammar, Vocabulary, Pronunciation)
+    promptText = `Bạn là chuyên gia khảo thí và giáo viên Tiếng Anh xuất sắc (Cambridge / IELTS / THCS & THPT).
+Nhiệm vụ: Phân tích CỰC KỲ KỸ LƯỠNG tài liệu/ảnh chụp đề thi tiếng Anh đính kèm để trích xuất đầy đủ BẢN CHẤT VÀ CỐT LÕI CỦA TỪNG BÀI TẬP.
+
+CÁC NGUYÊN TẮC CỐT LÕI BẮT BUỘC CHO TEST MODE:
+1. Nhận diện dạng bài tập & Yêu cầu đề thi (Section Instructions):
+   - BÀI PHÁT ÂM (Pronunciation):
+     + 'q' PHẢI là chỉ dẫn bài làm: "Choose the word whose underlined part differs from the other three in pronunciation:"
+     + 'o': Giữ lại 4 phương án và BẮT BUỘC ĐÁNH DẤU CHÍNH XÁC PHẦN GẠCH CHÂN BẰNG THẺ HTML <u>...</u> (ví dụ: ["g<u>a</u>rbage", "<u>a</u>rtist", "m<u>a</u>ny", "h<u>a</u>ndcraft"] hoặc ["balanc<u>ed</u>", "research<u>ed</u>", "process<u>ed</u>", "manag<u>ed</u>"]). TUYỆT ĐỐI không bỏ sót phần gạch chân vì nếu không học sinh không biết đang hỏi chữ cái nào!
+     + 'e': Giải thích phiên âm IPA của âm gạch chân và lý do chọn đáp án đúng.
+     + 's': "Pronunciation"
+
+   - BÀI TRỌNG ÂM (Stress):
+     + 'q' PHẢI là chỉ dẫn bài làm: "Choose the word that differs from the other three in the position of primary stress:"
+     + 'o': 4 từ vựng lựa chọn của đề.
+     + 'e': Giải thích vị trí trọng âm (âm tiết 1, 2, 3...) của từng từ.
+     + 's': "Stress"
+
+   - BÀI ĐỌC HIỂU (Reading Comprehension / Cloze Test):
+     + 'passage': Lưu trọn vẹn văn bản bài đọc ngữ cảnh, không cắt xén.
+     + 'q': Câu hỏi cụ thể của bài đọc.
+     + 's': "Reading"
+
+   - BÀI NGỮ PHÁP / TỪ VỰNG / TÌM LỖI SAI:
+     + 'q': Toàn bộ câu hỏi / câu văn chứa chỗ trống (ví dụ: "She went to the market to buy some _______.")
+     + 's': "Grammar" hoặc "Vocabulary"
+
+   - BÀI NỐI THÔNG TIN (Matching):
+     + Mỗi câu hỏi là 1 người/đoạn cần ghép, 4 phương án là các đối tượng đối chiếu kèm tóm tắt nội dung.
+     + 's': "Matching"
+
+2. TUYỆT ĐỐI KHÔNG BAO GIỜ đặt 'q' chỉ vỏn vẹn là "Question 1", "Question 2"!
+   Học sinh khi nhìn vào màn hình làm bài PHẢI ĐỌC ĐƯỢC RÕ RÀNG yêu cầu bài làm hoặc câu hỏi đề bài!
+
+3. TUYỆT ĐỐI KHÔNG ép bài thi về dạng điền từ ngô nghê với các đáp án tự bịa như 'Teacher', 'Student', 'School'. Phải dùng phương án và nội dung thực tế của đề thi.
+
+4. ĐÁP ÁN 'a':
+   Phải là số nguyên 0, 1, 2, 3 tương ứng với vị trí đúng trong mảng 'o' (0 cho A, 1 cho B, 2 cho C, 3 cho D). Phải suy luận học thuật chính xác 100%.
+
+5. 'passage': Bài đọc đầy đủ (nếu bài đọc chung cho nhiều câu hỏi, giữ nguyên toàn bộ bài đọc ở trường 'passage' này; nếu không có bài đọc thì để rỗng "")
 
 Trả về strictly JSON danh sách:
 [
@@ -1204,13 +1228,14 @@ Trả về strictly JSON danh sách:
     promptText = `Bạn là chuyên gia giáo dục tiếng Anh. Dưới đây là nội dung bài tập (bằng ảnh chụp hoặc văn bản).
 Hãy trích xuất thành danh sách câu hỏi trắc nghiệm tiếng Anh TỐI ƯU CHO GAME ĐỐI KHÁNG NHANH (tối đa 25 câu).
 QUY TẮC ĐẶC BIỆT:
-1. TUYỆT ĐỐI KHÔNG tự ý bịa ra các phương án điền từ ngô nghê như 'Teacher', 'Student', 'School'. Phải dùng phương án và nội dung thực tế của đề thi.
-2. ÁP DỤNG GIẢI PHÁP C (Context Focus): Với bài đọc dài hoặc bài nối Matching, hãy trích đoạn ngữ cảnh trọng tâm (2-3 câu ngắn gọn chứa manh mối then chốt) ghép thẳng vào câu hỏi 'q' để học sinh dễ đọc nhanh trên điện thoại mà không bị tràn màn hình.
-3. 'q': Câu hỏi ngắn gọn (kèm ngữ cảnh ngắn nếu cần; giữ lại <u>, <b> nếu là câu phát âm/trọng âm)
-4. 'o': Mảng 4 phương án lựa chọn ["A", "B", "C", "D"]
-5. 'a': Chỉ số (0, 1, 2, 3) của đáp án đúng
-6. 'e': Lời giải thích ngắn gọn, từ khóa đối chiếu
-7. 's': Dạng bài (Pronunciation, Grammar, Vocabulary, Reading)
+1. TUYỆT ĐỐI KHÔNG BAO GIỜ đặt 'q' chỉ là "Question 1", "Question 2"! Phải ghi rõ câu hỏi hoặc yêu cầu bài làm.
+2. Với bài phát âm (Pronunciation): Trong 'o' PHẢI ĐÁNH DẤU PHẦN GẠCH CHÂN BẰNG THẺ HTML <u>...</u> (ví dụ: "g<u>a</u>rbage", "balanc<u>ed</u>").
+3. ÁP DỤNG GIẢI PHÁP C (Context Focus): Với bài đọc dài hoặc bài nối Matching, hãy trích đoạn ngữ cảnh trọng tâm (2-3 câu ngắn gọn chứa manh mối then chốt) ghép thẳng vào câu hỏi 'q' để học sinh dễ đọc nhanh trên điện thoại mà không bị tràn màn hình.
+4. 'q': Câu hỏi ngắn gọn (kèm ngữ cảnh ngắn nếu cần; giữ lại <u>, <b> nếu là câu phát âm/trọng âm).
+5. 'o': Mảng 4 phương án lựa chọn ["A", "B", "C", "D"].
+6. 'a': Chỉ số (0, 1, 2, 3) của đáp án đúng.
+7. 'e': Lời giải thích ngắn gọn, phiên âm IPA hoặc từ khóa đối chiếu.
+8. 's': Dạng bài (Pronunciation, Stress, Grammar, Vocabulary, Reading).
 
 Trả về strictly JSON danh sách:
 [
@@ -1230,7 +1255,10 @@ Trả về strictly JSON danh sách:
     });
     requestBody = {
       contents: [{ parts }],
-      generationConfig: { responseMimeType: 'application/json' }
+      generationConfig: {
+        responseMimeType: 'application/json',
+        temperature: 0.1
+      }
     };
   } else {
     let cleanText = contentOrImages;
@@ -1248,11 +1276,14 @@ Trả về strictly JSON danh sách:
           { text: promptText + '\n\nNội dung đề bài:\n---\n' + cleanText + '\n---' }
         ]
       }],
-      generationConfig: { responseMimeType: 'application/json' }
+      generationConfig: {
+        responseMimeType: 'application/json',
+        temperature: 0.1
+      }
     };
   }
 
-  const models = ['gemini-flash-lite-latest', 'gemini-3.8-flash'];
+  const models = ['gemini-flash-latest', 'gemini-pro-latest', 'gemini-3.8-flash', 'gemini-3.5-flash', 'gemini-flash-lite-latest'];
   let lastError = null;
 
   for (const m of models) {
@@ -1286,7 +1317,7 @@ Trả về strictly JSON danh sách:
 }
 
 // Mảng lưu nhiều ảnh chụp màn hình từ Ctrl + V hoặc chọn file
-let pastedImages = [];
+
 
 function addPastedImage(dataUrl) {
   pastedImages.push(dataUrl);

@@ -52,7 +52,17 @@ function prep(list) {   // trước khi chơi: bỏ câu hỏng, làm sạch, x�
   return (list || []).filter(x => x && x.o && x.o.length >= 2 && x.a >= 0 && x.a < x.o.length).map((x, i) => {
     let idx = x.o.map((_, k) => k);
     if (!NOSHUF.test((x.s || '') + ' ' + x.q)) idx = shuffle(idx);
-    return { n: i + 1, q: safe(x.q), s: esc(x.s || ''), o: idx.map(k => safe(x.o[k])), a: idx.indexOf(x.a), e: safe(x.e || '') };
+    return {
+      n: i + 1,
+      q: safe(x.q),
+      s: esc(x.s || ''),
+      passage: x.passage ? safe(x.passage) : '',
+      audio: x.audio ? esc(x.audio) : '',
+      img: x.img ? esc(x.img) : '',
+      o: idx.map(k => safe(x.o[k])),
+      a: idx.indexOf(x.a),
+      e: safe(x.e || '')
+    };
   });
 }
 
