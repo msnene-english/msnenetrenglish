@@ -141,18 +141,17 @@ th{color:#7a6aa8;font-size:13px}
 
     <!-- TAB 1: DÁN TỪ WORD / EXCEL -->
     <div id="tPaste">
-     <!-- TÍNH NĂNG TỰ ĐỘNG CÀO ĐỀ TỪ LINK BÀI TẬP CỦA CÔ & AI GEMINI -->
+     <!-- TÍNH NĂNG TỰ ĐỘNG CÀO ĐỀ TỪ LINK BÀI TẬP CỦA CÔ (TỰ ĐỘNG & AI GỘP LÀM 1) -->
       <div style="background:#eef7ff;border:2px dashed #38bdf8;border-radius:16px;padding:12px 14px;margin-bottom:12px">
-       <div style="font-weight:800;color:#0284c7;font-size:14px;margin-bottom:6px">🤖 Tự động lấy câu hỏi từ link bài tập (Đã kết nối AI thông minh):</div>
+       <div style="font-weight:800;color:#0284c7;font-size:14px;margin-bottom:6px">🤖 Nạp đề từ link bài tập (Tự động nhận diện + AI thông minh):</div>
        <div style="display:flex;gap:8px;flex-wrap:wrap">
-        <input id="inpWebLink" class="inp" style="flex:1;min-width:200px;padding:8px 12px;font-size:14px" placeholder="Dán link bài tập (VD: link test 1 p1.html hoặc voca p2.html...)">
-        <button class="btn g" id="bFetchLink" style="font-size:13px;padding:8px 14px" title="Đọc tức thì các dạng bài tập có sẵn">⚡ Tự động nạp đề</button>
-        <button class="btn b" id="bGeminiAi" style="font-size:13px;padding:8px 14px" title="Dùng AI Gemini đọc hiểu bài tập">🧠 AI Gemini đọc đề</button>
+        <input id="inpWebLink" class="inp" style="flex:1;min-width:240px;padding:9px 12px;font-size:14px" placeholder="Dán link bài tập (VD: test 1 p1.html, voca p2.html, matching p1.html...)">
+        <button class="btn g" id="bFetchLink" style="font-size:14px;padding:9px 20px;font-weight:800" title="Tự động nhận diện câu hỏi, nếu gặp dạng bài lạ sẽ tự kích hoạt AI Gemini đọc đề">⚡ Nạp đề</button>
        </div>
        <div class="hint" id="linkFetchStatus" style="margin-top:6px;color:#0369a1;font-size:13px"></div>
       </div>
 
-      <textarea id="pTxt"<textarea id="pTxt"<textarea id="pTxt" placeholder="Cách 1 — Copy các ô từ Excel rồi dán vào (cột: Câu hỏi | A | B | C | D | Đáp án | Giải thích)
+      <textarea id="pTxt"<textarea id="pTxt"<textarea id="pTxt"<textarea id="pTxt" placeholder="Cách 1 — Copy các ô từ Excel rồi dán vào (cột: Câu hỏi | A | B | C | D | Đáp án | Giải thích)
 
 Cách 2 — Dán từ Word theo mẫu:
 1. She ___ to school every day.
@@ -1020,7 +1019,7 @@ async function callGeminiAiExtract(htmlOrText) {
   }
   cleanText = cleanText.substring(0, 32000);
 
-  const promptText = `Bạn là chuyên gia giáo dục tiếng Anh. Hãy đọc hiểu toàn bộ nội dung sau và trích xuất thành danh sách câu hỏi trắc nghiệm tiếng Anh (tối đa 30 câu). Với mỗi câu hỏi:
+  const promptText = `Bạn là chuyên gia giáo dục tiếng Anh. Dưới đây là nội dung bài tập / đề thi tiếng Anh (có thể là trắc nghiệm, ngữ pháp, phát âm, đọc hiểu Reading Comprehension, hoặc đọc nối Matching). Hãy đọc hiểu cốt lõi của bài thi và trích xuất thành danh sách câu hỏi trắc nghiệm tiếng Anh thông minh cho học sinh thi đấu (tối đa 30 câu). Với mỗi câu hỏi:
 - "q": Nội dung câu hỏi (giữ lại <u>, <b> nếu là câu hỏi phát âm/trọng âm)
 - "o": Mảng 4 phương án lựa chọn ["A", "B", "C", "D"]
 - "a": Chỉ số (0, 1, 2, 3) của đáp án đúng trong mảng "o"
@@ -1075,83 +1074,58 @@ Trả về strictly JSON dạng danh sách:
   throw new Error('Lỗi khi gọi AI: ' + (lastError ? lastError.message : 'Không nhận diện được phản hồi.'));
 }
 
-// 1. Nút Tự động nạp đề (Universal Fast Parser -> tự động AI nếu gặp web lạ)
+// Nút Nạp đề DUY NHẤT: Tự động chạy bộ đọc nhanh, nếu không tìm thấy thì tự kích hoạt AI Gemini
 if ($('bFetchLink')) {
   $('bFetchLink').onclick = async () => {
     const url = clean($('inpWebLink').value);
-    if (!url) return toast('Cô dán link bài tập vào ô trước nhé!', 2200);
+    const pasteTxt = clean($('pTxt')?.value || '');
     const status = $('linkFetchStatus');
-    status.innerHTML = '⏳ Đang kết nối và đọc câu hỏi từ link…';
+
+    if (!url && !pasteTxt) {
+      return toast('Cô dán link bài tập hoặc dán nội dung vào ô trước nhé!', 2200);
+    }
+
+    status.innerHTML = '⏳ Đang kết nối và đọc nội dung bài tập…';
     $('bFetchLink').disabled = true;
 
     try {
-      const res = await fetch(url);
-      if (!res.ok) throw new Error('Không mở được link (Mã lỗi ' + res.status + ')');
-      const html = await res.text();
+      let extractedQs = [];
+      let docTitle = 'Bài tập tiếng Anh';
 
-      const parsed = parseQuestionsUniversal(html);
-      let extractedQs = parsed.questions;
+      if (url) {
+        const res = await fetch(url);
+        if (!res.ok) throw new Error('Không mở được link (Mã lỗi ' + res.status + ')');
+        const html = await res.text();
 
-      if (!extractedQs.length) {
-        status.innerHTML = '🧠 Đang dùng AI Gemini đọc hiểu và trích xuất câu hỏi…';
-        extractedQs = await callGeminiAiExtract(html);
+        // 1. Thử bộ đọc nhanh đa năng (Universal Fast Parser)
+        const parsed = parseQuestionsUniversal(html);
+        if (parsed.title) docTitle = parsed.title;
+
+        if (parsed.questions && parsed.questions.length > 0) {
+          extractedQs = parsed.questions;
+          status.innerHTML = '🎉 <b>Thành công!</b> Đã tự động đọc nhanh <b>' + extractedQs.length + ' câu hỏi</b> từ bài tập.';
+          toast('🎉 Nạp nhanh thành công ' + extractedQs.length + ' câu hỏi!', 3000);
+        } else {
+          // 2. Tự động chuyển sang AI Gemini đọc hiểu chuyên sâu (dành cho Reading, Matching, web phức tạp)
+          status.innerHTML = '🧠 <b>Đang dùng Trí tuệ Nhân tạo Gemini đọc hiểu và phân tích bài tập…</b> (vui lòng đợi vài giây)';
+          extractedQs = await callGeminiAiExtract(html);
+          status.innerHTML = '🎉 <b>AI Gemini phân tích thành công!</b> Đã bóc tách <b>' + extractedQs.length + ' câu hỏi</b> chuyên sâu.';
+          toast('🎉 AI đã bóc tách ' + extractedQs.length + ' câu hỏi!', 3500);
+        }
+      } else if (pasteTxt) {
+        // Dán văn bản từ Word/PDF/Zalo: dùng AI Gemini bóc tách câu hỏi
+        status.innerHTML = '🧠 <b>Đang dùng AI Gemini phân tích văn bản bài tập…</b>';
+        extractedQs = await callGeminiAiExtract(pasteTxt);
+        status.innerHTML = '🎉 <b>AI Gemini phân tích thành công!</b> Đã bóc tách <b>' + extractedQs.length + ' câu hỏi</b>.';
+        toast('🎉 AI đã bóc tách ' + extractedQs.length + ' câu hỏi!', 3500);
       }
 
-      setQs(extractedQs, parsed.title, []);
-      status.innerHTML = '🎉 <b>Thành công!</b> Đã tự động đọc được <b>' + extractedQs.length + ' câu hỏi</b> từ bài tập.';
-      toast('🎉 Nạp thành công ' + extractedQs.length + ' câu hỏi!', 3500);
+      setQs(extractedQs, docTitle, []);
     } catch (err) {
       status.innerHTML = '❌ ' + err.message;
       toast('❌ ' + err.message, 3500);
     } finally {
       $('bFetchLink').disabled = false;
-    }
-  };
-}
-
-// 2. Nút AI Gemini đọc đề chuyên sâu (cho cả link hoặc văn bản dán)
-if ($('bGeminiAi')) {
-  $('bGeminiAi').onclick = async () => {
-    const url = clean($('inpWebLink').value);
-    const pasteTxt = clean($('pTxt')?.value || '');
-    const status = $('linkFetchStatus');
-
-    let contentToAnalyze = '';
-    let docTitle = 'Bài tập tiếng Anh (AI tạo)';
-
-    if (url) {
-      status.innerHTML = '⏳ Đang tải link bài tập…';
-      $('bGeminiAi').disabled = true;
-      try {
-        const res = await fetch(url);
-        if (!res.ok) throw new Error('Không mở được link: ' + res.status);
-        contentToAnalyze = await res.text();
-        const tm = contentToAnalyze.match(/<title>(.*?)<\/title>/i);
-        if (tm) docTitle = tm[1].replace(/<[^>]+>/g, '').trim();
-      } catch (e) {
-        status.innerHTML = '❌ ' + e.message;
-        $('bGeminiAi').disabled = false;
-        return toast('❌ ' + e.message, 3500);
-      }
-    } else if (pasteTxt) {
-      contentToAnalyze = pasteTxt;
-    } else {
-      return toast('Cô dán link bài tập hoặc dán nội dung văn bản vào ô trước nhé!', 2500);
-    }
-
-    status.innerHTML = '🧠 <b>AI Gemini đang đọc hiểu bài tập & trích xuất câu hỏi…</b>';
-    $('bGeminiAi').disabled = true;
-
-    try {
-      const extractedQs = await callGeminiAiExtract(contentToAnalyze);
-      setQs(extractedQs, docTitle, []);
-      status.innerHTML = '🎉 <b>AI Gemini phân tích thành công!</b> Đã bóc tách <b>' + extractedQs.length + ' câu hỏi</b>.';
-      toast('🎉 AI đã trích xuất ' + extractedQs.length + ' câu hỏi!', 3500);
-    } catch (err) {
-      status.innerHTML = '❌ ' + err.message;
-      toast('❌ ' + err.message, 3500);
-    } finally {
-      $('bGeminiAi').disabled = false;
     }
   };
 }
