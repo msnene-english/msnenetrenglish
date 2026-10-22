@@ -70,6 +70,36 @@ body{display:flex;flex-direction:column;overflow:hidden}
 .item:disabled{opacity:.5;cursor:default}
 .item b{font-size:16px}.item .ic{font-size:30px}.item .cost{margin-left:auto;font-weight:800;background:#fff;border-radius:10px;padding:4px 9px;white-space:nowrap}
 .item small{display:block;font-size:13px;color:#7a6aa8}
+
+/* ═════ STYLES BÀI KIỂM TRA (TEST MODE) ═════ */
+#testApp{display:flex;flex-direction:column;height:100vh;width:100vw;position:fixed;inset:0;z-index:100;background:var(--t-bg,#f8fafc);font-family:'Nunito',sans-serif;overflow:hidden}
+.test-pastel{--t-bg:#fdf4ff;--t-card:#fff;--t-primary:#8b5cf6;--t-border:#f0abfc}
+.test-cambridge{--t-bg:#f8fafc;--t-card:#fff;--t-primary:#1e3a8a;--t-border:#cbd5e1}
+.test-cyber{--t-bg:#0b0f19;--t-card:#151b2b;--t-primary:#a855f7;--t-border:#2d3748;color:#f1f5f9}
+.test-fresh{--t-bg:#ecfdf5;--t-card:#fff;--t-primary:#059669;--t-border:#a7f3d0}
+.t-header{height:60px;background:#fff;display:flex;align-items:center;justify-content:space-between;padding:0 16px;box-shadow:0 2px 10px rgba(0,0,0,.06);border-bottom:2px solid var(--t-border,#e2e8f0);flex-shrink:0}
+.test-cyber .t-header{background:#111827;border-color:#374151}
+.t-body{flex:1;display:flex;gap:16px;padding:16px;max-width:1300px;width:100%;margin:0 auto;overflow:auto;box-sizing:border-box}
+@media(max-width:820px){.t-body{flex-direction:column;padding:10px;gap:10px}}
+.t-passage-col{flex:1;background:var(--t-card,#fff);border:2px solid var(--t-border,#e2e8f0);border-radius:18px;padding:18px;overflow-y:auto;max-height:calc(100vh - 100px);box-shadow:0 4px 12px rgba(0,0,0,.03)}
+@media(max-width:820px){.t-passage-col{max-height:220px}}
+.t-question-col{flex:1.2;display:flex;flex-direction:column;gap:12px}
+.t-card{background:var(--t-card,#fff);border:2px solid var(--t-border,#e2e8f0);border-radius:18px;padding:20px;box-shadow:0 4px 14px rgba(0,0,0,.04)}
+.test-cyber .t-card,.test-cyber .t-passage-col{background:#151b2b;border-color:#2d3748}
+.t-pills{display:flex;gap:6px;flex-wrap:wrap;padding:8px 12px;background:var(--t-card,#fff);border-radius:14px;border:1px solid var(--t-border,#e2e8f0)}
+.test-cyber .t-pills{background:#151b2b;border-color:#2d3748}
+.t-pill{width:32px;height:32px;border-radius:50%;border:2px solid #cbd5e1;background:#f1f5f9;font-weight:800;font-size:13px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .2s;color:#334155}
+.t-pill.answered{background:#8b5cf6;color:#fff;border-color:#7c3aed}
+.t-pill.current{border-color:#f59e0b;box-shadow:0 0 0 3px #fef3c7}
+.t-opt{display:flex;align-items:center;gap:12px;padding:12px 16px;border-radius:14px;border:2px solid #e2e8f0;background:#fff;cursor:pointer;font-weight:700;font-size:15px;transition:all .15s;text-align:left;color:#1e293b}
+.test-cyber .t-opt{background:#1e293b;border-color:#334155;color:#e2e8f0}
+.t-opt:hover{border-color:#a855f7;background:#faf5ff}
+.test-cyber .t-opt:hover{background:#2d3748}
+.t-opt.selected{border-color:#8b5cf6;background:#ede9fe;color:#5b21b6;font-weight:800}
+.test-cyber .t-opt.selected{background:#4c1d95;border-color:#a855f7;color:#fff}
+.t-opt-label{width:28px;height:28px;border-radius:50%;background:#f1f5f9;display:flex;align-items:center;justify-content:center;font-weight:900;font-size:13px;flex-shrink:0;color:#475569}
+.t-opt.selected .t-opt-label{background:#8b5cf6;color:#fff}
+
 </style>
 </head>
 <body>
@@ -132,7 +162,7 @@ body{display:flex;flex-direction:column;overflow:hidden}
 const { $, esc, fmt, stamp, clean, pick, shuffle, COLORS, BADGE, sfx, toast, confetti } = GC;
 const U = new URLSearchParams(location.search), HWP = U.get('hw'), QUIZ_ID = U.get('quiz') || U.get('id'); let SOLO = U.get('solo') || (HWP || QUIZ_ID ? 'hw' : null);   // solo = "mau:0" · hw = bài tập về nhà (đề nén trong link)
 let HW = null;
-const GNAME = { climb: '🧗 Leo núi', brick: '🍄 Nấm Mario', tank: '🛡 Xe tăng', bomb: '💣 Đặt bom' };
+const GNAME = { climb: '🧗 Leo núi', brick: '🍄 Nấm Mario', tank: '🛡 Xe tăng', bomb: '💣 Đặt bom', test: '📝 Bài kiểm tra' };
 const GAIN = { correct: 100, streakBonus: 15, streakMax: 5, cap: 1000, scale: 1 };
 /* cô cài: mỗi câu đúng được eq ⚡ (100/200/300), bình đầy em ⚡ (0 = không giới hạn) */
 function setGain(eq, em) { eq = +eq || 100; GAIN.correct = eq; GAIN.streakBonus = Math.round(eq * .15); GAIN.scale = eq / 100; GAIN.cap = em === undefined || em === null || em === '' ? 1000 : +em; Climb.S.cap = GAIN.cap }
@@ -162,6 +192,237 @@ let LVL = 2, started = false, over = false, joined = false, kicked = false, t0 =
 let streak = 0, best = 0, ans = 0, okN = 0, order = [], cur = null, answered = false, nameV = '', myColor = pick(COLORS);
 const solved = new Set();
 const anyOpen = () => !!document.querySelector('#ovQ.on,#ovShop.on,#ovRes.on');
+
+
+/* ══════════════════════════════════════════════════════════════
+   CHẾ ĐỘ BÀI KIỂM TRA CHUYÊN SÂU (TEST RUNNER ENGINE)
+   ══════════════════════════════════════════════════════════════ */
+let trIndex = 0;
+let trAnswers = {}; // { qIndex: selectedOptIndex }
+let trTimerInterval = null;
+let trTimeRemaining = 2700; // 45 phút mặc định
+let trSubmitted = false;
+
+function startTestMode() {
+  document.body.classList.add('test-mode');
+  // Ẩn arcade HUD và Canvas
+  if ($('hud')) $('hud').style.display = 'none';
+  if ($('stage')) $('stage').style.display = 'none';
+  if ($('keys')) $('keys').style.display = 'none';
+  if ($('pad')) $('pad').style.display = 'none';
+
+  const theme = (info && info.theme) || (HW && HW.theme) || 'pastel';
+  $('testApp').className = 'test-' + theme;
+  $('testApp').hidden = false;
+
+  const testTitle = (info && info.t) || (HW && HW.t) || 'Bài kiểm tra tiếng Anh';
+  $('trTitle').textContent = '📝 ' + testTitle;
+  $('trStudentName').textContent = 'Học sinh: ' + (nameV || 'Em');
+
+  // Đặt thời gian làm bài
+  const durMinutes = (info && info.dur) || (HW && HW.dur) || 45;
+  if (durMinutes > 0) {
+    trTimeRemaining = durMinutes * 60;
+    startTestTimer();
+  } else {
+    $('trTimer').textContent = '⏱ Tự do';
+  }
+
+  trIndex = 0;
+  trAnswers = {};
+  trSubmitted = false;
+  renderTestQuestion();
+}
+
+function startTestTimer() {
+  if (trTimerInterval) clearInterval(trTimerInterval);
+  trTimerInterval = setInterval(() => {
+    if (trSubmitted) { clearInterval(trTimerInterval); return; }
+    trTimeRemaining--;
+    if (trTimeRemaining <= 0) {
+      clearInterval(trTimerInterval);
+      $('trTimer').textContent = '⏱ Hết giờ!';
+      toast('⏰ Hết thời gian làm bài! Đang tự động nộp bài…', 3000);
+      submitTestExam(true);
+      return;
+    }
+    const m = Math.floor(trTimeRemaining / 60);
+    const s = trTimeRemaining % 60;
+    $('trTimer').textContent = '⏱ ' + String(m).padStart(2, '0') + ':' + String(s).padStart(2, '0');
+  }, 1000);
+}
+
+function renderTestQuestion() {
+  if (!QS || !QS.length) return;
+  const q = QS[trIndex];
+  if (!q) return;
+
+  // 1. Render Navigation Pills
+  const pillsBox = $('trPills');
+  pillsBox.innerHTML = QS.map((_, idx) => {
+    const isAns = trAnswers[idx] !== undefined;
+    const isCur = idx === trIndex;
+    return `<button class="t-pill ${isAns ? 'answered' : ''} ${isCur ? 'current' : ''}" onclick="jumpTestQ(${idx})">${idx + 1}</button>`;
+  }).join('');
+
+  // 2. Render Passage (nếu có)
+  const passageCol = $('trPassageCol');
+  if (q.passage && q.passage.trim()) {
+    passageCol.hidden = false;
+    $('trPassageText').innerHTML = q.passage;
+  } else {
+    passageCol.hidden = true;
+  }
+
+  // 3. Render Audio (nếu có)
+  const audioBox = $('trAudioBox');
+  if (q.audio && q.audio.trim()) {
+    audioBox.hidden = false;
+    $('trAudioPlayer').src = q.audio;
+  } else {
+    audioBox.hidden = true;
+  }
+
+  // 4. Render Image (nếu có)
+  const imgBox = $('trImgBox');
+  if (q.img && q.img.trim()) {
+    imgBox.hidden = false;
+    $('trImg').src = q.img;
+  } else {
+    imgBox.hidden = true;
+  }
+
+  // 5. Question Text & Subject
+  $('trQNum').textContent = 'Câu ' + (trIndex + 1) + ' / ' + QS.length;
+  $('trQSubject').textContent = q.s ? '📌 ' + q.s : '';
+  $('trQText').innerHTML = q.q;
+
+  // 6. Options
+  const optsBox = $('trOpts');
+  const selectedIdx = trAnswers[trIndex];
+  optsBox.innerHTML = (q.o || []).map((optText, optIdx) => {
+    const label = String.fromCharCode(65 + optIdx);
+    const isSel = selectedIdx === optIdx;
+    return `
+      <div class="t-opt ${isSel ? 'selected' : ''}" onclick="selectTestOpt(${optIdx})">
+        <span class="t-opt-label">${label}</span>
+        <span style="flex:1">${optText}</span>
+      </div>
+    `;
+  }).join('');
+
+  // 7. Progress text
+  const ansCount = Object.keys(trAnswers).length;
+  $('trProgressTxt').textContent = 'Đã làm: ' + ansCount + '/' + QS.length + ' câu';
+}
+
+window.selectTestOpt = function(optIdx) {
+  if (trSubmitted) return;
+  trAnswers[trIndex] = optIdx;
+  renderTestQuestion();
+
+  // Báo tiến độ thời gian thực về phòng của cô
+  if (path) {
+    const ansCount = Object.keys(trAnswers).length;
+    let correctCount = 0;
+    for (const [k, v] of Object.entries(trAnswers)) {
+      if (QS[k] && QS[k].a === v) correctCount++;
+    }
+    net.update(path, {
+      n: nameV,
+      ans: ansCount,
+      ok: correctCount,
+      tot: QS.length,
+      st: 'playing',
+      score: Math.round(correctCount / QS.length * 100)
+    }).catch(() => {});
+  }
+};
+
+window.jumpTestQ = function(idx) {
+  trIndex = idx;
+  renderTestQuestion();
+};
+
+if ($('bTrPrev')) {
+  $('bTrPrev').onclick = () => {
+    if (trIndex > 0) { trIndex--; renderTestQuestion(); }
+  };
+}
+if ($('bTrNext')) {
+  $('bTrNext').onclick = () => {
+    if (trIndex < QS.length - 1) { trIndex++; renderTestQuestion(); }
+  };
+}
+
+if ($('bTrSubmit')) {
+  $('bTrSubmit').onclick = () => {
+    const ansCount = Object.keys(trAnswers).length;
+    const unanswered = QS.length - ansCount;
+    let msg = 'Em đã làm ' + ansCount + '/' + QS.length + ' câu.';
+    if (unanswered > 0) {
+      msg += ' Còn ' + unanswered + ' câu chưa làm. Em có chắc chắn muốn nộp bài không?';
+    } else {
+      msg += ' Em có muốn nộp bài thi ngay bây giờ không?';
+    }
+    if (confirm(msg)) {
+      submitTestExam(false);
+    }
+  };
+}
+
+function submitTestExam(auto) {
+  trSubmitted = true;
+  if (trTimerInterval) clearInterval(trTimerInterval);
+
+  let correctCount = 0;
+  for (let i = 0; i < QS.length; i++) {
+    if (trAnswers[i] === QS[i].a) correctCount++;
+  }
+  const score = Math.round((correctCount / QS.length) * 100);
+
+  // Gửi trạng thái nộp bài chính thức về Firebase
+  if (path) {
+    net.update(path, {
+      n: nameV,
+      ans: Object.keys(trAnswers).length,
+      ok: correctCount,
+      tot: QS.length,
+      st: 'submitted',
+      score: score,
+      submittedAt: net.now()
+    }).catch(() => {});
+  }
+
+  // Hiển thị modal kết quả
+  $('trResScore').textContent = score;
+  $('trResCorrect').textContent = correctCount + ' / ' + QS.length;
+  $('trResSub').textContent = score >= 80 ? '🌟 Kết quả xuất sắc! Cô rất tự hào về em!' : score >= 50 ? '👏 Em đã hoàn thành tốt bài kiểm tra!' : '💪 Hãy xem lại các câu sai để cố gắng hơn nhé!';
+
+  // Bảng xem lại từng câu
+  $('trResReviewBox').innerHTML = QS.map((q, idx) => {
+    const userChoice = trAnswers[idx];
+    const isOk = userChoice === q.a;
+    const choiceText = userChoice !== undefined ? (q.o[userChoice] || 'Không rõ') : 'Chưa trả lời';
+    const correctText = q.o[q.a];
+
+    return `
+      <div style="border-bottom:1px solid #e5e7eb;padding:10px 0">
+        <div style="font-weight:800;font-size:14px;color:#1e293b">Câu ${idx + 1}: ${q.q}</div>
+        <div style="font-size:13px;margin:4px 0">
+          Lựa chọn của em: <b style="color:${isOk ? '#16a34a' : '#dc2626'}">${isOk ? '✅ ' : '❌ '}${choiceText}</b>
+        </div>
+        ${!isOk ? `<div style="font-size:13px;color:#15803d">Đáp án đúng: <b>${correctText}</b></div>` : ''}
+        ${q.e ? `<div style="font-size:12px;color:#6b7280;background:#f3f4f6;padding:6px 10px;border-radius:8px;margin-top:4px">💡 ${q.e}</div>` : ''}
+      </div>
+    `;
+  }).join('');
+
+  $('ovTestResult').classList.add('on');
+  if (score >= 70 && typeof confetti === 'function') {
+    confetti();
+  }
+}
 
 /* ═════ vào phòng ═════ */
 $('jCols').innerHTML = COLORS.map(c => '<button style="background:' + c + '" data-c="' + c + '" aria-label="Màu ' + c + '"></button>').join('');
@@ -238,7 +499,7 @@ async function joinRoom() {
   QS = GC.prep(Array.isArray(raw) ? raw : Object.values(raw || {}));
   if (!QS.length) throw new Error('Phòng chưa có câu hỏi.');
   pid = myPid(code); path = 'rooms/' + code + '/players/' + pid; evp = 'rooms/' + code + '/ev';
-  joinT = net.now(); setTitle = info.t || ''; setGain(info.eq, info.em); LVL = info.lv || 2; MODE = ['brick', 'tank', 'bomb'].includes(info.m) ? info.m : 'climb';
+  joinT = net.now(); setTitle = info.t || ''; setGain(info.eq, info.em); LVL = info.lv || 2; MODE = ['brick', 'tank', 'bomb', 'test'].includes(info.m) ? info.m : (info.m === 'test' ? 'test' : 'climb');
   const old = await net.once(path);
   boot(info.seed);
   if (old && old.n) {   // lỡ tải lại trang → giữ nguyên thành tích
@@ -252,6 +513,10 @@ async function joinRoom() {
   if (info.st === 'play') begin(); else { $('wSub').textContent = '📘 ' + setTitle + ' · Phòng ' + code + (info.lic ? ' · 🏫 ' + info.lic : ''); $('wTips').innerHTML = TIPS[MODE].map(t => '<li>' + t + '</li>').join(''); $('ovWait').classList.add('on') }
 }
 function boot(seed) {
+  if (MODE === 'test') {
+    startTestMode();
+    return;
+  }
   if (MODE === 'brick') {   // game Nấm Mario: dùng engine brick.js thay cho leo núi
     window.Climb = Brick; S = Brick.S; document.body.classList.add('brick');
     $('hName').textContent = '🍄 Nấm Mario'; $('keysT').innerHTML = '🎮 <kbd>←</kbd><kbd>→</kbd> chạy · giữ <kbd>↑</kbd> nhảy cao · <kbd>↓</kbd> chui ống · <kbd>F</kbd> bắn lửa · <kbd>E</kbd> trả lời'; document.title = 'Nấm Mario';
@@ -476,5 +741,93 @@ function resultText() {
 function copyResult() { const t = resultText(); navigator.clipboard.writeText(t).then(() => toast('📋 Đã copy! Mở Zalo dán gửi cô nhé', 2800)).catch(() => prompt('Copy đoạn này gửi cô:', t)) }
 function resume() { $('ovRes').classList.remove('on'); over = false; t0 += Date.now() - tEnd; tEnd = 0; S.running = true }
 </script>
+
+<!-- GIAO DIỆN BÀI KIỂM TRA (TEST RUNNER MODE) -->
+<div id="testApp" hidden>
+ <div class="t-header">
+  <div style="display:flex;align-items:center;gap:10px">
+   <span style="font-size:24px">📝</span>
+   <div>
+    <div id="trTitle" style="font-weight:900;font-size:16px;color:#2d2350">Bài kiểm tra tiếng Anh</div>
+    <div id="trStudentName" style="font-size:12px;color:#64748b">Học sinh</div>
+   </div>
+  </div>
+  <div style="display:flex;align-items:center;gap:12px">
+   <div id="trTimer" style="background:#fef2f2;color:#dc2626;border:1px solid #fecaca;padding:5px 14px;border-radius:20px;font-weight:900;font-size:14px">⏱ 45:00</div>
+   <button class="btn g" id="bTrSubmit" style="font-size:14px;padding:7px 16px;font-weight:800">📥 Nộp bài</button>
+  </div>
+ </div>
+
+ <div class="t-body">
+  <!-- Cột 1: Bài đọc (Chỉ hiện khi câu hỏi có passage) -->
+  <div id="trPassageCol" class="t-passage-col" hidden>
+   <div style="font-weight:800;color:#5b4bb0;font-size:15px;margin-bottom:10px;display:flex;align-items:center;gap:6px">
+    📖 <span>Nội dung bài đọc (Reading Passage):</span>
+   </div>
+   <div id="trPassageText" style="font-size:15px;line-height:1.75;color:#334155;white-space:pre-wrap"></div>
+  </div>
+
+  <!-- Cột 2: Câu hỏi, Audio, Lựa chọn & Điều hướng -->
+  <div class="t-question-col">
+   <!-- Thanh điều hướng số câu -->
+   <div class="t-pills" id="trPills"></div>
+
+   <!-- Khung câu hỏi -->
+   <div class="t-card">
+    <div id="trAudioBox" hidden style="margin-bottom:14px;background:#f0f9ff;border:1px solid #bae6fd;border-radius:12px;padding:8px">
+     <div style="font-weight:800;font-size:13px;color:#0369a1;margin-bottom:4px">🎧 Đoạn nghe (Listening Audio):</div>
+     <audio id="trAudioPlayer" controls style="width:100%"></audio>
+    </div>
+
+    <div id="trImgBox" hidden style="margin-bottom:14px;text-align:center">
+     <img id="trImg" style="max-height:220px;max-width:100%;border-radius:12px;border:1px solid #e2e8f0;cursor:pointer" title="Bấm để xem ảnh rõ hơn">
+    </div>
+
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+     <span id="trQNum" style="font-weight:900;color:#8b5cf6;font-size:14px">Câu 1 / 10</span>
+     <span id="trQSubject" style="font-size:12px;font-weight:700;color:#64748b"></span>
+    </div>
+
+    <div id="trQText" style="font-weight:800;font-size:17px;line-height:1.6;color:#1e293b;margin-bottom:18px"></div>
+    <div id="trOpts" style="display:grid;gap:10px"></div>
+   </div>
+
+   <!-- Nút chuyển câu -->
+   <div style="display:flex;justify-content:space-between;align-items:center">
+    <button class="btn w" id="bTrPrev" style="padding:10px 18px">← Câu trước</button>
+    <div id="trProgressTxt" style="font-weight:700;font-size:13px;color:#64748b">Đã làm: 0/0 câu</div>
+    <button class="btn b" id="bTrNext" style="padding:10px 18px">Câu sau →</button>
+   </div>
+  </div>
+ </div>
+</div>
+
+<!-- MODAL KẾT QUẢ BÀI THI CHO TEST MODE -->
+<div class="ov" id="ovTestResult">
+ <div class="card" style="max-width:680px;text-align:center">
+  <div class="big" style="font-size:26px">🎉 Chúc mừng em đã hoàn thành bài thi!</div>
+  <div class="sub" id="trResSub">Kết quả bài làm của em</div>
+  
+  <div style="display:flex;justify-content:center;gap:18px;margin:18px 0;flex-wrap:wrap">
+   <div style="background:#f5f3ff;border:2px solid #ddd6fe;border-radius:16px;padding:14px 22px;min-width:120px">
+    <div style="font-size:13px;font-weight:700;color:#7c3aed">Điểm số</div>
+    <div id="trResScore" style="font-size:32px;font-weight:900;color:#6d28d9">100</div>
+   </div>
+   <div style="background:#ecfdf5;border:2px solid #a7f3d0;border-radius:16px;padding:14px 22px;min-width:120px">
+    <div style="font-size:13px;font-weight:700;color:#059669">Số câu đúng</div>
+    <div id="trResCorrect" style="font-size:32px;font-weight:900;color:#047857">10 / 10</div>
+   </div>
+   <div style="background:#eff6ff;border:2px solid #bfdbfe;border-radius:16px;padding:14px 22px;min-width:120px">
+    <div style="font-size:13px;font-weight:700;color:#2563eb">Thời gian</div>
+    <div id="trResTime" style="font-size:32px;font-weight:900;color:#1d4ed8">12:30</div>
+   </div>
+  </div>
+
+  <div id="trResReviewBox" style="text-align:left;max-height:40vh;overflow:auto;background:#fafafa;border:1px solid #e5e5e5;border-radius:14px;padding:14px;margin-bottom:16px"></div>
+
+  <div class="row"><button class="btn g" onclick="$('ovTestResult').classList.remove('on')">Đóng kết quả</button></div>
+ </div>
+</div>
+
 </body>
 </html>

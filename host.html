@@ -141,17 +141,41 @@ th{color:#7a6aa8;font-size:13px}
 
     <!-- TAB 1: DÁN TỪ WORD / EXCEL -->
     <div id="tPaste">
-     <!-- TÍNH NĂNG TỰ ĐỘNG CÀO ĐỀ TỪ LINK BÀI TẬP CỦA CÔ (TỰ ĐỘNG & AI GỘP LÀM 1) -->
+     <!-- TÍNH NĂNG NẠP ĐỀ ĐA NĂNG (GAME + TEST + ẢNH CHỤP MÀN HÌNH CTRL+V) -->
       <div style="background:#eef7ff;border:2px dashed #38bdf8;border-radius:16px;padding:12px 14px;margin-bottom:12px">
-       <div style="font-weight:800;color:#0284c7;font-size:14px;margin-bottom:6px">🤖 Nạp đề từ link bài tập (Tự động nhận diện + AI thông minh):</div>
-       <div style="display:flex;gap:8px;flex-wrap:wrap">
-        <input id="inpWebLink" class="inp" style="flex:1;min-width:240px;padding:9px 12px;font-size:14px" placeholder="Dán link bài tập (VD: test 1 p1.html, voca p2.html, matching p1.html...)">
-        <button class="btn g" id="bFetchLink" style="font-size:14px;padding:9px 20px;font-weight:800" title="Tự động nhận diện câu hỏi, nếu gặp dạng bài lạ sẽ tự kích hoạt AI Gemini đọc đề">⚡ Nạp đề</button>
+       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
+        <span style="font-weight:800;color:#0284c7;font-size:14px">🤖 Nạp đề từ link bài tập, ảnh chụp (Ctrl+V) hoặc file:</span>
+        <div style="display:flex;gap:6px">
+         <button class="btn w" id="bPickImg" style="padding:3px 8px;font-size:12px" title="Chọn ảnh chụp đề từ máy tính">📷 Chọn ảnh</button>
+         <button class="btn w" id="bPickDoc" style="padding:3px 8px;font-size:12px" title="Nạp file văn bản / Word / Text">📄 Nạp file</button>
+         <input type="file" id="inpFileImg" accept="image/*" hidden>
+         <input type="file" id="inpFileDoc" accept=".txt,.html,.md,.json" hidden>
+        </div>
        </div>
-       <div class="hint" id="linkFetchStatus" style="margin-top:6px;color:#0369a1;font-size:13px"></div>
+
+       <!-- Ô dán link & 2 nút: Tạo Game vs Tạo Test -->
+       <div style="display:flex;gap:8px;flex-wrap:wrap">
+        <input id="inpWebLink" class="inp" style="flex:1;min-width:220px;padding:9px 12px;font-size:14px" placeholder="Dán link bài tập (test 1 p1.html, voca p2.html, matching p1.html...)">
+        <button class="btn" id="bLoadGame" style="font-size:13px;padding:9px 14px;font-weight:800;background:#0284c7;color:#fff" title="AI trích đoạn trọng tâm (Context Focus) tối ưu cho Game đối kháng nhanh">🎮 Nạp đề tạo Game</button>
+        <button class="btn g" id="bLoadTest" style="font-size:13px;padding:9px 14px;font-weight:800" title="Giữ NGUYÊN VẸN bài đọc, audio, hình ảnh, bài nối để làm bài kiểm tra chuẩn">📝 Nạp đề tạo Test</button>
+       </div>
+
+       <!-- Khung preview ảnh chụp màn hình dán qua Ctrl + V -->
+       <div id="pasteImgPreview" hidden style="margin-top:8px;background:#fff;border:1px solid #7dd3fc;border-radius:12px;padding:8px 12px;display:flex;align-items:center;gap:12px">
+        <img id="thumbPaste" style="max-height:55px;max-width:90px;border-radius:6px;border:1px solid #e2e8f0;object-fit:cover">
+        <div style="flex:1">
+         <div style="font-weight:700;font-size:13px;color:#0369a1">📸 Đã nhận ảnh chụp màn hình bài tập!</div>
+         <div style="font-size:12px;color:#64748b">Bấm "🎮 Nạp đề tạo Game" hoặc "📝 Nạp đề tạo Test" để AI đọc chữ từ ảnh</div>
+        </div>
+        <button class="btn r" id="bClearPasteImg" style="padding:3px 8px;font-size:12px">✕ Bỏ ảnh</button>
+       </div>
+
+       <div class="hint" id="linkFetchStatus" style="margin-top:6px;color:#0369a1;font-size:13px">
+        💡 <b>Mẹo:</b> Cô có thể chụp màn hình (Win + Shift + S) rồi nhấn <b>Ctrl + V</b> ngay vào đây để AI đọc đề!
+       </div>
       </div>
 
-      <textarea id="pTxt"<textarea id="pTxt"<textarea id="pTxt"<textarea id="pTxt" placeholder="Cách 1 — Copy các ô từ Excel rồi dán vào (cột: Câu hỏi | A | B | C | D | Đáp án | Giải thích)
+      <textarea id="pTxt"<textarea id="pTxt"<textarea id="pTxt"<textarea id="pTxt"<textarea id="pTxt" placeholder="Cách 1 — Copy các ô từ Excel rồi dán vào (cột: Câu hỏi | A | B | C | D | Đáp án | Giải thích)
 
 Cách 2 — Dán từ Word theo mẫu:
 1. She ___ to school every day.
@@ -183,7 +207,12 @@ Giải thích: Chủ ngữ số ít đi với goes"></textarea>
        <input type="file" id="fImportBank" accept=".json" hidden>
       </label>
      </div>
-     <div style="font-weight:800;font-size:13px;color:#5b4bb0;margin:6px 0">🌐 THƯ VIỆN ĐỀ CHUNG (Mọi thầy cô đều dùng được)</div>
+     <div style="display:flex;gap:6px;margin:8px 0">
+       <button class="btn g" id="bFiltAll" style="padding:4px 10px;font-size:12px">Tất cả đề</button>
+       <button class="btn w" id="bFiltGame" style="padding:4px 10px;font-size:12px">🎮 Chỉ Game</button>
+       <button class="btn w" id="bFiltTest" style="padding:4px 10px;font-size:12px">📝 Chỉ Bài Test</button>
+      </div>
+      <div style="font-weight:800;font-size:13px;color:#5b4bb0;margin:6px 0">🌐 THƯ VIỆN ĐỀ CHUNG (Mọi thầy cô đều dùng được)</div>
      <div id="commBankList" class="prev" style="max-height:220px"></div>
      <div style="font-weight:800;font-size:13px;color:#7a6aa8;margin:12px 0 6px">🔒 KHO ĐỀ RIÊNG CỦA MÁY NÀY</div>
      <div id="bankList" class="prev" style="max-height:160px"></div>
@@ -208,42 +237,72 @@ Giải thích: Chủ ngữ số ít đi với goes"></textarea>
     <div class="lab">Tên bộ đề (hiện cho học sinh)</div>
     <input id="gTitle" class="inp" maxlength="60" placeholder="VD: English 7 · Unit 5 hoặc IELTS Reading">
 
-    <div class="lab">Kiểu game (Đã mở full cả 4 game)</div>
+    <div class="lab">Kiểu game &amp; Kiểm tra (Đã mở full)</div>
     <div class="modes" id="gModes">
-     <button class="mode on" data-m="climb"><b>🧗</b><span>Leo núi<small>Leo lên đỉnh · cứu công chúa</small></span></button>
-     <button class="mode" data-m="brick"><b>🍄</b><span>Nấm Mario<small>4 màn · chui ống · đánh rồng</small></span></button>
-     <button class="mode" data-m="tank"><b>🛡</b><span>Xe tăng<small>4 stage · bảo vệ căn cứ</small></span></button>
+     <button class="mode on" data-m="climb"><b>🧗</b><span>Leo núi<small>Leo đỉnh · cứu công chúa</small></span></button>
+     <button class="mode" data-m="brick"><b>🍄</b><span>Nấm Mario<small>4 màn · chui ống</small></span></button>
+     <button class="mode" data-m="tank"><b>🛡</b><span>Xe tăng<small>4 stage · bảo vệ cứ điểm</small></span></button>
      <button class="mode" data-m="bomb"><b>💣</b><span>Đặt bom<small>8 màn · Bomberman cổ điển</small></span></button>
+     <button class="mode" data-m="test" style="border:2px solid #8b5cf6"><b>📝</b><span>Bài kiểm tra<small>Đầy đủ Reading · Listening</small></span></button>
     </div>
 
-    <div class="lab">🎚 Độ khó</div>
-    <select id="gLv">
-     <option value="1">😊 Dễ — núi thấp, ít quái</option>
-     <option value="2" selected>🔥 Vừa — nhiều quái, bậc hẹp, có băng trơn</option>
-     <option value="3">💀 Khó — núi rất cao, quái dày đặc, bậc sụp nhanh</option>
-    </select>
+    <!-- CẤU HÌNH 1: DÀNH CHO GAME ARCADE (LEO NÚI, MARIO, XE TĂNG, ĐẶT BOM) -->
+    <div id="arcadeSettings">
+     <div class="lab">🎚 Độ khó</div>
+     <select id="gLv">
+      <option value="1">😊 Dễ — núi thấp, ít quái</option>
+      <option value="2" selected>🔥 Vừa — nhiều quái, bậc hẹp, có băng trơn</option>
+      <option value="3">💀 Khó — núi rất cao, quái dày đặc, bậc sụp nhanh</option>
+     </select>
 
-    <div class="lab">Thời gian chơi</div>
-    <select id="gDur">
-     <option value="5">5 phút</option>
-     <option value="7">7 phút</option>
-     <option value="10" selected>10 phút</option>
-     <option value="15">15 phút</option>
-     <option value="20">20 phút</option>
-     <option value="30">30 phút</option>
-    </select>
+     <div class="lab">Thời gian chơi</div>
+     <select id="gDur">
+      <option value="5">5 phút</option>
+      <option value="7">7 phút</option>
+      <option value="10" selected>10 phút</option>
+      <option value="15">15 phút</option>
+      <option value="20">20 phút</option>
+      <option value="30">30 phút</option>
+     </select>
 
-    <div class="two">
-     <div><div class="lab">⚡ Mỗi câu đúng được</div><select id="gEq"><option value="100" selected>100 năng lượng</option><option value="200">200 năng lượng</option><option value="300">300 năng lượng</option></select></div>
-     <div><div class="lab">🔋 Bình năng lượng đầy</div><select id="gEm"><option value="500">500</option><option value="1000" selected>1000</option><option value="1500">1500</option><option value="2000">2000</option><option value="0">Không giới hạn</option></select></div>
+     <div class="two">
+      <div><div class="lab">⚡ Mỗi câu đúng được</div><select id="gEq"><option value="100" selected>100 năng lượng</option><option value="200">200 năng lượng</option><option value="300">300 năng lượng</option></select></div>
+      <div><div class="lab">🔋 Bình năng lượng đầy</div><select id="gEm"><option value="500">500</option><option value="1000" selected>1000</option><option value="1500">1500</option><option value="2000">2000</option><option value="0">Không giới hạn</option></select></div>
+     </div>
+     <div class="hint">Mỗi bước nhảy tốn 6 ⚡, đi bộ tốn liên tục. Đầy bình thì phải đi leo để tiêu hao bớt năng lượng.</div>
+
+     <div class="lab">Tương tác &amp; âm thanh</div>
+     <label class="sw"><input type="checkbox" id="gIa" checked><span>🎒 Cho phép trêu nhau<small>❄️ đóng băng · 🧲 hút năng lượng · 🛡 khiên (tốn ⚡)</small></span></label>
+     <label class="sw"><input type="checkbox" id="gMu" checked><span>🎵 Nhạc nền trên máy học sinh<small>Bỏ tick nếu cả lớp ồn quá · máy chiếu bật/tắt bằng nút 🎵</small></span></label>
     </div>
-    <div class="hint">Mỗi bước nhảy tốn 6 ⚡, đi bộ tốn liên tục. Đầy bình thì phải đi leo để tiêu hao bớt năng lượng.</div>
 
-    <div class="lab">Tương tác &amp; âm thanh</div>
-    <label class="sw"><input type="checkbox" id="gIa" checked><span>🎒 Cho phép trêu nhau<small>❄️ đóng băng · 🧲 hút năng lượng · 🛡 khiên (tốn ⚡)</small></span></label>
-    <label class="sw"><input type="checkbox" id="gMu" checked><span>🎵 Nhạc nền trên máy học sinh<small>Bỏ tick nếu cả lớp ồn quá · máy chiếu bật/tắt bằng nút 🎵</small></span></label>
+    <!-- CẤU HÌNH 2: DÀNH CHO BÀI KIỂM TRA (TEST MODE) -->
+    <div id="testSettings" hidden style="background:#f5f3ff;border:2px solid #ddd6fe;border-radius:16px;padding:12px;margin:10px 0">
+     <div style="font-weight:800;color:#6d28d9;font-size:14px;margin-bottom:8px">⚙️ Cấu hình Bài Kiểm Tra:</div>
+     <div class="lab" style="margin-top:4px">🎨 Theme giao diện bài test</div>
+     <select id="testTheme" class="inp">
+      <option value="pastel" selected>🌈 Vui nhộn Pastel (Màu sắc hoạt hình vui vẻ)</option>
+      <option value="cambridge">🏛️ Cambridge Chuẩn thi (Gọn gàng, học thuật)</option>
+      <option value="cyber">🌌 Không gian Vũ trụ (Cyber Neon huyền bí)</option>
+      <option value="fresh">🌿 Xanh Mint tươi mát (Dịu mắt, tập trung)</option>
+     </select>
 
-    <div class="row" style="justify-content:stretch">
+     <div class="lab">⏱ Thời gian làm bài kiểm tra</div>
+     <select id="testDur" class="inp">
+      <option value="15">15 phút</option>
+      <option value="30">30 phút</option>
+      <option value="45" selected>45 phút (Chuẩn 1 tiết học)</option>
+      <option value="60">60 phút</option>
+      <option value="0">Không giới hạn thời gian</option>
+     </select>
+
+     <div class="lab">Quy chế bài thi</div>
+     <label class="sw" style="background:#fff"><input type="checkbox" id="testShuffle" checked><span>🔀 Trộn trật tự câu hỏi &amp; phương án<small>Chống học sinh nhìn bài nhau</small></span></label>
+     <label class="sw" style="background:#fff"><input type="checkbox" id="testReview" checked><span>🔄 Cho phép xem lại và sửa câu trả lời trước khi nộp</span></label>
+     <label class="sw" style="background:#fff"><input type="checkbox" id="testShowExp" checked><span>📖 Xem lời giải chi tiết sau khi nộp bài</span></label>
+    </div>
+
+    <div class="row" style="justify-content:stretch"><div class="row" style="justify-content:stretch">
      <button class="btn" id="bOpen" style="flex:1;font-size:17px;padding:13px" disabled>🚪 Mở phòng chơi chung</button>
      <button class="btn w" id="bSolo" disabled>📚 Giao bài về nhà</button>
     </div>
@@ -463,48 +522,66 @@ function saveBank(list) {
   renderBank();
 }
 
-async function renderBank() {
-  const query = ($('searchBank') ? $('searchBank').value : '').toLowerCase().trim();
-  
-  // 1. Render Thư viện đề chung
-  cachedCommunity = await GC.getCommunityLibrary();
-  let commList = cachedCommunity;
+let bankFilter = 'all'; // 'all', 'game', 'test'
+
+function renderBank() {
+  const query = clean($('searchBank') ? $('searchBank').value : '').toLowerCase();
+
+  // 1. Render Thư viện chung
+  let commList = (window.communityQuizzesCache || []).slice();
+  if (bankFilter === 'game') commList = commList.filter(q => q.type !== 'test' && q.m !== 'test');
+  if (bankFilter === 'test') commList = commList.filter(q => q.type === 'test' || q.m === 'test');
   if (query) {
-    commList = commList.filter(q => (q.title + ' ' + (q.author || '') + ' ' + (q.id || '')).toLowerCase().includes(query));
+    commList = commList.filter(q => (q.title || '').toLowerCase().includes(query) || (q.author || '').toLowerCase().includes(query) || (q.id || '').toLowerCase().includes(query));
   }
 
   if (!commList.length) {
     $('commBankList').innerHTML = '<div class="hint" style="text-align:center;padding:12px">Không tìm thấy đề nào phù hợp.</div>';
   } else {
-    $('commBankList').innerHTML = commList.map(item => `
-      <div class="bank-item" style="border-left:4px solid #5ab0ff">
+    $('commBankList').innerHTML = commList.map(item => {
+      const isTest = item.type === 'test' || item.m === 'test';
+      const badgeHtml = isTest 
+        ? '<span style="background:#8b5cf6;color:#fff;font-size:11px;font-weight:800;padding:2px 6px;border-radius:6px;margin-right:6px">📝 BÀI TEST</span>'
+        : '<span style="background:#0284c7;color:#fff;font-size:11px;font-weight:800;padding:2px 6px;border-radius:6px;margin-right:6px">🎮 GAME</span>';
+
+      return `
+      <div class="bank-item" style="border-left:4px solid ${isTest ? '#8b5cf6' : '#5ab0ff'}">
         <div class="binfo" onclick="loadQuizData('${item.id}')">
-          <span style="font-size:15px;color:#2d2350">📘 ${esc(item.title)}</span>
+          <span style="font-size:15px;color:#2d2350">${badgeHtml}📘 ${esc(item.title)}</span>
           <span style="font-size:12px;color:#7a6aa8;display:block">
             Mã: <code style="color:#5b4bb0">${esc(item.id)}</code> · ${item.qs ? item.qs.length : 0} câu · Tác giả: <b>${esc(item.author || 'Ms Nenet')}</b> · ${esc(item.date || '')}
           </span>
         </div>
         <div class="bacts">
-          <button class="btn g" style="padding:5px 9px;font-size:12px" title="Dùng đề này mở phòng" onclick="loadQuizData('${item.id}')">🎯 Mở phòng</button>
-          <button class="btn w" style="padding:5px 9px;font-size:12px" title="Giao bài về nhà" onclick="assignHwFor('${item.id}')">📚 Giao bài</button>
+          <button class="btn g" style="padding:5px 9px;font-size:12px" title="Dùng đề này mở phòng" onclick="loadQuizData('${item.id}')">${isTest ? '📝 Mở phòng thi' : '🎯 Mở phòng'}</button>
+          <button class="btn w" style="padding:5px 9px;font-size:12px" title="Giao bài" onclick="assignHwFor('${item.id}')">${isTest ? '📋 Giao bài test' : '📚 Giao bài'}</button>
         </div>
       </div>
-    `).join('');
+      `;
+    }).join('');
   }
 
   // 2. Render Kho riêng
   const bank = getBank();
   let localFiltered = bank;
+  if (bankFilter === 'game') localFiltered = localFiltered.filter(q => q.type !== 'test' && q.m !== 'test');
+  if (bankFilter === 'test') localFiltered = localFiltered.filter(q => q.type === 'test' || q.m === 'test');
   if (query) {
-    localFiltered = localFiltered.filter(q => q.title.toLowerCase().includes(query));
+    localFiltered = localFiltered.filter(q => (q.title || '').toLowerCase().includes(query));
   }
   if (!localFiltered.length) {
     $('bankList').innerHTML = '<div class="hint" style="text-align:center;padding:10px">Kho riêng trên máy này chưa có đề nào.</div>';
   } else {
-    $('bankList').innerHTML = localFiltered.map((item, idx) => `
+    $('bankList').innerHTML = localFiltered.map((item, idx) => {
+      const isTest = item.type === 'test' || item.m === 'test';
+      const badgeHtml = isTest 
+        ? '<span style="background:#8b5cf6;color:#fff;font-size:11px;font-weight:800;padding:2px 6px;border-radius:6px;margin-right:6px">📝 TEST</span>'
+        : '<span style="background:#0284c7;color:#fff;font-size:11px;font-weight:800;padding:2px 6px;border-radius:6px;margin-right:6px">🎮 GAME</span>';
+
+      return `
       <div class="bank-item">
         <div class="binfo" onclick="loadFromBank(${idx})">
-          <span style="font-size:15px">🔒 ${esc(item.title)}</span>
+          <span style="font-size:15px">${badgeHtml}🔒 ${esc(item.title)}</span>
           <span style="font-size:12px;color:#7a6aa8;display:block">${item.qs.length} câu · ${item.date || ''}</span>
         </div>
         <div class="bacts">
@@ -513,11 +590,23 @@ async function renderBank() {
           <button class="btn r" style="padding:4px 8px;font-size:12px" onclick="deleteFromBank(${idx})">✕</button>
         </div>
       </div>
-    `).join('');
+      `;
+    }).join('');
   }
 }
 
-if ($('searchBank')) {
+// Bắt sự kiện bộ lọc đề
+if ($('bFiltAll')) $('bFiltAll').onclick = () => { bankFilter = 'all'; updateFilterButtons(); renderBank(); };
+if ($('bFiltGame')) $('bFiltGame').onclick = () => { bankFilter = 'game'; updateFilterButtons(); renderBank(); };
+if ($('bFiltTest')) $('bFiltTest').onclick = () => { bankFilter = 'test'; updateFilterButtons(); renderBank(); };
+
+function updateFilterButtons() {
+  if ($('bFiltAll')) $('bFiltAll').className = 'btn ' + (bankFilter === 'all' ? 'g' : 'w');
+  if ($('bFiltGame')) $('bFiltGame').className = 'btn ' + (bankFilter === 'game' ? 'g' : 'w');
+  if ($('bFiltTest')) $('bFiltTest').className = 'btn ' + (bankFilter === 'test' ? 'g' : 'w');
+}
+
+if ($('searchBank'))if ($('searchBank')) {
   $('searchBank').oninput = () => renderBank();
 }
 
@@ -1005,36 +1094,80 @@ function parseQuestionsUniversal(html) {
   return { title, questions: extractedQs };
 }
 
-// Hàm gọi AI Gemini đọc hiểu & trích xuất câu hỏi tự động (dùng thẳng quota của cô)
-async function callGeminiAiExtract(htmlOrText) {
+// Hàm gọi AI Gemini đọc hiểu & trích xuất câu hỏi tự động (hỗ trợ cả ảnh chụp màn hình base64 & văn bản)
+async function callGeminiAiExtract(contentOrImage, isTestMode) {
   const key = systemAiKey || DEFAULT_AI_KEY;
+  const isImage = typeof contentOrImage === 'string' && contentOrImage.startsWith('data:image/');
 
-  // Tách văn bản sạch
-  let cleanText = htmlOrText;
-  if (htmlOrText.includes('<html') || htmlOrText.includes('<body') || htmlOrText.includes('</div>')) {
-    const d = document.createElement('div');
-    d.innerHTML = htmlOrText;
-    d.querySelectorAll('script, style, svg, iframe, noscript, nav, header, footer').forEach(e => e.remove());
-    cleanText = d.innerText;
-  }
-  cleanText = cleanText.substring(0, 32000);
-
-  const promptText = `Bạn là chuyên gia giáo dục tiếng Anh. Dưới đây là nội dung bài tập / đề thi tiếng Anh (có thể là trắc nghiệm, ngữ pháp, phát âm, đọc hiểu Reading Comprehension, hoặc đọc nối Matching). Hãy đọc hiểu cốt lõi của bài thi và trích xuất thành danh sách câu hỏi trắc nghiệm tiếng Anh thông minh cho học sinh thi đấu (tối đa 30 câu). Với mỗi câu hỏi:
-- "q": Nội dung câu hỏi (giữ lại <u>, <b> nếu là câu hỏi phát âm/trọng âm)
+  let promptText = '';
+  if (isTestMode) {
+    promptText = `Bạn là chuyên gia khảo thí tiếng Anh quốc tế (Cambridge / IELTS). Dưới đây là đề bài kiểm tra (bằng văn bản hoặc ảnh chụp).
+Hãy đọc hiểu cốt lõi và trích xuất thành danh sách câu hỏi kiểm tra đầy đủ, GIỮ NGUYÊN VẸN BÀI ĐỌC (Reading), ĐOẠN NGHE (Listening), BÀI NỐI (Matching), KHÔNG CẮT XÉN.
+Yêu cầu định dạng JSON cho Test Mode:
+- "q": Câu hỏi cụ thể
+- "passage": Toàn bộ bài đọc ngữ cảnh đầy đủ (nếu bài đọc chung cho nhiều câu, giữ nguyên toàn bộ bài đọc ở trường 'passage' này)
+- "audio": Link file âm thanh nghe (nếu tìm thấy trong đề)
+- "img": Link ảnh hoặc ghi chú ảnh minh họa nếu có
 - "o": Mảng 4 phương án lựa chọn ["A", "B", "C", "D"]
-- "a": Chỉ số (0, 1, 2, 3) của đáp án đúng trong mảng "o"
-- "e": Lời giải thích chi tiết, mẹo ngữ pháp hoặc phân tích phát âm
-- "s": Chủ đề hoặc phần thi (ví dụ: Pronunciation, Grammar, Vocabulary, Reading)
+- "a": Chỉ số (0, 1, 2, 3) của đáp án đúng
+- "e": Lời giải thích chi tiết, dẫn chứng câu chữ trong bài đọc (evidence)
+- "s": Dạng bài (Reading, Listening, Matching, Grammar, Vocabulary)
 
-Nội dung:
----
-${cleanText}
----
+Trả về strictly JSON danh sách:
+[
+  { "q": "...", "passage": "...", "o": ["...", "...", "...", "..."], "a": 0, "e": "...", "s": "..." }
+]`;
+  } else {
+    // Game mode: Áp dụng Giải pháp C - Context Focus (trích đoạn ngắn gọn cho game phản xạ nhanh)
+    promptText = `Bạn là chuyên gia giáo dục tiếng Anh. Dưới đây là nội dung bài tập (bằng văn bản hoặc ảnh chụp).
+Hãy trích xuất thành danh sách câu hỏi trắc nghiệm tiếng Anh TỐI ƯU CHO GAME ĐỐI KHÁNG NHANH (tối đa 25 câu).
+YÊU CẦU ĐẶC BIỆT (Giải pháp C - Context Focus):
+- Với bài đọc dài hoặc bài nối Matching: Trích đoạn ngữ cảnh trọng tâm (2-3 câu ngắn gọn chứa manh mối) ghép thẳng vào câu hỏi 'q' để học sinh dễ đọc nhanh trên điện thoại mà không bị tràn màn hình.
+- "q": Câu hỏi ngắn gọn (kèm ngữ cảnh ngắn nếu cần; giữ lại <u>, <b> nếu là câu phát âm/trọng âm)
+- "o": Mảng 4 phương án lựa chọn ["A", "B", "C", "D"]
+- "a": Chỉ số (0, 1, 2, 3) của đáp án đúng
+- "e": Lời giải thích ngắn gọn, từ khóa đối chiếu
+- "s": Dạng bài (Pronunciation, Grammar, Vocabulary, Reading)
 
-Trả về strictly JSON dạng danh sách:
+Trả về strictly JSON danh sách:
 [
   { "q": "...", "o": ["...", "...", "...", "..."], "a": 0, "e": "...", "s": "..." }
 ]`;
+  }
+
+  let requestBody = {};
+  if (isImage) {
+    const commaIdx = contentOrImage.indexOf(',');
+    const mimeType = contentOrImage.substring(5, contentOrImage.indexOf(';'));
+    const b64Data = contentOrImage.substring(commaIdx + 1);
+    requestBody = {
+      contents: [{
+        parts: [
+          { text: promptText },
+          { inlineData: { mimeType, data: b64Data } }
+        ]
+      }],
+      generationConfig: { responseMimeType: 'application/json' }
+    };
+  } else {
+    let cleanText = contentOrImage;
+    if (cleanText.includes('<html') || cleanText.includes('<body') || cleanText.includes('</div>')) {
+      const d = document.createElement('div');
+      d.innerHTML = cleanText;
+      d.querySelectorAll('script, style, svg, iframe, noscript, nav, header, footer').forEach(e => e.remove());
+      cleanText = d.innerText;
+    }
+    cleanText = cleanText.replace(/\s+/g, ' ').trim().substring(0, 32000);
+
+    requestBody = {
+      contents: [{
+        parts: [
+          { text: promptText + '\n\nNội dung đề bài:\n---\n' + cleanText + '\n---' }
+        ]
+      }],
+      generationConfig: { responseMimeType: 'application/json' }
+    };
+  }
 
   const models = ['gemini-flash-lite-latest', 'gemini-3.8-flash'];
   let lastError = null;
@@ -1045,12 +1178,7 @@ Trả về strictly JSON dạng danh sách:
       const resp = await fetch(url, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          contents: [{ parts: [{ text: promptText }] }],
-          generationConfig: {
-            responseMimeType: 'application/json'
-          }
-        })
+        body: JSON.stringify(requestBody)
       });
 
       if (!resp.ok) {
@@ -1074,60 +1202,172 @@ Trả về strictly JSON dạng danh sách:
   throw new Error('Lỗi khi gọi AI: ' + (lastError ? lastError.message : 'Không nhận diện được phản hồi.'));
 }
 
-// Nút Nạp đề DUY NHẤT: Tự động chạy bộ đọc nhanh, nếu không tìm thấy thì tự kích hoạt AI Gemini
-if ($('bFetchLink')) {
-  $('bFetchLink').onclick = async () => {
-    const url = clean($('inpWebLink').value);
-    const pasteTxt = clean($('pTxt')?.value || '');
-    const status = $('linkFetchStatus');
+// Biến lưu ảnh chụp màn hình từ Ctrl + V
+let pastedImageBase64 = null;
 
-    if (!url && !pasteTxt) {
-      return toast('Cô dán link bài tập hoặc dán nội dung vào ô trước nhé!', 2200);
-    }
-
-    status.innerHTML = '⏳ Đang kết nối và đọc nội dung bài tập…';
-    $('bFetchLink').disabled = true;
-
-    try {
-      let extractedQs = [];
-      let docTitle = 'Bài tập tiếng Anh';
-
-      if (url) {
-        const res = await fetch(url);
-        if (!res.ok) throw new Error('Không mở được link (Mã lỗi ' + res.status + ')');
-        const html = await res.text();
-
-        // 1. Thử bộ đọc nhanh đa năng (Universal Fast Parser)
-        const parsed = parseQuestionsUniversal(html);
-        if (parsed.title) docTitle = parsed.title;
-
-        if (parsed.questions && parsed.questions.length > 0) {
-          extractedQs = parsed.questions;
-          status.innerHTML = '🎉 <b>Thành công!</b> Đã tự động đọc nhanh <b>' + extractedQs.length + ' câu hỏi</b> từ bài tập.';
-          toast('🎉 Nạp nhanh thành công ' + extractedQs.length + ' câu hỏi!', 3000);
-        } else {
-          // 2. Tự động chuyển sang AI Gemini đọc hiểu chuyên sâu (dành cho Reading, Matching, web phức tạp)
-          status.innerHTML = '🧠 <b>Đang dùng Trí tuệ Nhân tạo Gemini đọc hiểu và phân tích bài tập…</b> (vui lòng đợi vài giây)';
-          extractedQs = await callGeminiAiExtract(html);
-          status.innerHTML = '🎉 <b>AI Gemini phân tích thành công!</b> Đã bóc tách <b>' + extractedQs.length + ' câu hỏi</b> chuyên sâu.';
-          toast('🎉 AI đã bóc tách ' + extractedQs.length + ' câu hỏi!', 3500);
+// Lắng nghe Ctrl + V dán ảnh trên toàn trang
+window.addEventListener('paste', e => {
+  const items = (e.clipboardData || e.originalEvent?.clipboardData)?.items;
+  if (!items) return;
+  for (const item of items) {
+    if (item.type && item.type.indexOf('image') !== -1) {
+      const blob = item.getAsFile();
+      const reader = new FileReader();
+      reader.onload = evt => {
+        pastedImageBase64 = evt.target.result;
+        if ($('pasteImgPreview')) {
+          $('pasteImgPreview').hidden = false;
+          $('thumbPaste').src = pastedImageBase64;
+          $('linkFetchStatus').innerHTML = '📸 <b>Đã nhận ảnh chụp màn hình!</b> Bấm nút <b>"🎮 Nạp đề tạo Game"</b> hoặc <b>"📝 Nạp đề tạo Test"</b> bên trên.';
+          toast('📸 Đã dán ảnh chụp màn hình!', 2500);
         }
-      } else if (pasteTxt) {
-        // Dán văn bản từ Word/PDF/Zalo: dùng AI Gemini bóc tách câu hỏi
-        status.innerHTML = '🧠 <b>Đang dùng AI Gemini phân tích văn bản bài tập…</b>';
-        extractedQs = await callGeminiAiExtract(pasteTxt);
-        status.innerHTML = '🎉 <b>AI Gemini phân tích thành công!</b> Đã bóc tách <b>' + extractedQs.length + ' câu hỏi</b>.';
-        toast('🎉 AI đã bóc tách ' + extractedQs.length + ' câu hỏi!', 3500);
-      }
+      };
+      reader.readAsDataURL(blob);
+      e.preventDefault();
+      break;
+    }
+  }
+});
 
-      setQs(extractedQs, docTitle, []);
-    } catch (err) {
-      status.innerHTML = '❌ ' + err.message;
-      toast('❌ ' + err.message, 3500);
-    } finally {
-      $('bFetchLink').disabled = false;
+// Nút chọn ảnh và file tài liệu
+if ($('bPickImg')) $('bPickImg').onclick = () => $('inpFileImg').click();
+if ($('inpFileImg')) {
+  $('inpFileImg').onchange = e => {
+    const file = e.target.files[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onload = evt => {
+        pastedImageBase64 = evt.target.result;
+        $('pasteImgPreview').hidden = false;
+        $('thumbPaste').src = pastedImageBase64;
+        $('linkFetchStatus').innerHTML = '📸 <b>Đã chọn ảnh: ' + esc(file.name) + '!</b> Bấm nút tạo Game hoặc Test để AI đọc.';
+        toast('📸 Đã chọn ảnh: ' + file.name, 2200);
+      };
+      reader.readAsDataURL(file);
     }
   };
+}
+if ($('bClearPasteImg')) {
+  $('bClearPasteImg').onclick = () => {
+    pastedImageBase64 = null;
+    $('pasteImgPreview').hidden = true;
+    if ($('inpFileImg')) $('inpFileImg').value = '';
+    $('linkFetchStatus').innerHTML = '💡 <b>Mẹo:</b> Cô có thể chụp màn hình (Win + Shift + S) rồi nhấn <b>Ctrl + V</b> ngay vào đây để AI đọc đề!';
+  };
+}
+if ($('bPickDoc')) $('bPickDoc').onclick = () => $('inpFileDoc').click();
+if ($('inpFileDoc')) {
+  $('inpFileDoc').onchange = e => {
+    const file = e.target.files[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onload = evt => {
+        $('pTxt').value = evt.target.result;
+        toast('📄 Đã nạp nội dung file: ' + file.name, 2500);
+        $('linkFetchStatus').innerHTML = '📄 Đã nạp nội dung từ <b>' + esc(file.name) + '</b>. Bấm tạo Game hoặc Test để tiếp tục.';
+      };
+      reader.readAsText(file);
+    }
+  };
+}
+
+// Xử lý nạp đề: hàm chung cho cả Nạp đề tạo Game & Nạp đề tạo Test
+async function processLoadQuiz(isTestMode) {
+  const url = clean($('inpWebLink').value);
+  const pasteTxt = clean($('pTxt')?.value || '');
+  const status = $('linkFetchStatus');
+
+  if (!pastedImageBase64 && !url && !pasteTxt) {
+    return toast('Cô dán link bài tập, dán ảnh chụp (Ctrl+V) hoặc dán văn bản trước nhé!', 2500);
+  }
+
+  status.innerHTML = '⏳ Đang phân tích bài tập…';
+  if ($('bLoadGame')) $('bLoadGame').disabled = true;
+  if ($('bLoadTest')) $('bLoadTest').disabled = true;
+
+  try {
+    let extractedQs = [];
+    let docTitle = isTestMode ? 'Bài kiểm tra tiếng Anh' : 'Game ôn tập tiếng Anh';
+
+    // 1. Trường hợp có ảnh chụp màn hình (Ctrl + V)
+    if (pastedImageBase64) {
+      status.innerHTML = '🧠 <b>AI Gemini đang đọc chữ và câu hỏi từ ảnh chụp màn hình…</b>';
+      extractedQs = await callGeminiAiExtract(pastedImageBase64, isTestMode);
+      docTitle = (isTestMode ? 'Bài kiểm tra' : 'Game') + ' (Ảnh chụp màn hình)';
+    }
+    // 2. Trường hợp có Link web
+    else if (url) {
+      const res = await fetch(url);
+      if (!res.ok) throw new Error('Không mở được link (Mã lỗi ' + res.status + ')');
+      const html = await res.text();
+
+      // Nếu tạo game và web có sẵn cấu trúc chuẩn: đọc siêu tốc
+      if (!isTestMode) {
+        const parsed = parseQuestionsUniversal(html);
+        if (parsed.questions && parsed.questions.length > 0) {
+          extractedQs = parsed.questions;
+          if (parsed.title) docTitle = parsed.title;
+        }
+      }
+
+      // Nếu chưa có câu hỏi hoặc là chế độ Test (cần giữ trọn bài đọc/listening): dùng AI
+      if (!extractedQs.length) {
+        status.innerHTML = '🧠 <b>AI Gemini đang đọc hiểu ngữ nghĩa & phân tích bài tập…</b>';
+        extractedQs = await callGeminiAiExtract(html, isTestMode);
+        const tm = html.match(/<title>(.*?)<\/title>/i);
+        if (tm) docTitle = tm[1].replace(/<[^>]+>/g, '').trim();
+      }
+    }
+    // 3. Trường hợp dán văn bản
+    else if (pasteTxt) {
+      status.innerHTML = '🧠 <b>AI Gemini đang phân tích văn bản bài tập…</b>';
+      extractedQs = await callGeminiAiExtract(pasteTxt, isTestMode);
+    }
+
+    if (!extractedQs || !extractedQs.length) {
+      throw new Error('Không trích xuất được câu hỏi nào từ nội dung.');
+    }
+
+    // Tự động chuyển mode nếu chọn Test
+    if (isTestMode) {
+      selectMode('test');
+    } else if (gMode === 'test') {
+      selectMode('climb');
+    }
+
+    // Đánh dấu type cho bộ đề
+    window.currentQuizType = isTestMode ? 'test' : 'game';
+
+    setQs(extractedQs, docTitle, []);
+    status.innerHTML = '🎉 <b>Thành công!</b> Đã nạp <b>' + extractedQs.length + ' câu hỏi</b> (' + (isTestMode ? '📝 Dạng Bài Test' : '🎮 Dạng Game') + ').';
+    toast('🎉 Nạp thành công ' + extractedQs.length + ' câu hỏi!', 3500);
+  } catch (err) {
+    status.innerHTML = '❌ ' + err.message;
+    toast('❌ ' + err.message, 3500);
+  } finally {
+    if ($('bLoadGame')) $('bLoadGame').disabled = false;
+    if ($('bLoadTest')) $('bLoadTest').disabled = false;
+  }
+}
+
+if ($('bLoadGame')) $('bLoadGame').onclick = () => processLoadQuiz(false);
+if ($('bLoadTest')) $('bLoadTest').onclick = () => processLoadQuiz(true);
+
+// Chuyển đổi Kiểu game & Cấu hình (Ảnh 1 & Ảnh 2)
+function selectMode(m) {
+  gMode = m;
+  document.querySelectorAll('#gModes .mode').forEach(b => {
+    b.classList.toggle('on', b.dataset.m === m);
+  });
+  updateModeView();
+}
+
+function updateModeView() {
+  const isTest = gMode === 'test';
+  if ($('arcadeSettings')) $('arcadeSettings').hidden = isTest;
+  if ($('testSettings')) $('testSettings').hidden = !isTest;
+  if ($('bOpen')) $('bOpen').textContent = isTest ? '📝 Mở phòng kiểm tra' : '🚪 Mở phòng chơi chung';
+  if ($('bSolo')) $('bSolo').textContent = isTest ? '📋 Giao bài kiểm tra về nhà' : '📚 Giao bài về nhà';
 }
 
 /* ═════ KHỞI ĐỘNG ═════ */
