@@ -68,23 +68,45 @@ function fromOld(x) {
     else if (x.correct != null) a = o.indexOf(x.correct);
   }
   const qText = x.question ? (x.question + (x.text ? '<br><br>' + x.text : '')) : (x.q || x.text || '');
-  const isText = x.type === 'text' || (!!x.ansText && (!o || o.length < 2));
+  const isSpeaking = x.type === 'speaking' || !!x.targetText;
+  const isText = !isSpeaking && (x.type === 'text' || (!!x.ansText && (!o || o.length < 2)));
   return {
-    type: isText ? 'text' : 'mc',
+    type: isSpeaking ? 'speaking' : isText ? 'text' : 'mc',
     q: qText,
-    o: isText ? [] : o,
-    a: isText ? 0 : a,
-    ansText: x.ansText || '',
-    e: x.explanation || x.exp || x.vnt || '',
-    s: (x.type && x.type !== 'text' && x.type !== 'mc' ? x.type : '') || x.sec || x.s || ''
+    targetText: x.targetText || (isSpeaking ? (x.ansText || (o && o[0]) || qText) : ''),
+    ipa: x.ipa || '',
+    o: isSpeaking || isText ? [] : o,
+    a: isSpeaking || isText ? 0 : a,
+    ansText: isSpeaking ? (x.targetText || x.ansText || '') : (x.ansText || ''),
+    e: x.explanation || x.exp || x.vnt || x.e || '',
+    s: (x.type && x.type !== 'text' && x.type !== 'mc' && x.type !== 'speaking' ? x.type : '') || x.sec || x.s || (isSpeaking ? 'Speaking / Pronunciation' : '')
   };
 }
 function prep(list, noShuffle) {   // trước khi chơi: bỏ câu hỏng, làm sạch, xáo đáp án 1 lần
   return (list || []).filter(x => {
     if (!x || !x.q) return false;
+    if (x.type === 'speaking' || x.targetText) return !!clean(x.targetText || x.ansText || x.q || '');
     if (x.type === 'text' || (x.ansText && (!x.o || x.o.length < 2))) return !!clean(x.ansText || (x.o && x.o[0]) || '');
     return x.o && x.o.length >= 2 && x.a >= 0 && x.a < x.o.length;
   }).map((x, i) => {
+    if (x.type === 'speaking' || x.targetText) {
+      const target = clean((x.targetText || x.ansText || x.q || '').replace(/<[^>]+>/g, ''));
+      return {
+        n: i + 1,
+        type: 'speaking',
+        q: safe(x.q),
+        targetText: target,
+        ipa: x.ipa ? esc(x.ipa) : '',
+        s: esc(x.s || 'Speaking / Pronunciation'),
+        passage: x.passage ? safe(x.passage) : '',
+        audio: x.audio ? esc(x.audio) : '',
+        img: x.img ? esc(x.img) : '',
+        o: [],
+        a: 0,
+        ansText: target,
+        e: safe(x.e || '')
+      };
+    }
     const isText = x.type === 'text' || (!!x.ansText && (!x.o || x.o.length < 2));
     if (isText) {
       return {
@@ -1012,5 +1034,198 @@ function showReportCard(data) {
   };
 }
 
-  return { $, shuffle, pick, clamp, esc, fmt, stamp, clean, rng, COLORS, BADGE, safe, normAns, checkTextAns, fromOld, prep, parseCSV, rowsToQs, parseText, parsePaste, sheetSets, sheetSet, sampleSet, packHw, unpackHw, tone, sfx, confetti, toast, rank, makeNet, music, saveCommunityQuiz, getCommunityLibrary, getQuizById, saveHwMeta, submitHwResult, getHwGradebook, showReportCard };
+  
+/* ══════════════════════════════════════════════════════════════
+   HỆ THỐNG ĐÁNH GIÁ PHÁT ÂM TIẾNG ANH AI (AI PRONUNCIATION EVALUATION)
+   ══════════════════════════════════════════════════════════════ */
+const DEFAULT_AI_KEY = atob('QVEuQWI4Uk42SXY0Mm9BVTFySEFWNEItTVlMb0U2eThEaHFvd2pybFZ3QXVkbUEyQkxYOWc=');
+let systemAiKey = DEFAULT_AI_KEY;
+if (typeof window !== 'undefined' && window.firebaseConfig && window.firebaseConfig.databaseURL) {
+  try {
+    fetch(window.firebaseConfig.databaseURL + '/system_config/gemini_key.json')
+      .then(r => r.json())
+      .then(k => { if (k && typeof k === 'string') systemAiKey = k; })
+      .catch(() => {});
+  } catch(e) {}
+}
+function getAiKey() { return systemAiKey || DEFAULT_AI_KEY; }
+
+function levenshteinDist(s1, s2) {
+  const m = s1.length, n = s2.length;
+  const d = Array.from({ length: m + 1 }, () => new Array(n + 1).fill(0));
+  for (let i = 0; i <= m; i++) d[i][0] = i;
+  for (let j = 0; j <= n; j++) d[0][j] = j;
+  for (let i = 1; i <= m; i++) {
+    for (let j = 1; j <= n; j++) {
+      const cost = s1[i - 1] === s2[j - 1] ? 0 : 1;
+      d[i][j] = Math.min(d[i - 1][j] + 1, d[i][j - 1] + 1, d[i - 1][j - 1] + cost);
+    }
+  }
+  return d[m][n];
+}
+
+function diffPronunciation(spoken, target) {
+  const cleanStr = str => String(str || '').toLowerCase().replace(/[^\w\s']/g, ' ').replace(/\s+/g, ' ').trim();
+  const sWords = cleanStr(spoken).split(' ').filter(Boolean);
+  const tWords = cleanStr(target).split(' ').filter(Boolean);
+
+  if (!tWords.length) return { score: 0, passed: false, words: [] };
+
+  const results = [];
+  let matchedWeight = 0;
+  let sIdx = 0;
+
+  for (let i = 0; i < tWords.length; i++) {
+    const tw = tWords[i];
+    let found = -1;
+    for (let j = sIdx; j < Math.min(sIdx + 4, sWords.length); j++) {
+      if (sWords[j] === tw) {
+        found = j;
+        break;
+      }
+    }
+
+    if (found !== -1) {
+      results.push({ word: tw, status: 'ok', spoken: sWords[found] });
+      matchedWeight += 1.0;
+      sIdx = found + 1;
+    } else {
+      let closeFound = -1;
+      let minDiff = 999;
+      for (let j = sIdx; j < Math.min(sIdx + 3, sWords.length); j++) {
+        const sw = sWords[j];
+        const dist = levenshteinDist(tw, sw);
+        const maxLen = Math.max(tw.length, sw.length);
+        if (maxLen > 2 && dist <= Math.max(1, Math.floor(maxLen * 0.35))) {
+          if (dist < minDiff) {
+            minDiff = dist;
+            closeFound = j;
+          }
+        }
+      }
+
+      if (closeFound !== -1) {
+        results.push({ word: tw, status: 'close', spoken: sWords[closeFound] });
+        matchedWeight += 0.75;
+        sIdx = closeFound + 1;
+      } else {
+        results.push({ word: tw, status: 'bad', spoken: null });
+      }
+    }
+  }
+
+  const score = Math.min(100, Math.max(0, Math.round((matchedWeight / tWords.length) * 100)));
+  return {
+    score,
+    passed: score >= 70,
+    words: results,
+    matchedCount: Math.round(matchedWeight),
+    totalWords: tWords.length
+  };
+}
+
+function speakText(text, lang = 'en-US', rate = 0.88) {
+  if (typeof window === 'undefined' || !window.speechSynthesis) return;
+  try {
+    window.speechSynthesis.cancel();
+    const u = new SpeechSynthesisUtterance(text);
+    u.lang = lang;
+    u.rate = rate;
+    const voices = window.speechSynthesis.getVoices();
+    const enVoice = voices.find(v => (v.name.includes('Natural') || v.name.includes('Google')) && v.lang.startsWith('en'))
+      || voices.find(v => v.lang.startsWith('en'))
+      || voices[0];
+    if (enVoice) u.voice = enVoice;
+    window.speechSynthesis.speak(u);
+  } catch (e) {
+    console.warn('SpeechSynthesis error:', e);
+  }
+}
+
+async function evaluatePronunciationAI(spoken, target, ipa) {
+  const localRes = diffPronunciation(spoken, target);
+  let feedback = '';
+  let tips = '';
+
+  const badWords = localRes.words.filter(w => w.status === 'bad').map(w => w.word);
+  const closeWords = localRes.words.filter(w => w.status === 'close').map(w => w.word);
+
+  if (localRes.score >= 90) {
+    feedback = '🌟 Xuất sắc! Em phát âm rất chuẩn xác, trôi chảy và rõ ràng!';
+  } else if (localRes.score >= 70) {
+    feedback = `👍 Khá tốt! Em đã phát âm đúng ${localRes.matchedCount}/${localRes.totalWords} từ.` +
+      (badWords.length ? ` Hãy chú ý luyện thêm từ: "${badWords.slice(0, 2).join('", "')}".` : '');
+  } else {
+    feedback = `💪 Cần cố gắng hơn! Em phát âm được ${localRes.matchedCount}/${localRes.totalWords} từ.` +
+      (badWords.length ? ` Các từ chưa đạt: "${badWords.slice(0, 3).join('", "')}".` : '') + ' Hãy bấm "Nghe mẫu" để nghe lại nhé!';
+  }
+
+  const key = getAiKey();
+  if (key && typeof fetch !== 'undefined' && spoken && spoken.trim()) {
+    const prompt = `Bạn là giáo viên chuyên ngữ âm Tiếng Anh (English Phonetics Teacher).
+Nhiệm vụ: Nhận xét phát âm của học sinh dựa trên bản ghi âm chuyển chữ.
+Câu mẫu chuẩn: "${target}"
+${ipa ? `Phiên âm IPA: "${ipa}"` : ''}
+Lời học sinh phát âm thực tế: "${spoken}"
+
+Hãy phân tích ngắn gọn:
+1. Độ chuẩn xác (score: 0-100).
+2. Lời khuyên bằng tiếng Việt thật khích lệ, thân thiện (tối đa 2 câu), chỉ rõ từ nào bị đọc sót, đọc nhầm âm đuôi (/s/, /ed/, /t/) hoặc sai trọng âm.
+3. Mẹo phát âm ngắn gọn (tips) cho âm khó nhất trong câu này.
+
+Trả về strictly JSON:
+{
+  "score": <0-100>,
+  "passed": <true nếu score >= 70>,
+  "feedback": "<lời nhận xét tiếng Việt khích lệ>",
+  "tips": "<mẹo phát âm âm khó>"
+}`;
+
+    const models = ['gemini-3.5-flash', 'gemini-3.8-flash', 'gemini-flash-latest', 'gemini-flash-lite-latest'];
+    for (const m of models) {
+      try {
+        const ctrl = new AbortController();
+        const tid = setTimeout(() => ctrl.abort(), 4000);
+        const resp = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${m}:generateContent?key=${key}`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            contents: [{ parts: [{ text: prompt }] }],
+            generationConfig: { responseMimeType: 'application/json', temperature: 0.2 }
+          }),
+          signal: ctrl.signal
+        });
+        clearTimeout(tid);
+        if (resp.ok) {
+          const data = await resp.json();
+          const txt = data.candidates?.[0]?.content?.parts?.[0]?.text;
+          if (txt) {
+            const aiJson = JSON.parse(txt);
+            return {
+              score: typeof aiJson.score === 'number' ? aiJson.score : localRes.score,
+              passed: aiJson.score != null ? aiJson.score >= 70 : localRes.passed,
+              feedback: aiJson.feedback || feedback,
+              tips: aiJson.tips || tips,
+              words: localRes.words,
+              spoken,
+              target
+            };
+          }
+        }
+      } catch (err) {}
+    }
+  }
+
+  return {
+    score: localRes.score,
+    passed: localRes.passed,
+    feedback,
+    tips,
+    words: localRes.words,
+    spoken,
+    target
+  };
+}
+
+return { $, shuffle, pick, clamp, esc, fmt, stamp, clean, rng, COLORS, BADGE, safe, normAns, checkTextAns, fromOld, prep, parseCSV, rowsToQs, parseText, parsePaste, sheetSets, sheetSet, sampleSet, packHw, unpackHw, tone, sfx, confetti, toast, rank, makeNet, music, saveCommunityQuiz, getCommunityLibrary, getQuizById, saveHwMeta, submitHwResult, getHwGradebook, showReportCard, getAiKey, diffPronunciation, speakText, evaluatePronunciationAI };
 })();

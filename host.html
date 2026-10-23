@@ -261,6 +261,7 @@ Giải thích: Chủ ngữ số ít đi với goes"></textarea>
      <button class="btn b" type="button" id="bToggleVisualEditor" style="padding:7px 12px;font-size:13px;flex:1">✏️ Sửa chi tiết từng câu (0)</button>
      <button class="btn w" type="button" id="bAddMcQ" style="padding:7px 10px;font-size:12px" title="Thêm 1 câu hỏi trắc nghiệm A/B/C/D">➕ Câu Trắc nghiệm</button>
      <button class="btn w" type="button" id="bAddTextQ" style="padding:7px 10px;font-size:12px" title="Thêm 1 câu hỏi tự luận ngắn / điền từ / viết lại câu">✍️ Câu Tự luận / Điền từ</button>
+     <button class="btn w" type="button" id="bAddSpeakingQ" style="padding:7px 10px;font-size:12px;background:#fdf2f8;border-color:#f472b6;color:#9d174d" title="Thêm 1 câu hỏi phát âm tiếng Anh (AI chấm điểm)">🗣 Câu Phát âm (Speaking AI)</button>
     </div>
     <div id="qVisualEditor" hidden style="max-height:520px;overflow:auto;margin-top:8px;padding:8px;background:#f5f0ff;border:2px solid #d8ccff;border-radius:14px"></div>
 
@@ -582,8 +583,11 @@ function refreshQsPreviewOnly() {
   $('qStat').className = 'stat ' + (list.length ? 'ok' : '');
   $('qStat').textContent = list.length ? '✅ Đang có ' + list.length + ' câu hỏi sẵn sàng' : '';
   $('qPrev').innerHTML = list.slice(0, 40).map((q, i) => {
-    const isText = q.type === 'text' || (!!q.ansText && (!q.o || q.o.length < 2));
-    const ansLabel = isText ? ('✍️ [Tự luận] ' + esc(q.ansText || '')) : GC.safe((q.o && q.o[q.a]) || '');
+    const isSpeaking = q.type === 'speaking';
+    const isText = !isSpeaking && (q.type === 'text' || (!!q.ansText && (!q.o || q.o.length < 2)));
+    const ansLabel = isSpeaking
+      ? ('🗣 [Phát âm] “' + esc(q.targetText || q.ansText || '') + '”' + (q.ipa ? ' ' + esc(q.ipa) : ''))
+      : isText ? ('✍️ [Tự luận] ' + esc(q.ansText || '')) : GC.safe((q.o && q.o[q.a]) || '');
     return '<div>' + (i + 1) + '. ' + GC.safe(q.q).replace(/<br>/g, ' ') + ' <span style="color:#1d8a5a;font-weight:800">→ ' + ansLabel + '</span></div>';
   }).join('');
   if ($('bToggleVisualEditor')) {
@@ -598,15 +602,18 @@ function refreshQsPreviewOnly() {
 
 function setQs(list, title, errs) {
   qs = (list || []).map(q => {
-    const isText = q.type === 'text' || (!!q.ansText && (!q.o || q.o.length < 2));
+    const isSpeaking = q.type === 'speaking' || !!q.targetText;
+    const isText = !isSpeaking && (q.type === 'text' || (!!q.ansText && (!q.o || q.o.length < 2)));
     return {
-      type: isText ? 'text' : 'mc',
-      q: q.q || '',
-      o: isText ? [] : (Array.isArray(q.o) && q.o.length ? q.o.slice() : ['Đáp án A', 'Đáp án B', 'Đáp án C', 'Đáp án D']),
-      a: isText ? 0 : (typeof q.a === 'number' && q.a >= 0 ? q.a : 0),
-      ansText: isText ? (q.ansText || (q.o && q.o[0]) || '') : '',
+      type: isSpeaking ? 'speaking' : isText ? 'text' : 'mc',
+      q: q.q || (isSpeaking ? 'Read aloud the following sentence / word clearly:' : ''),
+      targetText: q.targetText || (isSpeaking ? (q.ansText || (q.o && q.o[0]) || q.q || '') : ''),
+      ipa: q.ipa || '',
+      o: isSpeaking || isText ? [] : (Array.isArray(q.o) && q.o.length ? q.o.slice() : ['Đáp án A', 'Đáp án B', 'Đáp án C', 'Đáp án D']),
+      a: isSpeaking || isText ? 0 : (typeof q.a === 'number' && q.a >= 0 ? q.a : 0),
+      ansText: isSpeaking ? (q.targetText || q.ansText || '') : isText ? (q.ansText || (q.o && q.o[0]) || '') : '',
       e: q.e || '',
-      s: q.s || '',
+      s: q.s || (isSpeaking ? 'Speaking / Pronunciation' : ''),
       passage: q.passage || '',
       audio: q.audio || '',
       img: q.img || ''
@@ -630,19 +637,39 @@ function renderVisualEditor() {
     return;
   }
   box.innerHTML = qs.map((q, idx) => {
-    const isText = q.type === 'text';
-    const optsHtml = isText
-      ? `<div style="margin-top:6px">
+    const isSpeaking = q.type === 'speaking';
+    const isText = !isSpeaking && q.type === 'text';
+    let optsHtml = '';
+    if (isSpeaking) {
+      optsHtml = `
+        <div style="margin-top:6px;background:#fdf2f8;padding:10px;border-radius:10px;border:1px solid #fbcfe8">
+          <div style="font-size:12px;font-weight:800;color:#9d174d;margin-bottom:4px">🗣 Câu/Từ chuẩn cần học sinh phát âm (Target Speech):</div>
+          <input class="ve-inp" style="width:100%;font-weight:800;color:#831843" value="${esc(q.targetText || q.ansText || '')}" placeholder="VD: The environmental protection project was successful." oninput="veUpdateField(${idx}, 'targetText', this.value); veUpdateField(${idx}, 'ansText', this.value)">
+          <div style="display:flex;gap:8px;margin-top:6px;flex-wrap:wrap">
+            <div style="flex:1;min-width:180px">
+              <div style="font-size:11px;font-weight:700;color:#6b7280;margin-bottom:2px">Phiên âm IPA (tùy chọn):</div>
+              <input class="ve-inp" style="width:100%;font-size:12px" value="${esc(q.ipa || '')}" placeholder="VD: /ˌkɒnvəˈseɪʃn/" oninput="veUpdateField(${idx}, 'ipa', this.value)">
+            </div>
+            <div style="flex:1;min-width:180px;display:flex;align-items:flex-end">
+              <button type="button" class="btn w" style="padding:6px 12px;font-size:12px;width:100%" onclick="GC.speakText(qs[${idx}].targetText || qs[${idx}].ansText || qs[${idx}].q)">🔊 Nghe thử giọng đọc mẫu</button>
+            </div>
+          </div>
+        </div>
+      `;
+    } else if (isText) {
+      optsHtml = `<div style="margin-top:6px">
            <div style="font-size:12px;font-weight:800;color:#047857;margin-bottom:4px">✍️ Đáp án đúng chấp nhận (ngăn cách nhiều cách viết bằng dấu <code>/</code>, VD: <code>went / did go</code>):</div>
            <input class="ve-inp" value="${esc(q.ansText || '')}" placeholder="Nhập đáp án đúng..." oninput="veUpdateAnsText(${idx}, this.value)">
-         </div>`
-      : (q.o || ['', '', '', '']).map((optVal, oi) => `
+         </div>`;
+    } else {
+      optsHtml = (q.o || ['', '', '', '']).map((optVal, oi) => `
            <div class="ve-opt-row">
              <button type="button" class="ve-ans-btn ${q.a === oi ? 'on' : ''}" title="Chọn làm đáp án đúng" onclick="veSetCorrect(${idx}, ${oi})">${'ABCD'[oi]}</button>
              <input class="ve-inp" id="veOpt_${idx}_${oi}" value="${esc(optVal)}" placeholder="Phương án ${'ABCD'[oi]}" oninput="veUpdateOpt(${idx}, ${oi}, this.value)">
              <button type="button" class="btn w" style="padding:4px 8px;font-size:11px" title="Gạch chân phần đang bôi đen (dùng cho bài Phát âm)" onclick="veUnderlineField('veOpt_${idx}_${oi}', ${idx}, ${oi})">U̲</button>
            </div>
          `).join('');
+    }
 
     return `
       <div class="ve-card">
@@ -650,8 +677,9 @@ function renderVisualEditor() {
           <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">
             <span style="background:#6d28d9;color:#fff;font-weight:900;font-size:12px;padding:3px 9px;border-radius:12px">Câu ${idx + 1}</span>
             <select class="ve-inp" style="width:auto;padding:4px 8px;font-size:12px" onchange="veChangeType(${idx}, this.value)">
-              <option value="mc" ${!isText ? 'selected' : ''}>🎯 Trắc nghiệm (A/B/C/D)</option>
+              <option value="mc" ${!isText && !isSpeaking ? 'selected' : ''}>🎯 Trắc nghiệm (A/B/C/D)</option>
               <option value="text" ${isText ? 'selected' : ''}>✍️ Tự luận / Điền từ / Viết lại câu</option>
+              <option value="speaking" ${isSpeaking ? 'selected' : ''}>🗣 Phát âm / Nói (Speaking AI)</option>
             </select>
             <input class="ve-inp" style="width:135px;padding:4px 8px;font-size:12px" value="${esc(q.s || '')}" placeholder="Dạng bài (VD: Reading)" oninput="veUpdateField(${idx}, 's', this.value)">
           </div>
@@ -716,14 +744,23 @@ window.veUpdateAnsText = function(idx, val) {
 window.veChangeType = function(idx, newType) {
   if (!qs[idx]) return;
   qs[idx].type = newType;
-  if (newType === 'text') {
+  if (newType === 'speaking') {
+    if (!qs[idx].targetText) {
+      qs[idx].targetText = qs[idx].ansText || (qs[idx].o && qs[idx].o[qs[idx].a]) || qs[idx].q || '';
+    }
+    if (!qs[idx].ansText) qs[idx].ansText = qs[idx].targetText;
+    if (!qs[idx].s) qs[idx].s = 'Speaking / Pronunciation';
+    if (!qs[idx].q || qs[idx].q.startsWith('Câu hỏi mới')) {
+      qs[idx].q = 'Read aloud the following sentence / word clearly:';
+    }
+  } else if (newType === 'text') {
     if (!qs[idx].ansText && qs[idx].o && qs[idx].o[qs[idx].a]) {
       qs[idx].ansText = qs[idx].o[qs[idx].a].replace(/<[^>]+>/g, '');
     }
     if (!qs[idx].s) qs[idx].s = 'Tự luận / Điền từ';
   } else {
     if (!qs[idx].o || qs[idx].o.length < 2) {
-      qs[idx].o = [qs[idx].ansText || 'Phương án A', 'Phương án B', 'Phương án C', 'Phương án D'];
+      qs[idx].o = [qs[idx].ansText || qs[idx].targetText || 'Phương án A', 'Phương án B', 'Phương án C', 'Phương án D'];
       qs[idx].a = 0;
     }
   }
@@ -777,6 +814,29 @@ if ($('bAddTextQ')) {
     refreshQsPreviewOnly();
     renderVisualEditor();
     $('qVisualEditor').scrollTop = $('qVisualEditor').scrollHeight;
+  };
+}
+if ($('bAddSpeakingQ')) {
+  $('bAddSpeakingQ').onclick = () => {
+    qs.push({
+      type: 'speaking',
+      q: 'Read aloud the following sentence / word clearly:',
+      targetText: 'Practice makes perfect.',
+      ipa: '/ˈpræktɪs meɪks ˈpɜːrfɪkt/',
+      o: [],
+      a: 0,
+      ansText: 'Practice makes perfect.',
+      e: 'Phát âm rõ âm đuôi /s/ trong "makes" và trọng âm của "perfect" rơi vào âm tiết đầu.',
+      s: 'Speaking / Pronunciation',
+      passage: '',
+      audio: '',
+      img: ''
+    });
+    $('qVisualEditor').hidden = false;
+    refreshQsPreviewOnly();
+    renderVisualEditor();
+    $('qVisualEditor').scrollTop = $('qVisualEditor').scrollHeight;
+    toast('🗣 Đã thêm 1 câu hỏi phát âm Speaking AI!', 1800);
   };
 }
 
@@ -1442,8 +1502,13 @@ window.showExplanation = function(qNum) {
     jumpSel.value = String(currentExpQNum);
   }
 
-  const isText = q.type === 'text' || (!!q.ansText && (!q.o || q.o.length < 2));
-  const correctLabel = isText ? esc(q.ansText) : (q.o ? ('ABCD'[q.a] + '. ' + GC.safe(q.o[q.a])) : 'Chưa rõ');
+  const isSpeaking = q.type === 'speaking';
+  const isText = !isSpeaking && (q.type === 'text' || (!!q.ansText && (!q.o || q.o.length < 2)));
+  const target = q.targetText || q.ansText || q.q;
+  const safeTarget = esc(target).replace(/'/g, "\\'");
+  const correctLabel = isSpeaking
+    ? ('🗣 “' + esc(target) + '”' + (q.ipa ? ' ' + esc(q.ipa) : ''))
+    : isText ? esc(q.ansText) : (q.o ? ('ABCD'[q.a] + '. ' + GC.safe(q.o[q.a])) : 'Chưa rõ');
   $('expSub').innerHTML = `<b>Câu ${currentExpQNum} / ${qs.length}</b> ${q.s ? ' · 📌 <i>' + esc(q.s) + '</i>' : ''} · <span style="color:#047857">🎯 Đáp án đúng: <b>${correctLabel}</b></span>`;
 
   let passageHtml = '';
@@ -1457,7 +1522,16 @@ window.showExplanation = function(qNum) {
   }
 
   let optionsHtml = '';
-  if (isText) {
+  if (isSpeaking) {
+    optionsHtml = `
+      <div style="background:#fdf2f8;border:2px solid #f472b6;border-radius:12px;padding:12px;margin:12px 0">
+        <div style="font-weight:800;color:#9d174d;margin-bottom:4px">🗣 Dạng câu phát âm tiếng Anh (Speaking AI):</div>
+        <div style="font-size:16px;color:#831843;font-weight:900">Câu chuẩn: “${GC.safe(target)}”</div>
+        ${q.ipa ? `<div style="font-size:13px;color:#be185d;font-family:monospace;margin-top:4px">Phiên âm IPA: ${GC.safe(q.ipa)}</div>` : ''}
+        <button type="button" class="btn w" style="margin-top:8px;padding:4px 10px;font-size:12px" onclick="GC.speakText('${safeTarget}')">🔊 Nghe thử giọng đọc mẫu</button>
+      </div>
+    `;
+  } else if (isText) {
     optionsHtml = `
       <div style="background:#ecfdf5;border:2px solid #6ee7b7;border-radius:12px;padding:12px;margin:12px 0">
         <div style="font-weight:800;color:#065f46;margin-bottom:4px">✍️ Dạng câu tự luận / điền từ / viết lại câu:</div>
@@ -1688,6 +1762,16 @@ CÁC NGUYÊN TẮC CỐT LÕI BẮT BUỘC CHO TEST MODE:
    - BÀI NỐI THÔNG TIN (Matching):
      + Mỗi câu hỏi là 1 người/đoạn cần ghép, 4 phương án là các đối tượng đối chiếu kèm tóm tắt nội dung.
      + 's': "Matching"
+
+
+   - BÀI PHÁT ÂM NÓI / ĐỌC THÀNH TIẾNG (Speaking / Read Aloud / Pronunciation Evaluation):
+     + Nếu bài tập yêu cầu học sinh đọc to câu/từ hoặc kiểm tra kỹ năng Nói:
+     + Đặt "type": "speaking", "o": [], "a": 0.
+     + 'q': Lời nhắc bài làm (VD: "Read aloud the following sentence / word clearly:")
+     + 'targetText': Câu hoặc từ tiếng Anh chuẩn cần đọc.
+     + 'ipa': Phiên âm IPA chuẩn.
+     + 's': "Speaking"
+     + 'e': Lời khuyên phát âm, trọng âm và các âm đuôi cần lưu ý.
 
    - BÀI TỰ LUẬN NGẮN / ĐIỀN TỪ / CHIA DẠNG TỪ / VIẾT LẠI CÂU (Short Answer / Word Form / Sentence Transformation - KHÔNG có A, B, C, D):
      + Nếu bài gốc yêu cầu học sinh tự điền từ vào chỗ trống, chia động từ/từ loại trong ngoặc, hoặc viết lại câu (Sentence Rewrite) mà KHÔNG có 4 đáp án A, B, C, D:
