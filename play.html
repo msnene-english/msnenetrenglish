@@ -182,7 +182,8 @@ const TIPS = {
   climb: ['🧗 Leo từ chân núi lên đỉnh · 🚩 chạm cờ để lưu trạm', '🪨 Bậc đá nứt sẽ sụp · 🧊 bậc băng trơn trượt · 🍄 nấm hồng là lò xo', '👸 Công chúa bị nhốt trong lồng trên đỉnh lâu đài'],
   bomb: ['💣 Đặt bom phá gạch, hạ hết quái rồi tìm 🚪 cửa ra giấu dưới gạch để qua màn', '🎮 Mũi tên / WASD để đi · Space hoặc B đặt bom (iPad: chữ thập ◀▲▼▶ + nút 💣)', '🎁 Phá gạch là có thể rơi đồ: 💣 thêm bom · 🔥 lửa dài · 🔴 lửa tối đa · 🍎🍓🍌 trái cây (+5⚡) · 👟 chạy nhanh · 📡 bom điều khiển · 🦶 đá bom · 👻 xuyên gạch · 🧯 chống lửa · 🦺 bất tử', '⚠️ Cẩn thận lửa của chính mình! Bom trúng cửa ra là quái mới chui ra đó', '🏆 8 màn: đồng cỏ → sa mạc → băng tuyết → núi lửa · có cả MÀN THƯỞNG săn ⚡'],
   tank: ['🛡 Lái xe tăng bảo vệ căn cứ 🦅 — hạ hết xe tăng địch để qua STAGE', '🎮 Mũi tên / WASD để lái · Space hoặc F để bắn (iPad: chữ thập ◀▲▼▶ + nút 🔥)', '🌸 Hạ xe địch nhấp nháy hồng sẽ rơi vật phẩm: ⭐ nâng súng · ⛑ khiên · 🛠 tường thép · 💣 bom · ⏰ đóng băng · ⚡ năng lượng', '🌳 Núp dưới rừng để địch khó thấy · 🌊 nước không đi qua được nhưng đạn bay qua', '💥 STAGE 4: trùm SIÊU TĂNG bắn toả 3 hướng — hạ nó để phá đảo!'],
-  brick: ['🧱 4 màn: Đồng cỏ → Hang ngầm → Xứ mây → Lâu đài dung nham', '❓ Hộp ? ra: 🪙 xu (+3⚡) · 🍄 nấm xanh (+20⚡) · 🍄 nấm đỏ hoá TO · 🌸 hoa lửa (bắn được) · ⭐ sao bất tử', '⬆ Giữ nút nhảy càng lâu thì nhảy càng cao — đội được cả khối ? trên cao!', '⬇ Ống có mũi tên: đứng lên + bấm ↓ để chui xuống hầm bí mật đầy xu!', '🌸 Hoa ăn thịt chui ra từ ống · 🔥 thanh lửa xoay · 🌋 dung nham — né hết nhé', '🏁 Chạm cột cờ để qua màn · màn 4: 🐉 rồng phun lửa canh công chúa — bắn 🔥 (phím F) hoặc chạm rìu 🪓 để hạ nó!']
+  brick: ['🧱 4 màn: Đồng cỏ → Hang ngầm → Xứ mây → Lâu đài dung nham', '❓ Hộp ? ra: 🪙 xu (+3⚡) · 🍄 nấm xanh (+20⚡) · 🍄 nấm đỏ hoá TO · 🌸 hoa lửa (bắn được) · ⭐ sao bất tử', '⬆ Giữ nút nhảy càng lâu thì nhảy càng cao — đội được cả khối ? trên cao!', '⬇ Ống có mũi tên: đứng lên + bấm ↓ để chui xuống hầm bí mật đầy xu!', '🌸 Hoa ăn thịt chui ra từ ống · 🔥 thanh lửa xoay · 🌋 dung nham — né hết nhé', '🏁 Chạm cột cờ để qua màn · màn 4: 🐉 rồng phun lửa canh công chúa — bắn 🔥 (phím F) hoặc chạm rìu 🪓 để hạ nó!'],
+  test: ['📝 Đọc kỹ yêu cầu đề bài, đoạn văn hoặc nghe kỹ audio trước khi chọn đáp án', '🔀 Có thể chuyển qua lại giữa các câu bằng thanh số câu phía trên', '📥 Làm xong nhớ bấm nút Nộp bài để gửi điểm cho cô nhé!']
 };
 const BST_MSG = ['🏁 Qua màn 1! Quái củ hành bắt đầu chạy nhanh hơn — đặt bom chặn đường nó!', '🏁 Qua màn 2! Vào sa mạc nóng bỏng nào!', '🏁 Qua màn 3! Thùng gỗ đổi hướng liên tục — canh cho chuẩn!', '🏁 Qua màn 4! MÀN THƯỞNG: bất tử 25 giây, săn quái lấy ⚡!', '🎁 Hết màn thưởng! Vào băng tuyết — ma đi xuyên gạch được đấy!', '🏁 Qua màn 5! Quái đỏ biết đuổi theo em — đừng để bị dồn góc!', '🏁 Qua màn 6! Núi lửa phía trước — 2 màn cuối rồi!', '🏁 Qua màn 7! Màn cuối cùng — phá đảo thôi!', '🏆 Phá đảo!'];
 const ST_MSG = ['🏁 STAGE 1 CLEAR! Sông xanh rừng thẳm phía trước — núp rừng mà bắn nhé!', '🏁 STAGE 2 CLEAR! Pháo đài thép đang chờ — ăn ⭐ để súng bắn thủng thép!', '🏁 STAGE 3 CLEAR! Trận cuối: SIÊU TĂNG xuất hiện — giữ chặt căn cứ!'];
@@ -385,6 +386,7 @@ if ($('bTrSubmit')) {
 }
 
 function submitTestExam(auto) {
+  if (trSubmitted) return;
   trSubmitted = true;
   if (trTimerInterval) clearInterval(trTimerInterval);
 
@@ -395,7 +397,8 @@ function submitTestExam(auto) {
   const score = Math.round((correctCount / QS.length) * 100);
 
   // Gửi trạng thái nộp bài chính thức về Firebase
-  if (path) {
+  if (path && net) {
+    const nowT = net.now();
     net.update(path, {
       n: nameV,
       ans: Object.keys(trAnswers).length,
@@ -403,9 +406,18 @@ function submitTestExam(auto) {
       tot: QS.length,
       st: 'submitted',
       score: score,
-      alt: 100,
-      submittedAt: net.now()
+      alt: score,
+      tt: Math.max(1, nowT - (t0 || nowT)),
+      submittedAt: nowT
     }).catch(() => {});
+    if (evp) {
+      net.push(evp, { ty: 'win', fr: pid, nm: nameV, score, t: nowT });
+      for (let i = 0; i < QS.length; i++) {
+        if (trAnswers[i] !== QS[i].a) {
+          net.push(evp, { ty: 'wrong', q: QS[i].id || (i + 1), fr: pid, nm: nameV, t: nowT });
+        }
+      }
+    }
   }
 
   // Hiển thị modal kết quả
@@ -413,24 +425,31 @@ function submitTestExam(auto) {
   $('trResCorrect').textContent = correctCount + ' / ' + QS.length;
   $('trResSub').textContent = score >= 80 ? '🌟 Kết quả xuất sắc! Cô rất tự hào về em!' : score >= 50 ? '👏 Em đã hoàn thành tốt bài kiểm tra!' : '💪 Hãy xem lại các câu sai để cố gắng hơn nhé!';
 
-  // Bảng xem lại từng câu
-  $('trResReviewBox').innerHTML = QS.map((q, idx) => {
-    const userChoice = trAnswers[idx];
-    const isOk = userChoice === q.a;
-    const choiceText = userChoice !== undefined ? (q.o[userChoice] || 'Không rõ') : 'Chưa trả lời';
-    const correctText = q.o[q.a];
+  const cfg = info || HW || {};
+  const showExp = cfg.testShowExp !== false;
 
-    return `
-      <div style="border-bottom:1px solid #e5e7eb;padding:10px 0">
-        <div style="font-weight:800;font-size:14px;color:#1e293b">Câu ${idx + 1}: ${q.q}</div>
-        <div style="font-size:13px;margin:4px 0">
-          Lựa chọn của em: <b style="color:${isOk ? '#16a34a' : '#dc2626'}">${isOk ? '✅ ' : '❌ '}${choiceText}</b>
+  // Bảng xem lại từng câu
+  if (!showExp) {
+    $('trResReviewBox').innerHTML = '<div style="text-align:center;color:#64748b;padding:18px;font-weight:700">🔒 Đáp án chi tiết và lời giải đang được ẩn theo cài đặt của giáo viên.</div>';
+  } else {
+    $('trResReviewBox').innerHTML = QS.map((q, idx) => {
+      const userChoice = trAnswers[idx];
+      const isOk = userChoice === q.a;
+      const choiceText = userChoice !== undefined ? (q.o[userChoice] || 'Không rõ') : 'Chưa trả lời';
+      const correctText = q.o[q.a];
+
+      return `
+        <div style="border-bottom:1px solid #e5e7eb;padding:10px 0">
+          <div style="font-weight:800;font-size:14px;color:#1e293b">Câu ${idx + 1}: ${q.q}</div>
+          <div style="font-size:13px;margin:4px 0">
+            Lựa chọn của em: <b style="color:${isOk ? '#16a34a' : '#dc2626'}">${isOk ? '✅ ' : '❌ '}${choiceText}</b>
+          </div>
+          ${!isOk ? `<div style="font-size:13px;color:#15803d">Đáp án đúng: <b>${correctText}</b></div>` : ''}
+          ${q.e ? `<div style="font-size:12px;color:#6b7280;background:#f3f4f6;padding:6px 10px;border-radius:8px;margin-top:4px">💡 ${q.e}</div>` : ''}
         </div>
-        ${!isOk ? `<div style="font-size:13px;color:#15803d">Đáp án đúng: <b>${correctText}</b></div>` : ''}
-        ${q.e ? `<div style="font-size:12px;color:#6b7280;background:#f3f4f6;padding:6px 10px;border-radius:8px;margin-top:4px">💡 ${q.e}</div>` : ''}
-      </div>
-    `;
-  }).join('');
+      `;
+    }).join('');
+  }
 
   $('ovTestResult').classList.add('on');
   if (score >= 70 && typeof confetti === 'function') {
@@ -493,11 +512,10 @@ async function joinSolo() {
   else if (SOLO.startsWith('mau:')) set = GC.sampleSet(+SOLO.slice(4));
   else if (SOLO.startsWith('sheet:')) { const name = SOLO.slice(6), r = await GC.sheetSet(name); set = { title: name, qs: r.qs } }
   if (!set || !set.qs.length) throw new Error('Không tìm thấy bộ câu hỏi này. Em báo cô kiểm tra lại link nhé!');
-  QS = GC.prep(set.qs); setTitle = set.title;
   const P = HW || { eq: U.get('eq'), em: U.get('em'), lv: U.get('lv'), m: U.get('m') };
   setGain(P.eq, P.em); LVL = +P.lv || 2; MODE = ['brick', 'tank', 'bomb', 'test'].includes(P.m) ? P.m : 'climb';
+  QS = GC.prep(set.qs, MODE === 'test' && P.testShuffle === false); setTitle = set.title;
   boot(20261019);
-  if (MODE === 'test') return;
   begin();
 }
 function myPid(c) {
@@ -516,13 +534,20 @@ async function joinRoom() {
   QS = GC.prep(Array.isArray(raw) ? raw : Object.values(raw || {}), info.m === 'test' && info.testShuffle === false);
   if (!QS.length) throw new Error('Phòng chưa có câu hỏi.');
   pid = myPid(code); path = 'rooms/' + code + '/players/' + pid; evp = 'rooms/' + code + '/ev';
-  joinT = net.now(); setTitle = info.t || ''; setGain(info.eq, info.em); LVL = info.lv || 2; MODE = ['brick', 'tank', 'bomb', 'test'].includes(info.m) ? info.m : (info.m === 'test' ? 'test' : 'climb');
+  joinT = net.now(); setTitle = info.t || ''; setGain(info.eq, info.em); LVL = info.lv || 2; MODE = ['brick', 'tank', 'bomb', 'test'].includes(info.m) ? info.m : 'climb';
   const old = await net.once(path);
   boot(info.seed);
   if (MODE === 'test') {
-    await net.update(path, { n: nameV, c: myColor, j: (old && old.j) || joinT, on: 1, ans: 0, ok: 0, tot: QS.length, alt: 0, st: 'playing' });
-    joined = true;
+    await net.update(path, { n: nameV, c: myColor, j: (old && old.j) || joinT, on: 1, ans: (old && old.ans) || 0, ok: (old && old.ok) || 0, tot: QS.length, alt: (old && old.alt) || 0, score: (old && old.score) || 0, st: (old && old.st === 'submitted') ? 'submitted' : 'playing' });
     net.onDisconnect(path, { on: 0 });
+    joined = true; listen();
+    $('ovJoin').classList.remove('on');
+    if (info.st === 'play') begin();
+    else {
+      $('wSub').textContent = '📝 ' + setTitle + ' · Phòng ' + code + (info.lic ? ' · 🏫 ' + info.lic : '');
+      $('wTips').innerHTML = (TIPS[MODE] || TIPS.climb).map(t => '<li>' + t + '</li>').join('');
+      $('ovWait').classList.add('on');
+    }
     return;
   }
   if (old && old.n) {   // lỡ tải lại trang → giữ nguyên thành tích
@@ -537,7 +562,7 @@ async function joinRoom() {
 }
 function boot(seed) {
   if (MODE === 'test') {
-    startTestMode();
+    document.title = '📝 Bài kiểm tra';
     return;
   }
   if (MODE === 'brick') {   // game Nấm Mario: dùng engine brick.js thay cho leo núi
@@ -564,28 +589,45 @@ function boot(seed) {
 /* ═════ nghe phòng ═════ */
 function listen() {
   net.on('rooms/' + code + '/info', v => {
-    if (!v) { if (!over) { over = true; S.running = false; showRes('gone') } return }
+    if (!v) {
+      if (!over) {
+        over = true; S.running = false;
+        if (MODE === 'test') { if (!trSubmitted) submitTestExam(true); }
+        else showRes('gone');
+      }
+      return;
+    }
     info = v; $('hShop').hidden = !v.ia;
     if (v.st === 'play' && !started) begin();
-    if (v.st === 'end' && !over) finish('teacher');
+    if (v.st === 'end' && !over) {
+      if (MODE === 'test') { over = true; if (!trSubmitted) submitTestExam(true); }
+      else finish('teacher');
+    }
   });
   net.on('rooms/' + code + '/players', v => {
     players = v || {};
-    if (joined && !players[pid] && !kicked) { kicked = true; over = true; S.running = false; closeAll(); showRes('kick'); return }
-    for (const id in S.ghosts) if (!players[id] || !players[id].on) delete S.ghosts[id];
-    for (const [id, p] of Object.entries(players)) {
-      if (id === pid || !p.on) continue;
-      const g = S.ghosts[id] || (S.ghosts[id] = {});
-      g.n = p.n || '?'; g.c = p.c || '#ccc'; g.tx = p.x ?? Climb.W / 2 - 17; g.ty = p.y ?? -40; g.f = p.f || 1; g.fz = p.fz || 0; g.sh = p.sh || 0; g.wk = p.wk; g.pw = p.pw || 0;
+    if (joined && !players[pid] && !kicked) {
+      kicked = true; over = true; S.running = false;
+      if (trTimerInterval) clearInterval(trTimerInterval);
+      if ($('testApp')) $('testApp').style.display = 'none';
+      closeAll(); showRes('kick'); return;
+    }
+    if (MODE !== 'test') {
+      for (const id in S.ghosts) if (!players[id] || !players[id].on) delete S.ghosts[id];
+      for (const [id, p] of Object.entries(players)) {
+        if (id === pid || !p.on) continue;
+        const g = S.ghosts[id] || (S.ghosts[id] = {});
+        g.n = p.n || '?'; g.c = p.c || '#ccc'; g.tx = p.x ?? Climb.W / 2 - 17; g.ty = p.y ?? -40; g.f = p.f || 1; g.fz = p.fz || 0; g.sh = p.sh || 0; g.wk = p.wk; g.pw = p.pw || 0;
+      }
     }
     if (!started) $('wList').innerHTML = Object.values(players).map(p => '<span><i class="dot" style="background:' + esc(p.c) + '"></i> ' + esc(p.n) + '</span>').join('');
     if (over && $('ovRes').classList.contains('on') && $('rRank')) $('rRank').textContent = rankText();
   });
   net.onAdded(evp, (k, e) => { if (e && e.t >= joinT - 1000) onEv(e) });
-  setInterval(sync, 300);
+  if (MODE !== 'test') setInterval(sync, 300);
 }
 function sync() {
-  if (!joined || kicked || !net) return;
+  if (!joined || kicked || !net || MODE === 'test') return;
   const d = { x: Math.round(Climb.pl.x), y: Math.round(Climb.pl.y), f: Climb.pl.face, alt: Climb.alt(), en: Math.round(S.energy), ok: okN, ans, st: streak, bs: best, fl: S.falls, sp: S.stomps, cp: S.cpAt ? S.cpAt.cp || 0 : 0, tt: tt || 0, fz: S.fz || 0, sh: S.sh || 0, on: 1 };
   if (Climb.extra) Object.assign(d, Climb.extra());
   const s = JSON.stringify(d); if (s !== lastSent || Date.now() - lastT > 5000) { lastSent = s; lastT = Date.now(); net.update(path, d) }   // ≥ 5 giây/lần để cô biết em vẫn đang chơi
@@ -593,7 +635,13 @@ function sync() {
 function feed(t) { const f = $('feed'), d = document.createElement('div'); d.textContent = t; f.prepend(d); while (f.children.length > 4) f.lastChild.remove(); setTimeout(() => d.remove(), 6000) }
 function onEv(e) {
   const mine = e.to === pid, from = e.nm || 'Một bạn', now = net.now();
-  if (e.ty === 'end') { if (!over) finish('teacher'); return }   // cô bấm kết thúc → khoá ngay
+  if (e.ty === 'end') {
+    if (!over) {
+      if (MODE === 'test') { over = true; if (!trSubmitted) submitTestExam(true); }
+      else finish('teacher');
+    }
+    return;
+  }   // cô bấm kết thúc → khoá ngay
   if (e.ty === 'cp' && e.fr !== pid) feed('🚩 ' + from + ' lên Trạm ' + e.n);
   else if (e.ty === 'lv' && e.fr !== pid) feed('🏁 ' + from + (e.k === 'stage' ? ' qua Stage ' : ' qua Màn ') + e.n);
   else if (e.ty === 'win' && e.fr !== pid) feed('👸 ' + from + ' đã giải cứu công chúa!');
@@ -610,6 +658,10 @@ function onEv(e) {
 function begin() {
   if (started) return; started = true; t0 = Date.now();
   $('ovJoin').classList.remove('on'); $('ovWait').classList.remove('on');
+  if (MODE === 'test') {
+    startTestMode();
+    return;
+  }
   S.running = true; $('eBtn').hidden = false;
   if (HW ? HW.mu !== false : (SOLO || !info || info.mu !== false)) GC.music.start(true, MODE);   // mỗi game một bản nhạc
   setTimeout(() => $('keys').classList.add('mini'), 25000);   // sau 25 giây thu gọn hướng dẫn phím   // cô quyết định bật/tắt nhạc, học sinh không có nút tắt

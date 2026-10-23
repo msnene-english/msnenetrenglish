@@ -317,6 +317,13 @@ const music = (function () {
 function rank(players) {
   return Object.entries(players || {}).sort((A, B) => {
     const a = A[1], b = B[1];
+    if (a.score !== undefined || b.score !== undefined || a.st === 'submitted' || b.st === 'submitted' || a.st === 'playing' || b.st === 'playing') {
+      const sA = a.score ?? 0, sB = b.score ?? 0;
+      if (sB !== sA) return sB - sA;
+      if ((b.ok || 0) !== (a.ok || 0)) return (b.ok || 0) - (a.ok || 0);
+      if ((b.ans || 0) !== (a.ans || 0)) return (b.ans || 0) - (a.ans || 0);
+      return (a.submittedAt || Infinity) - (b.submittedAt || Infinity);
+    }
     if (!!a.tt !== !!b.tt) return a.tt ? -1 : 1;
     if (a.tt && b.tt) return a.tt - b.tt;
     return (b.alt || 0) - (a.alt || 0) || (b.ok || 0) - (a.ok || 0);

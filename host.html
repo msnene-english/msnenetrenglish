@@ -784,6 +784,9 @@ $('bHwMake').onclick = async () => {
     t: title,
     m: gMode,
     theme: $('testTheme')?.value || 'pastel',
+    testShuffle: $('testShuffle')?.checked ?? true,
+    testReview: $('testReview')?.checked ?? true,
+    testShowExp: $('testShowExp')?.checked ?? true,
     lv: +$('gLv').value,
     eq: +$('gEq').value,
     em: +$('gEm').value,
@@ -883,6 +886,7 @@ $('bOpen').onclick = async () => {
       testDur: tDur,
       testShuffle: $('testShuffle')?.checked ?? true,
       testReview: $('testReview')?.checked ?? true,
+      testShowExp: $('testShowExp')?.checked ?? true,
       st: 'lobby',
       seed: Math.floor(Math.random() * 1e9) + 1,
       dur: tDur,
@@ -958,12 +962,24 @@ function tick() {
   $('tLeft').textContent = fmt(left);
   $('tLeft').classList.toggle('low', left < 60000);
   const L = Object.values(players);
-  if (left <= 0 || (L.length && L.every(p => p.tt))) endGame();
+  if (left <= 0 || (L.length && L.every(p => p.tt || p.st === 'submitted'))) endGame();
 }
 function renderBoard() {
   if (!info || info.st === 'lobby') return;
+  const isTest = info.m === 'test';
   const now = net.now(), cps = [1, 2, 3, 4].map(i => i / 5 * 100);
   $('board').innerHTML = GC.rank(players).map(([id, p], i) => {
+    if (isTest) {
+      const tot = p.tot || qs.length || 1;
+      const ans = p.ans || 0;
+      const pct = p.st === 'submitted' ? 100 : Math.min(100, Math.round(ans / tot * 100));
+      const icons = (p.st === 'submitted' ? '✅' : '✍️') + (p.on ? '' : ' 💤');
+      const sc = p.score ?? Math.round((p.ok || 0) / tot * 100);
+      const statusTxt = p.st === 'submitted' ? ('✅ Đã nộp · ' + sc + ' điểm') : ('✍️ Đang làm ' + ans + '/' + tot + ' câu');
+      return '<div class="lr"><div class="rk">' + (['🥇', '🥈', '🥉'][i] || i + 1) + '</div><div class="nm"><i class="dot" style="background:' + esc(p.c) + '"></i> ' + esc(p.n) + ' ' + icons + '</div>' +
+        '<div class="bar"><i style="width:' + pct + '%;background:linear-gradient(90deg,' + esc(p.c) + ',#10b981)"></i></div>' +
+        '<div class="meta">' + statusTxt + ' · 🎯 Đúng ' + (p.ok || 0) + '/' + tot + '</div></div>';
+    }
     const pct = p.tt ? 100 : Math.min(100, (p.alt || 0) / TOP * 100);
     const icons = (p.tt ? '👸' : '') + (p.fz > now ? '❄️' : '') + (p.sh > now ? '🛡' : '') + (p.on ? '' : '💤');
     return '<div class="lr"><div class="rk">' + (['🥇', '🥈', '🥉'][i] || i + 1) + '</div><div class="nm"><i class="dot" style="background:' + esc(p.c) + '"></i> ' + esc(p.n) + ' ' + icons + '</div>' +
@@ -974,7 +990,7 @@ function renderBoard() {
 setInterval(() => { if (info && info.st === 'play') renderBoard() }, 1000);
 
 function feedLine(e) {
-  const t = e.ty === 'cp' ? '🚩 ' + e.nm + ' lên Trạm ' + e.n : e.ty === 'lv' ? '🏁 ' + e.nm + (e.k === 'stage' ? ' qua Stage ' : ' qua Màn ') + e.n : e.ty === 'win' ? '👸 ' + e.nm + ' đã giải cứu công chúa!' : e.ty === 'fz' ? '❄️ ' + e.nm + ' đóng băng ' + e.tn : e.ty === 'st' ? '🧲 ' + e.nm + ' hút ⚡ của ' + e.tn : e.ty === 'blk' ? '🛡 ' + e.nm + ' chặn được chiêu trêu' : '';
+  const t = e.ty === 'cp' ? '🚩 ' + e.nm + ' lên Trạm ' + e.n : e.ty === 'lv' ? '🏁 ' + e.nm + (e.k === 'stage' ? ' qua Stage ' : ' qua Màn ') + e.n : e.ty === 'win' ? (info && info.m === 'test' ? '📥 ' + e.nm + ' đã nộp bài kiểm tra (' + (e.score ?? 0) + ' điểm)!' : '👸 ' + e.nm + ' đã giải cứu công chúa!') : e.ty === 'fz' ? '❄️ ' + e.nm + ' đóng băng ' + e.tn : e.ty === 'st' ? '🧲 ' + e.nm + ' hút ⚡ của ' + e.tn : e.ty === 'blk' ? '🛡 ' + e.nm + ' chặn được chiêu trêu' : '';
   if (!t) return; const d = document.createElement('div'); d.textContent = t; $('feed').prepend(d); while ($('feed').children.length > 40) $('feed').lastChild.remove();
   if (e.ty === 'win') { sfx('fanfare'); confetti(60); }
 }
@@ -999,15 +1015,29 @@ function showEnd() {
   show('vEnd'); clearInterval(timerI);
   if (!showEnd.done) { showEnd.done = code; sfx('fanfare'); confetti(120); }
   const R = GC.rank(players);
-  $('eTitle').textContent = '📘 ' + info.t + ' · ' + R.length + ' bạn tham gia';
+  const isTest = info && info.m === 'test';
+  const totQ = qs.length || 1;
+  $('eTitle').textContent = (isTest ? '📝 ' : '📘 ') + info.t + ' · ' + R.length + ' bạn tham gia';
   const H = [150, 115, 90], COL = ['#f5b942', '#a7a7c9', '#e39a6a'];
   $('podium').innerHTML = [1, 0, 2].filter(i => R[i]).map(i => {
     const p = R[i][1];
-    return '<div class="pod"><div class="av" style="background:' + esc(p.c) + '"></div><div class="nm">' + esc(p.n) + '</div><div class="meta">' + (p.tt ? '👸 Cứu công chúa' : p.lb ? esc(p.lb) : '⛰ ' + (p.alt || 0) + 'm') + ' · ✅ ' + (p.ok || 0) + '</div><div class="st" style="height:' + H[i] + 'px;background:' + COL[i] + '">' + (i + 1) + '</div></div>'
+    const metaTxt = isTest
+      ? ('🏆 ' + (p.score ?? Math.round((p.ok || 0) / (p.tot || totQ) * 100)) + ' điểm · ✅ ' + (p.ok || 0) + '/' + (p.tot || totQ))
+      : ((p.tt ? '👸 Cứu công chúa' : p.lb ? esc(p.lb) : '⛰ ' + (p.alt || 0) + 'm') + ' · ✅ ' + (p.ok || 0));
+    return '<div class="pod"><div class="av" style="background:' + esc(p.c) + '"></div><div class="nm">' + esc(p.n) + '</div><div class="meta">' + metaTxt + '</div><div class="st" style="height:' + H[i] + 'px;background:' + COL[i] + '">' + (i + 1) + '</div></div>'
   }).join('');
 
-  $('eTable').innerHTML = '<tr><th>Hạng</th><th>Họ tên</th><th>Tiến độ</th><th>Đúng</th><th>% đúng</th><th>🔥 Chuỗi</th><th>🍄 Giẫm</th><th>😱 Rơi</th></tr>' +
-    R.map(([, p], i) => '<tr><td>' + (i + 1) + '</td><td>' + esc(p.n) + '</td><td>' + (p.tt ? '👸 Phá đảo' : p.lb ? esc(p.lb) + (p.cn != null ? ' · 🪙 ' + p.cn : '') : (p.alt || 0) + ' m') + '</td><td>' + (p.ok || 0) + '/' + (p.ans || 0) + '</td><td>' + (p.ans ? Math.round(p.ok / p.ans * 100) : 0) + '%</td><td>' + (p.bs || 0) + '</td><td>' + (p.sp || 0) + '</td><td>' + (p.fl || 0) + '</td></tr>').join('');
+  if (isTest) {
+    $('eTable').innerHTML = '<tr><th>Hạng</th><th>Họ tên</th><th>Trạng thái</th><th>Điểm số</th><th>Số câu đúng</th><th>Đã làm</th></tr>' +
+      R.map(([, p], i) => {
+        const tot = p.tot || totQ;
+        const sc = p.score ?? Math.round((p.ok || 0) / tot * 100);
+        return '<tr><td>' + (i + 1) + '</td><td>' + esc(p.n) + '</td><td>' + (p.st === 'submitted' ? '✅ Đã nộp bài' : '⏳ Chưa nộp') + '</td><td><b>' + sc + ' / 100</b></td><td>' + (p.ok || 0) + ' / ' + tot + '</td><td>' + (p.ans || 0) + ' / ' + tot + '</td></tr>';
+      }).join('');
+  } else {
+    $('eTable').innerHTML = '<tr><th>Hạng</th><th>Họ tên</th><th>Tiến độ</th><th>Đúng</th><th>% đúng</th><th>🔥 Chuỗi</th><th>🍄 Giẫm</th><th>😱 Rơi</th></tr>' +
+      R.map(([, p], i) => '<tr><td>' + (i + 1) + '</td><td>' + esc(p.n) + '</td><td>' + (p.tt ? '👸 Phá đảo' : p.lb ? esc(p.lb) + (p.cn != null ? ' · 🪙 ' + p.cn : '') : (p.alt || 0) + ' m') + '</td><td>' + (p.ok || 0) + '/' + (p.ans || 0) + '</td><td>' + (p.ans ? Math.round(p.ok / p.ans * 100) : 0) + '%</td><td>' + (p.bs || 0) + '</td><td>' + (p.sp || 0) + '</td><td>' + (p.fl || 0) + '</td></tr>').join('');
+  }
 
   // PHÂN TÍCH CÂU LÀM SAI NHIỀU NHẤT
   const mEntries = Object.entries(mistakeStats).sort((a,b) => b[1] - a[1]);
@@ -1043,8 +1073,18 @@ window.showExplanation = function(qNum) {
 
 $('bCsv').onclick = () => {
   const R = GC.rank(players), q = s => '"' + String(s).replace(/"/g, '""') + '"';
-  const rows = [['Hạng', 'Họ tên', 'Về đích', 'Tiến độ', 'Đúng', 'Đã trả lời', '% đúng', 'Chuỗi dài nhất', 'Giẫm bẹp', 'Số lần rơi']].concat(
-    R.map(([, p], i) => [i + 1, p.n, p.tt ? 'Có' : '', p.tt ? 'Phá đảo' : p.lb || (p.alt || 0) + ' m', p.ok || 0, p.ans || 0, p.ans ? Math.round(p.ok / p.ans * 100) : 0, p.bs || 0, p.sp || 0, p.fl || 0]));
+  const isTest = info && info.m === 'test';
+  const totQ = qs.length || 1;
+  const rows = isTest
+    ? [['Hạng', 'Họ tên', 'Trạng thái', 'Điểm (thang 100)', 'Số câu đúng', 'Đã làm', 'Tổng số câu']].concat(
+        R.map(([, p], i) => {
+          const tot = p.tot || totQ;
+          const sc = p.score ?? Math.round((p.ok || 0) / tot * 100);
+          return [i + 1, p.n, p.st === 'submitted' ? 'Đã nộp bài' : 'Chưa nộp', sc, p.ok || 0, p.ans || 0, tot];
+        })
+      )
+    : [['Hạng', 'Họ tên', 'Về đích', 'Tiến độ', 'Đúng', 'Đã trả lời', '% đúng', 'Chuỗi dài nhất', 'Giẫm bẹp', 'Số lần rơi']].concat(
+        R.map(([, p], i) => [i + 1, p.n, p.tt ? 'Có' : '', p.tt ? 'Phá đảo' : p.lb || (p.alt || 0) + ' m', p.ok || 0, p.ans || 0, p.ans ? Math.round(p.ok / p.ans * 100) : 0, p.bs || 0, p.sp || 0, p.fl || 0]));
   const blob = new Blob(['\ufeff' + 'Bộ đề:,' + q(info.t) + ',Ngày:,' + q(stamp(info.en || Date.now())) + '\n' + rows.map(r => r.map(q).join(',')).join('\n')], { type: 'text/csv;charset=utf-8' });
   const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'Bang diem - ' + info.t.replace(/[\\/:*?"<>|]/g, '') + ' - ' + code + '.csv'; a.click();
 };
