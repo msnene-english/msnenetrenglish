@@ -48,10 +48,10 @@ function fromOld(x) {
   const qText = x.question ? (x.question + (x.text ? '<br><br>' + x.text : '')) : (x.q || x.text || '');
   return { q: qText, o, a, e: x.explanation || x.exp || x.vnt || '', s: x.type || x.sec || '' };
 }
-function prep(list) {   // trước khi chơi: bỏ câu hỏng, làm sạch, xáo đáp án 1 lần
+function prep(list, noShuffle) {   // trước khi chơi: bỏ câu hỏng, làm sạch, xáo đáp án 1 lần
   return (list || []).filter(x => x && x.o && x.o.length >= 2 && x.a >= 0 && x.a < x.o.length).map((x, i) => {
     let idx = x.o.map((_, k) => k);
-    if (!NOSHUF.test((x.s || '') + ' ' + x.q)) idx = shuffle(idx);
+    if (!noShuffle && !NOSHUF.test((x.s || '') + ' ' + x.q)) idx = shuffle(idx);
     return {
       n: i + 1,
       q: safe(x.q),

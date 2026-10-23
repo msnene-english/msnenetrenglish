@@ -206,7 +206,9 @@ let trSubmitted = false;
 function startTestMode() {
   document.body.classList.add('test-mode');
   // Ẩn màn hình đăng nhập, arcade HUD và Canvas
-  if ($('vJoin')) $('vJoin').hidden = true;
+  $('ovJoin').classList.remove('on'); $('ovWait').classList.remove('on'); $('ovQ').classList.remove('on');
+  if ($('eBtn')) $('eBtn').hidden = true;
+  if ($('toast')) $('toast').style.zIndex = 300;
   if ($('hud')) $('hud').style.display = 'none';
   if ($('stage')) $('stage').style.display = 'none';
   if ($('keys')) $('keys').style.display = 'none';
@@ -230,6 +232,7 @@ function startTestMode() {
     $('trTimer').textContent = '⏱ Tự do';
   }
 
+  bindTestButtons();
   trIndex = 0;
   trAnswers = {};
   trSubmitted = false;
@@ -336,18 +339,25 @@ window.selectTestOpt = function(optIdx) {
       ok: correctCount,
       tot: QS.length,
       st: 'playing',
+      alt: Math.round(ansCount / QS.length * 100),
       score: Math.round(correctCount / QS.length * 100)
     }).catch(() => {});
   }
 };
 
+function testNoBack() { const cfg = info || HW || {}; return cfg.testReview === false; }
 window.jumpTestQ = function(idx) {
+  if (testNoBack() && idx < trIndex) return toast('🔒 Bài này không cho quay lại câu trước', 1800);
   trIndex = idx;
   renderTestQuestion();
 };
 
+let testBtnsBound = false;
+function bindTestButtons() {
+  if (testBtnsBound) return; testBtnsBound = true;
 if ($('bTrPrev')) {
   $('bTrPrev').onclick = () => {
+    if (testNoBack()) return toast('🔒 Bài này không cho quay lại câu trước', 1800);
     if (trIndex > 0) { trIndex--; renderTestQuestion(); }
   };
 }
@@ -372,6 +382,7 @@ if ($('bTrSubmit')) {
     }
   };
 }
+}
 
 function submitTestExam(auto) {
   trSubmitted = true;
@@ -392,7 +403,7 @@ function submitTestExam(auto) {
       tot: QS.length,
       st: 'submitted',
       score: score,
-      alt: score,
+      alt: 100,
       submittedAt: net.now()
     }).catch(() => {});
   }
@@ -486,10 +497,7 @@ async function joinSolo() {
   const P = HW || { eq: U.get('eq'), em: U.get('em'), lv: U.get('lv'), m: U.get('m') };
   setGain(P.eq, P.em); LVL = +P.lv || 2; MODE = ['brick', 'tank', 'bomb', 'test'].includes(P.m) ? P.m : 'climb';
   boot(20261019);
-  if (MODE === 'test') {
-    show('vPlay');
-    return;
-  }
+  if (MODE === 'test') return;
   begin();
 }
 function myPid(c) {
@@ -505,7 +513,7 @@ async function joinRoom() {
   if (!info) throw new Error('Không thấy phòng ' + code + '. Em xem lại mã trên màn hình của cô nhé!' + (net.mode === 'local' ? ' (Chế độ thử: phải mở trên cùng máy với trang của cô.)' : ''));
   if (info.st === 'end') throw new Error('Phòng này đã kết thúc rồi.');
   const raw = await net.once('rooms/' + code + '/qs');
-  QS = GC.prep(Array.isArray(raw) ? raw : Object.values(raw || {}));
+  QS = GC.prep(Array.isArray(raw) ? raw : Object.values(raw || {}), info.m === 'test' && info.testShuffle === false);
   if (!QS.length) throw new Error('Phòng chưa có câu hỏi.');
   pid = myPid(code); path = 'rooms/' + code + '/players/' + pid; evp = 'rooms/' + code + '/ev';
   joinT = net.now(); setTitle = info.t || ''; setGain(info.eq, info.em); LVL = info.lv || 2; MODE = ['brick', 'tank', 'bomb', 'test'].includes(info.m) ? info.m : (info.m === 'test' ? 'test' : 'climb');
@@ -513,7 +521,8 @@ async function joinRoom() {
   boot(info.seed);
   if (MODE === 'test') {
     await net.update(path, { n: nameV, c: myColor, j: (old && old.j) || joinT, on: 1, ans: 0, ok: 0, tot: QS.length, alt: 0, st: 'playing' });
-    show('vPlay');
+    joined = true;
+    net.onDisconnect(path, { on: 0 });
     return;
   }
   if (old && old.n) {   // lỡ tải lại trang → giữ nguyên thành tích
