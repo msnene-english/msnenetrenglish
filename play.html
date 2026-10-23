@@ -73,6 +73,8 @@ body{display:flex;flex-direction:column;overflow:hidden}
 
 /* ═════ STYLES BÀI KIỂM TRA (TEST MODE) ═════ */
 #testApp{display:none;flex-direction:column;height:100vh;width:100vw;position:fixed;inset:0;z-index:100;background:var(--t-bg,#f8fafc);font-family:'Nunito',sans-serif;overflow:hidden}
+#ovTestResult{z-index:500!important}
+#ovTestResult.on{display:flex!important}
 .test-pastel{--t-bg:#fdf4ff;--t-card:#fff;--t-primary:#8b5cf6;--t-border:#f0abfc}
 .test-cambridge{--t-bg:#f8fafc;--t-card:#fff;--t-primary:#1e3a8a;--t-border:#cbd5e1}
 .test-cyber{--t-bg:#0b0f19;--t-card:#151b2b;--t-primary:#a855f7;--t-border:#2d3748;color:#f1f5f9}
@@ -129,7 +131,7 @@ body{display:flex;flex-direction:column;overflow:hidden}
  <div id="jCodeBox"><div class="lab">🔢 Mã phòng</div><input id="jCode" class="fld" inputmode="numeric" maxlength="6" placeholder="6 chữ số trên màn hình của cô" autocomplete="off"></div>
  <div class="lab">👤 Họ tên</div><input id="jName" class="fld" maxlength="30" placeholder="✏️ Nhập họ tên của em" autocomplete="off">
  <div class="lab">🎨 Chọn màu nhân vật</div><div id="jCols" class="cols"></div>
- <ul class="rules">
+ <ul class="rules" id="jRules">
   <li>⚡ Trả lời ĐÚNG để nạp năng lượng · đúng liên tiếp 🔥 được thưởng thêm</li>
   <li>🏃 Đi và nhảy đều tốn ⚡ — hết ⚡ là đứng im, phải trả lời tiếp</li>
   <li>🍄 Nhảy lên đầu nấm để giẫm bẹp (+10⚡) · đụng ngang bị hất văng, mất ⚡ · 🦔 nhím gai phải né</li>
@@ -163,6 +165,48 @@ const { $, esc, fmt, stamp, clean, pick, shuffle, COLORS, BADGE, sfx, toast, con
 const U = new URLSearchParams(location.search), HWP = U.get('hw'), QUIZ_ID = U.get('quiz') || U.get('id'); let SOLO = U.get('solo') || (HWP || QUIZ_ID ? 'hw' : null);   // solo = "mau:0" · hw = bài tập về nhà (đề nén trong link)
 let HW = null;
 const GNAME = { climb: '🧗 Leo núi', brick: '🍄 Nấm Mario', tank: '🛡 Xe tăng', bomb: '💣 Đặt bom', test: '📝 Bài kiểm tra' };
+const RULES = {
+  test: [
+    '📝 Đọc kỹ yêu cầu đề bài, đoạn văn (Reading) hoặc nghe kỹ audio trước khi chọn đáp án',
+    '⏱ Phân bổ thời gian làm bài hợp lý theo đồng hồ đếm ngược trên màn hình',
+    '🔀 Có thể chuyển qua lại giữa các câu bằng thanh số câu phía trên',
+    '📥 Sau khi làm xong, kiểm tra kỹ và bấm nút Nộp bài để gửi điểm cho cô nhé!'
+  ],
+  brick: [
+    '🍄 Nấm Mario: Đội hộp ? để ăn xu (+3⚡), nấm xanh (+20⚡), nấm đỏ to lớn & hoa lửa',
+    '⬇ Đứng trên ống có mũi tên và bấm ↓ để chui xuống hầm bí mật đầy xu',
+    '🌸 Hoa ăn thịt, thanh lửa xoay, dung nham — né hết nhé',
+    '👸 Màn 4: Rồng phun lửa canh giữ công chúa — hạ nó để giải cứu nàng!'
+  ],
+  tank: [
+    '🛡 Xe tăng 1990: Lái xe bảo vệ căn cứ đại bàng 🦅 — hạ hết xe tăng địch để qua màn',
+    '🌸 Nhặt đồ hồng để nâng cấp súng, khiên bảo vệ, đóng băng địch',
+    '💥 STAGE 4: Siêu tăng bắn toả 3 hướng — hạ nó để phá đảo!'
+  ],
+  bomb: [
+    '💣 Đặt bom phá gạch, hạ hết quái rồi tìm cửa ra giấu dưới gạch',
+    '🎁 Phá gạch nhặt đồ: thêm bom, lửa dài, chạy nhanh, chống lửa, bất tử',
+    '🏆 Vượt 8 màn: đồng cỏ → sa mạc → băng tuyết → núi lửa!'
+  ],
+  climb: [
+    '🧗 Leo núi: Trả lời ĐÚNG để nạp năng lượng · đúng liên tiếp 🔥 được thưởng thêm',
+    '🏃 Đi và nhảy đều tốn ⚡ — hết ⚡ là đứng im, phải trả lời tiếp',
+    '🍄 Nhảy lên đầu nấm để giẫm bẹp (+10⚡) · đụng ngang bị hất văng, mất ⚡',
+    '👸 Công chúa đang bị nhốt ở cuối đường — về đích trước để giải cứu nàng!'
+  ]
+};
+
+function updateJoinUiForMode(m) {
+  const isTest = m === 'test';
+  if ($('jRules')) {
+    const list = RULES[m] || (isTest ? RULES.test : RULES.climb);
+    $('jRules').innerHTML = list.map(item => '<li>' + item + '</li>').join('');
+  }
+  const bigEl = $('ovJoin') ? $('ovJoin').querySelector('.big') : null;
+  if (bigEl) {
+    bigEl.textContent = isTest ? '📝 Bài Kiểm Tra Tiếng Anh' : (GNAME[m] || '🧗 Đừng Nhìn Xuống!');
+  }
+}
 const GAIN = { correct: 100, streakBonus: 15, streakMax: 5, cap: 1000, scale: 1 };
 /* cô cài: mỗi câu đúng được eq ⚡ (100/200/300), bình đầy em ⚡ (0 = không giới hạn) */
 function setGain(eq, em) { eq = +eq || 100; GAIN.correct = eq; GAIN.streakBonus = Math.round(eq * .15); GAIN.scale = eq / 100; GAIN.cap = em === undefined || em === null || em === '' ? 1000 : +em; Climb.S.cap = GAIN.cap }
@@ -493,19 +537,38 @@ function submitTestExam(auto) {
     $('trResReviewBox').innerHTML = QS.map((q, idx) => {
       const userChoice = trAnswers[idx];
       const isOk = isTestQCorrect(q, userChoice);
-      const choiceText = q.type === 'text'
+      const isText = q.type === 'text' || (!!q.ansText && (!q.o || q.o.length < 2));
+      const choiceText = isText
         ? (userChoice !== undefined && String(userChoice).trim() !== '' ? esc(userChoice) : 'Chưa trả lời')
         : (userChoice !== undefined ? (q.o[userChoice] || 'Không rõ') : 'Chưa trả lời');
-      const correctText = q.type === 'text' ? esc(q.ansText) : q.o[q.a];
+      const correctText = isText ? esc(q.ansText) : (q.o ? ('ABCD'[q.a] + '. ' + q.o[q.a]) : 'Không rõ');
+
+      const allOptsHtml = isText
+        ? `<div style="font-size:13px;margin:3px 0;color:#047857">🎯 Đáp án đúng được chấp nhận: <b>${esc(q.ansText)}</b></div>`
+        : `<div style="display:grid;gap:4px;margin:6px 0">` +
+            (q.o || []).map((opt, oi) => {
+              const isSelected = userChoice === oi;
+              const isRight = q.a === oi;
+              const bg = isRight ? '#ecfdf5' : isSelected ? '#fef2f2' : '#f8fafc';
+              const bd = isRight ? '#10b981' : isSelected ? '#ef4444' : '#e2e8f0';
+              const col = isRight ? '#065f46' : isSelected ? '#b91c1c' : '#334155';
+              const mark = isRight ? ' ✅ (ĐÚNG)' : isSelected ? ' ❌ (Em chọn)' : '';
+              return `<div style="font-size:13px;padding:6px 10px;border-radius:8px;border:1.5px solid ${bd};background:${bg};color:${col};font-weight:${isRight || isSelected ? 800 : 600}">
+                <b>${'ABCD'[oi]}.</b> ${opt} <span style="font-size:11px;font-weight:800">${mark}</span>
+              </div>`;
+            }).join('') +
+          `</div>`;
 
       return `
-        <div style="border-bottom:1px solid #e5e7eb;padding:10px 0">
-          <div style="font-weight:800;font-size:14px;color:#1e293b">Câu ${idx + 1}: ${q.q}</div>
-          <div style="font-size:13px;margin:4px 0">
-            Câu trả lời của em: <b style="color:${isOk ? '#16a34a' : '#dc2626'}">${isOk ? '✅ ' : '❌ '}${choiceText}</b>
+        <div style="border-bottom:1.5px solid #e2e8f0;padding:12px 0">
+          <div style="font-weight:900;font-size:15px;color:#1e1b4b">Câu ${idx + 1}: ${q.q}</div>
+          <div style="font-size:13px;margin:5px 0">
+            Lựa chọn của em: <b style="color:${isOk ? '#16a34a' : '#dc2626'}">${isOk ? '✅ ' : '❌ '}${choiceText}</b>
           </div>
-          ${!isOk ? `<div style="font-size:13px;color:#15803d">Đáp án đúng: <b>${correctText}</b></div>` : ''}
-          ${q.e ? `<div style="font-size:12px;color:#6b7280;background:#f3f4f6;padding:6px 10px;border-radius:8px;margin-top:4px">💡 ${q.e}</div>` : ''}
+          ${allOptsHtml}
+          <div style="font-size:13px;color:#1e293b;background:#f3f4f6;padding:8px 12px;border-radius:10px;margin-top:6px;border-left:4px solid #8b5cf6">
+            💡 <b>Giải thích chi tiết:</b> ${q.e ? q.e : ('Đáp án chính xác là <b>' + correctText + '</b>.')}
+          </div>
         </div>
       `;
     }).join('');
@@ -521,13 +584,20 @@ function submitTestExam(auto) {
 $('jCols').innerHTML = COLORS.map(c => '<button style="background:' + c + '" data-c="' + c + '" aria-label="Màu ' + c + '"></button>').join('');
 const paintCols = () => [...$('jCols').children].forEach(b => b.classList.toggle('on', b.dataset.c === myColor)); paintCols();
 $('jCols').onclick = e => { const c = e.target.dataset.c; if (c) { myColor = c; paintCols(); sfx('pop') } };
-if (SOLO) { $('jCodeBox').hidden = true; $('jSub').textContent = U.get('m') === 'brick' ? 'Luyện tập một mình — vượt 4 màn, giải cứu công chúa!' : 'Luyện tập một mình — leo lên đỉnh nhanh nhất có thể!'; $('jGo').textContent = '🚀 Bắt đầu!' }
+if (U.get('m')) updateJoinUiForMode(U.get('m'));
+if (SOLO) {
+  $('jCodeBox').hidden = true;
+  const isT = U.get('m') === 'test';
+  $('jSub').textContent = isT ? 'Luyện tập / Kiểm tra tự do — Đọc kỹ và chọn đáp án chính xác!' : (U.get('m') === 'brick' ? 'Luyện tập một mình — vượt 4 màn, giải cứu công chúa!' : 'Luyện tập một mình — leo lên đỉnh nhanh nhất có thể!');
+  $('jGo').textContent = isT ? '📝 Bắt đầu làm bài!' : '🚀 Bắt đầu!';
+}
 if (SOLO === 'hw') {
   if (HWP) {
     $('jSub').textContent = '📚 Đang mở bài tập…'; $('jGo').disabled = true;
     GC.unpackHw(HWP).then(h => {
       HW = h; const late = h.dl && Date.now() > h.dl;
-      $('jSub').innerHTML = '📚 <b>Bài tập về nhà</b>: ' + esc(h.t) + '<br>' + (GNAME[h.m] || '') + ' · ⏱ mỗi lượt ' + (h.dur ? h.dur + ' phút' : 'không giới hạn') + (h.dl ? '<br>⏰ Hạn nộp: <b>' + stamp(h.dl) + '</b>' : '') + (h.lic ? '<br>🏫 ' + esc(h.lic) : '');
+      updateJoinUiForMode(h.m || 'test');
+      $('jSub').innerHTML = (h.m === 'test' ? '📝 <b>Bài kiểm tra</b>: ' : '📚 <b>Bài tập về nhà</b>: ') + esc(h.t) + '<br>' + (GNAME[h.m] || '') + ' · ⏱ mỗi lượt ' + (h.dur ? h.dur + ' phút' : 'không giới hạn') + (h.dl ? '<br>⏰ Hạn nộp: <b>' + stamp(h.dl) + '</b>' : '') + (h.lic ? '<br>🏫 ' + esc(h.lic) : '');
       if (late) $('jErr').textContent = '⏰ Đã hết hạn nộp bài (' + stamp(h.dl) + '). Em liên hệ cô nhé!'; else $('jGo').disabled = false;
     }).catch(e => { $('jErr').textContent = '❌ Link bài tập bị lỗi hoặc bị cắt mất — em xin cô gửi lại link nhé' });
   } else if (QUIZ_ID) {
@@ -555,7 +625,13 @@ if (SOLO === 'hw') {
     });
   }
 }
-if (U.get('room')) $('jCode').value = U.get('room').replace(/\D/g, '').slice(0, 6);
+if (U.get('room')) {
+  const rm = U.get('room').replace(/\D/g, '').slice(0, 6);
+  $('jCode').value = rm;
+  GC.makeNet().then(n => { net = n; return n.once('rooms/' + rm + '/info'); }).then(inf => {
+    if (inf && inf.m) updateJoinUiForMode(inf.m);
+  }).catch(() => {});
+}
 ['jCode', 'jName'].forEach(id => $(id).addEventListener('keydown', e => { if (e.key === 'Enter') $('jGo').click() }));
 function bad(el, msg) { el.classList.remove('err'); void el.offsetWidth; el.classList.add('err'); el.focus(); $('jErr').textContent = msg }
 $('jGo').onclick = async () => {
@@ -595,6 +671,7 @@ async function joinRoom() {
   if (!QS.length) throw new Error('Phòng chưa có câu hỏi.');
   pid = myPid(code); path = 'rooms/' + code + '/players/' + pid; evp = 'rooms/' + code + '/ev';
   joinT = net.now(); setTitle = info.t || ''; setGain(info.eq, info.em); LVL = info.lv || 2; MODE = ['brick', 'tank', 'bomb', 'test'].includes(info.m) ? info.m : 'climb';
+  updateJoinUiForMode(MODE);
   const old = await net.once(path);
   boot(info.seed);
   if (MODE === 'test') {

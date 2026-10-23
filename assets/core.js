@@ -595,8 +595,11 @@ async function saveCommunityQuiz(quiz) {
   if (!quiz.id) {
     quiz.id = 'MN-' + (Math.floor(1000 + Math.random() * 9000));
   }
+  quiz.title = (quiz.title || '').trim() || (quiz.type === 'test' || quiz.m === 'test' ? 'Bài kiểm tra tiếng Anh' : 'Bài ôn tập tiếng Anh');
+  quiz.type = quiz.type || (quiz.m === 'test' ? 'test' : 'game');
+  quiz.m = quiz.m || (quiz.type === 'test' ? 'test' : 'climb');
   quiz.date = quiz.date || new Date().toLocaleDateString('vi-VN');
-  quiz.author = quiz.author || (window.GAME_CONFIG && window.GAME_CONFIG.teacher) || 'Cô Chí Nên';
+  quiz.author = (quiz.author || '').trim() || (window.GAME_CONFIG && window.GAME_CONFIG.teacher) || 'Cô Chí Nên';
 
   // 1. Lưu local cache
   const list = getLocalCommunity();

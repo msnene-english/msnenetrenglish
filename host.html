@@ -234,6 +234,7 @@ Giải thích: Chủ ngữ số ít đi với goes"></textarea>
     <div id="tBank" hidden>
      <div style="display:flex;gap:8px;margin-bottom:10px;flex-wrap:wrap;align-items:center">
       <input id="searchBank" class="inp" style="flex:1;min-width:160px;padding:7px 12px;font-size:13px" placeholder="🔍 Tìm kiếm đề thi...">
+      <button class="btn b" id="bRefreshBank" type="button" style="font-size:12px;padding:7px 11px">🔄 Làm mới thư viện</button>
       <button class="btn g" id="bExportBank" style="font-size:12px;padding:7px 10px">⬇️ Xuất file</button>
       <label class="btn w" style="font-size:12px;padding:7px 10px;cursor:pointer">
        ⬆️ Nạp file
@@ -328,14 +329,24 @@ Giải thích: Chủ ngữ số ít đi với goes"></textarea>
       <option value="fresh">🌿 Xanh Mint tươi mát (Dịu mắt, tập trung)</option>
      </select>
 
-     <div class="lab">⏱ Thời gian làm bài kiểm tra</div>
-     <select id="testDur" class="inp">
-      <option value="15">15 phút</option>
-      <option value="30">30 phút</option>
-      <option value="45" selected>45 phút (Chuẩn 1 tiết học)</option>
-      <option value="60">60 phút</option>
-      <option value="0">Không giới hạn thời gian</option>
-     </select>
+     <div class="lab">⏱ Thời gian làm bài kiểm tra (Chọn nhanh hoặc tự gõ số phút tùy ý)</div>
+     <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px" id="testDurPresets">
+      <button type="button" class="btn w" data-dur="5" style="padding:5px 9px;font-size:12px">5p</button>
+      <button type="button" class="btn w" data-dur="10" style="padding:5px 9px;font-size:12px">10p</button>
+      <button type="button" class="btn w" data-dur="15" style="padding:5px 9px;font-size:12px">15p</button>
+      <button type="button" class="btn w" data-dur="20" style="padding:5px 9px;font-size:12px">20p</button>
+      <button type="button" class="btn w" data-dur="30" style="padding:5px 9px;font-size:12px">30p</button>
+      <button type="button" class="btn g" data-dur="45" style="padding:5px 9px;font-size:12px">45p (Chuẩn)</button>
+      <button type="button" class="btn w" data-dur="60" style="padding:5px 9px;font-size:12px">60p</button>
+      <button type="button" class="btn w" data-dur="90" style="padding:5px 9px;font-size:12px">90p</button>
+      <button type="button" class="btn w" data-dur="0" style="padding:5px 9px;font-size:12px">♾ Tự do</button>
+     </div>
+     <div style="display:flex;align-items:center;gap:8px">
+      <span style="font-weight:700;font-size:13px;color:#475569">Hoặc tự nhập:</span>
+      <input type="number" id="testDurInp" min="0" max="300" class="inp" value="45" style="width:110px;padding:7px 12px;font-size:15px;font-weight:900;color:#6d28d9">
+      <span style="font-weight:800;font-size:14px;color:#475569">phút (0 = không giới hạn)</span>
+     </div>
+     <select id="testDur" class="inp" hidden><option value="45" selected>45</option></select>
 
      <div class="lab">Quy chế bài thi</div>
      <label class="sw" style="background:#fff"><input type="checkbox" id="testShuffle" checked><span>🔀 Trộn trật tự câu hỏi &amp; phương án<small>Chống học sinh nhìn bài nhau</small></span></label>
@@ -408,8 +419,13 @@ Giải thích: Chủ ngữ số ít đi với goes"></textarea>
 
    <!-- MỤC NÂNG CẤP MỚI: PHÂN TÍCH CÂU HỎI SAI NHIỀU NHẤT -->
    <div class="review-box" id="revBox" hidden>
-    <h3 style="color:#c2410c;font-size:18px;margin-bottom:6px">⚠️ Các câu hỏi học sinh làm sai nhiều nhất (Cần giải thích lại):</h3>
-    <div class="hint" style="margin-bottom:10px">Bấm vào nút "🔍 Xem lời giải" để chiếu câu hỏi và đáp án chi tiết lên máy chiếu cho cả lớp.</div>
+    <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px">
+     <div>
+      <h3 style="color:#c2410c;font-size:18px;margin-bottom:4px">⚠️ Thống kê câu làm sai &amp; Chiếu lời giải chi tiết:</h3>
+      <div class="hint" style="margin-bottom:6px">Bấm "🔍 Xem lời giải" từng câu hoặc chiếu lời giải toàn bộ đề thi lên máy chiếu cho cả lớp.</div>
+     </div>
+     <button type="button" class="btn g" id="bExpAllQs" style="padding:9px 16px;font-size:14px;font-weight:800">📖 Chiếu lời giải toàn bộ đề thi</button>
+    </div>
     <div id="mistakeList"></div>
    </div>
 
@@ -463,12 +479,19 @@ Giải thích: Chủ ngữ số ít đi với goes"></textarea>
  </div>
 </div></div>
 
-<!-- MODAL CHIẾU LỜI GIẢI CHI TIẾT (REVIEW CÂU SAI) -->
-<div class="ov" id="ovExp"><div class="card" style="max-width:720px">
- <div class="big" style="font-size:24px">📖 Chiếu Lời Giải Chi Tiết Cho Cả Lớp</div>
- <div class="sub" id="expSub"></div>
- <div id="expBody" style="background:#f8f6ff;border-radius:14px;padding:14px;line-height:1.6;font-size:16px;max-height:60vh;overflow:auto;margin:10px 0"></div>
- <div class="row"><button class="btn g" onclick="$('ovExp').classList.remove('on')">Đóng lời giải</button></div>
+<!-- MODAL CHIẾU LỜI GIẢI CHI TIẾT (REVIEW TOÀN BỘ CÂU HỎI & ĐÁP ÁN) -->
+<div class="ov" id="ovExp"><div class="card" style="max-width:820px;width:96%">
+ <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px">
+  <div class="big" style="font-size:22px;margin:0">📖 Chiếu Lời Giải &amp; Toàn Bộ Đáp Án Cho Cả Lớp</div>
+  <div style="display:flex;align-items:center;gap:6px">
+   <button type="button" class="btn w" style="padding:6px 12px;font-size:13px" onclick="expNav(-1)">← Câu trước</button>
+   <select id="expJumpSel" class="inp" style="width:auto;padding:5px 10px;font-size:13px;font-weight:800" onchange="showExplanation(+this.value)"></select>
+   <button type="button" class="btn b" style="padding:6px 12px;font-size:13px" onclick="expNav(1)">Câu sau →</button>
+  </div>
+ </div>
+ <div class="sub" id="expSub" style="margin-top:6px"></div>
+ <div id="expBody" style="background:#f8f6ff;border-radius:16px;border:2px solid #e4dcff;padding:16px;line-height:1.6;font-size:16px;max-height:62vh;overflow:auto;margin:10px 0"></div>
+ <div class="row"><button class="btn g" type="button" onclick="$('ovExp').classList.remove('on')">Đóng lời giải</button></div>
 </div></div>
 
 <!-- MODAL SỔ ĐIỂM BÀI TẬP VỀ NHÀ (HOMEWORK GRADEBOOK) -->
@@ -551,7 +574,7 @@ document.querySelectorAll('.tab').forEach(b => b.onclick = () => {
   $('tPaste').hidden = src !== 'paste';
   $('tMau').hidden = src !== 'mau';
   $('tBank').hidden = src !== 'bank';
-  if (src === 'bank') renderBank();
+  if (src === 'bank') renderBank(true);
 });
 
 function refreshQsPreviewOnly() {
@@ -793,8 +816,59 @@ function saveBank(list) {
 }
 
 let bankFilter = 'all'; // 'all', 'game', 'test'
+let isFetchingBank = false;
 
-function renderBank() {
+function getTestDurMinutes() {
+  const inpVal = $('testDurInp') ? +($('testDurInp').value) : NaN;
+  if (!isNaN(inpVal) && inpVal >= 0) return inpVal;
+  return +($('testDur')?.value || 45);
+}
+
+function setTestDurMinutes(m) {
+  m = Math.max(0, +m || 0);
+  if ($('testDurInp')) $('testDurInp').value = m;
+  if ($('testDur')) $('testDur').value = String(m);
+  if ($('testDurPresets')) {
+    [...$('testDurPresets').children].forEach(btn => {
+      const bDur = +btn.dataset.dur;
+      btn.className = 'btn ' + (bDur === m ? 'g' : 'w');
+    });
+  }
+}
+
+if ($('testDurPresets')) {
+  $('testDurPresets').onclick = e => {
+    const btn = e.target.closest('button');
+    if (!btn || btn.dataset.dur === undefined) return;
+    setTestDurMinutes(+btn.dataset.dur);
+  };
+}
+if ($('testDurInp')) {
+  $('testDurInp').oninput = () => {
+    const val = +$('testDurInp').value;
+    if ($('testDurPresets')) {
+      [...$('testDurPresets').children].forEach(btn => {
+        btn.className = 'btn ' + (+btn.dataset.dur === val ? 'g' : 'w');
+      });
+    }
+  };
+}
+
+async function renderBank(forceCloud) {
+  if (forceCloud || !window.communityQuizzesCache) {
+    if ($('commBankList')) {
+      $('commBankList').innerHTML = '<div class="hint" style="text-align:center;padding:16px">⏳ Đang đồng bộ Thư viện đề thi từ máy chủ Firebase…</div>';
+    }
+    isFetchingBank = true;
+    try {
+      window.communityQuizzesCache = await GC.getCommunityLibrary();
+    } catch(err) {
+      console.warn('Load community library error:', err);
+    } finally {
+      isFetchingBank = false;
+    }
+  }
+
   const query = clean($('searchBank') ? $('searchBank').value : '').toLowerCase();
 
   // 1. Render Thư viện chung
@@ -806,7 +880,7 @@ function renderBank() {
   }
 
   if (!commList.length) {
-    $('commBankList').innerHTML = '<div class="hint" style="text-align:center;padding:12px">Không tìm thấy đề nào phù hợp.</div>';
+    $('commBankList').innerHTML = '<div class="hint" style="text-align:center;padding:16px">Không tìm thấy bộ đề nào phù hợp. Cô hãy bấm <b>"🔄 Làm mới thư viện"</b> hoặc tạo đề mới nhé!</div>';
   } else {
     $('commBankList').innerHTML = commList.map(item => {
       const isTest = item.type === 'test' || item.m === 'test';
@@ -817,9 +891,9 @@ function renderBank() {
       return `
       <div class="bank-item" style="border-left:4px solid ${isTest ? '#8b5cf6' : '#5ab0ff'}">
         <div class="binfo" onclick="loadQuizData('${item.id}')">
-          <span style="font-size:15px;color:#2d2350">${badgeHtml}📘 ${esc(item.title)}</span>
+          <span style="font-size:15px;color:#2d2350">${badgeHtml}📘 ${esc(item.title || item.id)}</span>
           <span style="font-size:12px;color:#7a6aa8;display:block">
-            Mã: <code style="color:#5b4bb0">${esc(item.id)}</code> · ${item.qs ? item.qs.length : 0} câu · Tác giả: <b>${esc(item.author || 'Ms Nenet')}</b> · ${esc(item.date || '')}
+            Mã: <code style="color:#5b4bb0;font-weight:800">${esc(item.id)}</code> · ${item.qs ? item.qs.length : 0} câu · Tác giả: <b>${esc(item.author || 'Ms Nenet')}</b> · ${esc(item.date || '')}
           </span>
         </div>
         <div class="bacts">
@@ -866,6 +940,7 @@ function renderBank() {
 }
 
 // Bắt sự kiện bộ lọc đề
+if ($('bRefreshBank')) $('bRefreshBank').onclick = () => { toast('🔄 Đang đồng bộ lại thư viện từ Firebase…', 1500); renderBank(true); };
 if ($('bFiltAll')) $('bFiltAll').onclick = () => { bankFilter = 'all'; updateFilterButtons(); renderBank(); };
 if ($('bFiltGame')) $('bFiltGame').onclick = () => { bankFilter = 'game'; updateFilterButtons(); renderBank(); };
 if ($('bFiltTest')) $('bFiltTest').onclick = () => { bankFilter = 'test'; updateFilterButtons(); renderBank(); };
@@ -881,10 +956,15 @@ if ($('searchBank'))if ($('searchBank')) {
 }
 
 window.loadQuizData = async function(id) {
+  toast('⏳ Đang tải bộ đề ' + id + '…', 1500);
   const quiz = await GC.getQuizById(id);
   if (quiz && quiz.qs) {
-    setQs(quiz.qs, quiz.title, []);
-    toast('✅ Đã nạp đề: ' + quiz.title + ' (' + quiz.qs.length + ' câu)');
+    const isTest = quiz.type === 'test' || quiz.m === 'test';
+    selectMode(isTest ? 'test' : (quiz.m || 'climb'));
+    setQs(quiz.qs, quiz.title || id, []);
+    toast('✅ Đã nạp đề: ' + (quiz.title || id) + ' (' + quiz.qs.length + ' câu) ' + (isTest ? '📝 Bài Test' : '🎮 Game'), 2800);
+  } else {
+    toast('❌ Không tải được nội dung câu hỏi của mã đề ' + id, 3000);
   }
 };
 
@@ -1029,7 +1109,7 @@ $('bHwMake').onclick = async () => {
   if (!$('hwNoDl').checked && (!dl || dl < Date.now())) return toast('⏰ Cô chọn hạn nộp ở tương lai nhé', 2400);
   const isTest = gMode === 'test';
   const title = clean($('gTitle').value) || (isTest ? 'Bài kiểm tra tiếng Anh' : 'Bài ôn tập');
-  const dur = isTest ? +($('testDur')?.value || 45) : +$('hwDur').value;
+  const dur = isTest ? getTestDurMinutes() : +$('hwDur').value;
   const withE = $('hwExp').checked;
   const payload = {
     v: 1,
@@ -1137,7 +1217,7 @@ $('bOpen').onclick = async () => {
   try {
     code = await net.newCode(); await net.host(code);
     const isTest = gMode === 'test';
-    const tDur = isTest ? +($('testDur')?.value || 45) : +$('gDur').value;
+    const tDur = isTest ? getTestDurMinutes() : +$('gDur').value;
     info = {
       t: clean($('gTitle').value) || (isTest ? 'Bài kiểm tra tiếng Anh' : 'Game ôn tập'),
       m: gMode,
@@ -1180,7 +1260,7 @@ function enterRoom() {
   mistakeStats = {};
   TOP = info.m === 'test' ? 100 : ((info.m === 'brick' ? Brick : info.m === 'tank' ? Tank : info.m === 'bomb' ? Bomb : Climb).measure(info.seed, info.lv || 2) || 1);
   offs.forEach(f => f()); offs = [];
-  const url = new URL('play.html', location.href); url.searchParams.set('room', code);
+  const url = new URL('play.html', location.href); url.searchParams.set('room', code); if (info && info.m) url.searchParams.set('m', info.m);
   $('lCode').textContent = code; $('vCode').textContent = code; $('lUrl').textContent = url.href; $('lTitle').textContent = '📘 ' + info.t; $('vTitle').textContent = '📘 ' + info.t;
   joinUrl = url.href;
   $('qr').innerHTML = '';
@@ -1315,35 +1395,106 @@ function showEnd() {
       R.map(([idKey, p], i) => '<tr><td>' + (i + 1) + '</td><td>' + esc(p.n) + '</td><td>' + (p.tt ? '👸 Phá đảo' : p.lb ? esc(p.lb) + (p.cn != null ? ' · 🪙 ' + p.cn : '') : (p.alt || 0) + ' m') + '</td><td>' + (p.ok || 0) + '/' + (p.ans || 0) + '</td><td>' + (p.ans ? Math.round(p.ok / p.ans * 100) : 0) + '%</td><td>' + (p.bs || 0) + '</td><td>' + (p.sp || 0) + '</td><td>' + (p.fl || 0) + '</td><td><button class="btn b" style="padding:4px 10px;font-size:12px" onclick="exportPlayerReport(\'' + esc(idKey) + '\')">🏅 Phiếu điểm</button></td></tr>').join('');
   }
 
-  // PHÂN TÍCH CÂU LÀM SAI NHIỀU NHẤT
-  const mEntries = Object.entries(mistakeStats).sort((a,b) => b[1] - a[1]);
-  if (mEntries.length && qs.length) {
+  // PHÂN TÍCH CÂU LÀM SAI & CHIẾU LỜI GIẢI TOÀN BỘ ĐỀ
+  if (qs.length) {
     $('revBox').hidden = false;
-    $('mistakeList').innerHTML = mEntries.slice(0, 5).map(([qIdx, count]) => {
-      const qNum = +qIdx;
-      const question = qs[qNum - 1] || qs[qNum] || { q: 'Câu hỏi ' + qNum };
-      return `
-        <div class="mistake-row">
-          <div style="flex:1;margin-right:12px">
-            <b>⚠️ Câu ${qNum}:</b> ${GC.safe(question.q).slice(0, 90)}... 
-            <span style="color:#c23a55;font-size:13px">(${count} lượt làm sai)</span>
+    if ($('bExpAllQs')) $('bExpAllQs').onclick = () => showExplanation(1);
+    const mEntries = Object.entries(mistakeStats).sort((a,b) => b[1] - a[1]);
+    if (mEntries.length) {
+      $('mistakeList').innerHTML = mEntries.slice(0, 8).map(([qIdx, count]) => {
+        const qNum = +qIdx;
+        const question = qs[qNum - 1] || qs[qNum] || { q: 'Câu hỏi ' + qNum };
+        return `
+          <div class="mistake-row">
+            <div style="flex:1;margin-right:12px">
+              <b>⚠️ Câu ${qNum}:</b> ${GC.safe(question.q).slice(0, 90)}... 
+              <span style="color:#c23a55;font-size:13px">(${count} lượt làm sai)</span>
+            </div>
+            <button class="btn" style="padding:6px 12px;font-size:13px" onclick="showExplanation(${qNum})">🔍 Xem lời giải</button>
           </div>
-          <button class="btn" style="padding:6px 12px;font-size:13px" onclick="showExplanation(${qNum})">🔍 Xem lời giải</button>
-        </div>
-      `;
-    }).join('');
+        `;
+      }).join('');
+    } else {
+      $('mistakeList').innerHTML = '<div style="background:#fff;border-radius:12px;padding:10px 14px;margin-top:8px;font-weight:700;color:#047857">🎉 Các bạn làm bài rất tốt! Bấm nút <b>"📖 Chiếu lời giải toàn bộ đề thi"</b> bên trên để cùng lớp xem lại đáp án từng câu nhé.</div>';
+    }
   } else {
     $('revBox').hidden = true;
   }
 }
 
+let currentExpQNum = 1;
+
+window.expNav = function(delta) {
+  const next = currentExpQNum + delta;
+  if (next >= 1 && next <= qs.length) {
+    showExplanation(next);
+  }
+};
+
 window.showExplanation = function(qNum) {
-  const q = qs[qNum - 1] || qs[qNum];
+  currentExpQNum = Math.max(1, Math.min(qs.length, +qNum || 1));
+  const q = qs[currentExpQNum - 1];
   if (!q) return;
-  $('expSub').textContent = 'Câu ' + qNum + ' · Đáp án đúng: ' + (q.o ? q.o[q.a] : '');
-  $('expBody').innerHTML = '<h3>' + GC.safe(q.q) + '</h3><br>' +
-    '<div style="color:#1d8a5a;font-weight:800;font-size:17px;margin-bottom:10px">✅ Đáp án chính xác: ' + GC.safe(q.o[q.a]) + '</div>' +
-    (q.e ? '<div style="margin-top:8px"><b>📖 Lời giải chi tiết:</b><br>' + q.e + '</div>' : '<div class="hint">Chưa có phần giải thích riêng cho câu này.</div>');
+
+  const jumpSel = $('expJumpSel');
+  if (jumpSel) {
+    jumpSel.innerHTML = qs.map((_, i) => `<option value="${i + 1}" ${i + 1 === currentExpQNum ? 'selected' : ''}>Câu ${i + 1} / ${qs.length}</option>`).join('');
+    jumpSel.value = String(currentExpQNum);
+  }
+
+  const isText = q.type === 'text' || (!!q.ansText && (!q.o || q.o.length < 2));
+  const correctLabel = isText ? esc(q.ansText) : (q.o ? ('ABCD'[q.a] + '. ' + GC.safe(q.o[q.a])) : 'Chưa rõ');
+  $('expSub').innerHTML = `<b>Câu ${currentExpQNum} / ${qs.length}</b> ${q.s ? ' · 📌 <i>' + esc(q.s) + '</i>' : ''} · <span style="color:#047857">🎯 Đáp án đúng: <b>${correctLabel}</b></span>`;
+
+  let passageHtml = '';
+  if (q.passage && q.passage.trim()) {
+    passageHtml = `
+      <div style="background:#fff;border:1.5px solid #cbd5e1;border-radius:12px;padding:12px;margin-bottom:12px;font-size:14px;line-height:1.7;color:#334155">
+        <b style="color:#5b4bb0;display:block;margin-bottom:6px">📖 Đoạn văn bài đọc (Reading Passage):</b>
+        ${q.passage}
+      </div>
+    `;
+  }
+
+  let optionsHtml = '';
+  if (isText) {
+    optionsHtml = `
+      <div style="background:#ecfdf5;border:2px solid #6ee7b7;border-radius:12px;padding:12px;margin:12px 0">
+        <div style="font-weight:800;color:#065f46;margin-bottom:4px">✍️ Dạng câu tự luận / điền từ / viết lại câu:</div>
+        <div style="font-size:16px;color:#047857;font-weight:800">Đáp án chính xác được chấp nhận: <code>${esc(q.ansText)}</code></div>
+      </div>
+    `;
+  } else {
+    optionsHtml = `
+      <div style="margin:12px 0;display:grid;gap:8px">
+        <div style="font-weight:800;color:#475569;font-size:13px">TOÀN BỘ PHƯƠNG ÁN LỰA CHỌN (A, B, C, D):</div>
+        ${(q.o || []).map((optText, oi) => {
+          const isRight = oi === q.a;
+          return `
+            <div style="display:flex;align-items:center;gap:10px;padding:10px 14px;border-radius:12px;border:2px solid ${isRight ? '#10b981' : '#e2e8f0'};background:${isRight ? '#ecfdf5' : '#fff'};font-weight:700">
+              <span style="width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:900;background:${isRight ? '#10b981' : '#f1f5f9'};color:${isRight ? '#fff' : '#475569'}">${'ABCD'[oi]}</span>
+              <span style="flex:1;font-size:15px;color:${isRight ? '#065f46' : '#1e293b'}">${optText}</span>
+              ${isRight ? '<span style="background:#10b981;color:#fff;font-size:12px;font-weight:900;padding:3px 10px;border-radius:12px">✅ ĐÁP ÁN ĐÚNG</span>' : ''}
+            </div>
+          `;
+        }).join('')}
+      </div>
+    `;
+  }
+
+  const expText = q.e ? q.e : ('Đáp án chính xác là <b>' + correctLabel + '</b>. Học sinh cần chú ý cấu trúc ngữ pháp và từ khóa quan trọng của câu này.');
+
+  $('expBody').innerHTML = `
+    ${passageHtml}
+    <div style="font-size:18px;font-weight:900;color:#1e1b4b;margin-bottom:10px">
+      <span style="color:#6d28d9">Câu ${currentExpQNum}:</span> ${GC.safe(q.q)}
+    </div>
+    ${optionsHtml}
+    <div style="background:#fffbeb;border:2px solid #fde68a;border-radius:14px;padding:12px 14px;margin-top:10px">
+      <div style="font-weight:900;color:#b45309;margin-bottom:4px">💡 Lời giải &amp; Phân tích chi tiết:</div>
+      <div style="font-size:15px;color:#1e293b;line-height:1.6">${expText}</div>
+    </div>
+  `;
   $('ovExp').classList.add('on');
 };
 
@@ -2103,6 +2254,7 @@ async function checkResume() {
     else { $('netB').className = 'badge warn'; $('netB').textContent = '🟡 Chế độ thử: tab trên máy này' }
     selectMode(gMode);
     checkResume();
+    renderBank(true); // Tự động đồng bộ kho đề Firebase ngay khi mở trang
   } catch (e) { $('netB').className = 'badge warn'; $('netB').textContent = '❌ ' + e.message }
 })();
 </script>
