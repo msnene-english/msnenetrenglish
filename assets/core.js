@@ -36,6 +36,28 @@ function safe(html) {
 
 /* ── câu hỏi chuẩn: {q, o:[...], a: chỉ số đáp án đúng, e: giải thích, s: dạng bài} ── */
 const NOSHUF = /Pronunciation|Stress|Ordering|underlined|âm tiết|trọng âm|phát âm|sắp xếp/i;
+/* ── chuẩn hoá & chấm câu tự luận ngắn / điền từ / viết lại câu ── */
+function normAns(s) {
+  return clean(String(s || '').replace(/<[^>]+>/g, ''))
+    .toLowerCase()
+    .replace(/\bwon't\b/g, 'will not')
+    .replace(/\bcan't\b/g, 'cannot')
+    .replace(/\bshan't\b/g, 'shall not')
+    .replace(/\b(do|does|did|is|are|was|were|have|has|had|would|could|should|must|need)n't\b/g, '$1 not')
+    .replace(/\bi'm\b/g, 'i am')
+    .replace(/\b(you|we|they)'re\b/g, '$1 are')
+    .replace(/\b(i|you|we|they)'ve\b/g, '$1 have')
+    .replace(/\b(i|you|he|she|it|we|they)'ll\b/g, '$1 will')
+    .replace(/^[.,!?;:"'()\s]+|[.,!?;:"'()\s]+$/g, '')
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+function checkTextAns(userVal, ansText) {
+  const u = normAns(userVal);
+  if (!u) return false;
+  const targets = String(ansText || '').split(/\s*[\/|;]\s*/).map(normAns).filter(Boolean);
+  return targets.includes(u);
+}
 function fromOld(x) {
   let o = [], a = -1;
   if (x.opts) {
@@ -46,14 +68,45 @@ function fromOld(x) {
     else if (x.correct != null) a = o.indexOf(x.correct);
   }
   const qText = x.question ? (x.question + (x.text ? '<br><br>' + x.text : '')) : (x.q || x.text || '');
-  return { q: qText, o, a, e: x.explanation || x.exp || x.vnt || '', s: x.type || x.sec || '' };
+  const isText = x.type === 'text' || (!!x.ansText && (!o || o.length < 2));
+  return {
+    type: isText ? 'text' : 'mc',
+    q: qText,
+    o: isText ? [] : o,
+    a: isText ? 0 : a,
+    ansText: x.ansText || '',
+    e: x.explanation || x.exp || x.vnt || '',
+    s: (x.type && x.type !== 'text' && x.type !== 'mc' ? x.type : '') || x.sec || x.s || ''
+  };
 }
 function prep(list, noShuffle) {   // trước khi chơi: bỏ câu hỏng, làm sạch, xáo đáp án 1 lần
-  return (list || []).filter(x => x && x.o && x.o.length >= 2 && x.a >= 0 && x.a < x.o.length).map((x, i) => {
+  return (list || []).filter(x => {
+    if (!x || !x.q) return false;
+    if (x.type === 'text' || (x.ansText && (!x.o || x.o.length < 2))) return !!clean(x.ansText || (x.o && x.o[0]) || '');
+    return x.o && x.o.length >= 2 && x.a >= 0 && x.a < x.o.length;
+  }).map((x, i) => {
+    const isText = x.type === 'text' || (!!x.ansText && (!x.o || x.o.length < 2));
+    if (isText) {
+      return {
+        n: i + 1,
+        type: 'text',
+        q: safe(x.q),
+        ansText: clean(x.ansText || (x.o && x.o[0]) || ''),
+        s: esc(x.s || 'Tự luận / Điền từ'),
+        passage: x.passage ? safe(x.passage) : '',
+        audio: x.audio ? esc(x.audio) : '',
+        img: x.img ? esc(x.img) : '',
+        o: [],
+        a: 0,
+        e: safe(x.e || '')
+      };
+    }
     let idx = x.o.map((_, k) => k);
     if (!noShuffle && !NOSHUF.test((x.s || '') + ' ' + x.q)) idx = shuffle(idx);
     return {
       n: i + 1,
+      type: 'mc',
+      ansText: '',
       q: safe(x.q),
       s: esc(x.s || ''),
       passage: x.passage ? safe(x.passage) : '',
@@ -91,23 +144,33 @@ function ansIndex(ans, o) {
 function rowToQ(r, line, out, errs) {
   const q = (r[0] || '').trim(), o = r.slice(1, 5).map(s => (s || '').trim()), ans = (r[5] || '').trim();
   if (!q && !o.some(Boolean)) return;
-  const ai = ansIndex(ans, o), keep = o.map((x, i) => x ? i : -1).filter(i => i >= 0), oo = keep.map(i => o[i]), aa = keep.indexOf(ai);
-  if (!q || oo.length < 2 || aa < 0) { errs.push('Dòng ' + line + ': ' + (!q ? 'thiếu câu hỏi' : oo.length < 2 ? 'cần ít nhất 2 phương án' : 'đáp án "' + ans + '" không khớp A/B/C/D')); return }
-  out.push({ q: nl(q), o: oo.map(nl), a: aa, e: nl((r[6] || '').trim()), s: (r[7] || '').trim() });
+  const keep = o.map((x, i) => x ? i : -1).filter(i => i >= 0), oo = keep.map(i => o[i]);
+  if (q && oo.length === 0 && ans) {
+    out.push({ type: 'text', q: nl(q), ansText: clean(ans), o: [], a: 0, e: nl((r[6] || '').trim()), s: (r[7] || 'Tự luận / Điền từ').trim() });
+    return;
+  }
+  const ai = ansIndex(ans, o), aa = keep.indexOf(ai);
+  if (!q || oo.length < 2 || aa < 0) { errs.push('Dòng ' + line + ': ' + (!q ? 'thiếu câu hỏi' : oo.length < 2 ? 'cần ít nhất 2 phương án (hoặc để trống cả 4 cột A-D và điền cột Đáp án cho câu tự luận)' : 'đáp án "' + ans + '" không khớp A/B/C/D')); return }
+  out.push({ type: 'mc', q: nl(q), o: oo.map(nl), a: aa, e: nl((r[6] || '').trim()), s: (r[7] || '').trim() });
 }
 function rowsToQs(rows) {
   const out = [], errs = [];
   rows.forEach((r, ri) => { if (ri === 0 && r.some(c => /^\s*(đáp án|dap an|answer|key)\s*$/i.test(c))) return; rowToQ(r, ri + 1, out, errs) });
   return { qs: out, errs };
 }
-/* dán từ Word:  1. Câu hỏi … / A. … / *B. … (dấu * = đáp án đúng) / Đáp án: B / Giải thích: … */
+/* dán từ Word:  1. Câu hỏi … / A. … / *B. … (dấu * = đáp án đúng) / Đáp án: B / Giải thích: … (Nếu không có A,B,C,D mà có Đáp án: ... -> câu tự luận/điền từ) */
 function parseText(t) {
   const out = [], errs = []; let cur = null;
   const flush = () => {
     if (!cur) return;
+    if (cur.q && cur.o.length === 0 && cur.key) {
+      out.push({ type: 'text', q: nl(cur.q), ansText: clean(cur.key), o: [], a: 0, e: nl(cur.e), s: 'Tự luận / Điền từ' });
+      cur = null;
+      return;
+    }
     if (cur.a < 0 && cur.key) cur.a = ansIndex(cur.key, cur.o);
-    if (!cur.q || cur.o.length < 2 || cur.a < 0) errs.push('Câu ' + (out.length + errs.length + 1) + ' (“' + cur.q.slice(0, 40) + '…”): ' + (cur.o.length < 2 ? 'chưa đủ phương án' : 'chưa đánh dấu đáp án đúng (* hoặc dòng "Đáp án: B")'));
-    else out.push({ q: nl(cur.q), o: cur.o.map(nl), a: cur.a, e: nl(cur.e), s: '' });
+    if (!cur.q || cur.o.length < 2 || cur.a < 0) errs.push('Câu ' + (out.length + errs.length + 1) + ' (“' + cur.q.slice(0, 40) + '…”): ' + (cur.o.length < 2 ? 'chưa đủ phương án (hoặc thêm dòng "Đáp án: ..." cho câu điền từ/tự luận)' : 'chưa đánh dấu đáp án đúng (* hoặc dòng "Đáp án: B")'));
+    else out.push({ type: 'mc', q: nl(cur.q), o: cur.o.map(nl), a: cur.a, e: nl(cur.e), s: '' });
     cur = null;
   };
   const OPT = /^\s*(\*?)\s*\(?([A-Da-d])[.)]\s*(.*?)\s*(\*?)\s*$/;
@@ -625,5 +688,326 @@ async function getQuizById(id) {
   return null;
 }
 
-  return { $, shuffle, pick, clamp, esc, fmt, stamp, clean, rng, COLORS, BADGE, safe, fromOld, prep, parseCSV, rowsToQs, parseText, parsePaste, sheetSets, sheetSet, sampleSet, packHw, unpackHw, tone, sfx, confetti, toast, rank, makeNet, music, saveCommunityQuiz, getCommunityLibrary, getQuizById };
+/* ═════ SỔ ĐIỂM BÀI TẬP VỀ NHÀ (HOMEWORK GRADEBOOK) ═════ */
+const HW_META_KEY = 'msnenet_hw_meta';
+const HW_SUBS_KEY = 'msnenet_hw_subs';
+
+function getLocalHwMetas() {
+  try { return JSON.parse(localStorage.getItem(HW_META_KEY) || '{}'); } catch (e) { return {}; }
+}
+function saveLocalHwMetas(obj) {
+  try { localStorage.setItem(HW_META_KEY, JSON.stringify(obj)); } catch (e) {}
+}
+function getLocalHwSubs() {
+  try { return JSON.parse(localStorage.getItem(HW_SUBS_KEY) || '{}'); } catch (e) { return {}; }
+}
+function saveLocalHwSubs(obj) {
+  try { localStorage.setItem(HW_SUBS_KEY, JSON.stringify(obj)); } catch (e) {}
+}
+
+async function saveHwMeta(meta) {
+  if (!meta || !meta.id) return;
+  const item = {
+    id: String(meta.id).trim(),
+    title: meta.title || 'Bài tập về nhà',
+    m: meta.m || 'climb',
+    dur: meta.dur || 0,
+    dl: meta.dl || 0,
+    createdAt: meta.createdAt || Date.now(),
+    date: stamp(meta.createdAt || Date.now())
+  };
+  const metas = getLocalHwMetas();
+  metas[item.id] = Object.assign(metas[item.id] || {}, item);
+  saveLocalHwMetas(metas);
+
+  const cfg = window.GAME_CONFIG || {};
+  if (cfg.firebase && cfg.firebase.databaseURL) {
+    try {
+      const url = cfg.firebase.databaseURL.replace(/\/$/, '') + '/hw_meta/' + encodeURIComponent(item.id) + '.json';
+      await fetch(url, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(item) });
+    } catch (e) { console.warn('saveHwMeta sync warn:', e); }
+  }
+  return item;
+}
+
+async function submitHwResult(hwId, entry) {
+  if (!hwId || !entry || !entry.n) return;
+  hwId = String(hwId).trim();
+  const subId = 's_' + Date.now() + '_' + Math.random().toString(36).slice(2, 6);
+  const rec = {
+    id: subId,
+    hwId,
+    title: entry.title || 'Bài tập tiếng Anh',
+    n: entry.n,
+    score: entry.score ?? 0,
+    ok: entry.ok ?? 0,
+    ans: entry.ans ?? 0,
+    tot: entry.tot ?? 0,
+    m: entry.m || 'climb',
+    durText: entry.durText || '00:00',
+    at: Date.now(),
+    date: stamp(Date.now())
+  };
+
+  // 1. Lưu local
+  const allSubs = getLocalHwSubs();
+  if (!allSubs[hwId]) allSubs[hwId] = {};
+  allSubs[hwId][subId] = rec;
+  saveLocalHwSubs(allSubs);
+
+  const metas = getLocalHwMetas();
+  if (!metas[hwId]) {
+    metas[hwId] = { id: hwId, title: rec.title, m: rec.m, createdAt: rec.at, date: rec.date };
+    saveLocalHwMetas(metas);
+  }
+
+  // 2. Đồng bộ Firebase
+  const cfg = window.GAME_CONFIG || {};
+  if (cfg.firebase && cfg.firebase.databaseURL) {
+    const base = cfg.firebase.databaseURL.replace(/\/$/, '');
+    try {
+      await fetch(base + '/hw_subs/' + encodeURIComponent(hwId) + '/' + subId + '.json', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(rec)
+      });
+      await fetch(base + '/hw_meta/' + encodeURIComponent(hwId) + '.json', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id: hwId, title: rec.title, m: rec.m, updatedAt: rec.at, date: rec.date })
+      });
+    } catch (e) { console.warn('submitHwResult firebase warn:', e); }
+  }
+  return rec;
+}
+
+async function getHwGradebook() {
+  const metas = Object.assign({}, getLocalHwMetas());
+  const subsByHw = {};
+  const localSubs = getLocalHwSubs();
+  for (const [hid, map] of Object.entries(localSubs)) {
+    subsByHw[hid] = Object.assign({}, map || {});
+  }
+
+  const cfg = window.GAME_CONFIG || {};
+  if (cfg.firebase && cfg.firebase.databaseURL) {
+    const base = cfg.firebase.databaseURL.replace(/\/$/, '');
+    try {
+      const [mRes, sRes] = await Promise.all([
+        fetch(base + '/hw_meta.json').then(r => r.json()).catch(() => null),
+        fetch(base + '/hw_subs.json').then(r => r.json()).catch(() => null)
+      ]);
+      if (mRes && typeof mRes === 'object') {
+        for (const [k, v] of Object.entries(mRes)) {
+          if (v && typeof v === 'object') metas[k] = Object.assign(metas[k] || {}, v);
+        }
+      }
+      if (sRes && typeof sRes === 'object') {
+        for (const [hid, map] of Object.entries(sRes)) {
+          if (map && typeof map === 'object') {
+            if (!subsByHw[hid]) subsByHw[hid] = {};
+            Object.assign(subsByHw[hid], map);
+          }
+        }
+      }
+    } catch (e) { console.warn('getHwGradebook warn:', e); }
+  }
+
+  // Đảm bảo mọi hwId có bài nộp đều nằm trong danh sách metas
+  for (const [hid, map] of Object.entries(subsByHw)) {
+    const arr = Object.values(map || {});
+    if (arr.length && !metas[hid]) {
+      metas[hid] = { id: hid, title: arr[0].title || ('Bài tập ' + hid), m: arr[0].m || 'test', createdAt: arr[0].at || Date.now() };
+    }
+  }
+
+  const list = Object.values(metas).sort((a, b) => (b.updatedAt || b.createdAt || 0) - (a.updatedAt || a.createdAt || 0));
+  const sortedSubs = {};
+  for (const [hid, map] of Object.entries(subsByHw)) {
+    sortedSubs[hid] = Object.values(map || {}).sort((a, b) => (b.score ?? 0) - (a.score ?? 0) || (b.ok ?? 0) - (a.ok ?? 0) || (a.at || 0) - (b.at || 0));
+  }
+  return { list, subsByHw: sortedSubs };
+}
+
+/* ═════ XUẤT PHIẾU ĐIỂM GỬI PHỤ HUYNH (PARENT REPORT CARD) ═════ */
+function showReportCard(data) {
+  data = data || {};
+  const name = data.name || 'Học sinh';
+  const title = data.title || 'Bài kiểm tra tiếng Anh';
+  const score = Math.round(data.score ?? 0);
+  const ok = data.ok ?? 0;
+  const tot = data.tot ?? 1;
+  const modeName = data.modeName || (data.m === 'test' ? '📝 Bài kiểm tra khảo thí' : '🎮 Game ôn tập');
+  const timeText = data.timeText || 'Hoàn thành';
+  const dateText = data.dateText || stamp(Date.now());
+  const teacher = data.teacher || 'Cô Chí Nên (Ms Nenet English)';
+
+  const cv = document.createElement('canvas');
+  cv.width = 1080;
+  cv.height = 760;
+  const ctx = cv.getContext('2d');
+
+  // 1. Nền Gradient sang trọng
+  const bg = ctx.createLinearGradient(0, 0, 1080, 760);
+  bg.addColorStop(0, '#f5f0ff');
+  bg.addColorStop(0.5, '#fff5f9');
+  bg.addColorStop(1, '#eef8ff');
+  ctx.fillStyle = bg;
+  ctx.fillRect(0, 0, 1080, 760);
+
+  // Hoạ tiết trang trí góc
+  ctx.fillStyle = 'rgba(139, 92, 246, 0.08)';
+  ctx.beginPath(); ctx.arc(980, 90, 180, 0, Math.PI * 2); ctx.fill();
+  ctx.fillStyle = 'rgba(236, 72, 153, 0.07)';
+  ctx.beginPath(); ctx.arc(100, 680, 190, 0, Math.PI * 2); ctx.fill();
+
+  // Khung viền đôi
+  ctx.strokeStyle = '#8b5cf6';
+  ctx.lineWidth = 6;
+  ctx.strokeRect(28, 28, 1024, 704);
+  ctx.strokeStyle = '#ddd6fe';
+  ctx.lineWidth = 2;
+  ctx.strokeRect(40, 40, 1000, 680);
+
+  // Header Banner
+  const hGrad = ctx.createLinearGradient(60, 60, 1020, 150);
+  hGrad.addColorStop(0, '#6d28d9');
+  hGrad.addColorStop(1, '#db2777');
+  ctx.fillStyle = hGrad;
+  ctx.beginPath();
+  ctx.roundRect(65, 65, 950, 92, 22);
+  ctx.fill();
+
+  ctx.fillStyle = '#ffffff';
+  ctx.textAlign = 'center';
+  ctx.font = '900 28px "Nunito", "Segoe UI", sans-serif';
+  ctx.fillText('🌟 PHIẾU BÁO KẾT QUẢ HỌC TẬP · MS NENET ENGLISH 🌟', 540, 112);
+  ctx.font = '700 17px "Nunito", "Segoe UI", sans-serif';
+  ctx.fillStyle = '#fde68a';
+  ctx.fillText(modeName + '  ·  Ngày: ' + dateText, 540, 142);
+
+  // Thông tin học sinh & bài học
+  ctx.textAlign = 'left';
+  ctx.fillStyle = '#1e1b4b';
+  ctx.font = '900 34px "Nunito", "Segoe UI", sans-serif';
+  ctx.fillText('👤 Học sinh: ' + name, 80, 220);
+
+  ctx.fillStyle = '#4c1d95';
+  ctx.font = '800 24px "Nunito", "Segoe UI", sans-serif';
+  const shortTitle = title.length > 52 ? title.slice(0, 50) + '…' : title;
+  ctx.fillText('📘 Bài: ' + shortTitle, 80, 268);
+
+  // 3 Ô thống kê lớn
+  const boxes = [
+    { label: 'ĐIỂM SỐ (THANG 100)', val: score + ' / 100', bg: '#f5f3ff', bd: '#c4b5fd', col: '#6d28d9' },
+    { label: 'SỐ CÂU ĐÚNG', val: ok + ' / ' + tot + ' câu', bg: '#ecfdf5', bd: '#6ee7b7', col: '#047857' },
+    { label: 'THỜI GIAN HOÀN THÀNH', val: timeText, bg: '#eff6ff', bd: '#93c5fd', col: '#1d4ed8' }
+  ];
+  boxes.forEach((b, idx) => {
+    const bx = 80 + idx * 315;
+    const by = 305;
+    ctx.fillStyle = b.bg;
+    ctx.strokeStyle = b.bd;
+    ctx.lineWidth = 3;
+    ctx.beginPath();
+    ctx.roundRect(bx, by, 290, 145, 20);
+    ctx.fill();
+    ctx.stroke();
+
+    ctx.textAlign = 'center';
+    ctx.fillStyle = '#475569';
+    ctx.font = '800 15px "Nunito", "Segoe UI", sans-serif';
+    ctx.fillText(b.label, bx + 145, by + 42);
+
+    ctx.fillStyle = b.col;
+    ctx.font = '900 38px "Nunito", "Segoe UI", sans-serif';
+    ctx.fillText(b.val, bx + 145, by + 105);
+  });
+
+  // Hộp Nhận xét của Giáo viên
+  ctx.fillStyle = '#fffbeb';
+  ctx.strokeStyle = '#fcd34d';
+  ctx.lineWidth = 3;
+  ctx.beginPath();
+  ctx.roundRect(80, 480, 920, 140, 20);
+  ctx.fill();
+  ctx.stroke();
+
+  const stars = score >= 90 ? '⭐⭐⭐⭐⭐ XUẤT SẮC' : score >= 75 ? '⭐⭐⭐⭐⭐ TỐT' : score >= 50 ? '⭐⭐⭐⭐ ĐẠT YÊU CẦU' : '⭐⭐⭐ CẦN CỐ GẮNG';
+  const remark = score >= 90
+    ? 'Con nắm vững kiến thức và hoàn thành bài xuất sắc! Cô rất tự hào về con!'
+    : score >= 75
+    ? 'Con làm bài rất cẩn thận và đạt kết quả tốt. Hãy phát huy ở các bài tiếp theo nhé!'
+    : score >= 50
+    ? 'Con đã hoàn thành bài tập. Hãy xem kỹ lại lời giải các câu sai để bứt phá điểm 9, 10 nhé!'
+    : 'Con cần ôn tập lại từ vựng & ngữ pháp của bài này và làm lại để nắm chắc kiến thức hơn nhé!';
+
+  ctx.textAlign = 'left';
+  ctx.fillStyle = '#b45309';
+  ctx.font = '900 22px "Nunito", "Segoe UI", sans-serif';
+  ctx.fillText('💬 Nhận xét của Giáo viên:   ' + stars, 108, 525);
+
+  ctx.fillStyle = '#1e293b';
+  ctx.font = '700 21px "Nunito", "Segoe UI", sans-serif';
+  ctx.fillText('“' + remark + '”', 108, 575);
+
+  // Footer chữ ký
+  ctx.textAlign = 'between';
+  ctx.fillStyle = '#64748b';
+  ctx.font = '700 18px "Nunito", "Segoe UI", sans-serif';
+  ctx.textAlign = 'left';
+  ctx.fillText('🌐 Hệ thống học & khảo thí trực tuyến Ms Nenet English', 80, 675);
+  ctx.textAlign = 'right';
+  ctx.fillStyle = '#5b21b6';
+  ctx.font = '900 20px "Nunito", "Segoe UI", sans-serif';
+  ctx.fillText('👩‍🏫 Giáo viên: ' + teacher, 1000, 675);
+
+  const dataUrl = cv.toDataURL('image/png');
+
+  // Hiển thị Modal xem trước & tải/copy ảnh
+  let modal = document.getElementById('ovReportCard');
+  if (!modal) {
+    modal = document.createElement('div');
+    modal.id = 'ovReportCard';
+    modal.style.cssText = 'position:fixed;inset:0;background:rgba(20,14,40,.72);z-index:9999;display:flex;align-items:center;justify-content:center;padding:16px;backdrop-filter:blur(4px)';
+    document.body.appendChild(modal);
+  }
+  modal.style.display = 'flex';
+  modal.innerHTML = `
+    <div style="background:#fff;border-radius:24px;max-width:720px;width:100%;padding:20px;text-align:center;box-shadow:0 20px 60px rgba(0,0,0,.35);border:3px solid #ddd6fe">
+      <div style="font-weight:900;font-size:22px;color:#2d2350;margin-bottom:4px">🏅 Phiếu Báo Điểm Gửi Phụ Huynh</div>
+      <div style="font-size:13px;color:#64748b;font-weight:700;margin-bottom:12px">Bấm <b>Copy ảnh</b> rồi nhấn <b>Ctrl + V</b> trực tiếp vào khung chat Zalo để gửi ngay!</div>
+      <img src="${dataUrl}" style="width:100%;max-height:58vh;object-fit:contain;border-radius:14px;border:2px solid #e2e8f0;box-shadow:0 4px 14px rgba(0,0,0,.08)">
+      <div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin-top:16px">
+        <button id="bRcCopyImg" style="background:linear-gradient(180deg,#2563eb,#1d4ed8);color:#fff;border:none;border-radius:14px;padding:11px 20px;font-weight:900;font-size:15px;cursor:pointer">📋 Copy ảnh dán Zalo</button>
+        <button id="bRcDownloadImg" style="background:linear-gradient(180deg,#10b981,#059669);color:#fff;border:none;border-radius:14px;padding:11px 20px;font-weight:900;font-size:15px;cursor:pointer">📥 Tải ảnh phiếu điểm (.png)</button>
+        <button id="bRcClose" style="background:#f1f5f9;color:#334155;border:2px solid #cbd5e1;border-radius:14px;padding:11px 20px;font-weight:800;font-size:15px;cursor:pointer">Đóng</button>
+      </div>
+    </div>
+  `;
+
+  document.getElementById('bRcClose').onclick = () => { modal.style.display = 'none'; };
+  document.getElementById('bRcDownloadImg').onclick = () => {
+    const a = document.createElement('a');
+    a.href = dataUrl;
+    a.download = 'Phieu-diem-' + clean(name).replace(/\s+/g, '-') + '.png';
+    a.click();
+    toast('📥 Đã tải ảnh phiếu điểm về máy!', 2500);
+  };
+  document.getElementById('bRcCopyImg').onclick = async () => {
+    try {
+      const blob = await new Promise(r => cv.toBlob(r, 'image/png'));
+      await navigator.clipboard.write([new ClipboardItem({ 'image/png': blob })]);
+      toast('✅ Đã copy ảnh phiếu điểm! Hãy mở Zalo và nhấn Ctrl + V để gửi!', 3500);
+    } catch (e) {
+      const a = document.createElement('a');
+      a.href = dataUrl;
+      a.download = 'Phieu-diem-' + clean(name).replace(/\s+/g, '-') + '.png';
+      a.click();
+      toast('📥 Trình duyệt tự động tải ảnh phiếu điểm để gửi Zalo!', 3000);
+    }
+  };
+}
+
+  return { $, shuffle, pick, clamp, esc, fmt, stamp, clean, rng, COLORS, BADGE, safe, normAns, checkTextAns, fromOld, prep, parseCSV, rowsToQs, parseText, parsePaste, sheetSets, sheetSet, sampleSet, packHw, unpackHw, tone, sfx, confetti, toast, rank, makeNet, music, saveCommunityQuiz, getCommunityLibrary, getQuizById, saveHwMeta, submitHwResult, getHwGradebook, showReportCard };
 })();

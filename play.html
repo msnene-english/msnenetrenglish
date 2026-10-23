@@ -266,7 +266,8 @@ function renderTestQuestion() {
   // 1. Render Navigation Pills
   const pillsBox = $('trPills');
   pillsBox.innerHTML = QS.map((_, idx) => {
-    const isAns = trAnswers[idx] !== undefined;
+    const v = trAnswers[idx];
+    const isAns = v !== undefined && String(v).trim() !== '';
     const isCur = idx === trIndex;
     return `<button class="t-pill ${isAns ? 'answered' : ''} ${isCur ? 'current' : ''}" onclick="jumpTestQ(${idx})">${idx + 1}</button>`;
   }).join('');
@@ -303,47 +304,76 @@ function renderTestQuestion() {
   $('trQSubject').textContent = q.s ? '📌 ' + q.s : '';
   $('trQText').innerHTML = q.q;
 
-  // 6. Options
+  // 6. Options or Short-Answer Input
   const optsBox = $('trOpts');
-  const selectedIdx = trAnswers[trIndex];
-  optsBox.innerHTML = (q.o || []).map((optText, optIdx) => {
-    const label = String.fromCharCode(65 + optIdx);
-    const isSel = selectedIdx === optIdx;
-    return `
-      <div class="t-opt ${isSel ? 'selected' : ''}" onclick="selectTestOpt(${optIdx})">
-        <span class="t-opt-label">${label}</span>
-        <span style="flex:1">${optText}</span>
+  const selectedVal = trAnswers[trIndex];
+  if (q.type === 'text') {
+    optsBox.innerHTML = `
+      <div style="background:#f8fafc;border:2px solid #cbd5e1;border-radius:14px;padding:14px">
+        <div style="font-size:13px;font-weight:800;color:#475569;margin-bottom:8px">✍️ Nhập câu trả lời của em vào ô bên dưới:</div>
+        <input id="trTextInput" type="text" value="${esc(selectedVal != null ? selectedVal : '')}" placeholder="Gõ đáp án tiếng Anh vào đây..." autocomplete="off" spellcheck="false"
+          style="width:100%;padding:12px 14px;font:800 16px/1.4 'Nunito',sans-serif;border:2px solid #8b5cf6;border-radius:12px;background:#fff;color:#1e293b"
+          oninput="typeTestAns(this.value)">
       </div>
     `;
-  }).join('');
+  } else {
+    optsBox.innerHTML = (q.o || []).map((optText, optIdx) => {
+      const label = String.fromCharCode(65 + optIdx);
+      const isSel = selectedVal === optIdx;
+      return `
+        <div class="t-opt ${isSel ? 'selected' : ''}" onclick="selectTestOpt(${optIdx})">
+          <span class="t-opt-label">${label}</span>
+          <span style="flex:1">${optText}</span>
+        </div>
+      `;
+    }).join('');
+  }
 
   // 7. Progress text
-  const ansCount = Object.keys(trAnswers).length;
+  const ansCount = Object.values(trAnswers).filter(v => v !== undefined && String(v).trim() !== '').length;
   $('trProgressTxt').textContent = 'Đã làm: ' + ansCount + '/' + QS.length + ' câu';
+}
+
+function isTestQCorrect(q, userVal) {
+  if (!q || userVal === undefined || userVal === null || String(userVal).trim() === '') return false;
+  if (q.type === 'text') return GC.checkTextAns(userVal, q.ansText);
+  return userVal === q.a;
+}
+
+function syncTestProgressLive() {
+  if (!path || !net) return;
+  const ansCount = Object.values(trAnswers).filter(v => v !== undefined && String(v).trim() !== '').length;
+  let correctCount = 0;
+  for (const [k, v] of Object.entries(trAnswers)) {
+    if (QS[k] && isTestQCorrect(QS[k], v)) correctCount++;
+  }
+  net.update(path, {
+    n: nameV,
+    ans: ansCount,
+    ok: correctCount,
+    tot: QS.length,
+    st: 'playing',
+    alt: Math.round(ansCount / QS.length * 100),
+    score: Math.round(correctCount / QS.length * 100)
+  }).catch(() => {});
 }
 
 window.selectTestOpt = function(optIdx) {
   if (trSubmitted) return;
   trAnswers[trIndex] = optIdx;
   renderTestQuestion();
+  syncTestProgressLive();
+};
 
-  // Báo tiến độ thời gian thực về phòng của cô
-  if (path) {
-    const ansCount = Object.keys(trAnswers).length;
-    let correctCount = 0;
-    for (const [k, v] of Object.entries(trAnswers)) {
-      if (QS[k] && QS[k].a === v) correctCount++;
-    }
-    net.update(path, {
-      n: nameV,
-      ans: ansCount,
-      ok: correctCount,
-      tot: QS.length,
-      st: 'playing',
-      alt: Math.round(ansCount / QS.length * 100),
-      score: Math.round(correctCount / QS.length * 100)
-    }).catch(() => {});
-  }
+window.typeTestAns = function(val) {
+  if (trSubmitted) return;
+  if (String(val || '').trim() === '') delete trAnswers[trIndex];
+  else trAnswers[trIndex] = val;
+  const pills = $('trPills') ? $('trPills').children : [];
+  if (pills[trIndex]) pills[trIndex].classList.toggle('answered', trAnswers[trIndex] !== undefined);
+  const ansCount = Object.values(trAnswers).filter(v => v !== undefined && String(v).trim() !== '').length;
+  if ($('trProgressTxt')) $('trProgressTxt').textContent = 'Đã làm: ' + ansCount + '/' + QS.length + ' câu';
+  syncTestProgressLive();
 };
 
 function testNoBack() { const cfg = info || HW || {}; return cfg.testReview === false; }
@@ -392,16 +422,18 @@ function submitTestExam(auto) {
 
   let correctCount = 0;
   for (let i = 0; i < QS.length; i++) {
-    if (trAnswers[i] === QS[i].a) correctCount++;
+    if (isTestQCorrect(QS[i], trAnswers[i])) correctCount++;
   }
   const score = Math.round((correctCount / QS.length) * 100);
+  const ansCount = Object.values(trAnswers).filter(v => v !== undefined && String(v).trim() !== '').length;
+  const elapsedTxt = fmt(Date.now() - (t0 || Date.now()));
 
-  // Gửi trạng thái nộp bài chính thức về Firebase
+  // Gửi trạng thái nộp bài chính thức về Firebase (Phòng trực tiếp)
   if (path && net) {
     const nowT = net.now();
     net.update(path, {
       n: nameV,
-      ans: Object.keys(trAnswers).length,
+      ans: ansCount,
       ok: correctCount,
       tot: QS.length,
       st: 'submitted',
@@ -413,16 +445,42 @@ function submitTestExam(auto) {
     if (evp) {
       net.push(evp, { ty: 'win', fr: pid, nm: nameV, score, t: nowT });
       for (let i = 0; i < QS.length; i++) {
-        if (trAnswers[i] !== QS[i].a) {
+        if (!isTestQCorrect(QS[i], trAnswers[i])) {
           net.push(evp, { ty: 'wrong', q: QS[i].id || (i + 1), fr: pid, nm: nameV, t: nowT });
         }
       }
     }
   }
 
+  // Gửi tự động về Sổ điểm Bài tập về nhà của cô nếu làm qua link BTVN / Tự luyện
+  if (SOLO) {
+    const hwId = QUIZ_ID || (HW && HW.id) || (HWP ? 'HW-' + HWP.slice(-10) : ('SOLO-' + SOLO));
+    GC.submitHwResult(hwId, {
+      title: setTitle || (HW && HW.t) || 'Bài kiểm tra tiếng Anh',
+      n: nameV,
+      score,
+      ok: correctCount,
+      ans: ansCount,
+      tot: QS.length,
+      m: 'test',
+      durText: elapsedTxt
+    });
+  }
+
+  window.lastTestReportData = {
+    name: nameV,
+    title: setTitle || (info && info.t) || (HW && HW.t) || 'Bài kiểm tra tiếng Anh',
+    score,
+    ok: correctCount,
+    tot: QS.length,
+    m: 'test',
+    timeText: elapsedTxt
+  };
+
   // Hiển thị modal kết quả
   $('trResScore').textContent = score;
   $('trResCorrect').textContent = correctCount + ' / ' + QS.length;
+  if ($('trResTime')) $('trResTime').textContent = elapsedTxt;
   $('trResSub').textContent = score >= 80 ? '🌟 Kết quả xuất sắc! Cô rất tự hào về em!' : score >= 50 ? '👏 Em đã hoàn thành tốt bài kiểm tra!' : '💪 Hãy xem lại các câu sai để cố gắng hơn nhé!';
 
   const cfg = info || HW || {};
@@ -434,15 +492,17 @@ function submitTestExam(auto) {
   } else {
     $('trResReviewBox').innerHTML = QS.map((q, idx) => {
       const userChoice = trAnswers[idx];
-      const isOk = userChoice === q.a;
-      const choiceText = userChoice !== undefined ? (q.o[userChoice] || 'Không rõ') : 'Chưa trả lời';
-      const correctText = q.o[q.a];
+      const isOk = isTestQCorrect(q, userChoice);
+      const choiceText = q.type === 'text'
+        ? (userChoice !== undefined && String(userChoice).trim() !== '' ? esc(userChoice) : 'Chưa trả lời')
+        : (userChoice !== undefined ? (q.o[userChoice] || 'Không rõ') : 'Chưa trả lời');
+      const correctText = q.type === 'text' ? esc(q.ansText) : q.o[q.a];
 
       return `
         <div style="border-bottom:1px solid #e5e7eb;padding:10px 0">
           <div style="font-weight:800;font-size:14px;color:#1e293b">Câu ${idx + 1}: ${q.q}</div>
           <div style="font-size:13px;margin:4px 0">
-            Lựa chọn của em: <b style="color:${isOk ? '#16a34a' : '#dc2626'}">${isOk ? '✅ ' : '❌ '}${choiceText}</b>
+            Câu trả lời của em: <b style="color:${isOk ? '#16a34a' : '#dc2626'}">${isOk ? '✅ ' : '❌ '}${choiceText}</b>
           </div>
           ${!isOk ? `<div style="font-size:13px;color:#15803d">Đáp án đúng: <b>${correctText}</b></div>` : ''}
           ${q.e ? `<div style="font-size:12px;color:#6b7280;background:#f3f4f6;padding:6px 10px;border-radius:8px;margin-top:4px">💡 ${q.e}</div>` : ''}
@@ -710,14 +770,26 @@ function openQ() {
   if (over || !started || anyOpen()) return;
   if (!order.length) order = shuffle(QS.map((_, i) => i));
   cur = order.shift(); answered = false; S.running = false; Climb.release(); GC.music.duck(true);
-  const q = QS[cur], long = q.o.some(o => o.replace(/<[^>]+>/g, '').length > 32), col = BADGE[cur % 4], c = $('qCard'), full = GAIN.cap && S.energy >= GAIN.cap;
+  const q = QS[cur], isText = q.type === 'text', long = !isText && q.o.some(o => o.replace(/<[^>]+>/g, '').length > 32), col = BADGE[cur % 4], c = $('qCard'), full = GAIN.cap && S.energy >= GAIN.cap;
   c.classList.remove('shake'); c.style.borderTopColor = col;
+  const bodyHtml = isText
+    ? '<div style="margin:10px 0;display:flex;gap:8px"><input id="qTextInp" class="fld" style="flex:1;margin:0" placeholder="✍️ Nhập câu trả lời..." autocomplete="off" onkeydown="if(event.key===\'Enter\')answerTextQ()"><button class="btn g" onclick="answerTextQ()">✅ Trả lời</button></div>'
+    : '<div class="opts' + (long ? ' one' : '') + '">' + q.o.map((o, i) => '<button class="op" onclick="answer(' + i + ')"><span class="lt c' + i + '">' + 'ABCD'[i] + '</span><span>' + o + '</span></button>').join('') + '</div>';
   c.innerHTML = '<div class="qtop"><span class="qn" style="background:' + col + '">Câu ' + q.n + '</span>' + (q.s ? '<span class="qsec">' + q.s + '</span>' : '') +
     '<span class="qsec">🔥 ' + streak + '</span>' + (full ? '<span class="qsec">🔋 Bình đầy — trả lời để luyện, ⚡ không tăng</span>' : '<span class="qsec">⚡ +' + GAIN.correct + '</span>') + '<button class="qx" title="Đóng" onclick="closeQ()">✕</button></div>' +
-    '<div class="qtext">' + q.q + '</div><div class="opts' + (long ? ' one' : '') + '">' +
-    q.o.map((o, i) => '<button class="op" onclick="answer(' + i + ')"><span class="lt c' + i + '">' + 'ABCD'[i] + '</span><span>' + o + '</span></button>').join('') + '</div><div class="fb" id="fb"></div>';
+    '<div class="qtext">' + q.q + '</div>' + bodyHtml + '<div class="fb" id="fb"></div>';
   $('ovQ').classList.add('on'); c.scrollTop = 0;
+  if (isText && $('qTextInp')) setTimeout(() => $('qTextInp')?.focus(), 80);
 }
+window.answerTextQ = function() {
+  if (answered || cur === null) return;
+  const val = $('qTextInp') ? $('qTextInp').value : '';
+  if (!clean(val)) return toast('✍️ Em hãy nhập câu trả lời nhé!', 1800);
+  const q = QS[cur];
+  const ok = GC.checkTextAns(val, q.ansText);
+  if ($('qTextInp')) $('qTextInp').disabled = true;
+  answer(ok ? q.a : -1);
+};
 function answer(i) {
   if (answered || cur === null) return; answered = true; ans++;
   const q = QS[cur], ok = i === q.a, bs = $('qCard').querySelectorAll('.op');
@@ -735,7 +807,7 @@ function answer(i) {
       (q.e ? '<details class="exp"><summary>📖 Xem giải thích</summary>' + q.e + '</details>' : '');
   } else {
     streak = 0; order.splice(Math.min(3, order.length), 0, cur); sfx('bad'); $('qCard').classList.add('shake');
-    h = '<div class="msg bad">❌ Chưa đúng! Đáp án: ' + q.o[q.a] + '<small>' + pick(BAD_MSG) + '</small></div>' +
+    h = '<div class="msg bad">❌ Chưa đúng! Đáp án: ' + (q.type === 'text' ? esc(q.ansText) : q.o[q.a]) + '<small>' + pick(BAD_MSG) + '</small></div>' +
       (q.e ? '<details class="exp" open><summary>📖 Giải thích</summary>' + q.e + '</details>' : '');
   }
   const full = GAIN.cap && S.energy >= GAIN.cap;
@@ -793,6 +865,19 @@ function showRes(why) {
   if (!subN) { try { const k = 'att:' + decodeURIComponent(location.pathname) + (SOLO === 'hw' ? 'hw' + HWP.length + HWP.slice(-16) : SOLO || ''); subN = (+localStorage.getItem(k) || 0) + 1; localStorage.setItem(k, subN) } catch (e) { subN = 1 } }
   const hwLate = HW && HW.dl && tEnd > HW.dl;
   const won = !!tt, pct = ans ? Math.round(okN / ans * 100) : 0, T = Climb.topAlt();
+  if (SOLO) {
+    const hwId = QUIZ_ID || (HW && HW.id) || (HWP ? 'HW-' + HWP.slice(-10) : ('SOLO-' + SOLO));
+    GC.submitHwResult(hwId, {
+      title: setTitle || (HW && HW.t) || 'Bài tập ôn tập',
+      n: nameV,
+      score: pct,
+      ok: okN,
+      ans: ans,
+      tot: ans || QS.length,
+      m: MODE,
+      durText: fmt(tEnd - t0)
+    });
+  }
   const head = won ? (Climb.winTitle || '👸 Giải cứu công chúa thành công!') : why === 'time' ? (HW ? '⏰ Hết thời gian làm bài!' : '⏰ Hết giờ rồi!') : why === 'teacher' ? '🏁 Cô đã kết thúc trò chơi' : '🏁 Kết quả leo núi';
   $('rCard').innerHTML = '<div class="big">' + head + '</div><div class="sub">' + esc(setTitle) + '</div><div class="res">' +
     '<div class="wide">👤 ' + esc(nameV) + (SOLO ? '' : ' · <span id="rRank">' + rankText() + '</span>') + '</div>' +
@@ -802,7 +887,8 @@ function showRes(why) {
     (Climb.kind === 'bomb' ? '<div>💣 Bom: ' + Climb.pl.bombs + ' · 🔥 Lửa: ' + Climb.pl.fire + '</div><div>😵 Bị trúng: ' + S.hits + '</div>' : Climb.kind === 'tank' ? '<div>⭐ Nâng cấp súng: ' + Climb.pl.up + '/3</div><div>🦅 Căn cứ bị phá: ' + S.falls + '</div>' : '<div>🍄 Giẫm bẹp: ' + S.stomps + '</div><div>😱 Số lần rơi: ' + S.falls + '</div>') +
     (HW ? '<div class="wide">📚 Hạn nộp: ' + (HW.dl ? stamp(HW.dl) + (hwLate ? ' · ⚠️ <b>nộp trễ</b>' : ' · ✅ <b>đúng hạn</b>') : 'không đặt hạn') + '</div>' : '') +
     '<div class="wide">🔁 Lần nộp thứ ' + subN + ' trên máy này</div></div>' +
-    (HW ? '<div class="row"><button class="btn g" onclick="copyResult()" style="font-size:17px;padding:12px 22px">📋 Copy kết quả gửi cô</button>' + (!HW.dl || Date.now() < HW.dl ? '<button class="btn w" onclick="location.reload()">🔄 Làm lại</button>' : '') + '</div><div class="sub">👉 Bấm copy rồi mở Zalo dán gửi cô nhé!</div>'
+    '<div class="row" style="margin-bottom:6px"><button class="btn b" onclick="GC.showReportCard({name:nameV,title:setTitle,score:pct,ok:okN,tot:ans||QS.length,m:MODE,timeText:fmt(tEnd-t0)})">🏅 Xuất phiếu điểm gửi Phụ huynh</button></div>' +
+    (HW ? '<div class="row"><button class="btn g" onclick="copyResult()" style="font-size:17px;padding:12px 22px">📋 Copy kết quả gửi cô</button>' + (!HW.dl || Date.now() < HW.dl ? '<button class="btn w" onclick="location.reload()">🔄 Làm lại</button>' : '') + '</div><div class="sub">👉 Điểm của em đã tự động lưu vào Sổ điểm của cô · Bấm xuất phiếu điểm hoặc copy gửi Zalo nhé!</div>'
       : SOLO ? '<div class="row">' + (won ? '' : '<button class="btn g" onclick="resume()">🏃 Chơi tiếp</button>') + '<button class="btn" onclick="location.reload()">🔄 Chơi lại</button></div>'
       : '<div class="sub">' + (won && why === 'win' ? '🎉 Chờ cả lớp về đích nhé — xem bảng xếp hạng trên màn hình của cô!' : '📺 Nhìn lên màn hình của cô để xem bảng vinh danh!') + '</div>' + (why === 'teacher' || why === 'time' ? '<div class="lockmsg">🔒 ' + (why === 'time' ? 'Hết giờ' : 'Cô đã kết thúc trò chơi') + ' — màn chơi đã khoá, em không chơi tiếp được nữa.</div>' : ''));
   $('ovRes').classList.add('on');
@@ -900,7 +986,10 @@ function resume() { $('ovRes').classList.remove('on'); over = false; t0 += Date.
 
   <div id="trResReviewBox" style="text-align:left;max-height:40vh;overflow:auto;background:#fafafa;border:1px solid #e5e5e5;border-radius:14px;padding:14px;margin-bottom:16px"></div>
 
-  <div class="row"><button class="btn g" onclick="$('ovTestResult').classList.remove('on')">Đóng kết quả</button></div>
+  <div class="row" style="gap:10px;justify-content:center;flex-wrap:wrap">
+   <button class="btn b" onclick="GC.showReportCard(window.lastTestReportData)">🏅 Xuất phiếu điểm gửi Phụ huynh</button>
+   <button class="btn g" onclick="$('ovTestResult').classList.remove('on')">Đóng kết quả</button>
+  </div>
  </div>
 </div>
 

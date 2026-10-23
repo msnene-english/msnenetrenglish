@@ -98,6 +98,20 @@ th{color:#7a6aa8;font-size:13px}
 .review-box{background:#fff8f0;border:2px solid #ffcb80;border-radius:18px;padding:16px;margin:18px 0}
 .mistake-row{background:#fff;border-radius:12px;padding:10px 14px;margin-top:8px;display:flex;justify-content:space-between;align-items:center;font-weight:800}
 .mistake-row b{color:#c23a55}
+/* Responsive Table with Sticky Headers (modern-web-guidance: responsive-table) */
+.gb-table-wrap{overflow:auto;max-inline-size:100%;max-block-size:min(480px,65vh);container-type:inline-size;border-radius:14px;border:2px solid #e4dcff;background:#fff}
+.gb-table-wrap table{border-collapse:separate;border-spacing:0;width:100%}
+.gb-table-wrap thead{position:sticky;inset-block-start:0;z-index:2;background:#f3eeff}
+.gb-table-wrap tbody th{position:sticky;inset-inline-start:0;background:#fff;z-index:1;font-weight:800;text-align:left;padding:9px 10px;border-bottom:1px solid #f0ecff}
+/* Visual Question Editor Cards */
+.ve-card{background:#fff;border:2px solid #e2d9ff;border-radius:14px;padding:12px;margin-bottom:10px;box-shadow:0 2px 6px rgba(80,60,160,.06)}
+.ve-card:focus-within{border-color:#8b5cf6;box-shadow:0 0 0 3px rgba(139,92,246,.15)}
+.ve-row{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:8px}
+.ve-inp{width:100%;padding:7px 10px;border:1.5px solid #d8d0f5;border-radius:10px;font:700 13px/1.4 'Nunito',sans-serif;color:#2d2350;background:#fcfbff}
+.ve-inp:focus{outline:none;border-color:#7c5cff;background:#fff}
+.ve-opt-row{display:flex;align-items:center;gap:6px;margin-top:5px}
+.ve-ans-btn{width:28px;height:28px;border-radius:50%;border:2px solid #cbd5e1;background:#f1f5f9;font-weight:900;font-size:12px;cursor:pointer;color:#475569;flex-shrink:0}
+.ve-ans-btn.on{background:#10b981;border-color:#059669;color:#fff}
 [hidden]{display:none!important}
 </style>
 </head>
@@ -105,6 +119,7 @@ th{color:#7a6aa8;font-size:13px}
 <div class="wrap">
  <div class="top">
   <h1>🎮 Phòng game Cô Chí Nên</h1>
+  <button class="btn b" id="bOpenGradebook" type="button" style="padding:8px 14px;font-size:14px">📊 Sổ điểm BTVN</button>
   <span class="badge" id="netB">⏳ Đang kết nối…</span>
   <span class="badge ok" id="licTag">✅ Bản quyền: Cô Chí Nên · Mở trọn bộ 4 Game</span>
  </div>
@@ -239,6 +254,14 @@ Giải thích: Chủ ngữ số ít đi với goes"></textarea>
     <div class="stat" id="qStat"></div>
     <div class="errs" id="qErr"></div>
     <div class="prev" id="qPrev"></div>
+
+    <!-- THANH CÔNG CỤ SỬA TỪNG CÂU TRỰC QUAN & THÊM CÂU HỎI -->
+    <div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:8px">
+     <button class="btn b" type="button" id="bToggleVisualEditor" style="padding:7px 12px;font-size:13px;flex:1">✏️ Sửa chi tiết từng câu (0)</button>
+     <button class="btn w" type="button" id="bAddMcQ" style="padding:7px 10px;font-size:12px" title="Thêm 1 câu hỏi trắc nghiệm A/B/C/D">➕ Câu Trắc nghiệm</button>
+     <button class="btn w" type="button" id="bAddTextQ" style="padding:7px 10px;font-size:12px" title="Thêm 1 câu hỏi tự luận ngắn / điền từ / viết lại câu">✍️ Câu Tự luận / Điền từ</button>
+    </div>
+    <div id="qVisualEditor" hidden style="max-height:520px;overflow:auto;margin-top:8px;padding:8px;background:#f5f0ff;border:2px solid #d8ccff;border-radius:14px"></div>
 
     <div class="steps">
      <div class="sh">🚀 4 bước tổ chức chơi</div>
@@ -448,6 +471,45 @@ Giải thích: Chủ ngữ số ít đi với goes"></textarea>
  <div class="row"><button class="btn g" onclick="$('ovExp').classList.remove('on')">Đóng lời giải</button></div>
 </div></div>
 
+<!-- MODAL SỔ ĐIỂM BÀI TẬP VỀ NHÀ (HOMEWORK GRADEBOOK) -->
+<div class="ov" id="ovGradebook"><div class="card" style="max-width:920px;width:96%">
+ <div class="big" style="font-size:24px">📊 Sổ Điểm Bài Tập Về Nhà &amp; Đề Tự Luyện</div>
+ <div class="sub">Theo dõi tự động học sinh làm bài qua link Bài tập về nhà / Mã đề Thư viện (đồng bộ thời gian thực trên Firebase)</div>
+
+ <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin:12px 0">
+  <select id="gbSelect" class="sel" style="flex:1;min-width:220px"></select>
+  <button class="btn b" type="button" id="bGbRefresh" style="padding:9px 14px;font-size:13px">🔄 Làm mới</button>
+  <button class="btn g" type="button" id="bGbCsv" style="padding:9px 14px;font-size:13px">⬇️ Xuất Excel sổ điểm</button>
+ </div>
+
+ <div id="gbSummary" style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:10px"></div>
+
+ <div tabindex="0" role="region" aria-label="Bảng điểm bài tập về nhà" class="tw gb-table-wrap">
+  <table id="gbTable">
+   <thead>
+    <tr>
+     <th>Hạng</th>
+     <th>Họ tên học sinh</th>
+     <th>Bài tập / Bộ đề</th>
+     <th>Hình thức</th>
+     <th>Điểm số</th>
+     <th>Số câu đúng</th>
+     <th>Thời gian</th>
+     <th>Nộp lúc</th>
+     <th>Phiếu điểm</th>
+    </tr>
+   </thead>
+   <tbody id="gbTbody">
+    <tr><td colspan="9" style="text-align:center;padding:20px;color:#64748b">⏳ Đang tải dữ liệu sổ điểm…</td></tr>
+   </tbody>
+  </table>
+ </div>
+
+ <div class="row" style="margin-top:14px">
+  <button class="btn w" type="button" onclick="$('ovGradebook').classList.remove('on')">Đóng sổ điểm</button>
+ </div>
+</div></div>
+
 <!-- MODAL MỜI BẠN VÀO MUỘN -->
 <div class="ov" id="ovInv"><div class="card" style="max-width:560px;text-align:center">
  <div class="big">📲 Vào muộn vẫn chơi được!</div>
@@ -492,17 +554,207 @@ document.querySelectorAll('.tab').forEach(b => b.onclick = () => {
   if (src === 'bank') renderBank();
 });
 
-function setQs(list, title, errs) {
-  qs = list;
-  $('qStat').className = 'stat ' + (list.length ? 'ok' : errs.length ? 'bad' : '');
-  $('qStat').textContent = list.length ? '✅ Đọc được ' + list.length + ' câu hỏi' + (errs.length ? ' · ⚠️ ' + errs.length + ' dòng bị bỏ qua' : '') : errs.length ? '❌ Chưa đọc được câu nào' : '';
-  $('qErr').innerHTML = errs.slice(0, 30).map(esc).join('<br>');
-  $('qPrev').innerHTML = list.slice(0, 40).map((q, i) => '<div>' + (i + 1) + '. ' + GC.safe(q.q).replace(/<br>/g, ' ') + ' <span style="color:#1d8a5a">→ ' + GC.safe(q.o[q.a]) + '</span></div>').join('');
-  if (title && !$('gTitle').value) $('gTitle').value = title.replace(/<[^>]+>/g, '');
+function refreshQsPreviewOnly() {
+  const list = qs;
+  $('qStat').className = 'stat ' + (list.length ? 'ok' : '');
+  $('qStat').textContent = list.length ? '✅ Đang có ' + list.length + ' câu hỏi sẵn sàng' : '';
+  $('qPrev').innerHTML = list.slice(0, 40).map((q, i) => {
+    const isText = q.type === 'text' || (!!q.ansText && (!q.o || q.o.length < 2));
+    const ansLabel = isText ? ('✍️ [Tự luận] ' + esc(q.ansText || '')) : GC.safe((q.o && q.o[q.a]) || '');
+    return '<div>' + (i + 1) + '. ' + GC.safe(q.q).replace(/<br>/g, ' ') + ' <span style="color:#1d8a5a;font-weight:800">→ ' + ansLabel + '</span></div>';
+  }).join('');
+  if ($('bToggleVisualEditor')) {
+    const isOpen = !$('qVisualEditor').hidden;
+    $('bToggleVisualEditor').textContent = (isOpen ? '🔽 Thu gọn trình sửa câu hỏi (' : '✏️ Sửa chi tiết từng câu (') + list.length + ')';
+  }
   $('bOpen').disabled = !list.length;
   $('bSolo').disabled = !list.length;
   $('bSaveToBank').disabled = !list.length;
   $('soloHint').textContent = list.length ? '📚 Giao bài về nhà: tạo link có hạn nộp + thời gian chơi để gửi các em qua Zalo.' : '';
+}
+
+function setQs(list, title, errs) {
+  qs = (list || []).map(q => {
+    const isText = q.type === 'text' || (!!q.ansText && (!q.o || q.o.length < 2));
+    return {
+      type: isText ? 'text' : 'mc',
+      q: q.q || '',
+      o: isText ? [] : (Array.isArray(q.o) && q.o.length ? q.o.slice() : ['Đáp án A', 'Đáp án B', 'Đáp án C', 'Đáp án D']),
+      a: isText ? 0 : (typeof q.a === 'number' && q.a >= 0 ? q.a : 0),
+      ansText: isText ? (q.ansText || (q.o && q.o[0]) || '') : '',
+      e: q.e || '',
+      s: q.s || '',
+      passage: q.passage || '',
+      audio: q.audio || '',
+      img: q.img || ''
+    };
+  });
+  errs = errs || [];
+  $('qStat').className = 'stat ' + (qs.length ? 'ok' : errs.length ? 'bad' : '');
+  $('qStat').textContent = qs.length ? '✅ Đọc được ' + qs.length + ' câu hỏi' + (errs.length ? ' · ⚠️ ' + errs.length + ' dòng bị bỏ qua' : '') : errs.length ? '❌ Chưa đọc được câu nào' : '';
+  $('qErr').innerHTML = errs.slice(0, 30).map(esc).join('<br>');
+  if (title && !$('gTitle').value) $('gTitle').value = title.replace(/<[^>]+>/g, '');
+  refreshQsPreviewOnly();
+  if ($('qVisualEditor') && !$('qVisualEditor').hidden) renderVisualEditor();
+}
+
+/* ═════ TRÌNH CHỈNH SỬA TỪNG CÂU HỎI TRỰC QUAN (VISUAL QUESTION EDITOR) ═════ */
+function renderVisualEditor() {
+  const box = $('qVisualEditor');
+  if (!box) return;
+  if (!qs.length) {
+    box.innerHTML = '<div style="text-align:center;color:#64748b;padding:16px;font-weight:700">Chưa có câu hỏi nào. Cô hãy nạp đề hoặc bấm <b>➕ Câu Trắc nghiệm</b> / <b>✍️ Câu Tự luận</b> bên trên nhé!</div>';
+    return;
+  }
+  box.innerHTML = qs.map((q, idx) => {
+    const isText = q.type === 'text';
+    const optsHtml = isText
+      ? `<div style="margin-top:6px">
+           <div style="font-size:12px;font-weight:800;color:#047857;margin-bottom:4px">✍️ Đáp án đúng chấp nhận (ngăn cách nhiều cách viết bằng dấu <code>/</code>, VD: <code>went / did go</code>):</div>
+           <input class="ve-inp" value="${esc(q.ansText || '')}" placeholder="Nhập đáp án đúng..." oninput="veUpdateAnsText(${idx}, this.value)">
+         </div>`
+      : (q.o || ['', '', '', '']).map((optVal, oi) => `
+           <div class="ve-opt-row">
+             <button type="button" class="ve-ans-btn ${q.a === oi ? 'on' : ''}" title="Chọn làm đáp án đúng" onclick="veSetCorrect(${idx}, ${oi})">${'ABCD'[oi]}</button>
+             <input class="ve-inp" id="veOpt_${idx}_${oi}" value="${esc(optVal)}" placeholder="Phương án ${'ABCD'[oi]}" oninput="veUpdateOpt(${idx}, ${oi}, this.value)">
+             <button type="button" class="btn w" style="padding:4px 8px;font-size:11px" title="Gạch chân phần đang bôi đen (dùng cho bài Phát âm)" onclick="veUnderlineField('veOpt_${idx}_${oi}', ${idx}, ${oi})">U̲</button>
+           </div>
+         `).join('');
+
+    return `
+      <div class="ve-card">
+        <div class="ve-row" style="justify-content:space-between">
+          <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">
+            <span style="background:#6d28d9;color:#fff;font-weight:900;font-size:12px;padding:3px 9px;border-radius:12px">Câu ${idx + 1}</span>
+            <select class="ve-inp" style="width:auto;padding:4px 8px;font-size:12px" onchange="veChangeType(${idx}, this.value)">
+              <option value="mc" ${!isText ? 'selected' : ''}>🎯 Trắc nghiệm (A/B/C/D)</option>
+              <option value="text" ${isText ? 'selected' : ''}>✍️ Tự luận / Điền từ / Viết lại câu</option>
+            </select>
+            <input class="ve-inp" style="width:135px;padding:4px 8px;font-size:12px" value="${esc(q.s || '')}" placeholder="Dạng bài (VD: Reading)" oninput="veUpdateField(${idx}, 's', this.value)">
+          </div>
+          <div style="display:flex;gap:4px">
+            <button type="button" class="btn w" style="padding:4px 8px;font-size:11px" title="Gạch chân chữ đang bôi đen trong câu hỏi" onclick="veUnderlineField('veQ_${idx}', ${idx}, -1)">U̲ Gạch chân</button>
+            <button type="button" class="btn r" style="padding:4px 8px;font-size:11px" onclick="veDeleteQ(${idx})">🗑 Xoá</button>
+          </div>
+        </div>
+
+        <textarea class="ve-inp" id="veQ_${idx}" rows="2" placeholder="Nhập nội dung câu hỏi..." oninput="veUpdateField(${idx}, 'q', this.value)">${esc(q.q)}</textarea>
+        ${optsHtml}
+
+        <details style="margin-top:8px;font-size:12px">
+          <summary style="cursor:pointer;font-weight:800;color:#5b4bb0">📎 Lời giải · Đoạn văn Reading · Link Audio / Hình ảnh ${(q.passage || q.audio || q.img || q.e) ? '✅' : ''}</summary>
+          <div style="display:grid;gap:6px;margin-top:6px;padding-top:6px;border-top:1px dashed #dcd3ff">
+            <div>
+              <div style="font-weight:800;color:#475569;margin-bottom:2px">💡 Giải thích đáp án:</div>
+              <input class="ve-inp" value="${esc(q.e || '')}" placeholder="Giải thích vì sao chọn đáp án này..." oninput="veUpdateField(${idx}, 'e', this.value)">
+            </div>
+            <div>
+              <div style="font-weight:800;color:#475569;margin-bottom:2px">📖 Đoạn văn bài đọc (Reading Passage - nếu có):</div>
+              <textarea class="ve-inp" rows="3" placeholder="Dán đoạn văn Reading vào đây..." oninput="veUpdateField(${idx}, 'passage', this.value)">${esc(q.passage || '')}</textarea>
+            </div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px">
+              <div>
+                <div style="font-weight:800;color:#475569;margin-bottom:2px">🎧 Link Audio MP3 (Listening):</div>
+                <input class="ve-inp" value="${esc(q.audio || '')}" placeholder="https://.../audio.mp3" oninput="veUpdateField(${idx}, 'audio', this.value)">
+              </div>
+              <div>
+                <div style="font-weight:800;color:#475569;margin-bottom:2px">🖼 Link Hình ảnh minh hoạ:</div>
+                <input class="ve-inp" value="${esc(q.img || '')}" placeholder="https://.../image.png" oninput="veUpdateField(${idx}, 'img', this.value)">
+              </div>
+            </div>
+          </div>
+        </details>
+      </div>
+    `;
+  }).join('');
+}
+
+window.veUpdateField = function(idx, field, val) {
+  if (!qs[idx]) return;
+  qs[idx][field] = val;
+  refreshQsPreviewOnly();
+};
+window.veUpdateOpt = function(idx, oi, val) {
+  if (!qs[idx] || !qs[idx].o) return;
+  qs[idx].o[oi] = val;
+  refreshQsPreviewOnly();
+};
+window.veSetCorrect = function(idx, oi) {
+  if (!qs[idx]) return;
+  qs[idx].a = oi;
+  refreshQsPreviewOnly();
+  renderVisualEditor();
+};
+window.veUpdateAnsText = function(idx, val) {
+  if (!qs[idx]) return;
+  qs[idx].ansText = val;
+  refreshQsPreviewOnly();
+};
+window.veChangeType = function(idx, newType) {
+  if (!qs[idx]) return;
+  qs[idx].type = newType;
+  if (newType === 'text') {
+    if (!qs[idx].ansText && qs[idx].o && qs[idx].o[qs[idx].a]) {
+      qs[idx].ansText = qs[idx].o[qs[idx].a].replace(/<[^>]+>/g, '');
+    }
+    if (!qs[idx].s) qs[idx].s = 'Tự luận / Điền từ';
+  } else {
+    if (!qs[idx].o || qs[idx].o.length < 2) {
+      qs[idx].o = [qs[idx].ansText || 'Phương án A', 'Phương án B', 'Phương án C', 'Phương án D'];
+      qs[idx].a = 0;
+    }
+  }
+  refreshQsPreviewOnly();
+  renderVisualEditor();
+};
+window.veDeleteQ = function(idx) {
+  if (!qs[idx]) return;
+  qs.splice(idx, 1);
+  refreshQsPreviewOnly();
+  renderVisualEditor();
+  toast('🗑 Đã xoá câu ' + (idx + 1), 1600);
+};
+window.veUnderlineField = function(elId, idx, optIdx) {
+  const el = $(elId);
+  if (!el) return;
+  const start = el.selectionStart, end = el.selectionEnd;
+  if (start == null || end == null || start === end) {
+    toast('💡 Cô hãy bôi đen chữ cái cần gạch chân rồi bấm nút U̲ nhé!', 2400);
+    return;
+  }
+  const v = el.value;
+  const updated = v.slice(0, start) + '<u>' + v.slice(start, end) + '</u>' + v.slice(end);
+  el.value = updated;
+  if (optIdx >= 0) veUpdateOpt(idx, optIdx, updated);
+  else veUpdateField(idx, 'q', updated);
+  toast('✨ Đã gạch chân: <u>' + v.slice(start, end) + '</u>', 1800);
+};
+
+if ($('bToggleVisualEditor')) {
+  $('bToggleVisualEditor').onclick = () => {
+    const box = $('qVisualEditor');
+    box.hidden = !box.hidden;
+    if (!box.hidden) renderVisualEditor();
+    refreshQsPreviewOnly();
+  };
+}
+if ($('bAddMcQ')) {
+  $('bAddMcQ').onclick = () => {
+    qs.push({ type: 'mc', q: 'Câu hỏi mới ' + (qs.length + 1), o: ['Phương án A', 'Phương án B', 'Phương án C', 'Phương án D'], a: 0, ansText: '', e: '', s: 'Grammar', passage: '', audio: '', img: '' });
+    $('qVisualEditor').hidden = false;
+    refreshQsPreviewOnly();
+    renderVisualEditor();
+    $('qVisualEditor').scrollTop = $('qVisualEditor').scrollHeight;
+  };
+}
+if ($('bAddTextQ')) {
+  $('bAddTextQ').onclick = () => {
+    qs.push({ type: 'text', q: 'Complete the sentence: She _______ (go) to school yesterday.', o: [], a: 0, ansText: 'went / did go', e: 'Thì quá khứ đơn (yesterday) của go là went.', s: 'Word Form / Rewrite', passage: '', audio: '', img: '' });
+    $('qVisualEditor').hidden = false;
+    refreshQsPreviewOnly();
+    renderVisualEditor();
+    $('qVisualEditor').scrollTop = $('qVisualEditor').scrollHeight;
+  };
 }
 
 let pT = 0;
@@ -795,6 +1047,8 @@ $('bHwMake').onclick = async () => {
     dur,
     lic: 'Cô Chí Nên (Ms Nenet)',
     qs: qs.map(q => ({
+      type: q.type || 'mc',
+      ansText: q.ansText || '',
       q: q.q,
       o: q.o,
       a: q.a,
@@ -805,9 +1059,9 @@ $('bHwMake').onclick = async () => {
       img: q.img || ''
     }))
   };
-  
-  const u = new URL('play.html', location.href);
-  hwLink = u.href + '?hw=' + await GC.packHw(payload);
+
+  let hwId = 'HW-' + Math.floor(100000 + Math.random() * 900000);
+  payload.id = hwId;
 
   // XỬ LÝ QUYẾT ĐỊNH CỦA GIÁO VIÊN: LƯU VÀO THƯ VIỆN CHUNG & TẠO LINK RÚT GỌN
   hwShortLink = '';
@@ -822,15 +1076,20 @@ $('bHwMake').onclick = async () => {
       theme: payload.theme,
       lv: payload.lv,
       dur,
-      dl,
-      hwLink
+      dl
     });
+    hwId = saved.id;
+    payload.id = hwId;
     const su = new URL('play.html', location.href);
     su.searchParams.set('quiz', saved.id);
     hwShortLink = su.href;
     toast('🌐 Đã lưu & chia sẻ vào Thư viện chung với mã: ' + saved.id, 3500);
     renderBank();
   }
+
+  const u = new URL('play.html', location.href);
+  hwLink = u.href + '?hw=' + await GC.packHw(payload);
+  await GC.saveHwMeta({ id: hwId, title, m: gMode, dur, dl });
 
   const finalLink = hwShortLink || hwLink;
   if (isTest) {
@@ -899,6 +1158,8 @@ $('bOpen').onclick = async () => {
       cr: net.now()
     };
     const clean_qs = qs.map(q => ({
+      type: q.type || 'mc',
+      ansText: q.ansText || '',
       q: q.q,
       o: q.o,
       a: q.a,
@@ -1027,16 +1288,31 @@ function showEnd() {
     return '<div class="pod"><div class="av" style="background:' + esc(p.c) + '"></div><div class="nm">' + esc(p.n) + '</div><div class="meta">' + metaTxt + '</div><div class="st" style="height:' + H[i] + 'px;background:' + COL[i] + '">' + (i + 1) + '</div></div>'
   }).join('');
 
+  window.exportPlayerReport = function(pidKey) {
+    const p = players[pidKey];
+    if (!p) return;
+    const tot = p.tot || totQ;
+    const sc = isTest ? (p.score ?? Math.round((p.ok || 0) / tot * 100)) : (p.ans ? Math.round((p.ok || 0) / p.ans * 100) : 0);
+    GC.showReportCard({
+      name: p.n,
+      title: info.t,
+      score: sc,
+      ok: p.ok || 0,
+      tot: isTest ? tot : (p.ans || tot),
+      m: info.m,
+      timeText: p.tt ? fmt(p.tt) : 'Hoàn thành'
+    });
+  };
   if (isTest) {
-    $('eTable').innerHTML = '<tr><th>Hạng</th><th>Họ tên</th><th>Trạng thái</th><th>Điểm số</th><th>Số câu đúng</th><th>Đã làm</th></tr>' +
-      R.map(([, p], i) => {
+    $('eTable').innerHTML = '<tr><th>Hạng</th><th>Họ tên</th><th>Trạng thái</th><th>Điểm số</th><th>Số câu đúng</th><th>Đã làm</th><th>Phiếu điểm</th></tr>' +
+      R.map(([idKey, p], i) => {
         const tot = p.tot || totQ;
         const sc = p.score ?? Math.round((p.ok || 0) / tot * 100);
-        return '<tr><td>' + (i + 1) + '</td><td>' + esc(p.n) + '</td><td>' + (p.st === 'submitted' ? '✅ Đã nộp bài' : '⏳ Chưa nộp') + '</td><td><b>' + sc + ' / 100</b></td><td>' + (p.ok || 0) + ' / ' + tot + '</td><td>' + (p.ans || 0) + ' / ' + tot + '</td></tr>';
+        return '<tr><td>' + (i + 1) + '</td><td>' + esc(p.n) + '</td><td>' + (p.st === 'submitted' ? '✅ Đã nộp bài' : '⏳ Chưa nộp') + '</td><td><b>' + sc + ' / 100</b></td><td>' + (p.ok || 0) + ' / ' + tot + '</td><td>' + (p.ans || 0) + ' / ' + tot + '</td><td><button class="btn b" style="padding:4px 10px;font-size:12px" onclick="exportPlayerReport(\'' + esc(idKey) + '\')">🏅 Phiếu điểm</button></td></tr>';
       }).join('');
   } else {
-    $('eTable').innerHTML = '<tr><th>Hạng</th><th>Họ tên</th><th>Tiến độ</th><th>Đúng</th><th>% đúng</th><th>🔥 Chuỗi</th><th>🍄 Giẫm</th><th>😱 Rơi</th></tr>' +
-      R.map(([, p], i) => '<tr><td>' + (i + 1) + '</td><td>' + esc(p.n) + '</td><td>' + (p.tt ? '👸 Phá đảo' : p.lb ? esc(p.lb) + (p.cn != null ? ' · 🪙 ' + p.cn : '') : (p.alt || 0) + ' m') + '</td><td>' + (p.ok || 0) + '/' + (p.ans || 0) + '</td><td>' + (p.ans ? Math.round(p.ok / p.ans * 100) : 0) + '%</td><td>' + (p.bs || 0) + '</td><td>' + (p.sp || 0) + '</td><td>' + (p.fl || 0) + '</td></tr>').join('');
+    $('eTable').innerHTML = '<tr><th>Hạng</th><th>Họ tên</th><th>Tiến độ</th><th>Đúng</th><th>% đúng</th><th>🔥 Chuỗi</th><th>🍄 Giẫm</th><th>😱 Rơi</th><th>Phiếu điểm</th></tr>' +
+      R.map(([idKey, p], i) => '<tr><td>' + (i + 1) + '</td><td>' + esc(p.n) + '</td><td>' + (p.tt ? '👸 Phá đảo' : p.lb ? esc(p.lb) + (p.cn != null ? ' · 🪙 ' + p.cn : '') : (p.alt || 0) + ' m') + '</td><td>' + (p.ok || 0) + '/' + (p.ans || 0) + '</td><td>' + (p.ans ? Math.round(p.ok / p.ans * 100) : 0) + '%</td><td>' + (p.bs || 0) + '</td><td>' + (p.sp || 0) + '</td><td>' + (p.fl || 0) + '</td><td><button class="btn b" style="padding:4px 10px;font-size:12px" onclick="exportPlayerReport(\'' + esc(idKey) + '\')">🏅 Phiếu điểm</button></td></tr>').join('');
   }
 
   // PHÂN TÍCH CÂU LÀM SAI NHIỀU NHẤT
@@ -1261,6 +1537,11 @@ CÁC NGUYÊN TẮC CỐT LÕI BẮT BUỘC CHO TEST MODE:
    - BÀI NỐI THÔNG TIN (Matching):
      + Mỗi câu hỏi là 1 người/đoạn cần ghép, 4 phương án là các đối tượng đối chiếu kèm tóm tắt nội dung.
      + 's': "Matching"
+
+   - BÀI TỰ LUẬN NGẮN / ĐIỀN TỪ / CHIA DẠNG TỪ / VIẾT LẠI CÂU (Short Answer / Word Form / Sentence Transformation - KHÔNG có A, B, C, D):
+     + Nếu bài gốc yêu cầu học sinh tự điền từ vào chỗ trống, chia động từ/từ loại trong ngoặc, hoặc viết lại câu (Sentence Rewrite) mà KHÔNG có 4 đáp án A, B, C, D:
+     + Đặt "type": "text", "o": [], "a": 0, và ghi đáp án đúng vào "ansText" (có thể ghi nhiều cách viết đúng cách nhau bởi dấu "/", ví dụ: "went / did go" hoặc "has lived / has been living").
+     + 's': "Word Form" hoặc "Rewrite" hoặc "Fill in the blank".
 
 2. TUYỆT ĐỐI KHÔNG BAO GIỜ đặt 'q' chỉ vỏn vẹn là "Question 1", "Question 2"!
    Học sinh khi nhìn vào màn hình làm bài PHẢI ĐỌC ĐƯỢC RÕ RÀNG yêu cầu bài làm hoặc câu hỏi đề bài!
@@ -1706,6 +1987,103 @@ function updateModeView() {
 }
 
 
+
+/* ═════ SỔ ĐIỂM BÀI TẬP VỀ NHÀ (GRADEBOOK CONTROLLER) ═════ */
+let gbDataCache = { list: [], subsByHw: {} };
+let gbCurrentRows = [];
+
+async function openHwGradebook(preferHwId) {
+  $('ovGradebook').classList.add('on');
+  $('gbTbody').innerHTML = '<tr><td colspan="9" style="text-align:center;padding:20px;color:#64748b">⏳ Đang đồng bộ sổ điểm từ Firebase…</td></tr>';
+  gbDataCache = await GC.getHwGradebook();
+
+  const sel = $('gbSelect');
+  const prevVal = preferHwId || sel.value || 'ALL';
+  const opts = ['<option value="ALL">📚 Tất cả bài tập về nhà & đề tự luyện (' + Object.values(gbDataCache.subsByHw).reduce((s, a) => s + a.length, 0) + ' lượt nộp)</option>'];
+  gbDataCache.list.forEach(item => {
+    const cnt = (gbDataCache.subsByHw[item.id] || []).length;
+    opts.push(`<option value="${esc(item.id)}">${item.m === 'test' ? '📝' : '🎮'} ${esc(item.title)} [${esc(item.id)}] — ${cnt} lượt nộp</option>`);
+  });
+  sel.innerHTML = opts.join('');
+  if ([...sel.options].some(o => o.value === prevVal)) sel.value = prevVal;
+  renderGradebookTable();
+}
+
+function renderGradebookTable() {
+  const hid = $('gbSelect').value || 'ALL';
+  let rows = [];
+  if (hid === 'ALL') {
+    for (const arr of Object.values(gbDataCache.subsByHw)) {
+      rows = rows.concat(arr || []);
+    }
+    rows.sort((a, b) => (b.at || 0) - (a.at || 0));
+  } else {
+    rows = (gbDataCache.subsByHw[hid] || []).slice();
+  }
+  gbCurrentRows = rows;
+
+  const total = rows.length;
+  const avg = total ? Math.round(rows.reduce((s, r) => s + (r.score || 0), 0) / total) : 0;
+  const high = rows.filter(r => (r.score || 0) >= 80).length;
+  $('gbSummary').innerHTML = `
+    <div style="background:#f5f3ff;border:1.5px solid #ddd6fe;border-radius:12px;padding:8px 14px;font-weight:800;font-size:13px;color:#5b21b6">👥 Tổng lượt nộp: <b>${total}</b></div>
+    <div style="background:#ecfdf5;border:1.5px solid #a7f3d0;border-radius:12px;padding:8px 14px;font-weight:800;font-size:13px;color:#047857">🎯 Điểm trung bình: <b>${avg} / 100</b></div>
+    <div style="background:#fffbeb;border:1.5px solid #fde68a;border-radius:12px;padding:8px 14px;font-weight:800;font-size:13px;color:#b45309">🌟 Đạt ≥ 80 điểm: <b>${high} bạn</b></div>
+  `;
+
+  if (!rows.length) {
+    $('gbTbody').innerHTML = '<tr><td colspan="9" style="text-align:center;padding:24px;color:#64748b;font-weight:700">Chưa có học sinh nào nộp bài cho mục này. Khi học sinh hoàn thành link Bài tập về nhà, điểm sẽ tự động hiện tại đây!</td></tr>';
+    return;
+  }
+
+  $('gbTbody').innerHTML = rows.map((r, i) => `
+    <tr>
+      <td><b>#${i + 1}</b></td>
+      <th>${esc(r.n)}</th>
+      <td>${esc(r.title || r.hwId)}</td>
+      <td>${r.m === 'test' ? '📝 Bài kiểm tra' : '🎮 Game'}</td>
+      <td><b style="color:${(r.score || 0) >= 80 ? '#047857' : (r.score || 0) >= 50 ? '#1d4ed8' : '#dc2626'}">${r.score ?? 0} / 100</b></td>
+      <td>${r.ok ?? 0} / ${r.tot ?? 0}</td>
+      <td>${esc(r.durText || '—')}</td>
+      <td style="font-size:12px;color:#64748b">${esc(r.date || '')}</td>
+      <td><button type="button" class="btn b" style="padding:4px 9px;font-size:12px" onclick="openGbReportCard(${i})">🏅 Phiếu điểm</button></td>
+    </tr>
+  `).join('');
+}
+
+window.openGbReportCard = function(idx) {
+  const r = gbCurrentRows[idx];
+  if (!r) return;
+  GC.showReportCard({
+    name: r.n,
+    title: r.title || 'Bài tập tiếng Anh',
+    score: r.score ?? 0,
+    ok: r.ok ?? 0,
+    tot: r.tot ?? 1,
+    m: r.m || 'test',
+    timeText: r.durText || 'Hoàn thành',
+    dateText: r.date || ''
+  });
+};
+
+if ($('bOpenGradebook')) $('bOpenGradebook').onclick = () => openHwGradebook();
+if ($('gbSelect')) $('gbSelect').onchange = () => renderGradebookTable();
+if ($('bGbRefresh')) $('bGbRefresh').onclick = () => openHwGradebook($('gbSelect').value);
+if ($('bGbCsv')) {
+  $('bGbCsv').onclick = () => {
+    if (!gbCurrentRows.length) return toast('⚠️ Chưa có dữ liệu để xuất Excel', 2200);
+    const q = s => '"' + String(s ?? '').replace(/"/g, '""') + '"';
+    const header = ['Hạng', 'Họ tên học sinh', 'Mã bài', 'Tên bài tập', 'Hình thức', 'Điểm (thang 100)', 'Số câu đúng', 'Tổng số câu', 'Thời gian làm', 'Thời điểm nộp'];
+    const csvRows = [header].concat(gbCurrentRows.map((r, i) => [
+      i + 1, r.n, r.hwId, r.title, r.m === 'test' ? 'Bài kiểm tra' : 'Game', r.score ?? 0, r.ok ?? 0, r.tot ?? 0, r.durText || '', r.date || ''
+    ]));
+    const blob = new Blob(['\ufeff' + csvRows.map(r => r.map(q).join(',')).join('\n')], { type: 'text/csv;charset=utf-8' });
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = 'So_Diem_BTVN_MsNenet_' + new Date().toISOString().slice(0, 10) + '.csv';
+    a.click();
+  };
+}
 
 /* ═════ KHỞI ĐỘNG ═════ */
 async function checkResume() {
