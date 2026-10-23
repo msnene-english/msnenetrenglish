@@ -216,7 +216,12 @@ A. go
 *B. goes
 C. going
 D. gone
-Giải thích: Chủ ngữ số ít đi với goes"></textarea>
+Giải thích: Chủ ngữ số ít đi với goes
+
+Cách 3 — Dán câu luyện phát âm (AI tự điền IPA & mẹo):
+1. SPK: environmental protection
+2. SPK: photography
+3. SPK: Practice makes perfect."></textarea>
      <div class="hint">Đánh dấu đáp án đúng bằng <code>*</code> trước chữ cái, hoặc thêm dòng <code>Đáp án: B</code>. Bài phát âm gạch chân dùng <code>&lt;u&gt;ea&lt;/u&gt;</code>.</div>
      <div class="row" style="justify-content:flex-start;margin-top:8px">
       <button class="btn g" id="bSaveToBank" disabled style="font-size:13px;padding:6px 12px">🌐 Chia sẻ lên Thư viện chung</button>
@@ -262,6 +267,7 @@ Giải thích: Chủ ngữ số ít đi với goes"></textarea>
      <button class="btn w" type="button" id="bAddMcQ" style="padding:7px 10px;font-size:12px" title="Thêm 1 câu hỏi trắc nghiệm A/B/C/D">➕ Câu Trắc nghiệm</button>
      <button class="btn w" type="button" id="bAddTextQ" style="padding:7px 10px;font-size:12px" title="Thêm 1 câu hỏi tự luận ngắn / điền từ / viết lại câu">✍️ Câu Tự luận / Điền từ</button>
      <button class="btn w" type="button" id="bAddSpeakingQ" style="padding:7px 10px;font-size:12px;background:#fdf2f8;border-color:#f472b6;color:#9d174d" title="Thêm 1 câu hỏi phát âm tiếng Anh (AI chấm điểm)">🗣 Câu Phát âm (Speaking AI)</button>
+     <button class="btn b" type="button" id="bOpenQuickSpkModal" style="padding:7px 12px;font-size:12px;background:linear-gradient(135deg,#7c3aed,#db2777);color:#fff;border:none;box-shadow:0 2px 8px rgba(124,58,237,0.3)" title="Soạn danh sách từ/câu cần phát âm, AI sẽ tự động điền phiên âm IPA và mẹo">⚡ Tạo nhanh bài Phát âm với AI</button>
     </div>
     <div id="qVisualEditor" hidden style="max-height:520px;overflow:auto;margin-top:8px;padding:8px;background:#f5f0ff;border:2px solid #d8ccff;border-radius:14px"></div>
 
@@ -480,6 +486,48 @@ Giải thích: Chủ ngữ số ít đi với goes"></textarea>
  </div>
 </div></div>
 
+<!-- MODAL SOẠN BÀI TẬP PHÁT ÂM SIÊU TỐC VỚI AI -->
+<div class="ov" id="ovQuickSpk">
+ <div class="card" style="max-width:680px;width:96%;border-top:6px solid #8b5cf6">
+  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
+   <div style="font-size:20px;font-weight:900;color:#581c87;display:flex;align-items:center;gap:8px">
+    <span>🎙 Soạn bài tập Phát âm siêu tốc với AI</span>
+   </div>
+   <button type="button" class="btn w" style="padding:4px 10px;font-size:14px" onclick="$('ovQuickSpk').classList.remove('on')">✕ Đóng</button>
+  </div>
+  
+  <div style="font-size:14px;color:#475569;margin-bottom:10px;line-height:1.5">
+   Cô chỉ cần nhập hoặc dán danh sách <b>từ hoặc câu tiếng Anh</b> cần học sinh luyện đọc (mỗi từ/câu trên 1 dòng, hoặc dán theo định dạng <code>1. SPK: từ</code>). <b>AI sẽ tự động tra phiên âm IPA chuẩn và viết mẹo phát âm</b>! Cô vẫn có thể chỉnh sửa lại sau khi tạo xong.
+  </div>
+
+  <textarea id="quickSpkInput" rows="8" style="width:100%;padding:12px;font:700 15px/1.6 'Nunito',sans-serif;border:2px solid #c084fc;border-radius:12px;background:#faf5ff;color:#1e1b4b" placeholder="Ví dụ nhập danh sách từ/câu:
+environmental protection
+photography
+extraordinary
+Practice makes perfect.
+The project was successful.
+
+Hoặc dán theo mẫu:
+1. SPK: communication
+2. SPK: schedule
+3. SPK: comfortable"></textarea>
+
+  <div style="display:flex;align-items:center;gap:12px;margin:12px 0;flex-wrap:wrap">
+   <label style="font-size:13px;font-weight:700;color:#475569;display:flex;align-items:center;gap:6px;cursor:pointer">
+    <input type="checkbox" id="chkQuickSpkReplace" checked style="accent-color:#8b5cf6">
+    <span>Thay thế toàn bộ câu hỏi hiện tại (bỏ chọn để nối thêm vào cuối)</span>
+   </label>
+  </div>
+
+  <div style="display:flex;gap:10px;justify-content:flex-end">
+   <button type="button" class="btn w" onclick="$('ovQuickSpk').classList.remove('on')">Hủy</button>
+   <button type="button" class="btn b" id="bDoQuickSpkGen" style="padding:10px 20px;font-size:15px;font-weight:800;background:linear-gradient(135deg,#7c3aed,#db2777);border:none;box-shadow:0 4px 12px rgba(124,58,237,0.35)">
+    ✨ AI Tạo đề &amp; Điền IPA tự động
+   </button>
+  </div>
+ </div>
+</div>
+
 <!-- MODAL CHIẾU LỜI GIẢI CHI TIẾT (REVIEW TOÀN BỘ CÂU HỎI & ĐÁP ÁN) -->
 <div class="ov" id="ovExp"><div class="card" style="max-width:820px;width:96%">
  <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px">
@@ -626,6 +674,17 @@ function setQs(list, title, errs) {
   if (title && !$('gTitle').value) $('gTitle').value = title.replace(/<[^>]+>/g, '');
   refreshQsPreviewOnly();
   if ($('qVisualEditor') && !$('qVisualEditor').hidden) renderVisualEditor();
+
+  // Tự động kiểm tra câu hỏi speaking chưa có IPA hoặc mẹo phát âm để AI hoàn thiện giúp giáo viên
+  const unenriched = qs.filter(q => q.type === 'speaking' && (!q.ipa || !q.e));
+  if (unenriched.length > 0) {
+    toast(`🤖 AI đang tự động tạo phiên âm IPA và mẹo phát âm cho ${unenriched.length} câu...`, 3000);
+    GC.enrichSpeakingQuestionsAI(qs).then(() => {
+      refreshQsPreviewOnly();
+      if ($('qVisualEditor') && !$('qVisualEditor').hidden) renderVisualEditor();
+      toast(`✨ AI đã điền xong phiên âm IPA và mẹo phát âm cho ${unenriched.length} câu! Cô có thể bấm nghe thử hoặc chỉnh sửa trực tiếp.`, 3500);
+    }).catch(() => {});
+  }
 }
 
 /* ═════ TRÌNH CHỈNH SỬA TỪNG CÂU HỎI TRỰC QUAN (VISUAL QUESTION EDITOR) ═════ */
@@ -647,12 +706,19 @@ function renderVisualEditor() {
           <input class="ve-inp" style="width:100%;font-weight:800;color:#831843" value="${esc(q.targetText || q.ansText || '')}" placeholder="VD: The environmental protection project was successful." oninput="veUpdateField(${idx}, 'targetText', this.value); veUpdateField(${idx}, 'ansText', this.value)">
           <div style="display:flex;gap:8px;margin-top:6px;flex-wrap:wrap">
             <div style="flex:1;min-width:180px">
-              <div style="font-size:11px;font-weight:700;color:#6b7280;margin-bottom:2px">Phiên âm IPA (tùy chọn):</div>
+              <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:2px">
+                <span style="font-size:11px;font-weight:700;color:#6b7280">Phiên âm IPA:</span>
+                <button type="button" class="btn w" style="padding:2px 8px;font-size:10px;color:#7c3aed;background:#fdf4ff;border-color:#d8b4fe;font-weight:800" onclick="veAiGenSingleSpeaking(${idx})">✨ AI tạo IPA &amp; Mẹo</button>
+              </div>
               <input class="ve-inp" style="width:100%;font-size:12px" value="${esc(q.ipa || '')}" placeholder="VD: /ˌkɒnvəˈseɪʃn/" oninput="veUpdateField(${idx}, 'ipa', this.value)">
             </div>
             <div style="flex:1;min-width:180px;display:flex;align-items:flex-end">
               <button type="button" class="btn w" style="padding:6px 12px;font-size:12px;width:100%" onclick="GC.speakText(qs[${idx}].targetText || qs[${idx}].ansText || qs[${idx}].q)">🔊 Nghe thử giọng đọc mẫu</button>
             </div>
+          </div>
+          <div style="margin-top:8px">
+            <div style="font-size:11px;font-weight:700;color:#6b7280;margin-bottom:2px">💡 Mẹo phát âm &amp; Quy tắc trọng âm (AI tạo, cô có thể sửa):</div>
+            <textarea class="ve-inp" rows="2" style="width:100%;font-size:12px;line-height:1.5" placeholder="VD: Trọng âm rơi vào âm tiết thứ hai..." oninput="veUpdateField(${idx}, 'e', this.value)">${esc(q.e || '')}</textarea>
           </div>
         </div>
       `;
@@ -816,6 +882,84 @@ if ($('bAddTextQ')) {
     $('qVisualEditor').scrollTop = $('qVisualEditor').scrollHeight;
   };
 }
+
+window.veAiGenSingleSpeaking = async function(idx) {
+  const q = qs[idx];
+  if (!q) return;
+  const target = (q.targetText || q.ansText || q.q || '').trim();
+  if (!target) return toast('⚠️ Cô hãy nhập từ/câu cần phát âm trước nhé!', 2000);
+
+  toast(`🤖 AI đang tạo phiên âm IPA & mẹo cho "${target}"...`, 2500);
+  const genRes = await GC.generateSingleSpeakingAI(target);
+  if (genRes.ipa) q.ipa = genRes.ipa;
+  if (genRes.tips) q.e = genRes.tips;
+  if (genRes.prompt && (!q.q || q.q.startsWith('Câu hỏi') || q.q.includes('clearly:'))) q.q = genRes.prompt;
+
+  refreshQsPreviewOnly();
+  renderVisualEditor();
+  toast(`✨ Đã điền xong IPA: ${genRes.ipa || ''}`, 2000);
+};
+
+if ($('bOpenQuickSpkModal')) {
+  $('bOpenQuickSpkModal').onclick = () => {
+    $('ovQuickSpk').classList.add('on');
+    setTimeout(() => $('quickSpkInput')?.focus(), 100);
+  };
+}
+
+if ($('bDoQuickSpkGen')) {
+  $('bDoQuickSpkGen').onclick = async () => {
+    const text = ($('quickSpkInput').value || '').trim();
+    if (!text) return toast('⚠️ Cô hãy nhập ít nhất 1 từ hoặc câu cần phát âm nhé!', 2000);
+
+    const lines = text.split('\n').map(l => l.trim()).filter(Boolean);
+    const items = [];
+    lines.forEach(line => {
+      const m = line.match(/^(?:(?:câu|question)?\s*\d+\s*[.:)]\s*)?(?:spk|speaking|phát âm|phat am|nói|speak)\s*[:：]\s*(.+)$/i);
+      const target = m ? m[1].trim() : line.replace(/^\d+\s*[.:)]\s*/, '').trim();
+      if (target) {
+        items.push({
+          type: 'speaking',
+          q: 'Listen to the sample audio and read aloud clearly:',
+          targetText: target,
+          ipa: '',
+          e: '',
+          s: 'Speaking / Pronunciation',
+          o: [],
+          a: 0,
+          ansText: target
+        });
+      }
+    });
+
+    if (!items.length) return toast('⚠️ Chưa tìm thấy từ hoặc câu hợp lệ!', 2000);
+
+    const btn = $('bDoQuickSpkGen');
+    btn.disabled = true;
+    btn.innerHTML = '⏳ <b>AI đang tạo phiên âm &amp; mẹo...</b>';
+
+    $('ovQuickSpk').classList.remove('on');
+    toast(`🤖 AI đang xử lý ${items.length} từ/câu phát âm...`, 3000);
+
+    const enriched = await GC.enrichSpeakingQuestionsAI(items);
+
+    const replace = $('chkQuickSpkReplace') ? $('chkQuickSpkReplace').checked : true;
+    if (replace) {
+      qs = enriched;
+    } else {
+      qs = qs.concat(enriched);
+    }
+
+    btn.disabled = false;
+    btn.innerHTML = '✨ AI Tạo đề &amp; Điền IPA tự động';
+
+    $('qVisualEditor').hidden = false;
+    refreshQsPreviewOnly();
+    renderVisualEditor();
+    toast(`🎉 Đã tạo thành công ${enriched.length} câu phát âm với đầy đủ IPA & mẹo! Cô có thể bấm nghe thử hoặc chỉnh sửa trực tiếp.`, 3500);
+  };
+}
+
 if ($('bAddSpeakingQ')) {
   $('bAddSpeakingQ').onclick = () => {
     qs.push({

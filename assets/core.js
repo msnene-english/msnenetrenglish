@@ -185,6 +185,24 @@ function parseText(t) {
   const out = [], errs = []; let cur = null;
   const flush = () => {
     if (!cur) return;
+    if (cur.type === 'speaking' || cur.isSpeaking) {
+      out.push({
+        type: 'speaking',
+        q: nl(cur.q || 'Listen to the sample audio and read aloud clearly:'),
+        targetText: clean(cur.targetText || cur.key || cur.q || ''),
+        ipa: clean(cur.ipa || ''),
+        o: [],
+        a: 0,
+        ansText: clean(cur.targetText || cur.key || cur.q || ''),
+        e: nl(cur.e),
+        s: 'Speaking / Pronunciation',
+        passage: cur.passage || '',
+        audio: cur.audio || '',
+        img: cur.img || ''
+      });
+      cur = null;
+      return;
+    }
     if (cur.q && cur.o.length === 0 && cur.key) {
       out.push({ type: 'text', q: nl(cur.q), ansText: clean(cur.key), o: [], a: 0, e: nl(cur.e), s: 'Tự luận / Điền từ' });
       cur = null;
@@ -202,12 +220,43 @@ function parseText(t) {
     if (/^\*?\s*\(?A[.)]/i.test(line) && /\s\*?\(?[B-D][.)]\s/i.test(line)) parts = line.split(/\s+(?=\*?\(?[B-Db-d][.)]\s)/);
     parts.forEach(p => {
       let m;
+      // Nhận diện mẫu dán: 1. SPK: từ / SPK: từ / 1. Speaking: từ / 1. Phát âm: từ
+      if ((m = p.match(/^(?:(?:câu|question)?\s*\d+\s*[.:)]\s*)?(?:spk|speaking|phát âm|phat am|nói|speak)\s*[:：]\s*(.+)$/i))) {
+        flush();
+        const target = m[1].trim();
+        cur = {
+          type: 'speaking',
+          q: 'Listen to the sample audio and read aloud clearly:',
+          targetText: target,
+          ipa: '',
+          e: '',
+          key: target,
+          o: [],
+          a: 0
+        };
+        return;
+      }
+      if (cur && cur.type === 'speaking') {
+        if ((m = p.match(/^(ipa|phiên âm|phien am)\s*[:：]\s*(.+)$/i))) {
+          cur.ipa = m[2].trim();
+          return;
+        }
+        if ((m = p.match(/^(mẹo|meo|tips|tip|giải thích|lời giải|explain|explanation)\s*[:：]\s*(.*)$/i))) {
+          cur.e = m[2].trim();
+          cur.inE = true;
+          return;
+        }
+        if ((m = p.match(/^(yêu cầu|chỉ dẫn|prompt|instruction)\s*[:：]\s*(.+)$/i))) {
+          cur.q = m[2].trim();
+          return;
+        }
+      }
       if ((m = p.match(/^(đáp án|dap an|answer|key)\s*[:：]\s*(.+)$/i))) { if (cur) cur.key = m[2]; return }
       if ((m = p.match(/^(giải thích|lời giải|explain|explanation)\s*[:：]\s*(.*)$/i))) { if (cur) cur.e = m[2]; cur && (cur.inE = true); return }
       if (cur && !cur.inE && (m = p.match(OPT)) && 'ABCD'.indexOf(m[2].toUpperCase()) === cur.o.length) {
         cur.o.push(m[3].replace(/\s*\((đúng|correct)\)\s*$/i, '')); if (m[1] || m[4] || /\((đúng|correct)\)\s*$/i.test(m[3])) cur.a = cur.o.length - 1; return;
       }
-      if (cur && cur.inE && /^(câu|question)?\s*\d+\s*[.:)]\s*\S/i.test(p)) flush();   // câu đánh số mới → hết phần giải thích câu trước
+      if (cur && cur.inE && /^(câu|question)?\s*\d+\s*[.:)]\s*\S/i.test(p)) flush();
       if (cur && cur.inE) { cur.e += '\n' + p; return }
       if (cur && cur.o.length) flush();
       if (!cur) cur = { q: p.replace(/^(câu|question)?\s*\d+\s*[.:)]\s*/i, ''), o: [], a: -1, e: '', key: '' };
@@ -1227,5 +1276,155 @@ Trả về strictly JSON:
   };
 }
 
-return { $, shuffle, pick, clamp, esc, fmt, stamp, clean, rng, COLORS, BADGE, safe, normAns, checkTextAns, fromOld, prep, parseCSV, rowsToQs, parseText, parsePaste, sheetSets, sheetSet, sampleSet, packHw, unpackHw, tone, sfx, confetti, toast, rank, makeNet, music, saveCommunityQuiz, getCommunityLibrary, getQuizById, saveHwMeta, submitHwResult, getHwGradebook, showReportCard, getAiKey, diffPronunciation, speakText, evaluatePronunciationAI };
+
+/* Tự động làm giàu danh sách câu phát âm bằng AI: điền phiên âm IPA, chỉ dẫn và mẹo phát âm */
+async function enrichSpeakingQuestionsAI(qList) {
+  if (!Array.isArray(qList) || !qList.length) return qList;
+
+  const needsEnrich = [];
+  qList.forEach((q, idx) => {
+    if (q.type === 'speaking' || q.targetText) {
+      const target = (q.targetText || q.ansText || q.q || '').trim();
+      if (target && (!q.ipa || !q.e)) {
+        needsEnrich.push({ idx, target });
+      }
+    }
+  });
+
+  if (!needsEnrich.length) return qList;
+
+  const key = getAiKey();
+  if (!key || typeof fetch === 'undefined') {
+    needsEnrich.forEach(({ idx }) => {
+      if (!qList[idx].q || qList[idx].q.startsWith('Câu hỏi') || qList[idx].q.includes('clearly:')) qList[idx].q = 'Listen to the audio or read aloud clearly:';
+      if (!qList[idx].e) qList[idx].e = 'Luyện đọc to, rõ ràng từng âm tiết và chú ý trọng âm của từ.';
+    });
+    return qList;
+  }
+
+  const promptItems = needsEnrich.map((item, i) => ({ id: i, text: item.target }));
+  const prompt = `Bạn là chuyên gia ngữ âm Tiếng Anh (English Phonetics Expert).
+Nhiệm vụ: Cung cấp phiên âm quốc tế IPA và mẹo phát âm thực tế cho danh sách từ/câu sau:
+${JSON.stringify(promptItems)}
+
+Với MỖI mục:
+1. "ipa": Phiên âm quốc tế IPA chuẩn xác (kèm dấu trọng âm chính ˈ và phụ ˌ, ví dụ: /ˈfəʊ.tə.ɡrɑːf/, /ɪnˌvaɪ.rənˈmen.tl/).
+2. "tips": Lời khuyên phát âm thực tế bằng tiếng Việt (1-2 câu ngắn gọn), chỉ rõ trọng âm rơi vào âm tiết mấy, các âm gió đuôi (/s/, /ed/, /l/, /t/) hoặc phụ âm nối cần chú ý.
+3. "prompt": Chỉ dẫn bài làm ngắn bằng tiếng Anh (ví dụ: "Read aloud the word clearly:" hoặc "Read aloud the sentence with natural intonation:").
+
+Trả về STRICT JSON mảng:
+[
+  { "id": 0, "ipa": "...", "tips": "...", "prompt": "..." }
+]`;
+
+  const models = ['gemini-3.5-flash', 'gemini-3.8-flash', 'gemini-flash-latest', 'gemini-flash-lite-latest'];
+  for (const m of models) {
+    try {
+      const ctrl = new AbortController();
+      const tid = setTimeout(() => ctrl.abort(), 12000);
+      const resp = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${m}:generateContent?key=${key}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          contents: [{ parts: [{ text: prompt }] }],
+          generationConfig: { responseMimeType: 'application/json', temperature: 0.1 }
+        }),
+        signal: ctrl.signal
+      });
+      clearTimeout(tid);
+
+      if (resp.ok) {
+        const data = await resp.json();
+        const txt = data.candidates?.[0]?.content?.parts?.[0]?.text;
+        if (txt) {
+          const parsed = JSON.parse(txt);
+          if (Array.isArray(parsed)) {
+            parsed.forEach(resItem => {
+              const matched = needsEnrich[resItem.id];
+              if (matched && qList[matched.idx]) {
+                const targetQ = qList[matched.idx];
+                if (!targetQ.ipa && resItem.ipa) targetQ.ipa = resItem.ipa;
+                if (!targetQ.e && resItem.tips) targetQ.e = resItem.tips;
+                if ((!targetQ.q || targetQ.q.includes('clearly:')) && resItem.prompt) targetQ.q = resItem.prompt;
+              }
+            });
+            return qList;
+          }
+        }
+      }
+    } catch (err) {
+      console.warn(`Model ${m} enrich failed:`, err);
+    }
+  }
+
+  needsEnrich.forEach(({ idx }) => {
+    if (!qList[idx].q) qList[idx].q = 'Listen to the audio or read aloud clearly:';
+    if (!qList[idx].e) qList[idx].e = 'Luyện đọc to, rõ ràng từng âm tiết và chú ý trọng âm của từ.';
+  });
+  return qList;
+}
+
+/* Sinh IPA và mẹo phát âm cho 1 từ/câu riêng biệt trong trình sửa */
+async function generateSingleSpeakingAI(targetText) {
+  const cleanTarget = String(targetText || '').trim();
+  if (!cleanTarget) return { ipa: '', tips: '', prompt: 'Read aloud clearly:' };
+
+  const key = getAiKey();
+  if (!key || typeof fetch === 'undefined') {
+    return {
+      ipa: '',
+      tips: 'Luyện đọc to, rõ ràng từng âm tiết và chú ý trọng âm của từ.',
+      prompt: 'Read aloud clearly:'
+    };
+  }
+
+  const prompt = `Bạn là chuyên gia ngữ âm Tiếng Anh.
+Nhiệm vụ: Cung cấp phiên âm quốc tế IPA và mẹo phát âm tiếng Việt cho từ/câu: "${cleanTarget}"
+
+Trả về STRICT JSON:
+{
+  "ipa": "<phiên âm IPA chuẩn kèm trọng âm>",
+  "tips": "<lời khuyên phát âm 1-2 câu tiếng Việt (trọng âm, âm đuôi)>",
+  "prompt": "<chỉ dẫn bài làm tiếng Anh ngắn>"
+}`;
+
+  const models = ['gemini-3.5-flash', 'gemini-3.8-flash', 'gemini-flash-latest', 'gemini-flash-lite-latest'];
+  for (const m of models) {
+    try {
+      const ctrl = new AbortController();
+      const tid = setTimeout(() => ctrl.abort(), 4000);
+      const resp = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${m}:generateContent?key=${key}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          contents: [{ parts: [{ text: prompt }] }],
+          generationConfig: { responseMimeType: 'application/json', temperature: 0.1 }
+        }),
+        signal: ctrl.signal
+      });
+      clearTimeout(tid);
+
+      if (resp.ok) {
+        const data = await resp.json();
+        const txt = data.candidates?.[0]?.content?.parts?.[0]?.text;
+        if (txt) {
+          const parsed = JSON.parse(txt);
+          return {
+            ipa: parsed.ipa || '',
+            tips: parsed.tips || 'Luyện đọc to, rõ ràng từng âm tiết và chú ý trọng âm của từ.',
+            prompt: parsed.prompt || 'Read aloud clearly:'
+          };
+        }
+      }
+    } catch (err) {}
+  }
+
+  return {
+    ipa: '',
+    tips: 'Luyện đọc to, rõ ràng từng âm tiết và chú ý trọng âm của từ.',
+    prompt: 'Read aloud clearly:'
+  };
+}
+
+return { $, shuffle, pick, clamp, esc, fmt, stamp, clean, rng, COLORS, BADGE, safe, normAns, checkTextAns, fromOld, prep, parseCSV, rowsToQs, parseText, parsePaste, sheetSets, sheetSet, sampleSet, packHw, unpackHw, tone, sfx, confetti, toast, rank, makeNet, music, saveCommunityQuiz, getCommunityLibrary, getQuizById, saveHwMeta, submitHwResult, getHwGradebook, showReportCard, getAiKey, diffPronunciation, speakText, evaluatePronunciationAI, enrichSpeakingQuestionsAI, generateSingleSpeakingAI };
 })();
