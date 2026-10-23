@@ -330,10 +330,11 @@ Cách 3 — Dán câu luyện phát âm (AI tự điền IPA & mẹo):
      <div style="font-weight:800;color:#6d28d9;font-size:14px;margin-bottom:8px">⚙️ Cấu hình Bài Kiểm Tra:</div>
      <div class="lab" style="margin-top:4px">🎨 Theme giao diện bài test</div>
      <select id="testTheme" class="inp">
-      <option value="pastel" selected>🌈 Vui nhộn Pastel (Màu sắc hoạt hình vui vẻ)</option>
-      <option value="cambridge">🏛️ Cambridge Chuẩn thi (Gọn gàng, học thuật)</option>
-      <option value="cyber">🌌 Không gian Vũ trụ (Cyber Neon huyền bí)</option>
+      <option value="cambridge" selected>🏛️ Cambridge Chuẩn thi (Nền giấy trắng, chữ đen đậm tương phản cao - Dễ đọc nhất)</option>
+      <option value="sepia">📜 Giấy thi cổ điển / Vàng dịu mắt (Chống lóa, chống mỏi mắt)</option>
+      <option value="pastel">🌈 Vui nhộn Pastel (Màu sắc tươi sáng vui vẻ)</option>
       <option value="fresh">🌿 Xanh Mint tươi mát (Dịu mắt, tập trung)</option>
+      <option value="cyber">🌌 Giao diện Tối / Cyber (Chữ trắng sáng rõ, Dark Mode)</option>
      </select>
 
      <div class="lab">⏱ Thời gian làm bài kiểm tra (Chọn nhanh hoặc tự gõ số phút tùy ý)</div>
@@ -1234,7 +1235,7 @@ $('bSaveToBank').onclick = async () => {
     qs,
     m: gMode,
     type: isTest ? 'test' : 'game',
-    theme: $('testTheme')?.value || 'pastel',
+    theme: $('testTheme')?.value || 'cambridge',
     lv: +$('gLv').value
   });
   toast('🎉 Đã lưu & chia sẻ thành công lên Thư viện chung! Mã đề: ' + saved.id, 3500);
@@ -1254,7 +1255,7 @@ if ($('bSaveLocal')) {
       qs,
       m: gMode,
       type: isTest ? 'test' : 'game',
-      theme: $('testTheme')?.value || 'pastel',
+      theme: $('testTheme')?.value || 'cambridge',
       date: d.toLocaleDateString('vi-VN')
     });
     saveBank(bank);
@@ -1319,7 +1320,7 @@ $('bHwMake').onclick = async () => {
     v: 1,
     t: title,
     m: gMode,
-    theme: $('testTheme')?.value || 'pastel',
+    theme: $('testTheme')?.value || 'cambridge',
     testShuffle: $('testShuffle')?.checked ?? true,
     testReview: $('testReview')?.checked ?? true,
     testShowExp: $('testShowExp')?.checked ?? true,
@@ -1425,7 +1426,7 @@ $('bOpen').onclick = async () => {
     info = {
       t: clean($('gTitle').value) || (isTest ? 'Bài kiểm tra tiếng Anh' : 'Game ôn tập'),
       m: gMode,
-      theme: $('testTheme')?.value || 'pastel',
+      theme: $('testTheme')?.value || 'cambridge',
       testDur: tDur,
       testShuffle: $('testShuffle')?.checked ?? true,
       testReview: $('testReview')?.checked ?? true,

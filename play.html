@@ -92,36 +92,358 @@ body{display:flex;flex-direction:column;overflow:hidden}
 .spk-score-badge.failed { background: #fee2e2; color: #b91c1c; border: 1.5px solid #fca5a5; }
 .spk-ai-note { background: #fff; border: 1.5px solid #e9d5ff; border-radius: 12px; padding: 12px 14px; text-align: left; font-size: 14px; line-height: 1.5; color: #374151; margin-top: 10px; }
 
-/* ═════ STYLES BÀI KIỂM TRA (TEST MODE) ═════ */
-#testApp{display:none;flex-direction:column;height:100vh;width:100vw;position:fixed;inset:0;z-index:100;background:var(--t-bg,#f8fafc);font-family:'Nunito',sans-serif;overflow:hidden}
-#ovTestResult{z-index:500!important}
-#ovTestResult.on{display:flex!important}
-.test-pastel{--t-bg:#fdf4ff;--t-card:#fff;--t-primary:#8b5cf6;--t-border:#f0abfc}
-.test-cambridge{--t-bg:#f8fafc;--t-card:#fff;--t-primary:#1e3a8a;--t-border:#cbd5e1}
-.test-cyber{--t-bg:#0b0f19;--t-card:#151b2b;--t-primary:#a855f7;--t-border:#2d3748;color:#f1f5f9}
-.test-fresh{--t-bg:#ecfdf5;--t-card:#fff;--t-primary:#059669;--t-border:#a7f3d0}
-.t-header{height:60px;background:#fff;display:flex;align-items:center;justify-content:space-between;padding:0 16px;box-shadow:0 2px 10px rgba(0,0,0,.06);border-bottom:2px solid var(--t-border,#e2e8f0);flex-shrink:0}
-.test-cyber .t-header{background:#111827;border-color:#374151}
-.t-body{flex:1;display:flex;gap:16px;padding:16px;max-width:1300px;width:100%;margin:0 auto;overflow:auto;box-sizing:border-box}
-@media(max-width:820px){.t-body{flex-direction:column;padding:10px;gap:10px}}
-.t-passage-col{flex:1;background:var(--t-card,#fff);border:2px solid var(--t-border,#e2e8f0);border-radius:18px;padding:18px;overflow-y:auto;max-height:calc(100vh - 100px);box-shadow:0 4px 12px rgba(0,0,0,.03)}
-@media(max-width:820px){.t-passage-col{max-height:220px}}
-.t-question-col{flex:1.2;display:flex;flex-direction:column;gap:12px}
-.t-card{background:var(--t-card,#fff);border:2px solid var(--t-border,#e2e8f0);border-radius:18px;padding:20px;box-shadow:0 4px 14px rgba(0,0,0,.04)}
-.test-cyber .t-card,.test-cyber .t-passage-col{background:#151b2b;border-color:#2d3748}
-.t-pills{display:flex;gap:6px;flex-wrap:wrap;padding:8px 12px;background:var(--t-card,#fff);border-radius:14px;border:1px solid var(--t-border,#e2e8f0)}
-.test-cyber .t-pills{background:#151b2b;border-color:#2d3748}
-.t-pill{width:32px;height:32px;border-radius:50%;border:2px solid #cbd5e1;background:#f1f5f9;font-weight:800;font-size:13px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .2s;color:#334155}
-.t-pill.answered{background:#8b5cf6;color:#fff;border-color:#7c3aed}
-.t-pill.current{border-color:#f59e0b;box-shadow:0 0 0 3px #fef3c7}
-.t-opt{display:flex;align-items:center;gap:12px;padding:12px 16px;border-radius:14px;border:2px solid #e2e8f0;background:#fff;cursor:pointer;font-weight:700;font-size:15px;transition:all .15s;text-align:left;color:#1e293b}
-.test-cyber .t-opt{background:#1e293b;border-color:#334155;color:#e2e8f0}
-.t-opt:hover{border-color:#a855f7;background:#faf5ff}
-.test-cyber .t-opt:hover{background:#2d3748}
-.t-opt.selected{border-color:#8b5cf6;background:#ede9fe;color:#5b21b6;font-weight:800}
-.test-cyber .t-opt.selected{background:#4c1d95;border-color:#a855f7;color:#fff}
-.t-opt-label{width:28px;height:28px;border-radius:50%;background:#f1f5f9;display:flex;align-items:center;justify-content:center;font-weight:900;font-size:13px;flex-shrink:0;color:#475569}
-.t-opt.selected .t-opt-label{background:#8b5cf6;color:#fff}
+/* ═════ STYLES BÀI KIỂM TRA (TEST MODE - CHUẨN TƯƠNG PHẢN CAO & DỄ ĐỌC 100%) ═════ */
+#testApp {
+  display: none;
+  flex-direction: column;
+  height: 100vh;
+  width: 100vw;
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  background: var(--t-bg, #f8fafc);
+  font-family: 'Nunito', sans-serif;
+  overflow: hidden;
+}
+#ovTestResult { z-index: 500 !important; }
+#ovTestResult.on { display: flex !important; }
+
+/* 1. THEME CAMBRIDGE (Chuẩn thi quốc tế - Khuyên dùng số 1) */
+.test-cambridge {
+  --t-bg: #f8fafc;
+  --t-card: #ffffff;
+  --t-border: #cbd5e1;
+  --t-text: #0f172a;
+  --t-sub: #475569;
+  --t-primary: #1d4ed8;
+  --t-primary-light: #eff6ff;
+  --t-header-bg: #ffffff;
+  --t-header-border: #e2e8f0;
+  --t-opt-bg: #ffffff;
+  --t-opt-text: #0f172a;
+  --t-opt-border: #cbd5e1;
+  --t-opt-label-bg: #f1f5f9;
+  --t-opt-label-text: #334155;
+  color: #0f172a;
+}
+
+/* 2. THEME SEPIA (Giấy thi cổ điển / Vàng dịu mắt - Chống lóa, chống mỏi mắt) */
+.test-sepia {
+  --t-bg: #fbf7ee;
+  --t-card: #fffdf9;
+  --t-border: #e6dcbe;
+  --t-text: #292014;
+  --t-sub: #786445;
+  --t-primary: #854d0e;
+  --t-primary-light: #fef9c3;
+  --t-header-bg: #f5eedc;
+  --t-header-border: #e4d8b8;
+  --t-opt-bg: #fffdf9;
+  --t-opt-text: #292014;
+  --t-opt-border: #ded3b4;
+  --t-opt-label-bg: #eedfbe;
+  --t-opt-label-text: #453216;
+  color: #292014;
+}
+
+/* 3. THEME PASTEL (Tươi sáng hoạt hình - Đã tinh chỉnh tương phản cao) */
+.test-pastel {
+  --t-bg: #faf5ff;
+  --t-card: #ffffff;
+  --t-border: #e9d5ff;
+  --t-text: #1e1b4b;
+  --t-sub: #6b21a8;
+  --t-primary: #7c3aed;
+  --t-primary-light: #f3e8ff;
+  --t-header-bg: #ffffff;
+  --t-header-border: #f3e8ff;
+  --t-opt-bg: #ffffff;
+  --t-opt-text: #1e1b4b;
+  --t-opt-border: #e9d5ff;
+  --t-opt-label-bg: #f3e8ff;
+  --t-opt-label-text: #581c87;
+  color: #1e1b4b;
+}
+
+/* 4. THEME FRESH (Xanh Mint dịu mắt, tập trung) */
+.test-fresh {
+  --t-bg: #f0fdf4;
+  --t-card: #ffffff;
+  --t-border: #bbf7d0;
+  --t-text: #064e3b;
+  --t-sub: #047857;
+  --t-primary: #059669;
+  --t-primary-light: #dcfce7;
+  --t-header-bg: #ffffff;
+  --t-header-border: #dcfce7;
+  --t-opt-bg: #ffffff;
+  --t-opt-text: #064e3b;
+  --t-opt-border: #bbf7d0;
+  --t-opt-label-bg: #dcfce7;
+  --t-opt-label-text: #065f46;
+  color: #064e3b;
+}
+
+/* 5. THEME CYBER / DARK MODE (Khắc phục triệt để lỗi chữ đen nền tối: CHỮ TRẮNG TINH SÁNG RÕ 100%) */
+.test-cyber {
+  --t-bg: #090d16;
+  --t-card: #131b2e;
+  --t-border: #2e3b55;
+  --t-text: #ffffff;
+  --t-sub: #94a3b8;
+  --t-primary: #a855f7;
+  --t-primary-light: #2e1065;
+  --t-header-bg: #0d1322;
+  --t-header-border: #232f46;
+  --t-opt-bg: #1a2236;
+  --t-opt-text: #ffffff;
+  --t-opt-border: #3b4c6e;
+  --t-opt-label-bg: #2d3748;
+  --t-opt-label-text: #e2e8f0;
+  color: #ffffff;
+}
+
+/* Áp dụng triệt để biến màu lên toàn bộ cấu trúc bài thi */
+.t-header {
+  height: 60px;
+  background: var(--t-header-bg, #ffffff) !important;
+  border-bottom: 2px solid var(--t-header-border, #e2e8f0) !important;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 16px;
+  box-shadow: 0 2px 10px rgba(0,0,0,.06);
+  flex-shrink: 0;
+}
+.t-body {
+  flex: 1;
+  display: flex;
+  gap: 16px;
+  padding: 16px;
+  max-width: 1300px;
+  width: 100%;
+  margin: 0 auto;
+  overflow: auto;
+  box-sizing: border-box;
+}
+@media (max-width: 820px) {
+  .t-body { flex-direction: column; padding: 10px; gap: 10px; }
+}
+.t-passage-col {
+  flex: 1;
+  background: var(--t-card, #ffffff) !important;
+  border: 2px solid var(--t-border, #cbd5e1) !important;
+  border-radius: 18px;
+  padding: 18px;
+  overflow-y: auto;
+  max-height: calc(100vh - 100px);
+  box-shadow: 0 4px 12px rgba(0,0,0,.04);
+}
+@media (max-width: 820px) {
+  .t-passage-col { max-height: 220px; }
+}
+.t-question-col {
+  flex: 1.2;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.t-card {
+  background: var(--t-card, #ffffff) !important;
+  border: 2px solid var(--t-border, #cbd5e1) !important;
+  border-radius: 18px;
+  padding: 20px;
+  box-shadow: 0 4px 14px rgba(0,0,0,.04);
+}
+
+/* Văn bản câu hỏi & bài đọc - Đảm bảo độ tương phản cực cao */
+#trQText, .t-qtext {
+  font-weight: 800 !important;
+  font-size: 17px;
+  line-height: 1.65;
+  color: var(--t-text, #0f172a) !important;
+  margin-bottom: 18px;
+  letter-spacing: 0.15px;
+}
+#trPassageText {
+  font-size: 15px;
+  line-height: 1.8;
+  color: var(--t-text, #0f172a) !important;
+  white-space: pre-wrap;
+}
+#trTitle {
+  color: var(--t-text, #0f172a) !important;
+}
+#trStudentName {
+  color: var(--t-sub, #64748b) !important;
+}
+#trQNum {
+  color: var(--t-primary, #7c3aed) !important;
+}
+#trQSubject {
+  color: var(--t-sub, #64748b) !important;
+}
+
+/* Chế độ phóng to font chữ cho học sinh (A+) */
+#testApp.font-large #trQText, #testApp.font-large .t-qtext {
+  font-size: 20px !important;
+  line-height: 1.7 !important;
+}
+#testApp.font-large #trPassageText {
+  font-size: 17px !important;
+  line-height: 1.85 !important;
+}
+#testApp.font-large .t-opt {
+  font-size: 17px !important;
+  padding: 14px 18px !important;
+}
+
+/* Thanh số câu (Pills) - Tối ưu thanh trượt ngang mượt mà, không choán nửa màn hình điện thoại */
+.t-pills {
+  display: flex;
+  gap: 6px;
+  overflow-x: auto;
+  flex-wrap: nowrap;
+  padding: 8px 12px;
+  background: var(--t-card, #ffffff) !important;
+  border-radius: 14px;
+  border: 1px solid var(--t-border, #cbd5e1) !important;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+  flex-shrink: 0;
+}
+.t-pills::-webkit-scrollbar { display: none; }
+.t-pill {
+  flex: 0 0 32px;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  border: 2px solid var(--t-border, #cbd5e1);
+  background: var(--t-opt-label-bg, #f1f5f9) !important;
+  color: var(--t-opt-label-text, #334155) !important;
+  font-weight: 800;
+  font-size: 13px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all .2s;
+}
+.t-pill.answered {
+  background: var(--t-primary, #7c3aed) !important;
+  color: #ffffff !important;
+  border-color: var(--t-primary, #7c3aed) !important;
+}
+.t-pill.current {
+  border-color: #f59e0b !important;
+  box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.4) !important;
+}
+
+/* Phương án lựa chọn (Options) */
+.t-opt {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 16px;
+  border-radius: 14px;
+  border: 2px solid var(--t-opt-border, #cbd5e1) !important;
+  background: var(--t-opt-bg, #ffffff) !important;
+  color: var(--t-opt-text, #0f172a) !important;
+  cursor: pointer;
+  font-weight: 700;
+  font-size: 15px;
+  transition: all .15s;
+  text-align: left;
+}
+.t-opt:hover {
+  border-color: var(--t-primary, #7c3aed) !important;
+}
+.t-opt.selected {
+  border-color: var(--t-primary, #8b5cf6) !important;
+  background: var(--t-primary-light, #ede9fe) !important;
+  color: var(--t-text, #4c1d95) !important;
+  font-weight: 800;
+}
+.test-cyber .t-opt.selected {
+  background: #581c87 !important;
+  border-color: #c084fc !important;
+  color: #ffffff !important;
+}
+.t-opt-label {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: var(--t-opt-label-bg, #f1f5f9) !important;
+  color: var(--t-opt-label-text, #475569) !important;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 900;
+  font-size: 13px;
+  flex-shrink: 0;
+}
+.t-opt.selected .t-opt-label {
+  background: var(--t-primary, #8b5cf6) !important;
+  color: #ffffff !important;
+}
+
+/* Thích ứng Dark mode cho Speaking studio */
+.test-cyber .spk-box {
+  background: #182238 !important;
+  border-color: #4338ca !important;
+}
+.test-cyber .spk-target {
+  color: #f3e8ff !important;
+}
+.test-cyber .spk-ipa {
+  background: #2e1065 !important;
+  color: #d8b4fe !important;
+}
+.test-cyber .spk-ai-note {
+  background: #111827 !important;
+  border-color: #374151 !important;
+  color: #e2e8f0 !important;
+}
+.test-cyber .spk-listen-btn {
+  background: #1f2937 !important;
+  border-color: #4b5563 !important;
+  color: #f9fafb !important;
+}
+
+/* Tối ưu riêng cho màn hình điện thoại (Mobile) */
+@media (max-width: 640px) {
+  .t-header { height: 52px; padding: 0 8px; gap: 4px; }
+  #trTitle { max-width: 110px; font-size: 13px; }
+  #trStudentName { display: none; }
+  #trTimer { padding: 4px 8px; font-size: 12px; }
+  #bTrSubmit { padding: 5px 10px; font-size: 12px; }
+  .t-body { padding: 8px; gap: 8px; }
+  .t-card { padding: 14px; border-radius: 14px; }
+  .t-opt { padding: 10px 12px; font-size: 14px; gap: 8px; }
+  .t-opt-label { width: 24px; height: 24px; font-size: 12px; }
+  #trQText, .t-qtext { font-size: 15px !important; line-height: 1.55; margin-bottom: 12px; }
+}
+
+/* ═════ GIAO DIỆN BÀI TẬP PHÁT ÂM (SPEAKING AI STUDIO) ═════ */
+.spk-box { background: #faf5ff; border: 2px solid #d8b4fe; border-radius: 16px; padding: 18px; margin: 10px 0; text-align: center; }
+.spk-target { font-size: 22px; font-weight: 900; color: #581c87; line-height: 1.4; margin: 12px 0; letter-spacing: 0.2px; }
+.spk-ipa { display: inline-block; font-size: 14px; font-family: monospace; color: #9333ea; background: #f3e8ff; padding: 4px 10px; border-radius: 8px; margin-bottom: 12px; }
+.spk-btns { display: flex; gap: 10px; justify-content: center; align-items: center; flex-wrap: wrap; margin-bottom: 12px; }
+.spk-mic-btn { display: inline-flex; align-items: center; gap: 8px; font-size: 15px; font-weight: 800; padding: 12px 24px; border-radius: 50px; border: 2px solid #8b5cf6; background: #8b5cf6; color: #fff; cursor: pointer; transition: all 0.2s; box-shadow: 0 4px 14px rgba(139,92,246,0.35); }
+.spk-mic-btn:hover { background: #7c3aed; transform: translateY(-1px); }
+.spk-mic-btn.recording { background: #ef4444; border-color: #dc2626; box-shadow: 0 0 0 6px rgba(239,68,68,0.25); animation: pulseMic 1.2s infinite; }
+@keyframes pulseMic { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.05); } }
+.spk-listen-btn { display: inline-flex; align-items: center; gap: 6px; font-size: 14px; font-weight: 800; padding: 10px 18px; border-radius: 50px; border: 2px solid #e2e8f0; background: #fff; color: #475569; cursor: pointer; transition: all 0.15s; }
+.spk-listen-btn:hover { background: #f8fafc; border-color: #cbd5e1; }
+.spk-chips { display: flex; flex-wrap: wrap; gap: 6px; justify-content: center; margin: 12px 0; }
+.spk-chip { padding: 6px 12px; border-radius: 10px; font-size: 15px; font-weight: 800; display: inline-flex; align-items: center; gap: 4px; }
+.spk-chip.ok { background: #ecfdf5; border: 1.5px solid #10b981; color: #047857; }
+.spk-chip.close { background: #fefce8; border: 1.5px solid #eab308; color: #854d0e; }
+.spk-chip.bad { background: #fef2f2; border: 1.5px solid #ef4444; color: #b91c1c; text-decoration: underline wavy #ef4444; }
+.spk-score-badge { display: inline-flex; align-items: center; gap: 6px; font-size: 16px; font-weight: 900; padding: 6px 16px; border-radius: 20px; margin-top: 8px; }
+.spk-score-badge.passed { background: #dcfce7; color: #15803d; border: 1.5px solid #86efac; }
+.spk-score-badge.failed { background: #fee2e2; color: #b91c1c; border: 1.5px solid #fca5a5; }
+.spk-ai-note { background: #fff; border: 1.5px solid #e9d5ff; border-radius: 12px; padding: 12px 14px; text-align: left; font-size: 14px; line-height: 1.5; color: #374151; margin-top: 10px; }
 
 </style>
 </head>
@@ -269,6 +591,30 @@ let trTimerInterval = null;
 let trTimeRemaining = 2700; // 45 phút mặc định
 let trSubmitted = false;
 
+
+window.cycleTestTheme = function() {
+  const themes = ['cambridge', 'sepia', 'pastel', 'fresh', 'cyber'];
+  const curClass = $('testApp').className;
+  const match = curClass.match(/test-([a-z0-9_-]+)/);
+  const curTheme = match ? match[1] : 'cambridge';
+  const nextIdx = (themes.indexOf(curTheme) + 1) % themes.length;
+  const nextTheme = themes[nextIdx];
+  $('testApp').className = 'test-' + nextTheme + ($('testApp').classList.contains('font-large') ? ' font-large' : '');
+  const names = {
+    cambridge: '🏛️ Cambridge Chuẩn thi (Nền sáng, chữ đen đậm tương phản cao)',
+    sepia: '📜 Giấy thi Vàng dịu mắt (Chống mỏi mắt)',
+    pastel: '🌈 Nền Tươi sáng',
+    fresh: '🌿 Nền Xanh Mint dịu mắt',
+    cyber: '🌌 Giao diện Tối Dark Mode (Chữ trắng sáng rõ)'
+  };
+  toast('🎨 ' + names[nextTheme], 1800);
+};
+
+window.toggleTestFontZoom = function() {
+  const isLarge = $('testApp').classList.toggle('font-large');
+  toast(isLarge ? '🔠 Đã phóng to chữ làm bài' : '🔠 Cỡ chữ chuẩn', 1500);
+};
+
 function startTestMode() {
   document.body.classList.add('test-mode');
   // Ẩn màn hình đăng nhập, arcade HUD và Canvas
@@ -280,7 +626,7 @@ function startTestMode() {
   if ($('keys')) $('keys').style.display = 'none';
   if ($('pad')) $('pad').style.display = 'none';
 
-  const theme = (info && info.theme) || (HW && HW.theme) || 'pastel';
+  const theme = (info && info.theme) || (HW && HW.theme) || 'cambridge';
   $('testApp').className = 'test-' + theme;
   $('testApp').style.display = 'flex';
   $('testApp').hidden = false;
@@ -513,6 +859,11 @@ function renderTestQuestion() {
     const isCur = idx === trIndex;
     return `<button class="t-pill ${isAns ? 'answered' : ''} ${isCur ? 'current' : ''}" onclick="jumpTestQ(${idx})">${idx + 1}</button>`;
   }).join('');
+  setTimeout(() => {
+    if (pillsBox && pillsBox.children[trIndex]) {
+      pillsBox.children[trIndex].scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
+    }
+  }, 30);
 
   // 2. Render Passage (nếu có)
   const passageCol = $('trPassageCol');
@@ -1268,16 +1619,18 @@ function resume() { $('ovRes').classList.remove('on'); over = false; t0 += Date.
 <!-- GIAO DIỆN BÀI KIỂM TRA (TEST RUNNER MODE) -->
 <div id="testApp" hidden>
  <div class="t-header">
-  <div style="display:flex;align-items:center;gap:10px">
-   <span style="font-size:24px">📝</span>
-   <div>
-    <div id="trTitle" style="font-weight:900;font-size:16px;color:#2d2350">Bài kiểm tra tiếng Anh</div>
-    <div id="trStudentName" style="font-size:12px;color:#64748b">Học sinh</div>
+  <div style="display:flex;align-items:center;gap:8px;min-width:0">
+   <span style="font-size:22px;flex-shrink:0">📝</span>
+   <div style="min-width:0;overflow:hidden">
+    <div id="trTitle" style="font-weight:900;font-size:15px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">Bài kiểm tra tiếng Anh</div>
+    <div id="trStudentName" style="font-size:11px">Học sinh</div>
    </div>
   </div>
-  <div style="display:flex;align-items:center;gap:12px">
-   <div id="trTimer" style="background:#fef2f2;color:#dc2626;border:1px solid #fecaca;padding:5px 14px;border-radius:20px;font-weight:900;font-size:14px">⏱ 45:00</div>
-   <button class="btn g" id="bTrSubmit" style="font-size:14px;padding:7px 16px;font-weight:800">📥 Nộp bài</button>
+  <div style="display:flex;align-items:center;gap:6px;flex-shrink:0">
+   <button type="button" class="btn w" id="bTestThemeSwitch" style="padding:4px 8px;font-size:12px;border-radius:14px;font-weight:800;display:inline-flex;align-items:center;gap:3px" onclick="cycleTestTheme()" title="Đổi màu nền/giao diện làm bài (Sáng / Vàng dịu / Tối)">🎨 <span class="hm">Nền</span></button>
+   <button type="button" class="btn w" id="bTestFontZoom" style="padding:4px 8px;font-size:12px;border-radius:14px;font-weight:800" onclick="toggleTestFontZoom()" title="Phóng to / Thu nhỏ cỡ chữ">🔠</button>
+   <div id="trTimer" style="background:#fef2f2;color:#dc2626;border:1px solid #fecaca;padding:4px 10px;border-radius:16px;font-weight:900;font-size:13px;white-space:nowrap">⏱ 45:00</div>
+   <button class="btn g" id="bTrSubmit" style="font-size:13px;padding:6px 12px;font-weight:800;white-space:nowrap">📥 Nộp bài</button>
   </div>
  </div>
 
@@ -1287,7 +1640,7 @@ function resume() { $('ovRes').classList.remove('on'); over = false; t0 += Date.
    <div style="font-weight:800;color:#5b4bb0;font-size:15px;margin-bottom:10px;display:flex;align-items:center;gap:6px">
     📖 <span>Nội dung bài đọc (Reading Passage):</span>
    </div>
-   <div id="trPassageText" style="font-size:15px;line-height:1.75;color:#334155;white-space:pre-wrap"></div>
+   <div id="trPassageText"></div>
   </div>
 
   <!-- Cột 2: Câu hỏi, Audio, Lựa chọn & Điều hướng -->
@@ -1311,7 +1664,7 @@ function resume() { $('ovRes').classList.remove('on'); over = false; t0 += Date.
      <span id="trQSubject" style="font-size:12px;font-weight:700;color:#64748b"></span>
     </div>
 
-    <div id="trQText" style="font-weight:800;font-size:17px;line-height:1.6;color:#1e293b;margin-bottom:18px"></div>
+    <div id="trQText" class="t-qtext"></div>
     <div id="trOpts" style="display:grid;gap:10px"></div>
    </div>
 
