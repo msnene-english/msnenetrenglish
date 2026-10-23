@@ -157,16 +157,29 @@ th{color:#7a6aa8;font-size:13px}
        <div style="display:flex;gap:8px;flex-wrap:wrap">
         <input id="inpWebLink" class="inp" style="flex:1;min-width:220px;padding:9px 12px;font-size:14px" placeholder="Dán link bài tập (test 1 p1.html, voca p2.html, matching p1.html...)">
         <button class="btn" id="bLoadGame" style="font-size:13px;padding:9px 14px;font-weight:800;background:#0284c7;color:#fff" title="AI trích đoạn trọng tâm (Context Focus) tối ưu cho Game đối kháng nhanh">🎮 Nạp đề tạo Game</button>
-        <button class="btn g" id="bLoadTest" style="font-size:13px;padding:9px 14px;font-weight:800" title="Giữ NGUYÊN VẸN bài đọc, audio, hình ảnh, bài nối để làm bài kiểm tra chuẩn">📝 Nạp đề tạo Test</button>
+        <button class="btn g" id="bLoadTest" style="font-size:13px;padding:9px 14px;font-weight:800" title="Nạp đề thi đầy đủ mọi dạng bài (phát âm, trọng âm, ngữ pháp, bài đọc, từ vựng) cho bài kiểm tra chuẩn">📝 Nạp đề tạo Test</button>
        </div>
 
-       <!-- Khung preview danh sách ảnh chụp màn hình dán qua Ctrl + V hoặc chọn file -->
-       <div id="pasteImgPreview" hidden style="margin-top:10px;background:#f0f9ff;border:2px dashed #38bdf8;border-radius:14px;padding:12px">
+       <!-- VÙNG DÁN ẢNH CHỤP MÀN HÌNH / KÉO THẢ / CHỌN FILE -->
+       <div id="dropZoneImg" style="margin-top:10px;border:2px dashed #0284c7;border-radius:14px;background:#f0f9ff;padding:14px 16px;text-align:center;cursor:pointer;transition:all .2s">
+        <div style="font-size:26px;margin-bottom:4px">📸</div>
+        <div style="font-weight:800;font-size:14px;color:#0284c7">Bấm vào đây hoặc nhấn Ctrl + V để dán ảnh chụp màn hình</div>
+        <div style="font-size:12px;color:#64748b;margin-top:3px">
+         Dùng <b>Win + Shift + S</b> chụp đề rồi nhấn <b>Ctrl + V</b> · Hoặc kéo thả ảnh vào đây · Hỗ trợ chụp nhiều trang
+        </div>
+        <div style="margin-top:10px;display:flex;justify-content:center;gap:8px;flex-wrap:wrap">
+         <button class="btn b" id="bPasteClipboard" type="button" style="font-size:12px;padding:6px 14px;font-weight:700">📋 Dán ảnh từ Clipboard</button>
+         <button class="btn w" id="bPickImgZone" type="button" style="font-size:12px;padding:6px 14px;font-weight:700">📁 Chọn ảnh từ máy tính</button>
+        </div>
+       </div>
+
+       <!-- Khung preview danh sách ảnh chụp màn hình đã dán -->
+       <div id="pasteImgPreview" style="display:none;margin-top:10px;background:#fff;border:2px solid #38bdf8;border-radius:14px;padding:12px">
         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
          <span style="font-weight:800;font-size:13px;color:#0284c7" id="pastedImgCount">📸 Đã nhận 1 ảnh chụp màn hình</span>
          <div style="display:flex;gap:6px">
-          <button class="btn b" id="bAddMoreImg" style="padding:3px 10px;font-size:12px" title="Chụp thêm ảnh màn hình và dán Ctrl+V hoặc bấm vào đây">➕ Thêm ảnh</button>
-          <button class="btn r" id="bClearAllImg" style="padding:3px 8px;font-size:12px">✕ Xóa tất cả</button>
+          <button class="btn b" id="bAddMoreImg" type="button" style="padding:3px 10px;font-size:12px" title="Chụp thêm ảnh màn hình và dán Ctrl+V hoặc bấm vào đây">➕ Thêm ảnh</button>
+          <button class="btn r" id="bClearAllImg" type="button" style="padding:3px 8px;font-size:12px">✕ Xóa tất cả</button>
          </div>
         </div>
         <div id="pastedImgGallery" style="display:flex;gap:8px;overflow-x:auto;padding-bottom:4px"></div>
@@ -175,12 +188,12 @@ th{color:#7a6aa8;font-size:13px}
         </div>
        </div>
 
-       <div class="hint" id="linkFetchStatus"<div class="hint" id="linkFetchStatus" style="margin-top:6px;color:#0369a1;font-size:13px">
+       <div class="hint" id="linkFetchStatus" style="margin-top:8px;color:#0369a1;font-size:13px">
         💡 <b>Mẹo:</b> Cô có thể chụp màn hình (Win + Shift + S) rồi nhấn <b>Ctrl + V</b> ngay vào đây để AI đọc đề!
        </div>
       </div>
 
-      <textarea id="pTxt"<textarea id="pTxt"<textarea id="pTxt"<textarea id="pTxt"<textarea id="pTxt" placeholder="Cách 1 — Copy các ô từ Excel rồi dán vào (cột: Câu hỏi | A | B | C | D | Đáp án | Giải thích)
+      <textarea id="pTxt" placeholder="Cách 1 — Copy các ô từ Excel rồi dán vào (cột: Câu hỏi | A | B | C | D | Đáp án | Giải thích)
 
 Cách 2 — Dán từ Word theo mẫu:
 1. She ___ to school every day.
@@ -1317,7 +1330,18 @@ Trả về strictly JSON danh sách:
 }
 
 // Mảng lưu nhiều ảnh chụp màn hình từ Ctrl + V hoặc chọn file
+let pastedImages = [];
 
+function handleImageBlob(blob, filename) {
+  if (!blob) return false;
+  const reader = new FileReader();
+  reader.onload = evt => {
+    addPastedImage(evt.target.result);
+    toast('📸 Đã thêm ảnh chụp trang ' + pastedImages.length + '!', 2000);
+  };
+  reader.readAsDataURL(blob);
+  return true;
+}
 
 function addPastedImage(dataUrl) {
   pastedImages.push(dataUrl);
@@ -1327,11 +1351,13 @@ function addPastedImage(dataUrl) {
 window.removePastedImage = function(idx) {
   pastedImages.splice(idx, 1);
   renderPastedImages();
+  toast('🗑 Đã xóa bớt 1 ảnh chụp', 1500);
 };
 
 function clearAllPastedImages() {
   pastedImages = [];
   renderPastedImages();
+  toast('🧹 Đã xóa toàn bộ ảnh chụp', 1500);
 }
 
 function renderPastedImages() {
@@ -1339,49 +1365,163 @@ function renderPastedImages() {
   const gallery = $('pastedImgGallery');
   const countLabel = $('pastedImgCount');
   if (!pastedImages.length) {
-    if (box) box.hidden = true;
+    if (box) {
+      box.hidden = true;
+      box.style.display = 'none';
+    }
     if ($('linkFetchStatus')) $('linkFetchStatus').innerHTML = '💡 <b>Mẹo:</b> Cô có thể chụp màn hình (Win + Shift + S) rồi nhấn <b>Ctrl + V</b> ngay vào đây để AI đọc đề!';
     return;
   }
-  if (box) box.hidden = false;
+  if (box) {
+    box.hidden = false;
+    box.style.display = 'block';
+  }
   if (countLabel) countLabel.innerHTML = '📸 <b>Đã nhận ' + pastedImages.length + ' ảnh chụp màn hình</b> (AI sẽ đọc gộp tất cả ảnh)';
 
   if (gallery) {
     gallery.innerHTML = pastedImages.map((src, idx) => `
-      <div style="position:relative;flex-shrink:0;border:2px solid #38bdf8;border-radius:10px;overflow:hidden;background:#fff">
-        <img src="${src}" style="height:70px;width:110px;object-fit:cover;display:block">
-        <button onclick="removePastedImage(${idx})" style="position:absolute;top:2px;right:2px;background:#ef4444;color:#fff;border:none;border-radius:50%;width:20px;height:20px;font-size:11px;font-weight:900;cursor:pointer;line-height:20px;padding:0">✕</button>
-        <span style="position:absolute;bottom:2px;left:4px;background:#0009;color:#fff;font-size:10px;padding:1px 5px;border-radius:4px;font-weight:700">Trang ${idx + 1}</span>
+      <div style="position:relative;flex-shrink:0;border:2px solid #38bdf8;border-radius:10px;overflow:hidden;background:#fff;box-shadow:0 2px 6px rgba(0,0,0,.08)">
+        <img src="${src}" style="height:75px;width:115px;object-fit:cover;display:block">
+        <button onclick="removePastedImage(${idx})" type="button" style="position:absolute;top:3px;right:3px;background:#ef4444;color:#fff;border:none;border-radius:50%;width:22px;height:22px;font-size:12px;font-weight:900;cursor:pointer;line-height:22px;padding:0;box-shadow:0 1px 4px rgba(0,0,0,.3)">✕</button>
+        <span style="position:absolute;bottom:3px;left:4px;background:#000a;color:#fff;font-size:11px;padding:1px 6px;border-radius:4px;font-weight:700">Trang ${idx + 1}</span>
       </div>
     `).join('');
   }
 
-  $('linkFetchStatus').innerHTML = '📸 Đã có <b>' + pastedImages.length + ' ảnh chụp màn hình</b>! Bấm nút <b>"🎮 Nạp đề tạo Game"</b> hoặc <b>"📝 Nạp đề tạo Test"</b> bên trên để AI xử lý.';
+  $('linkFetchStatus').innerHTML = '📸 Đã có <b>' + pastedImages.length + ' ảnh chụp màn hình</b>! Bấm nút <b>"🎮 Nạp đề tạo Game"</b> hoặc <b>"📝 Nạp đề tạo Test"</b> bên trên để AI đọc chữ từ ảnh.';
 }
 
-// Lắng nghe Ctrl + V dán ảnh trên toàn trang (hỗ trợ dán nhiều ảnh liên tục)
+// 1. Lắng nghe Ctrl + V dán ảnh trên toàn trang (hỗ trợ cả clipboardData.items, clipboardData.files)
 window.addEventListener('paste', e => {
-  const items = (e.clipboardData || e.originalEvent?.clipboardData)?.items;
-  if (!items) return;
-  for (const item of items) {
-    if (item.type && item.type.indexOf('image') !== -1) {
-      const blob = item.getAsFile();
-      const reader = new FileReader();
-      reader.onload = evt => {
-        addPastedImage(evt.target.result);
-        toast('📸 Đã thêm ảnh chụp thứ ' + pastedImages.length + '!', 2000);
-      };
-      reader.readAsDataURL(blob);
-      e.preventDefault();
-      break;
+  const cd = e.clipboardData || e.originalEvent?.clipboardData;
+  if (!cd) return;
+
+  let imageHandled = false;
+
+  // A. Kiểm tra clipboard items
+  const items = cd.items;
+  if (items && items.length) {
+    for (let i = 0; i < items.length; i++) {
+      const item = items[i];
+      if (item.type && item.type.indexOf('image') !== -1) {
+        const blob = item.getAsFile();
+        if (blob && handleImageBlob(blob)) {
+          imageHandled = true;
+          e.preventDefault();
+          break;
+        }
+      }
+    }
+  }
+
+  // B. Kiểm tra clipboard files (ví dụ copy file ảnh từ folder/desktop)
+  if (!imageHandled && cd.files && cd.files.length) {
+    for (let i = 0; i < cd.files.length; i++) {
+      const file = cd.files[i];
+      if (file.type && file.type.indexOf('image') !== -1) {
+        if (handleImageBlob(file, file.name)) {
+          imageHandled = true;
+          e.preventDefault();
+          break;
+        }
+      }
+    }
+  }
+
+  // C. Nếu không phải ảnh nhưng nhấn Ctrl+V ngoài các ô gõ văn bản
+  if (!imageHandled) {
+    const activeTag = document.activeElement ? document.activeElement.tagName.toLowerCase() : '';
+    if (activeTag !== 'textarea' && activeTag !== 'input') {
+      const textData = cd.getData('text');
+      if (textData) {
+        if (textData.startsWith('http://') || textData.startsWith('https://')) {
+          if ($('inpWebLink')) $('inpWebLink').value = textData.trim();
+          toast('🔗 Đã tự động dán link vào ô bài tập!', 2500);
+        } else {
+          toast('💡 Clipboard đang chứa văn bản. Để dán ảnh: hãy dùng Win + Shift + S chụp đề rồi nhấn Ctrl + V nhé!', 3500);
+        }
+      }
     }
   }
 });
 
-// Nút chọn ảnh và file tài liệu
+// 2. Nút dán trực tiếp từ Clipboard (Clipboard API)
+async function pasteFromClipboard() {
+  try {
+    if (!navigator.clipboard || !navigator.clipboard.read) {
+      toast('💡 Cô nhấn tổ hợp phím Ctrl + V trên bàn phím để dán ảnh nhé!', 3000);
+      return;
+    }
+    const clipItems = await navigator.clipboard.read();
+    let found = false;
+    for (const item of clipItems) {
+      for (const type of item.types) {
+        if (type.startsWith('image/')) {
+          const blob = await item.getType(type);
+          if (handleImageBlob(blob)) {
+            found = true;
+            break;
+          }
+        }
+      }
+      if (found) break;
+    }
+    if (!found) {
+      toast('⚠️ Clipboard chưa có ảnh chụp! Cô hãy dùng Win + Shift + S chụp đề rồi dán lại nhé.', 3500);
+    }
+  } catch (err) {
+    console.warn('Clipboard read notice:', err);
+    toast('💡 Hãy nhấn phím Ctrl + V trên bàn phím để dán ảnh chụp đề!', 3000);
+  }
+}
+
+// 3. Kéo thả file ảnh trực tiếp (Drag & Drop)
+['dragenter', 'dragover'].forEach(evtName => {
+  window.addEventListener(evtName, e => {
+    e.preventDefault();
+    const dz = $('dropZoneImg');
+    if (dz) { dz.style.borderColor = '#0284c7'; dz.style.background = '#e0f2fe'; }
+  });
+});
+['dragleave', 'drop'].forEach(evtName => {
+  window.addEventListener(evtName, e => {
+    e.preventDefault();
+    const dz = $('dropZoneImg');
+    if (dz) { dz.style.borderColor = '#0284c7'; dz.style.background = '#f0f9ff'; }
+  });
+});
+window.addEventListener('drop', e => {
+  e.preventDefault();
+  const dt = e.dataTransfer;
+  if (!dt) return;
+  const files = dt.files;
+  if (files && files.length) {
+    let count = 0;
+    for (let i = 0; i < files.length; i++) {
+      const f = files[i];
+      if (f.type.startsWith('image/')) {
+        handleImageBlob(f, f.name);
+        count++;
+      }
+    }
+    if (count > 0) {
+      toast('📸 Đã thêm ' + count + ' ảnh từ kéo thả!', 2500);
+    }
+  }
+});
+
+// 4. Các nút bấm chọn file & Clipboard
+if ($('bPasteClipboard')) $('bPasteClipboard').onclick = e => { e.stopPropagation(); pasteFromClipboard(); };
 if ($('bPickImg')) $('bPickImg').onclick = () => $('inpFileImg').click();
+if ($('bPickImgZone')) $('bPickImgZone').onclick = e => { e.stopPropagation(); $('inpFileImg').click(); };
 if ($('bAddMoreImg')) $('bAddMoreImg').onclick = () => $('inpFileImg').click();
 if ($('bClearAllImg')) $('bClearAllImg').onclick = () => clearAllPastedImages();
+if ($('dropZoneImg')) {
+  $('dropZoneImg').onclick = e => {
+    if (e.target.tagName.toLowerCase() === 'button') return;
+    $('inpFileImg').click();
+  };
+}
 
 if ($('inpFileImg')) {
   $('inpFileImg').onchange = e => {
@@ -1420,7 +1560,6 @@ if ($('inpFileDoc')) {
   };
 }
 
-// Xử lý nạp đề: hàm chung cho cả Nạp đề tạo Game & Nạp đề tạo Test
 async function processLoadQuiz(isTestMode) {
   const url = clean($('inpWebLink').value);
   const pasteTxt = clean($('pTxt')?.value || '');
