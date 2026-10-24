@@ -138,8 +138,8 @@ th{color:#7a6aa8;font-size:13px}
   <div class="licbar" id="licBar">
    <span class="li" id="licIcon">🔒</span>
    <div class="lic-t" id="licText">
-    <b>Bản miễn phí:</b> 🧗 Leo núi &amp; 🍄 Nấm Mario.
-    <button type="button" class="btn b" id="bTriggerUnlockModal" style="padding:3px 12px;font-size:12px;margin-left:8px;background:linear-gradient(135deg,#7c3aed,#db2777);border:none;color:#fff;font-weight:800;cursor:pointer">🔑 Nhập mã 0000 để mở full 10 game</button>
+    <b>Bản tiêu chuẩn:</b> 🧗 Leo núi &amp; 🍄 Nấm Mario.
+    <button type="button" class="btn b" id="bTriggerUnlockModal" style="padding:3px 12px;font-size:12px;margin-left:8px;background:linear-gradient(135deg,#7c3aed,#db2777);border:none;color:#fff;font-weight:800;cursor:pointer">🔑 Kích hoạt bản quyền Pro</button>
    </div>
   </div>
 
@@ -567,22 +567,22 @@ Hoặc dán theo mẫu:
 
 
 
-<!-- MODAL NHẬP MÃ MỞ KHÓA TRỌN BỘ GAME (KEY: 0000) -->
+<!-- MODAL KÍCH HOẠT BẢN QUYỀN TRỌN BỘ GAME -->
 <div class="ov" id="ovUnlockGames">
  <div class="card" style="max-width:440px;width:94%;border-top:6px solid #8b5cf6;border-radius:18px;text-align:center;box-shadow:0 20px 45px rgba(0,0,0,0.3)">
-  <div style="font-size:46px;margin-bottom:6px">🔒</div>
-  <div style="font-size:20px;font-weight:900;color:#581c87;margin-bottom:8px">Mở khóa Trọn bộ 10 Game &amp; Phòng thi</div>
+  <div style="font-size:46px;margin-bottom:6px">🔐</div>
+  <div style="font-size:20px;font-weight:900;color:#581c87;margin-bottom:8px">Kích hoạt Bản quyền Trọn bộ Game</div>
   <div style="font-size:13px;color:#64748b;line-height:1.5;margin-bottom:16px">
-   Trò chơi này thuộc gói nâng cao (bản miễn phí gồm <b>🧗 Leo núi</b> &amp; <b>🍄 Nấm Mario</b>). Cô vui lòng nhập <b>Mã khóa (0000)</b> để mở khóa toàn bộ:
+   Trò chơi này thuộc phiên bản nâng cao (bản tiêu chuẩn gồm <b>🧗 Leo núi</b> &amp; <b>🍄 Nấm Mario</b>). Cô vui lòng nhập <b>Mã kích hoạt bản quyền</b> để mở khóa:
   </div>
   <div style="margin-bottom:16px">
-   <input type="password" id="gameUnlockPass" class="inp" maxlength="10" placeholder="Nhập mã khóa (VD: 0000)" style="font-size:20px;text-align:center;letter-spacing:6px;font-weight:900;width:100%;padding:10px;border:2px solid #8b5cf6;border-radius:12px">
-   <div id="gameUnlockErr" style="color:#dc2626;font-size:13px;font-weight:700;margin-top:6px;display:none">❌ Mã khóa không chính xác! Vui lòng thử lại.</div>
+   <input type="password" id="gameUnlockPass" class="inp" maxlength="20" placeholder="Nhập mã kích hoạt..." style="font-size:18px;text-align:center;letter-spacing:4px;font-weight:800;width:100%;padding:10px;border:2px solid #8b5cf6;border-radius:12px">
+   <div id="gameUnlockErr" style="color:#dc2626;font-size:13px;font-weight:700;margin-top:6px;display:none">❌ Mã kích hoạt không chính xác! Vui lòng thử lại.</div>
   </div>
   <div style="display:flex;gap:10px;justify-content:center">
    <button type="button" class="btn w" id="bCloseUnlockGames" style="padding:10px 18px;font-weight:700">Đóng</button>
    <button type="button" class="btn b" id="bDoUnlockGames" style="padding:10px 22px;font-size:15px;font-weight:800;background:linear-gradient(135deg,#7c3aed,#db2777);border:none;box-shadow:0 4px 12px rgba(124,58,237,0.35)">
-    ✨ Mở khóa ngay
+    ✨ Kích hoạt ngay
    </button>
   </div>
  </div>
@@ -1308,7 +1308,7 @@ async function renderBank(forceCloud) {
         <div class="bacts">
           <button class="btn g" style="padding:5px 9px;font-size:12px" title="Dùng đề này mở phòng" onclick="loadQuizData('${item.id}')">${isTest ? '📝 Mở phòng thi' : '🎯 Mở phòng'}</button>
           <button class="btn w" style="padding:5px 9px;font-size:12px" title="Giao bài" onclick="assignHwFor('${item.id}')">${isTest ? '📋 Giao bài test' : '📚 Giao bài'}</button>
-          <button class="btn r" style="padding:5px 8px;font-size:12px;background:#fef2f2;color:#dc2626;border:1px solid #fecaca" title="Xóa đề này khỏi thư viện (Cần mã Admin 0000)" onclick="adminDeleteQuiz('${esc(item.id)}')">🗑️</button>
+          <button class="btn r" style="padding:5px 8px;font-size:12px;background:#fef2f2;color:#dc2626;border:1px solid #fecaca" title="Xóa đề này khỏi thư viện (Dành cho Quản trị viên)" onclick="adminDeleteQuiz('${esc(item.id)}')">🗑️</button>
         </div>
       </div>
       `;
@@ -1641,7 +1641,7 @@ function doUnlockGamesSubmit() {
   if (res.ok) {
     if (errDiv) errDiv.style.display = 'none';
     $('ovUnlockGames').classList.remove('on');
-    toast('🎉 Mở khóa thành công toàn bộ 10 game & phòng thi!', 3000);
+    toast('🎉 Kích hoạt bản quyền thành công trọn bộ 10 game & phòng thi!', 3000);
     renderModesLockState();
     if (pendingUnlockTargetMode) {
       selectMode(pendingUnlockTargetMode);
@@ -1650,7 +1650,7 @@ function doUnlockGamesSubmit() {
   } else {
     if (errDiv) {
       errDiv.style.display = 'block';
-      errDiv.textContent = '❌ Mã khóa không chính xác! Vui lòng nhập đúng mã (0000).';
+      errDiv.textContent = '❌ Mã kích hoạt không chính xác! Vui lòng thử lại.';
     }
     if (passInp) {
       passInp.focus();
@@ -1693,8 +1693,8 @@ function renderModesLockState() {
     if (unlocked) {
       if (licIcon) licIcon.textContent = '🌟';
       licText.innerHTML = `
-        <b>Đã mở khóa toàn bộ 10 game &amp; Phòng thi</b> (Bản quyền Cô Chí Nên).
-        <button type="button" class="btn w" id="bRelockGames" style="padding:1px 8px;font-size:11px;margin-left:8px;color:#dc2626;border-color:#fca5a5;background:#fef2f2">🔒 Khóa lại (để test)</button>
+        <b>Phiên bản Pro:</b> Đã kích hoạt trọn bộ 10 game &amp; Phòng thi cho Cô Chí Nên.
+        <button type="button" class="btn w" id="bRelockGames" style="padding:1px 8px;font-size:11px;margin-left:8px;color:#dc2626;border-color:#fca5a5;background:#fef2f2" title="Khóa lại bản quyền">🔒 Khóa lại</button>
       `;
       if ($('bRelockGames')) {
         $('bRelockGames').onclick = (e) => {
@@ -1708,8 +1708,8 @@ function renderModesLockState() {
     } else {
       if (licIcon) licIcon.textContent = '🔒';
       licText.innerHTML = `
-        <b>Bản miễn phí:</b> 🧗 Leo núi &amp; 🍄 Nấm Mario.
-        <button type="button" class="btn b" id="bTriggerUnlockModal" style="padding:3px 12px;font-size:12px;margin-left:8px;background:linear-gradient(135deg,#7c3aed,#db2777);border:none;color:#fff;font-weight:800;cursor:pointer">🔑 Nhập mã 0000 để mở full 10 game</button>
+        <b>Bản tiêu chuẩn:</b> 🧗 Leo núi &amp; 🍄 Nấm Mario.
+        <button type="button" class="btn b" id="bTriggerUnlockModal" style="padding:3px 12px;font-size:12px;margin-left:8px;background:linear-gradient(135deg,#7c3aed,#db2777);border:none;color:#fff;font-weight:800;cursor:pointer">🔑 Kích hoạt bản quyền Pro</button>
       `;
       if ($('bTriggerUnlockModal')) {
         $('bTriggerUnlockModal').onclick = (e) => {

@@ -21,9 +21,9 @@ window.LIC = (function () {
       try {
         localStorage.setItem(STORAGE_KEY, UNLOCK_KEY);
       } catch (e) {}
-      return { ok: true, msg: 'Mở khóa thành công toàn bộ 10 game & phòng thi!' };
+      return { ok: true, msg: 'Kích hoạt bản quyền thành công trọn bộ 10 game & phòng thi!' };
     }
-    return { ok: false, msg: 'Mã khóa không chính xác! Vui lòng thử lại.' };
+    return { ok: false, msg: 'Mã kích hoạt không chính xác! Vui lòng thử lại.' };
   }
 
   function lock() {
