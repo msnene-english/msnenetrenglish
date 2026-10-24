@@ -121,7 +121,7 @@ th{color:#7a6aa8;font-size:13px}
   <h1>🎮 Phòng game Cô Chí Nên</h1>
   <button class="btn b" id="bOpenGradebook" type="button" style="padding:8px 14px;font-size:14px">📊 Sổ điểm BTVN</button>
   <span class="badge" id="netB">⏳ Đang kết nối…</span>
-  <span class="badge ok" id="licTag">✅ Bản quyền: Cô Chí Nên · Mở trọn bộ 4 Game</span>
+  <span class="badge ok" id="licTag">✅ Bản quyền: Cô Chí Nên · Mở trọn bộ 10 Game & Phòng thi</span>
  </div>
 
  <!-- 1. CÀI ĐẶT -->
@@ -132,13 +132,13 @@ th{color:#7a6aa8;font-size:13px}
     <div class="brand">Ms Nenet English · Bộ Game của Cô Chí Nên</div>
     <div class="hchips"><span>🧗 Leo núi</span><span>🍄 Nấm Mario</span><span>🛡 Xe tăng</span><span>💣 Đặt bom</span></div>
    </div>
-   <canvas id="heroCv" aria-label="Tranh pixel động: cảnh nhỏ của 4 game"></canvas>
+   <canvas id="heroCv" aria-label="Tranh pixel động: thế giới trò chơi Ms Nenet English"></canvas>
   </div>
 
   <div class="licbar">
    <span class="li">🎁</span>
    <div class="lic-t">
-    <b>Bản đầy đủ vĩnh viễn:</b> Đã kích hoạt trọn vẹn cả 4 game: 🧗 Leo núi, 🍄 Nấm Mario, 🛡 Xe tăng, 💣 Đặt bom cho <b>Cô Chí Nên (Ms Nenet English)</b>.
+    <b>Bản đầy đủ vĩnh viễn:</b> Đã kích hoạt trọn vẹn 10 game: 🧗 Leo núi, 🍄 Nấm Mario, 🛡 Xe tăng, 💣 Bomberman, 🟡 Pac-Man, 🏎 Đua xe, 🏃 Temple Run P1 & P2, 🔴 Bounce Tales P1 & P2 cho <b>Cô Chí Nên (Ms Nenet English)</b>.
    </div>
   </div>
 
@@ -1429,7 +1429,7 @@ if ($('bHwShortLink')) {
 }
 $('bHwLink').onclick = () => navigator.clipboard.writeText(hwLink).then(() => toast('📋 Đã copy link đầy đủ', 2000)).catch(() => prompt('Copy:', hwLink));
 
-/* Chọn chế độ game (Mở full cả 4 game) */
+/* Chọn chế độ game (Mở full 10 game + Phòng thi) */
 let gMode = 'climb';
 const MNAME = { climb: '🧗 Leo núi', brick: '🍄 Nấm Mario', tank: '🛡 Xe tăng', bomb: '💣 Bomberman', test: '📝 Phòng thi A2-B1', pac: '🟡 Pac-Man', race: '🏎 Đua xe', temple: '🏃 Temple Run P1', temple2: '🏃 Temple Run P2', bounce: '🔴 Bounce Tales', bounce2: '🐸 Bounce Tales P2' };
 $('gModes').onclick = e => {

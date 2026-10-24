@@ -1,4 +1,4 @@
-/* ═════ dải tranh pixel động: cảnh nhỏ của 4 game ═════ */
+/* ═════ dải tranh pixel động: cảnh nhỏ của các minigame ═════ */
 (function () {
   const cv = document.getElementById('heroCv'); if (!cv) return;
   const ctx = cv.getContext('2d'), RM = matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -58,7 +58,7 @@
     if (bt < 100) { const pul = 1 + Math.sin(t * .4) * .06; draw(spr('bomb', BOMB, PAL.bomb), bxp - (pul - 1) * 24, byp - (pul - 1) * 20, P * .9 * pul) }
     else { const k2 = (bt - 100) / 50, len = 70 * Math.min(1, k2 * 3), w2 = 18 * (1 - k2 * .5), cx = bxp + 22, cy = byp + 14;
       [['#FF7A1A', w2 + 8], ['#FFB627', w2], ['#FFF3B0', w2 - 8]].forEach(([c, w]) => { if (w > 0) { box(cx - len, cy - w / 2, len * 2, w, c); box(cx - w / 2, cy - len, w, len * 2 - (len - 14), c) } }) }
-    // nhãn 4 game
+    // nhãn các game
     ctx.font = '800 ' + Math.max(11, Math.round(W / 70)) + 'px Nunito,sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'alphabetic'; ctx.lineJoin = 'round'; ctx.lineWidth = 4;
     ['🧗 Leo núi', '🍄 Nấm Mario', '🛡 Xe tăng', '💣 Đặt bom'].forEach((s, i) => { ctx.strokeStyle = '#5b4bb0'; ctx.strokeText(s, seg * (i + .5), H - 4); ctx.fillStyle = '#fff'; ctx.fillText(s, seg * (i + .5), H - 4) });
     if (!RM) requestAnimationFrame(frame);

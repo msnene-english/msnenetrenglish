@@ -1241,7 +1241,18 @@ if (SOLO && SOLO !== 'hw') showGame(U.get('m'), null);
 if (SOLO) {
   $('jCodeBox').hidden = true;
   const isT = U.get('m') === 'test';
-  $('jSub').textContent = isT ? 'Luyện tập / Kiểm tra tự do — Đọc kỹ và chọn đáp án chính xác!' : (U.get('m') === 'brick' ? 'Luyện tập một mình — vượt 4 màn, giải cứu công chúa!' : 'Luyện tập một mình — leo lên đỉnh nhanh nhất có thể!');
+  $('jSub').textContent = isT ? 'Luyện tập / Kiểm tra tự do — Đọc kỹ và chọn đáp án chính xác!' : ({
+    brick: 'Luyện tập một mình — vượt 5 màn, giải cứu công chúa!',
+    tank: 'Luyện tập một mình — bảo vệ căn cứ, hạ gục xe tăng địch!',
+    bomb: 'Luyện tập một mình — đặt bom phá gạch, tiêu diệt quái vật!',
+    pac: 'Luyện tập một mình — ăn sạch 5 mê cung kinh điển!',
+    race: 'Luyện tập một mình — chinh phục 5 chặng đua tốc độ!',
+    temple: 'Luyện tập một mình — chạy qua 5 màn Temple Run P1!',
+    temple2: 'Luyện tập một mình — vượt 5 màn P2, đoạt tượng vàng!',
+    bounce: 'Luyện tập một mình — lăn bóng qua 6 màn, gom trứng vàng!',
+    bounce2: 'Luyện tập một mình — nảy lá, lặn biển và hạ trùm ếch!',
+    climb: 'Luyện tập một mình — leo lên đỉnh núi nhanh nhất có thể!'
+  }[U.get('m') || 'climb'] || 'Luyện tập một mình — phá đảo nhanh nhất có thể!');
   $('jGo').textContent = isT ? '📝 Bắt đầu làm bài!' : '🚀 Bắt đầu!';
 }
 if (SOLO === 'hw') {
@@ -1472,7 +1483,17 @@ function begin() {
   S.running = true; $('eBtn').hidden = false;
   if (HW ? HW.mu !== false : (SOLO || !info || info.mu !== false)) GC.music.start(true, MODE === 'temple2' ? 'temple' : MODE === 'bounce2' ? 'bounce' : MODE);   // mỗi game một bản nhạc
   setTimeout(() => $('keys').classList.add('mini'), 25000);   // sau 25 giây thu gọn hướng dẫn phím   // cô quyết định bật/tắt nhạc, học sinh không có nút tắt
-  toast('💪 Chào ' + nameV + (MODE === 'brick' ? '! Trả lời đúng để nạp ⚡ rồi xông qua 4 màn cứu công chúa nào!' : '! Trả lời đúng để nạp ⚡ rồi leo lên đỉnh nào!'), 2600);
+  toast('💪 Chào ' + nameV + ({
+    brick: '! Trả lời đúng để nạp ⚡ rồi xông qua 5 màn cứu công chúa nào!',
+    tank: '! Trả lời đúng để nạp ⚡ rồi bảo vệ căn cứ nào!',
+    bomb: '! Trả lời đúng để nạp ⚡ rồi đặt bom hạ quái nào!',
+    pac: '! Trả lời đúng để nạp ⚡ rồi ăn sạch mê cung nào!',
+    race: '! Trả lời đúng để đổ đầy xăng ⚡ rồi phóng về đích nào!',
+    temple: '! Trả lời đúng để nạp ⚡ rồi chạy qua 5 màn Temple Run P1 nào!',
+    temple2: '! Trả lời đúng để nạp ⚡ rồi chinh phục 5 màn P2, lấy tượng vàng nào!',
+    bounce: '! Trả lời đúng để nạp ⚡ rồi lăn bóng qua 6 màn, nhặt hết trứng vàng nào!',
+    bounce2: '! Trả lời đúng để nạp ⚡ rồi nảy lá, lặn đáy biển và hạ trùm ếch Hypnotoad nào!'
+  }[MODE] || '! Trả lời đúng để nạp ⚡ rồi leo lên đỉnh nào!'), 2600);
   if (S.energy <= 0) setTimeout(openQ, 700);
 }
 function onCP(n, kind) {

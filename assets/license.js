@@ -1,12 +1,12 @@
 /* license.js — Hệ thống Bản quyền Ms Nenet English (Cô Chí Nên)
-   Tất cả 4 game (🧗 Leo núi, 🍄 Nấm Mario, 🛡 Xe tăng, 💣 Đặt bom) mở khóa 100% vĩnh viễn. */
+   Tất cả 10 game (🧗 Leo núi, 🍄 Nấm Mario, 🛡 Xe tăng, 💣 Bomberman, 🟡 Pac-Man, 🏎 Đua xe, 🏃 Temple Run P1 & P2, 🔴 Bounce Tales P1 & P2) mở khóa 100% vĩnh viễn. */
 window.LIC = (function () {
   const FREE = ['climb', 'brick', 'tank', 'bomb'];
   const info = {
     ok: true,
     name: 'Cô Chí Nên (Ms Nenet)',
     exp: '2099-12-31',
-    expVN: 'Vĩnh viễn (Bản đầy đủ 4 game)',
+    expVN: 'Vĩnh viễn (Trọn bộ 10 game & Phòng thi)',
     issued: '2026-01-01',
     expired: false,
     code: 'CN.FULL.PRO'
