@@ -26,7 +26,7 @@ Hệ thống trò chơi học tập tương tác thời gian thực (Gamified Li
    - Giáo viên có quyền quyết định **"Lưu & Chia sẻ lên Thư viện chung"** sau mỗi lần tạo đề.
    - Mọi giáo viên đều có thể tìm kiếm, nạp đề mở phòng hoặc lấy link bài tập.
    - Sinh **Mã đề ngắn (Short ID)** dạng `MN-XXXX` giúp tạo đường link làm bài siêu ngắn: `play.html?quiz=MN-IELTS7` (gửi Zalo/Facebook 100% không bao giờ bị cắt link).
-   - Chức năng quản trị an toàn (Admin PIN `0000`) hỗ trợ xóa đề thi hoặc xóa bài nộp lỗi thời khỏi thư viện.
+   - Chức năng quản trị an toàn (Mã Quản trị viên bảo mật) hỗ trợ xóa đề thi hoặc xóa bài nộp lỗi thời khỏi thư viện.
 
 4. **Hai chế độ tổ chức học tập linh hoạt**:
    - 📺 **Trực tiếp tại lớp (Live Mode)**: Chiếu mã QR và mã phòng 6 chữ số lên bảng/máy chiếu, học sinh quét mã vào phòng thi đấu.

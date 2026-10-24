@@ -613,7 +613,7 @@ Hoặc dán theo mẫu:
   <button class="btn b" type="button" id="bGbRefresh" style="padding:9px 12px;font-size:13px">🔄 Làm mới</button>
   <button class="btn b" type="button" id="bGbAnalytics" style="padding:9px 12px;font-size:13px;background:#ede9fe;color:#6d28d9;border:1.5px solid #c4b5fd">📊 Phân tích câu sai</button>
   <button class="btn g" type="button" id="bGbCsv" style="padding:9px 12px;font-size:13px">⬇️ Xuất Excel</button>
-  <button class="btn r" type="button" id="bGbDeleteHw" style="padding:9px 12px;font-size:13px;background:#fef2f2;color:#dc2626;border:1.5px solid #fecaca" title="Xóa toàn bộ bài tập đang chọn (Cần mã Admin 0000)">🗑️ Xóa bài này</button>
+  <button class="btn r" type="button" id="bGbDeleteHw" style="padding:9px 12px;font-size:13px;background:#fef2f2;color:#dc2626;border:1.5px solid #fecaca" title="Xóa toàn bộ bài tập đang chọn (Dành cho Quản trị viên)">🗑️ Xóa bài này</button>
  </div>
 
  <div id="gbSummary" style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:10px"></div>
@@ -1617,7 +1617,7 @@ if ($('bHwShortLink')) {
 }
 $('bHwLink').onclick = () => navigator.clipboard.writeText(hwLink).then(() => toast('📋 Đã copy link đầy đủ', 2000)).catch(() => prompt('Copy:', hwLink));
 
-/* Chọn chế độ game (Free 2 game: Leo núi & Nấm Mario. Khóa các game còn lại bằng mã 0000) */
+/* Chọn chế độ game (Free 2 game: Leo núi & Nấm Mario) */
 let gMode = 'climb';
 const MNAME = { climb: '🧗 Leo núi', brick: '🍄 Nấm Mario', tank: '🛡 Xe tăng', bomb: '💣 Bomberman', test: '📝 Phòng thi A2-B1', pac: '🟡 Pac-Man', race: '🏎 Đua xe', temple: '🏃 Temple Run P1', temple2: '🏃 Temple Run P2', bounce: '🔴 Bounce Tales', bounce2: '🐸 Bounce Tales P2' };
 
@@ -1637,7 +1637,7 @@ function doUnlockGamesSubmit() {
   const passInp = $('gameUnlockPass');
   const errDiv = $('gameUnlockErr');
   const key = (passInp ? passInp.value : '').trim();
-  const res = window.LIC ? window.LIC.verify(key) : { ok: key === '0000' };
+  const res = window.LIC ? window.LIC.verify(key) : { ok: false };
   if (res.ok) {
     if (errDiv) errDiv.style.display = 'none';
     $('ovUnlockGames').classList.remove('on');
@@ -2747,7 +2747,7 @@ function renderGradebookTable() {
       <td style="font-size:12px;color:#64748b">${esc(r.date || '')}</td>
       <td style="white-space:nowrap">
          <button type="button" class="btn b" style="padding:4px 8px;font-size:12px" onclick="openGbReportCard(${i})">🏅 Phiếu</button>
-         <button type="button" class="btn r" style="padding:4px 7px;font-size:12px;background:#fef2f2;color:#dc2626;border:1px solid #fecaca;margin-left:4px" title="Xóa bản ghi này (Cần mã Admin 0000)" onclick="adminDeleteSubmission(${i})">🗑️</button>
+         <button type="button" class="btn r" style="padding:4px 7px;font-size:12px;background:#fef2f2;color:#dc2626;border:1px solid #fecaca;margin-left:4px" title="Xóa bản ghi này (Dành cho Quản trị viên)" onclick="adminDeleteSubmission(${i})">🗑️</button>
        </td>
     </tr>
   `).join('');
@@ -2772,12 +2772,12 @@ if ($('bOpenGradebook')) $('bOpenGradebook').onclick = () => openHwGradebook();
 if ($('gbSelect')) $('gbSelect').onchange = () => renderGradebookTable();
 if ($('bGbRefresh')) $('bGbRefresh').onclick = () => openHwGradebook($('gbSelect').value);
 
-/* ═════ QUẢN TRỊ ADMIN (MÃ KEY 0000) XÓA BỘ ĐỀ & BẢN GHI ĐIỂM ═════ */
+/* ═════ QUẢN TRỊ ADMIN XÓA BỘ ĐỀ & BẢN GHI ĐIỂM ═════ */
 window.adminDeleteQuiz = async function(id) {
   if (!id) return;
   const key = prompt('🔐 Nhập mã quản trị (Admin Key) để xóa bộ đề [' + id + ']:');
   if (key === null) return;
-  if (key.trim() !== '0000') {
+  if (!window.LIC || !window.LIC.verifyAdmin(key)) {
     toast('❌ Sai mã quản trị (Admin Key)!', 2500);
     return;
   }
@@ -2793,7 +2793,7 @@ window.adminDeleteSubmission = async function(idx) {
   if (!r) return;
   const key = prompt('🔐 Nhập mã quản trị (Admin Key) để xóa bản ghi điểm của học sinh: ' + r.n + ':');
   if (key === null) return;
-  if (key.trim() !== '0000') {
+  if (!window.LIC || !window.LIC.verifyAdmin(key)) {
     toast('❌ Sai mã quản trị (Admin Key)!', 2500);
     return;
   }
@@ -2812,7 +2812,7 @@ if ($('bGbDeleteHw')) {
     }
     const key = prompt('🔐 Nhập mã quản trị (Admin Key) để xóa toàn bộ bài tập [' + hid + '] và tất cả điểm số:');
     if (key === null) return;
-    if (key.trim() !== '0000') {
+    if (!window.LIC || !window.LIC.verifyAdmin(key)) {
       toast('❌ Sai mã quản trị (Admin Key)!', 2500);
       return;
     }
