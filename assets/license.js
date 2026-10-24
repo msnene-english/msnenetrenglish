@@ -1,37 +1,64 @@
 /* license.js — Hệ thống Bản quyền Ms Nene English (Cô Chí Nên)
-   Tất cả 10 game (🧗 Leo núi, 🍄 Nấm Mario, 🛡 Xe tăng, 💣 Bomberman, 🟡 Pac-Man, 🏎 Đua xe, 🏃 Temple Run P1 & P2, 🔴 Bounce Tales P1 & P2) mở khóa 100% vĩnh viễn. */
+   • 2 Game miễn phí (Free): 🧗 Leo núi (climb) & 🍄 Nấm Mario (brick).
+   • Toàn bộ các trò chơi khác & Phòng thi được khóa mặc định; mở khóa bằng Mã khóa bí mật: 0000. */
 window.LIC = (function () {
-  const FREE = ['climb', 'brick', 'tank', 'bomb'];
-  const info = {
-    ok: true,
-    name: 'Cô Chí Nên (Ms Nene)',
-    exp: '2099-12-31',
-    expVN: 'Vĩnh viễn (Trọn bộ 10 game & Phòng thi)',
-    issued: '2026-01-01',
-    expired: false,
-    code: 'CN.FULL.PRO'
-  };
+  const FREE_MODES = ['climb', 'brick'];
+  const UNLOCK_KEY = '0000';
+  const STORAGE_KEY = 'msnene_game_unlock_key';
+
+  function isUnlocked() {
+    try {
+      const saved = localStorage.getItem(STORAGE_KEY);
+      return saved === UNLOCK_KEY;
+    } catch (e) {
+      return false;
+    }
+  }
+
+  function verify(key) {
+    const cleanKey = String(key || '').trim();
+    if (cleanKey === UNLOCK_KEY) {
+      try {
+        localStorage.setItem(STORAGE_KEY, UNLOCK_KEY);
+      } catch (e) {}
+      return { ok: true, msg: 'Mở khóa thành công toàn bộ 10 game & phòng thi!' };
+    }
+    return { ok: false, msg: 'Mã khóa không chính xác! Vui lòng thử lại.' };
+  }
+
+  function lock() {
+    try {
+      localStorage.removeItem(STORAGE_KEY);
+    } catch (e) {}
+  }
+
+  function allowed(mode) {
+    if (FREE_MODES.includes(mode)) return true;
+    return isUnlocked();
+  }
 
   function current() {
-    return info;
+    const unlocked = isUnlocked();
+    return {
+      ok: unlocked,
+      name: 'Cô Chí Nên (Ms Nene)',
+      expVN: unlocked ? 'Vĩnh viễn (Trọn bộ 10 game & Phòng thi)' : 'Bản miễn phí (Leo núi & Nấm Mario)',
+      unlocked,
+      FREE_MODES
+    };
   }
 
-  function verify(code) {
-    return info;
-  }
+  const paid = () => isUnlocked();
 
-  function make(name, months) {
-    return { code: 'CN.FULL.PRO', name: name || 'Cô Chí Nên', expVN: 'Vĩnh viễn' };
-  }
-
-  function save(code) {
-    return info;
-  }
-
-  function clear() {}
-
-  const paid = () => true;
-  const allowed = () => true;
-
-  return { make, verify, current, save, clear, paid, allowed, FREE };
+  return {
+    FREE: FREE_MODES,
+    FREE_MODES,
+    UNLOCK_KEY,
+    isUnlocked,
+    verify,
+    lock,
+    allowed,
+    current,
+    paid
+  };
 })();

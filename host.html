@@ -135,10 +135,11 @@ th{color:#7a6aa8;font-size:13px}
    <canvas id="heroCv" aria-label="Tranh pixel động: thế giới trò chơi Ms Nene English"></canvas>
   </div>
 
-  <div class="licbar">
-   <span class="li">🎁</span>
-   <div class="lic-t">
-    <b>Bản đầy đủ vĩnh viễn:</b> Đã kích hoạt trọn vẹn 10 game: 🧗 Leo núi, 🍄 Nấm Mario, 🛡 Xe tăng, 💣 Bomberman, 🟡 Pac-Man, 🏎 Đua xe, 🏃 Temple Run P1 & P2, 🔴 Bounce Tales P1 & P2 cho <b>Cô Chí Nên (Ms Nene English)</b>.
+  <div class="licbar" id="licBar">
+   <span class="li" id="licIcon">🔒</span>
+   <div class="lic-t" id="licText">
+    <b>Bản miễn phí:</b> 🧗 Leo núi &amp; 🍄 Nấm Mario.
+    <button type="button" class="btn b" id="bTriggerUnlockModal" style="padding:3px 12px;font-size:12px;margin-left:8px;background:linear-gradient(135deg,#7c3aed,#db2777);border:none;color:#fff;font-weight:800;cursor:pointer">🔑 Nhập mã 0000 để mở full 10 game</button>
    </div>
   </div>
 
@@ -564,6 +565,28 @@ Hoặc dán theo mẫu:
  </div>
 </div>
 
+
+
+<!-- MODAL NHẬP MÃ MỞ KHÓA TRỌN BỘ GAME (KEY: 0000) -->
+<div class="ov" id="ovUnlockGames">
+ <div class="card" style="max-width:440px;width:94%;border-top:6px solid #8b5cf6;border-radius:18px;text-align:center;box-shadow:0 20px 45px rgba(0,0,0,0.3)">
+  <div style="font-size:46px;margin-bottom:6px">🔒</div>
+  <div style="font-size:20px;font-weight:900;color:#581c87;margin-bottom:8px">Mở khóa Trọn bộ 10 Game &amp; Phòng thi</div>
+  <div style="font-size:13px;color:#64748b;line-height:1.5;margin-bottom:16px">
+   Trò chơi này thuộc gói nâng cao (bản miễn phí gồm <b>🧗 Leo núi</b> &amp; <b>🍄 Nấm Mario</b>). Cô vui lòng nhập <b>Mã khóa (0000)</b> để mở khóa toàn bộ:
+  </div>
+  <div style="margin-bottom:16px">
+   <input type="password" id="gameUnlockPass" class="inp" maxlength="10" placeholder="Nhập mã khóa (VD: 0000)" style="font-size:20px;text-align:center;letter-spacing:6px;font-weight:900;width:100%;padding:10px;border:2px solid #8b5cf6;border-radius:12px">
+   <div id="gameUnlockErr" style="color:#dc2626;font-size:13px;font-weight:700;margin-top:6px;display:none">❌ Mã khóa không chính xác! Vui lòng thử lại.</div>
+  </div>
+  <div style="display:flex;gap:10px;justify-content:center">
+   <button type="button" class="btn w" id="bCloseUnlockGames" style="padding:10px 18px;font-weight:700">Đóng</button>
+   <button type="button" class="btn b" id="bDoUnlockGames" style="padding:10px 22px;font-size:15px;font-weight:800;background:linear-gradient(135deg,#7c3aed,#db2777);border:none;box-shadow:0 4px 12px rgba(124,58,237,0.35)">
+    ✨ Mở khóa ngay
+   </button>
+  </div>
+ </div>
+</div>
 
 <!-- MODAL CHIẾU LỜI GIẢI CHI TIẾT (REVIEW TOÀN BỘ CÂU HỎI & ĐÁP ÁN) -->
 <div class="ov" id="ovExp"><div class="card" style="max-width:820px;width:96%">
@@ -1483,6 +1506,10 @@ $('fImportBank').onchange = e => {
 const LVN = { 1: 'Dễ', 2: 'Vừa', 3: 'Khó' };
 let hwLink = '', hwShortLink = '', hwText = '';
 $('bSolo').onclick = () => {
+  if (window.LIC && !window.LIC.allowed(gMode)) {
+    promptUnlockModal(gMode);
+    return;
+  }
   const d = new Date(); d.setDate(d.getDate() + 1); d.setHours(21, 0, 0, 0);
   const p2 = x => String(x).padStart(2, '0');
   if (!$('hwDl').value) $('hwDl').value = d.getFullYear() + '-' + p2(d.getMonth() + 1) + '-' + p2(d.getDate()) + 'T21:00';
@@ -1590,16 +1617,126 @@ if ($('bHwShortLink')) {
 }
 $('bHwLink').onclick = () => navigator.clipboard.writeText(hwLink).then(() => toast('📋 Đã copy link đầy đủ', 2000)).catch(() => prompt('Copy:', hwLink));
 
-/* Chọn chế độ game (Mở full 10 game + Phòng thi) */
+/* Chọn chế độ game (Free 2 game: Leo núi & Nấm Mario. Khóa các game còn lại bằng mã 0000) */
 let gMode = 'climb';
 const MNAME = { climb: '🧗 Leo núi', brick: '🍄 Nấm Mario', tank: '🛡 Xe tăng', bomb: '💣 Bomberman', test: '📝 Phòng thi A2-B1', pac: '🟡 Pac-Man', race: '🏎 Đua xe', temple: '🏃 Temple Run P1', temple2: '🏃 Temple Run P2', bounce: '🔴 Bounce Tales', bounce2: '🐸 Bounce Tales P2' };
+
+let pendingUnlockTargetMode = null;
+function promptUnlockModal(targetMode) {
+  pendingUnlockTargetMode = targetMode || null;
+  const ov = $('ovUnlockGames');
+  const passInp = $('gameUnlockPass');
+  const errDiv = $('gameUnlockErr');
+  if (errDiv) errDiv.style.display = 'none';
+  if (passInp) passInp.value = '';
+  if (ov) ov.classList.add('on');
+  setTimeout(() => passInp && passInp.focus(), 100);
+}
+
+function doUnlockGamesSubmit() {
+  const passInp = $('gameUnlockPass');
+  const errDiv = $('gameUnlockErr');
+  const key = (passInp ? passInp.value : '').trim();
+  const res = window.LIC ? window.LIC.verify(key) : { ok: key === '0000' };
+  if (res.ok) {
+    if (errDiv) errDiv.style.display = 'none';
+    $('ovUnlockGames').classList.remove('on');
+    toast('🎉 Mở khóa thành công toàn bộ 10 game & phòng thi!', 3000);
+    renderModesLockState();
+    if (pendingUnlockTargetMode) {
+      selectMode(pendingUnlockTargetMode);
+      pendingUnlockTargetMode = null;
+    }
+  } else {
+    if (errDiv) {
+      errDiv.style.display = 'block';
+      errDiv.textContent = '❌ Mã khóa không chính xác! Vui lòng nhập đúng mã (0000).';
+    }
+    if (passInp) {
+      passInp.focus();
+      passInp.select();
+    }
+  }
+}
+
+if ($('bDoUnlockGames')) $('bDoUnlockGames').onclick = doUnlockGamesSubmit;
+if ($('gameUnlockPass')) $('gameUnlockPass').onkeydown = e => { if (e.key === 'Enter') doUnlockGamesSubmit(); };
+if ($('bCloseUnlockGames')) $('bCloseUnlockGames').onclick = () => $('ovUnlockGames').classList.remove('on');
+
+function renderModesLockState() {
+  const unlocked = window.LIC ? window.LIC.isUnlocked() : false;
+  document.querySelectorAll('#gModes .mode').forEach(b => {
+    const m = b.dataset.m;
+    const isFree = (m === 'climb' || m === 'brick');
+    const isLocked = !isFree && !unlocked;
+
+    b.classList.toggle('locked-mode', isLocked);
+    let lockBadge = b.querySelector('.mode-lock-badge');
+    if (isLocked) {
+      if (!lockBadge) {
+        lockBadge = document.createElement('span');
+        lockBadge.className = 'mode-lock-badge';
+        lockBadge.innerHTML = '🔒';
+        lockBadge.style.cssText = 'position:absolute;top:6px;right:6px;font-size:12px;background:#fef2f2;border-radius:50%;width:20px;height:20px;display:flex;align-items:center;justify-content:center;box-shadow:0 2px 5px rgba(0,0,0,0.12);border:1px solid #fecaca;pointer-events:none';
+        b.style.position = 'relative';
+        b.appendChild(lockBadge);
+      }
+    } else {
+      if (lockBadge) lockBadge.remove();
+    }
+  });
+
+  const licBar = $('licBar');
+  const licText = $('licText');
+  const licIcon = $('licIcon');
+  if (licBar && licText) {
+    if (unlocked) {
+      if (licIcon) licIcon.textContent = '🌟';
+      licText.innerHTML = `
+        <b>Đã mở khóa toàn bộ 10 game &amp; Phòng thi</b> (Bản quyền Cô Chí Nên).
+        <button type="button" class="btn w" id="bRelockGames" style="padding:1px 8px;font-size:11px;margin-left:8px;color:#dc2626;border-color:#fca5a5;background:#fef2f2">🔒 Khóa lại (để test)</button>
+      `;
+      if ($('bRelockGames')) {
+        $('bRelockGames').onclick = (e) => {
+          e.stopPropagation();
+          if (window.LIC) window.LIC.lock();
+          toast('🔒 Đã khóa lại trò chơi! Hiện chỉ còn 2 game free (Leo núi & Nấm Mario).', 2000);
+          selectMode('climb');
+          renderModesLockState();
+        };
+      }
+    } else {
+      if (licIcon) licIcon.textContent = '🔒';
+      licText.innerHTML = `
+        <b>Bản miễn phí:</b> 🧗 Leo núi &amp; 🍄 Nấm Mario.
+        <button type="button" class="btn b" id="bTriggerUnlockModal" style="padding:3px 12px;font-size:12px;margin-left:8px;background:linear-gradient(135deg,#7c3aed,#db2777);border:none;color:#fff;font-weight:800;cursor:pointer">🔑 Nhập mã 0000 để mở full 10 game</button>
+      `;
+      if ($('bTriggerUnlockModal')) {
+        $('bTriggerUnlockModal').onclick = (e) => {
+          e.stopPropagation();
+          promptUnlockModal();
+        };
+      }
+    }
+  }
+}
+
 $('gModes').onclick = e => {
   const b = e.target.closest('[data-m]'); if (!b) return;
-  selectMode(b.dataset.m);
+  const m = b.dataset.m;
+  if (window.LIC && !window.LIC.allowed(m)) {
+    promptUnlockModal(m);
+    return;
+  }
+  selectMode(m);
 };
 
 /* ═════ ② MỞ PHÒNG CHƠI CHUNG ═════ *//* ═════ ② MỞ PHÒNG CHƠI CHUNG ═════ */
 $('bOpen').onclick = async () => {
+  if (window.LIC && !window.LIC.allowed(gMode)) {
+    promptUnlockModal(gMode);
+    return;
+  }
   $('bOpen').disabled = true;
   try {
     code = await net.newCode(); await net.host(code);
@@ -2803,7 +2940,9 @@ async function checkResume() {
     if (net.mode === 'mqtt') { $('netB').className = 'badge ok'; $('netB').textContent = '🟢 Sẵn sàng — học sinh vào bằng điện thoại/iPad' }
     else if (net.mode === 'firebase') { $('netB').className = 'badge ok'; $('netB').textContent = '🟢 Đã kết nối máy chủ' }
     else { $('netB').className = 'badge warn'; $('netB').textContent = '🟡 Chế độ thử: tab trên máy này' }
-    selectMode(gMode);
+    renderModesLockState();
+    if (window.LIC && !window.LIC.allowed(gMode)) selectMode('climb');
+    else selectMode(gMode);
     checkResume();
     renderBank(true); // Tự động đồng bộ kho đề từ máy chủ ngay khi mở trang
   } catch (e) { $('netB').className = 'badge warn'; $('netB').textContent = '❌ ' + e.message }
