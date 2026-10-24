@@ -183,8 +183,12 @@ function rowsToQs(rows) {
 /* dán từ Word:  1. Câu hỏi … / A. … / *B. … (dấu * = đáp án đúng) / Đáp án: B / Giải thích: … (Nếu không có A,B,C,D mà có Đáp án: ... -> câu tự luận/điền từ) */
 function parseText(t) {
   const out = [], errs = []; let cur = null;
+  let activePassage = '';
+  let inPassage = false;
+
   const flush = () => {
     if (!cur) return;
+    const passageVal = cur.passage || activePassage || '';
     if (cur.type === 'speaking' || cur.isSpeaking) {
       out.push({
         type: 'speaking',
@@ -196,7 +200,7 @@ function parseText(t) {
         ansText: clean(cur.targetText || cur.key || cur.q || ''),
         e: nl(cur.e),
         s: 'Speaking / Pronunciation',
-        passage: cur.passage || '',
+        passage: passageVal,
         audio: cur.audio || '',
         img: cur.img || ''
       });
@@ -204,13 +208,13 @@ function parseText(t) {
       return;
     }
     if (cur.q && cur.o.length === 0 && cur.key) {
-      out.push({ type: 'text', q: nl(cur.q), ansText: clean(cur.key), o: [], a: 0, e: nl(cur.e), s: 'Tự luận / Điền từ' });
+      out.push({ type: 'text', q: nl(cur.q), ansText: clean(cur.key), o: [], a: 0, e: nl(cur.e), s: 'Tự luận / Điền từ', passage: passageVal });
       cur = null;
       return;
     }
     if (cur.a < 0 && cur.key) cur.a = ansIndex(cur.key, cur.o);
     if (!cur.q || cur.o.length < 2 || cur.a < 0) errs.push('Câu ' + (out.length + errs.length + 1) + ' (“' + cur.q.slice(0, 40) + '…”): ' + (cur.o.length < 2 ? 'chưa đủ phương án (hoặc thêm dòng "Đáp án: ..." cho câu điền từ/tự luận)' : 'chưa đánh dấu đáp án đúng (* hoặc dòng "Đáp án: B")'));
-    else out.push({ type: 'mc', q: nl(cur.q), o: cur.o.map(nl), a: cur.a, e: nl(cur.e), s: '' });
+    else out.push({ type: 'mc', q: nl(cur.q), o: cur.o.map(nl), a: cur.a, e: nl(cur.e), s: '', passage: passageVal });
     cur = null;
   };
   const OPT = /^\s*(\*?)\s*\(?([A-Da-d])[.)]\s*(.*?)\s*(\*?)\s*$/;
@@ -220,6 +224,24 @@ function parseText(t) {
     if (/^\*?\s*\(?A[.)]/i.test(line) && /\s\*?\(?[B-D][.)]\s/i.test(line)) parts = line.split(/\s+(?=\*?\(?[B-Db-d][.)]\s)/);
     parts.forEach(p => {
       let m;
+      // Nhận diện đoạn văn đọc hiểu: [Đoạn văn] / [Passage] / Đoạn văn: / Passage: / [Bài đọc]
+      if ((m = p.match(/^\[?(?:đoạn\s*văn|doan\s*van|reading\s*passage|passage|bài\s*đọc|bai\s*doc)\]?\s*[:：]?\s*(.*)$/i))) {
+        flush();
+        inPassage = true;
+        activePassage = m[1].trim();
+        return;
+      }
+
+      // Nhận diện bắt đầu câu hỏi mới (kết thúc vùng thu thập đoạn văn nếu có)
+      const isQuestionStart = /^(?:(?:câu|question)?\s*(?:\d+\s*[.:)]\s*)+)|^(?:spk|speaking|phát âm|phat am|nói|speak)\s*[:：]/i.test(p);
+      if (inPassage && isQuestionStart) {
+        inPassage = false;
+      }
+      if (inPassage) {
+        activePassage = (activePassage ? activePassage + '\n' : '') + p;
+        return;
+      }
+
       // Nhận diện mẫu dán: 1. SPK: từ / SPK: từ / 1. Speaking: từ / 1. Phát âm: từ
       if ((m = p.match(/^(?:(?:câu|question)?\s*(?:\d+\s*[.:)]\s*)+)?(?:spk|speaking|phát âm|phat am|nói|speak)\s*[:：]\s*(.+)$/i))) {
         flush();
@@ -232,7 +254,8 @@ function parseText(t) {
           e: '',
           key: target,
           o: [],
-          a: 0
+          a: 0,
+          passage: activePassage
         };
         return;
       }
@@ -259,7 +282,7 @@ function parseText(t) {
       if (cur && cur.inE && /^(câu|question)?\s*\d+\s*[.:)]\s*\S/i.test(p)) flush();
       if (cur && cur.inE) { cur.e += '\n' + p; return }
       if (cur && cur.o.length) flush();
-      if (!cur) cur = { q: p.replace(/^(câu|question)?\s*\d+\s*[.:)]\s*/i, ''), o: [], a: -1, e: '', key: '' };
+      if (!cur) cur = { q: p.replace(/^(câu|question)?\s*(?:\d+\s*[.:)]\s*)+/i, ''), o: [], a: -1, e: '', key: '', passage: activePassage };
       else cur.q += '\n' + p;
     });
   });
