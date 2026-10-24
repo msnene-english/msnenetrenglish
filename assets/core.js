@@ -753,6 +753,65 @@ async function getCommunityLibrary() {
   return Array.from(map.values());
 }
 
+
+async function deleteCommunityQuiz(id) {
+  if (!id) return false;
+  id = String(id).trim();
+  // 1. Local deletion
+  const list = getLocalCommunity().filter(q => q.id !== id);
+  saveLocalCommunity(list);
+  if (typeof window !== 'undefined' && window.communityQuizzesCache) {
+    window.communityQuizzesCache = window.communityQuizzesCache.filter(q => q.id !== id);
+  }
+  // 2. Cloud server deletion
+  const cfg = window.GAME_CONFIG || {};
+  if (cfg.firebase && cfg.firebase.databaseURL) {
+    try {
+      const url = cfg.firebase.databaseURL.replace(/\/$/, '') + '/community_quizzes/' + encodeURIComponent(id) + '.json';
+      await fetch(url, { method: 'DELETE' });
+    } catch (e) {
+      console.warn('Delete quiz from server warn:', e);
+    }
+  }
+  return true;
+}
+
+async function deleteHwSubmission(hwId, subId) {
+  if (!hwId) return false;
+  hwId = String(hwId).trim();
+  // 1. Local deletion
+  const allSubs = getLocalHwSubs();
+  if (allSubs[hwId]) {
+    if (subId) {
+      delete allSubs[hwId][subId];
+    } else {
+      delete allSubs[hwId];
+    }
+    saveLocalHwSubs(allSubs);
+  }
+  if (!subId) {
+    const metas = getLocalHwMetas();
+    delete metas[hwId];
+    saveLocalHwMetas(metas);
+  }
+  // 2. Cloud server deletion
+  const cfg = window.GAME_CONFIG || {};
+  if (cfg.firebase && cfg.firebase.databaseURL) {
+    const base = cfg.firebase.databaseURL.replace(/\/$/, '');
+    try {
+      if (subId) {
+        await fetch(base + '/hw_subs/' + encodeURIComponent(hwId) + '/' + encodeURIComponent(subId) + '.json', { method: 'DELETE' });
+      } else {
+        await fetch(base + '/hw_subs/' + encodeURIComponent(hwId) + '.json', { method: 'DELETE' });
+        await fetch(base + '/hw_meta/' + encodeURIComponent(hwId) + '.json', { method: 'DELETE' });
+      }
+    } catch (e) {
+      console.warn('Delete submission from server warn:', e);
+    }
+  }
+  return true;
+}
+
 async function getQuizById(id) {
   if (!id) return null;
   id = String(id).trim().toUpperCase();
@@ -1449,5 +1508,5 @@ Trả về STRICT JSON:
   };
 }
 
-return { $, shuffle, pick, clamp, esc, fmt, stamp, clean, rng, COLORS, BADGE, safe, normAns, checkTextAns, fromOld, prep, parseCSV, rowsToQs, parseText, parsePaste, sheetSets, sheetSet, sampleSet, packHw, unpackHw, tone, sfx, confetti, toast, rank, makeNet, music, saveCommunityQuiz, getCommunityLibrary, getQuizById, saveHwMeta, submitHwResult, getHwGradebook, showReportCard, getAiKey, diffPronunciation, speakText, evaluatePronunciationAI, enrichSpeakingQuestionsAI, generateSingleSpeakingAI };
+return { $, shuffle, pick, clamp, esc, fmt, stamp, clean, rng, COLORS, BADGE, safe, normAns, checkTextAns, fromOld, prep, parseCSV, rowsToQs, parseText, parsePaste, sheetSets, sheetSet, sampleSet, packHw, unpackHw, tone, sfx, confetti, toast, rank, makeNet, music, saveCommunityQuiz, getCommunityLibrary, getQuizById, saveHwMeta, submitHwResult, getHwGradebook, showReportCard, getAiKey, diffPronunciation, speakText, evaluatePronunciationAI, enrichSpeakingQuestionsAI, generateSingleSpeakingAI, deleteCommunityQuiz, deleteHwSubmission };
 })();

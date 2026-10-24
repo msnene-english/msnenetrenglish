@@ -199,12 +199,12 @@ th{color:#7a6aa8;font-size:13px}
         </div>
         <div id="pastedImgGallery" style="display:flex;gap:8px;overflow-x:auto;padding-bottom:4px"></div>
         <div style="font-size:12px;color:#0369a1;margin-top:6px">
-         💡 Cô có thể chụp nhiều trang/phần của đề thi (Win + Shift + S) rồi <b>Ctrl + V</b> từng ảnh vào đây. AI sẽ tự động đọc gộp tất cả ảnh lại thành một bài thi hoàn chỉnh!
+         💡 Cô có thể chụp nhiều trang/phần của đề thi (Win + Shift + S) rồi <b>Ctrl + V</b> từng ảnh vào đây. Hệ thống sẽ tự động đọc gộp tất cả ảnh lại thành một bài thi hoàn chỉnh!
         </div>
        </div>
 
        <div class="hint" id="linkFetchStatus" style="margin-top:8px;color:#0369a1;font-size:13px">
-        💡 <b>Mẹo:</b> Cô có thể chụp màn hình (Win + Shift + S) rồi nhấn <b>Ctrl + V</b> ngay vào đây để AI đọc đề!
+        💡 <b>Mẹo:</b> Cô có thể chụp màn hình (Win + Shift + S) rồi nhấn <b>Ctrl + V</b> ngay vào đây để tự động đọc đề!
        </div>
       </div>
 
@@ -218,7 +218,7 @@ C. going
 D. gone
 Giải thích: Chủ ngữ số ít đi với goes
 
-Cách 3 — Dán câu luyện phát âm (AI tự điền IPA & mẹo):
+Cách 3 — Dán câu luyện phát âm (tự động điền IPA & mẹo):
 1. SPK: environmental protection
 2. SPK: photography
 3. SPK: Practice makes perfect."></textarea>
@@ -266,8 +266,8 @@ Cách 3 — Dán câu luyện phát âm (AI tự điền IPA & mẹo):
      <button class="btn b" type="button" id="bToggleVisualEditor" style="padding:7px 12px;font-size:13px;flex:1">✏️ Sửa chi tiết từng câu (0)</button>
      <button class="btn w" type="button" id="bAddMcQ" style="padding:7px 10px;font-size:12px" title="Thêm 1 câu hỏi trắc nghiệm A/B/C/D">➕ Câu Trắc nghiệm</button>
      <button class="btn w" type="button" id="bAddTextQ" style="padding:7px 10px;font-size:12px" title="Thêm 1 câu hỏi tự luận ngắn / điền từ / viết lại câu">✍️ Câu Tự luận / Điền từ</button>
-     <button class="btn w" type="button" id="bAddSpeakingQ" style="padding:7px 10px;font-size:12px;background:#fdf2f8;border-color:#f472b6;color:#9d174d" title="Thêm 1 câu hỏi phát âm tiếng Anh (AI chấm điểm)">🗣 Câu Phát âm (Speaking AI)</button>
-     <button class="btn b" type="button" id="bOpenQuickSpkModal" style="padding:7px 12px;font-size:12px;background:linear-gradient(135deg,#7c3aed,#db2777);color:#fff;border:none;box-shadow:0 2px 8px rgba(124,58,237,0.3)" title="Soạn danh sách từ/câu cần phát âm, AI sẽ tự động điền phiên âm IPA và mẹo">⚡ Tạo nhanh bài Phát âm với AI</button>
+     <button class="btn w" type="button" id="bAddSpeakingQ" style="padding:7px 10px;font-size:12px;background:#fdf2f8;border-color:#f472b6;color:#9d174d" title="Thêm 1 câu hỏi phát âm tiếng Anh (chấm điểm ngữ âm tự động)">🗣 Câu Phát âm (Speaking)</button>
+     <button class="btn b" type="button" id="bOpenQuickSpkModal" style="padding:7px 12px;font-size:12px;background:linear-gradient(135deg,#7c3aed,#db2777);color:#fff;border:none;box-shadow:0 2px 8px rgba(124,58,237,0.3)" title="Soạn danh sách từ/câu cần phát âm, hệ thống sẽ tự động điền phiên âm IPA và mẹo">⚡ Tạo nhanh bài Phát âm tự động</button>
     </div>
     <div id="qVisualEditor" hidden style="max-height:520px;overflow:auto;margin-top:8px;padding:8px;background:#f5f0ff;border:2px solid #d8ccff;border-radius:14px"></div>
 
@@ -492,13 +492,13 @@ Cách 3 — Dán câu luyện phát âm (AI tự điền IPA & mẹo):
  <div class="card" style="max-width:680px;width:96%;border-top:6px solid #8b5cf6">
   <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
    <div style="font-size:20px;font-weight:900;color:#581c87;display:flex;align-items:center;gap:8px">
-    <span>🎙 Soạn bài tập Phát âm siêu tốc với AI</span>
+    <span>🎙 Soạn bài tập Phát âm siêu tốc tự động</span>
    </div>
    <button type="button" class="btn w" style="padding:4px 10px;font-size:14px" onclick="$('ovQuickSpk').classList.remove('on')">✕ Đóng</button>
   </div>
   
   <div style="font-size:14px;color:#475569;margin-bottom:10px;line-height:1.5">
-   Cô chỉ cần nhập hoặc dán danh sách <b>từ hoặc câu tiếng Anh</b> cần học sinh luyện đọc (mỗi từ/câu trên 1 dòng, hoặc dán theo định dạng <code>1. SPK: từ</code>). <b>AI sẽ tự động tra phiên âm IPA chuẩn và viết mẹo phát âm</b>! Cô vẫn có thể chỉnh sửa lại sau khi tạo xong.
+   Cô chỉ cần nhập hoặc dán danh sách <b>từ hoặc câu tiếng Anh</b> cần học sinh luyện đọc (mỗi từ/câu trên 1 dòng, hoặc dán theo định dạng <code>1. SPK: từ</code>). <b>Hệ thống sẽ tự động tra phiên âm IPA chuẩn và viết mẹo phát âm</b>! Cô vẫn có thể chỉnh sửa lại sau khi tạo xong.
   </div>
 
   <textarea id="quickSpkInput" rows="8" style="width:100%;padding:12px;font:700 15px/1.6 'Nunito',sans-serif;border:2px solid #c084fc;border-radius:12px;background:#faf5ff;color:#1e1b4b" placeholder="Ví dụ nhập danh sách từ/câu:
@@ -523,7 +523,7 @@ Hoặc dán theo mẫu:
   <div style="display:flex;gap:10px;justify-content:flex-end">
    <button type="button" class="btn w" onclick="$('ovQuickSpk').classList.remove('on')">Hủy</button>
    <button type="button" class="btn b" id="bDoQuickSpkGen" style="padding:10px 20px;font-size:15px;font-weight:800;background:linear-gradient(135deg,#7c3aed,#db2777);border:none;box-shadow:0 4px 12px rgba(124,58,237,0.35)">
-    ✨ AI Tạo đề &amp; Điền IPA tự động
+    ✨ Tạo đề &amp; Điền IPA tự động
    </button>
   </div>
  </div>
@@ -547,15 +547,24 @@ Hoặc dán theo mẫu:
 <!-- MODAL SỔ ĐIỂM BÀI TẬP VỀ NHÀ (HOMEWORK GRADEBOOK) -->
 <div class="ov" id="ovGradebook"><div class="card" style="max-width:920px;width:96%">
  <div class="big" style="font-size:24px">📊 Sổ Điểm Bài Tập Về Nhà &amp; Đề Tự Luyện</div>
- <div class="sub">Theo dõi tự động học sinh làm bài qua link Bài tập về nhà / Mã đề Thư viện (đồng bộ thời gian thực trên Firebase)</div>
+ <div class="sub">Theo dõi tự động học sinh làm bài qua link Bài tập về nhà / Mã đề Thư viện (đồng bộ thời gian thực trên máy chủ)</div>
 
  <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin:12px 0">
   <select id="gbSelect" class="sel" style="flex:1;min-width:220px"></select>
-  <button class="btn b" type="button" id="bGbRefresh" style="padding:9px 14px;font-size:13px">🔄 Làm mới</button>
-  <button class="btn g" type="button" id="bGbCsv" style="padding:9px 14px;font-size:13px">⬇️ Xuất Excel sổ điểm</button>
+  <button class="btn b" type="button" id="bGbRefresh" style="padding:9px 12px;font-size:13px">🔄 Làm mới</button>
+  <button class="btn b" type="button" id="bGbAnalytics" style="padding:9px 12px;font-size:13px;background:#ede9fe;color:#6d28d9;border:1.5px solid #c4b5fd">📊 Phân tích câu sai</button>
+  <button class="btn g" type="button" id="bGbCsv" style="padding:9px 12px;font-size:13px">⬇️ Xuất Excel</button>
+  <button class="btn r" type="button" id="bGbDeleteHw" style="padding:9px 12px;font-size:13px;background:#fef2f2;color:#dc2626;border:1.5px solid #fecaca" title="Xóa toàn bộ bài tập đang chọn (Cần mã Admin 0000)">🗑️ Xóa bài này</button>
  </div>
 
  <div id="gbSummary" style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:10px"></div>
+ <div id="gbAnalyticsBox" hidden style="background:#faf5ff;border:2px solid #ddd6fe;border-radius:14px;padding:16px;margin-bottom:12px">
+   <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
+     <b style="color:#5b21b6;font-size:16px">📊 Báo cáo Điểm &amp; Phân tích Câu sai (Item Analytics)</b>
+     <button type="button" class="btn w" style="padding:3px 8px;font-size:12px" onclick="$('gbAnalyticsBox').hidden = true">✕ Đóng</button>
+   </div>
+   <div id="gbAnalyticsContent"></div>
+ </div>
 
  <div tabindex="0" role="region" aria-label="Bảng điểm bài tập về nhà" class="tw gb-table-wrap">
   <table id="gbTable">
@@ -569,7 +578,7 @@ Hoặc dán theo mẫu:
      <th>Số câu đúng</th>
      <th>Thời gian</th>
      <th>Nộp lúc</th>
-     <th>Phiếu điểm</th>
+     <th>Thao tác</th>
     </tr>
    </thead>
    <tbody id="gbTbody">
@@ -679,11 +688,11 @@ function setQs(list, title, errs) {
   // Tự động kiểm tra câu hỏi speaking chưa có IPA hoặc mẹo phát âm để AI hoàn thiện giúp giáo viên
   const unenriched = qs.filter(q => q.type === 'speaking' && (!q.ipa || !q.e));
   if (unenriched.length > 0) {
-    toast(`🤖 AI đang tự động tạo phiên âm IPA và mẹo phát âm cho ${unenriched.length} câu...`, 3000);
+    toast(`✨ Đang tự động tạo phiên âm IPA và mẹo phát âm cho ${unenriched.length} câu...`, 3000);
     GC.enrichSpeakingQuestionsAI(qs).then(() => {
       refreshQsPreviewOnly();
       if ($('qVisualEditor') && !$('qVisualEditor').hidden) renderVisualEditor();
-      toast(`✨ AI đã điền xong phiên âm IPA và mẹo phát âm cho ${unenriched.length} câu! Cô có thể bấm nghe thử hoặc chỉnh sửa trực tiếp.`, 3500);
+      toast(`✨ Đã điền xong phiên âm IPA và mẹo phát âm cho ${unenriched.length} câu! Cô có thể bấm nghe thử hoặc chỉnh sửa trực tiếp.`, 3500);
     }).catch(() => {});
   }
 }
@@ -709,7 +718,7 @@ function renderVisualEditor() {
             <div style="flex:1;min-width:180px">
               <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:2px">
                 <span style="font-size:11px;font-weight:700;color:#6b7280">Phiên âm IPA:</span>
-                <button type="button" class="btn w" style="padding:2px 8px;font-size:10px;color:#7c3aed;background:#fdf4ff;border-color:#d8b4fe;font-weight:800" onclick="veAiGenSingleSpeaking(${idx})">✨ AI tạo IPA &amp; Mẹo</button>
+                <button type="button" class="btn w" style="padding:2px 8px;font-size:10px;color:#7c3aed;background:#fdf4ff;border-color:#d8b4fe;font-weight:800" onclick="veAiGenSingleSpeaking(${idx})">✨ Tự động tạo IPA &amp; Mẹo</button>
               </div>
               <input class="ve-inp" style="width:100%;font-size:12px" value="${esc(q.ipa || '')}" placeholder="VD: /ˌkɒnvəˈseɪʃn/" oninput="veUpdateField(${idx}, 'ipa', this.value)">
             </div>
@@ -718,7 +727,7 @@ function renderVisualEditor() {
             </div>
           </div>
           <div style="margin-top:8px">
-            <div style="font-size:11px;font-weight:700;color:#6b7280;margin-bottom:2px">💡 Mẹo phát âm &amp; Quy tắc trọng âm (AI tạo, cô có thể sửa):</div>
+            <div style="font-size:11px;font-weight:700;color:#6b7280;margin-bottom:2px">💡 Mẹo phát âm &amp; Quy tắc trọng âm (tự động tạo, cô có thể sửa):</div>
             <textarea class="ve-inp" rows="2" style="width:100%;font-size:12px;line-height:1.5" placeholder="VD: Trọng âm rơi vào âm tiết thứ hai..." oninput="veUpdateField(${idx}, 'e', this.value)">${esc(q.e || '')}</textarea>
           </div>
         </div>
@@ -746,7 +755,7 @@ function renderVisualEditor() {
             <select class="ve-inp" style="width:auto;padding:4px 8px;font-size:12px" onchange="veChangeType(${idx}, this.value)">
               <option value="mc" ${!isText && !isSpeaking ? 'selected' : ''}>🎯 Trắc nghiệm (A/B/C/D)</option>
               <option value="text" ${isText ? 'selected' : ''}>✍️ Tự luận / Điền từ / Viết lại câu</option>
-              <option value="speaking" ${isSpeaking ? 'selected' : ''}>🗣 Phát âm / Nói (Speaking AI)</option>
+              <option value="speaking" ${isSpeaking ? 'selected' : ''}>🗣 Phát âm / Nói (Speaking)</option>
             </select>
             <input class="ve-inp" style="width:135px;padding:4px 8px;font-size:12px" value="${esc(q.s || '')}" placeholder="Dạng bài (VD: Reading)" oninput="veUpdateField(${idx}, 's', this.value)">
           </div>
@@ -890,7 +899,7 @@ window.veAiGenSingleSpeaking = async function(idx) {
   const target = (q.targetText || q.ansText || q.q || '').trim();
   if (!target) return toast('⚠️ Cô hãy nhập từ/câu cần phát âm trước nhé!', 2000);
 
-  toast(`🤖 AI đang tạo phiên âm IPA & mẹo cho "${target}"...`, 2500);
+  toast(`⏳ Đang tạo phiên âm IPA & mẹo cho "${target}"...`, 2500);
   const genRes = await GC.generateSingleSpeakingAI(target);
   if (genRes.ipa) q.ipa = genRes.ipa;
   if (genRes.tips) q.e = genRes.tips;
@@ -937,10 +946,10 @@ if ($('bDoQuickSpkGen')) {
 
     const btn = $('bDoQuickSpkGen');
     btn.disabled = true;
-    btn.innerHTML = '⏳ <b>AI đang tạo phiên âm &amp; mẹo...</b>';
+    btn.innerHTML = '⏳ <b>Đang tạo phiên âm &amp; mẹo...</b>';
 
     $('ovQuickSpk').classList.remove('on');
-    toast(`🤖 AI đang xử lý ${items.length} từ/câu phát âm...`, 3000);
+    toast(`⏳ Đang tự động xử lý ${items.length} từ/câu phát âm...`, 3000);
 
     const enriched = await GC.enrichSpeakingQuestionsAI(items);
 
@@ -952,7 +961,7 @@ if ($('bDoQuickSpkGen')) {
     }
 
     btn.disabled = false;
-    btn.innerHTML = '✨ AI Tạo đề &amp; Điền IPA tự động';
+    btn.innerHTML = '✨ Tạo đề &amp; Điền IPA tự động';
 
     $('qVisualEditor').hidden = false;
     refreshQsPreviewOnly();
@@ -981,7 +990,7 @@ if ($('bAddSpeakingQ')) {
     refreshQsPreviewOnly();
     renderVisualEditor();
     $('qVisualEditor').scrollTop = $('qVisualEditor').scrollHeight;
-    toast('🗣 Đã thêm 1 câu hỏi phát âm Speaking AI!', 1800);
+    toast('🗣 Đã thêm 1 câu hỏi phát âm Speaking!', 1800);
   };
 }
 
@@ -1062,7 +1071,7 @@ if ($('testDurInp')) {
 async function renderBank(forceCloud) {
   if (forceCloud || !window.communityQuizzesCache) {
     if ($('commBankList')) {
-      $('commBankList').innerHTML = '<div class="hint" style="text-align:center;padding:16px">⏳ Đang đồng bộ Thư viện đề thi từ máy chủ Firebase…</div>';
+      $('commBankList').innerHTML = '<div class="hint" style="text-align:center;padding:16px">⏳ Đang đồng bộ Thư viện đề thi từ máy chủ…</div>';
     }
     isFetchingBank = true;
     try {
@@ -1104,6 +1113,7 @@ async function renderBank(forceCloud) {
         <div class="bacts">
           <button class="btn g" style="padding:5px 9px;font-size:12px" title="Dùng đề này mở phòng" onclick="loadQuizData('${item.id}')">${isTest ? '📝 Mở phòng thi' : '🎯 Mở phòng'}</button>
           <button class="btn w" style="padding:5px 9px;font-size:12px" title="Giao bài" onclick="assignHwFor('${item.id}')">${isTest ? '📋 Giao bài test' : '📚 Giao bài'}</button>
+          <button class="btn r" style="padding:5px 8px;font-size:12px;background:#fef2f2;color:#dc2626;border:1px solid #fecaca" title="Xóa đề này khỏi thư viện (Cần mã Admin 0000)" onclick="adminDeleteQuiz('${esc(item.id)}')">🗑️</button>
         </div>
       </div>
       `;
@@ -1145,7 +1155,7 @@ async function renderBank(forceCloud) {
 }
 
 // Bắt sự kiện bộ lọc đề
-if ($('bRefreshBank')) $('bRefreshBank').onclick = () => { toast('🔄 Đang đồng bộ lại thư viện từ Firebase…', 1500); renderBank(true); };
+if ($('bRefreshBank')) $('bRefreshBank').onclick = () => { toast('🔄 Đang đồng bộ lại thư viện từ máy chủ…', 1500); renderBank(true); };
 if ($('bFiltAll')) $('bFiltAll').onclick = () => { bankFilter = 'all'; updateFilterButtons(); renderBank(); };
 if ($('bFiltGame')) $('bFiltGame').onclick = () => { bankFilter = 'game'; updateFilterButtons(); renderBank(); };
 if ($('bFiltTest')) $('bFiltTest').onclick = () => { bankFilter = 'test'; updateFilterButtons(); renderBank(); };
@@ -1589,14 +1599,14 @@ function showEnd() {
     });
   };
   if (isTest) {
-    $('eTable').innerHTML = '<tr><th>Hạng</th><th>Họ tên</th><th>Trạng thái</th><th>Điểm số</th><th>Số câu đúng</th><th>Đã làm</th><th>Phiếu điểm</th></tr>' +
+    $('eTable').innerHTML = '<tr><th>Hạng</th><th>Họ tên</th><th>Trạng thái</th><th>Điểm số</th><th>Số câu đúng</th><th>Đã làm</th><th>Thao tác</th></tr>' +
       R.map(([idKey, p], i) => {
         const tot = p.tot || totQ;
         const sc = p.score ?? Math.round((p.ok || 0) / tot * 100);
         return '<tr><td>' + (i + 1) + '</td><td>' + esc(p.n) + '</td><td>' + (p.st === 'submitted' ? '✅ Đã nộp bài' : '⏳ Chưa nộp') + '</td><td><b>' + sc + ' / 100</b></td><td>' + (p.ok || 0) + ' / ' + tot + '</td><td>' + (p.ans || 0) + ' / ' + tot + '</td><td><button class="btn b" style="padding:4px 10px;font-size:12px" onclick="exportPlayerReport(\'' + esc(idKey) + '\')">🏅 Phiếu điểm</button></td></tr>';
       }).join('');
   } else {
-    $('eTable').innerHTML = '<tr><th>Hạng</th><th>Họ tên</th><th>Tiến độ</th><th>Đúng</th><th>% đúng</th><th>🔥 Chuỗi</th><th>🍄 Giẫm</th><th>😱 Rơi</th><th>Phiếu điểm</th></tr>' +
+    $('eTable').innerHTML = '<tr><th>Hạng</th><th>Họ tên</th><th>Tiến độ</th><th>Đúng</th><th>% đúng</th><th>🔥 Chuỗi</th><th>🍄 Giẫm</th><th>😱 Rơi</th><th>Thao tác</th></tr>' +
       R.map(([idKey, p], i) => '<tr><td>' + (i + 1) + '</td><td>' + esc(p.n) + '</td><td>' + (p.tt ? '👸 Phá đảo' : p.lb ? esc(p.lb) + (p.cn != null ? ' · 🪙 ' + p.cn : '') : (p.alt || 0) + ' m') + '</td><td>' + (p.ok || 0) + '/' + (p.ans || 0) + '</td><td>' + (p.ans ? Math.round(p.ok / p.ans * 100) : 0) + '%</td><td>' + (p.bs || 0) + '</td><td>' + (p.sp || 0) + '</td><td>' + (p.fl || 0) + '</td><td><button class="btn b" style="padding:4px 10px;font-size:12px" onclick="exportPlayerReport(\'' + esc(idKey) + '\')">🏅 Phiếu điểm</button></td></tr>').join('');
   }
 
@@ -1670,7 +1680,7 @@ window.showExplanation = function(qNum) {
   if (isSpeaking) {
     optionsHtml = `
       <div style="background:#fdf2f8;border:2px solid #f472b6;border-radius:12px;padding:12px;margin:12px 0">
-        <div style="font-weight:800;color:#9d174d;margin-bottom:4px">🗣 Dạng câu phát âm tiếng Anh (Speaking AI):</div>
+        <div style="font-weight:800;color:#9d174d;margin-bottom:4px">🗣 Dạng câu phát âm tiếng Anh (Speaking):</div>
         <div style="font-size:16px;color:#831843;font-weight:900">Câu chuẩn: “${GC.safe(target)}”</div>
         ${q.ipa ? `<div style="font-size:13px;color:#be185d;font-family:monospace;margin-top:4px">Phiên âm IPA: ${GC.safe(q.ipa)}</div>` : ''}
         <button type="button" class="btn w" style="margin-top:8px;padding:4px 10px;font-size:12px" onclick="GC.speakText('${safeTarget}')">🔊 Nghe thử giọng đọc mẫu</button>
@@ -1739,7 +1749,7 @@ $('bClose').onclick = async () => { await net.remove('rooms/' + code); showEnd.d
 
 
 /* ═════ TỰ ĐỘNG CÀO ĐỀ TỪ LINK BÀI TẬP GITHUB.IO & GEMINI AI ═════ */
-// Key Gemini mặc định của cô (Mã hóa an toàn) & Tự động đồng bộ từ Firebase
+// Key Gemini mặc định của cô (Mã hóa an toàn) & Tự động đồng bộ từ máy chủ
 const DEFAULT_AI_KEY = atob('QVEuQWI4Uk42SXY0Mm9BVTFySEFWNEItTVlMb0U2eThEaHFvd2pybFZ3QXVkbUEyQkxYOWc=');
 let systemAiKey = DEFAULT_AI_KEY;
 
@@ -2070,7 +2080,7 @@ function renderPastedImages() {
       box.hidden = true;
       box.style.display = 'none';
     }
-    if ($('linkFetchStatus')) $('linkFetchStatus').innerHTML = '💡 <b>Mẹo:</b> Cô có thể chụp màn hình (Win + Shift + S) rồi nhấn <b>Ctrl + V</b> ngay vào đây để AI đọc đề!';
+    if ($('linkFetchStatus')) $('linkFetchStatus').innerHTML = '💡 <b>Mẹo:</b> Cô có thể chụp màn hình (Win + Shift + S) rồi nhấn <b>Ctrl + V</b> ngay vào đây để tự động đọc đề!';
     return;
   }
   if (box) {
@@ -2374,7 +2384,7 @@ let gbCurrentRows = [];
 
 async function openHwGradebook(preferHwId) {
   $('ovGradebook').classList.add('on');
-  $('gbTbody').innerHTML = '<tr><td colspan="9" style="text-align:center;padding:20px;color:#64748b">⏳ Đang đồng bộ sổ điểm từ Firebase…</td></tr>';
+  $('gbTbody').innerHTML = '<tr><td colspan="9" style="text-align:center;padding:20px;color:#64748b">⏳ Đang đồng bộ sổ điểm từ máy chủ…</td></tr>';
   gbDataCache = await GC.getHwGradebook();
 
   const sel = $('gbSelect');
@@ -2426,7 +2436,10 @@ function renderGradebookTable() {
       <td>${r.ok ?? 0} / ${r.tot ?? 0}</td>
       <td>${esc(r.durText || '—')}</td>
       <td style="font-size:12px;color:#64748b">${esc(r.date || '')}</td>
-      <td><button type="button" class="btn b" style="padding:4px 9px;font-size:12px" onclick="openGbReportCard(${i})">🏅 Phiếu điểm</button></td>
+      <td style="white-space:nowrap">
+         <button type="button" class="btn b" style="padding:4px 8px;font-size:12px" onclick="openGbReportCard(${i})">🏅 Phiếu</button>
+         <button type="button" class="btn r" style="padding:4px 7px;font-size:12px;background:#fef2f2;color:#dc2626;border:1px solid #fecaca;margin-left:4px" title="Xóa bản ghi này (Cần mã Admin 0000)" onclick="adminDeleteSubmission(${i})">🗑️</button>
+       </td>
     </tr>
   `).join('');
 }
@@ -2449,6 +2462,143 @@ window.openGbReportCard = function(idx) {
 if ($('bOpenGradebook')) $('bOpenGradebook').onclick = () => openHwGradebook();
 if ($('gbSelect')) $('gbSelect').onchange = () => renderGradebookTable();
 if ($('bGbRefresh')) $('bGbRefresh').onclick = () => openHwGradebook($('gbSelect').value);
+
+/* ═════ QUẢN TRỊ ADMIN (MÃ KEY 0000) XÓA BỘ ĐỀ & BẢN GHI ĐIỂM ═════ */
+window.adminDeleteQuiz = async function(id) {
+  if (!id) return;
+  const key = prompt('🔐 Nhập mã quản trị (Admin Key) để xóa bộ đề [' + id + ']:');
+  if (key === null) return;
+  if (key.trim() !== '0000') {
+    toast('❌ Sai mã quản trị (Admin Key)!', 2500);
+    return;
+  }
+  if (!confirm('Cô có chắc chắn muốn xóa vĩnh viễn bộ đề [' + id + '] khỏi thư viện không?')) return;
+  toast('⏳ Đang xóa bộ đề khỏi hệ thống...', 1800);
+  await GC.deleteCommunityQuiz(id);
+  toast('🗑️ Đã xóa bộ đề [' + id + '] thành công!', 2200);
+  renderBank(true);
+};
+
+window.adminDeleteSubmission = async function(idx) {
+  const r = gbCurrentRows[idx];
+  if (!r) return;
+  const key = prompt('🔐 Nhập mã quản trị (Admin Key) để xóa bản ghi điểm của học sinh: ' + r.n + ':');
+  if (key === null) return;
+  if (key.trim() !== '0000') {
+    toast('❌ Sai mã quản trị (Admin Key)!', 2500);
+    return;
+  }
+  if (!confirm('Cô có chắc chắn muốn xóa bản ghi điểm của ' + r.n + ' không?')) return;
+  toast('⏳ Đang xóa bản ghi điểm...', 1800);
+  await GC.deleteHwSubmission(r.hwId, r.id);
+  toast('🗑️ Đã xóa bản ghi điểm của ' + r.n + ' thành công!', 2200);
+  openHwGradebook($('gbSelect').value);
+};
+
+if ($('bGbDeleteHw')) {
+  $('bGbDeleteHw').onclick = async () => {
+    const hid = $('gbSelect').value;
+    if (!hid || hid === 'ALL') {
+      return toast('⚠️ Cô hãy chọn 1 bài tập cụ thể trong danh sách thả xuống trước khi xóa nhé!', 2800);
+    }
+    const key = prompt('🔐 Nhập mã quản trị (Admin Key) để xóa toàn bộ bài tập [' + hid + '] và tất cả điểm số:');
+    if (key === null) return;
+    if (key.trim() !== '0000') {
+      toast('❌ Sai mã quản trị (Admin Key)!', 2500);
+      return;
+    }
+    if (!confirm('⚠️ CẢNH BÁO: Thao tác này sẽ xóa vĩnh viễn bài tập [' + hid + '] và TOÀN BỘ điểm nộp của học sinh. Cô có chắc chắn muốn xóa không?')) return;
+    toast('⏳ Đang xóa toàn bộ bài tập và dữ liệu nộp bài...', 2500);
+    await GC.deleteHwSubmission(hid);
+    toast('🗑️ Đã xóa bài tập [' + hid + '] thành công!', 2500);
+    openHwGradebook('ALL');
+  };
+}
+
+/* ═════ PHÂN TÍCH BÁO CÁO ĐIỂM & THỐNG KÊ CÂU SAI (ITEM ANALYTICS) ═════ */
+if ($('bGbAnalytics')) {
+  $('bGbAnalytics').onclick = () => {
+    if (!gbCurrentRows || !gbCurrentRows.length) {
+      return toast('⚠️ Chưa có dữ liệu nộp bài để phân tích!', 2200);
+    }
+    const box = $('gbAnalyticsBox');
+    const content = $('gbAnalyticsContent');
+    box.hidden = !box.hidden;
+    if (box.hidden) return;
+
+    const rows = gbCurrentRows;
+    const total = rows.length;
+    const avgScore = Math.round(rows.reduce((s, r) => s + (r.score || 0), 0) / total);
+    const maxScore = Math.max(...rows.map(r => r.score || 0));
+    const minScore = Math.min(...rows.map(r => r.score || 0));
+
+    const g80 = rows.filter(r => (r.score || 0) >= 80).length;
+    const g65 = rows.filter(r => (r.score || 0) >= 65 && (r.score || 0) < 80).length;
+    const g50 = rows.filter(r => (r.score || 0) >= 50 && (r.score || 0) < 65).length;
+    const gUnder = rows.filter(r => (r.score || 0) < 50).length;
+
+    // Tính tỷ lệ câu đúng trung bình
+    const avgOk = (rows.reduce((s, r) => s + (r.ok || 0), 0) / total).toFixed(1);
+    const totQ = rows[0]?.tot || 0;
+    const avgWrong = totQ > 0 ? (totQ - avgOk).toFixed(1) : 0;
+
+    content.innerHTML = `
+      <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(180px, 1fr));gap:10px;margin-bottom:14px">
+        <div style="background:#fff;border:1.5px solid #ddd6fe;border-radius:10px;padding:10px;text-align:center">
+          <div style="font-size:12px;color:#6b21a8;font-weight:800">📊 TỔNG SỐ BÀI NỘP</div>
+          <div style="font-size:22px;font-weight:900;color:#1e1b4b">${total} học sinh</div>
+        </div>
+        <div style="background:#fff;border:1.5px solid #bbf7d0;border-radius:10px;padding:10px;text-align:center">
+          <div style="font-size:12px;color:#047857;font-weight:800">🎯 ĐIỂM TRUNG BÌNH</div>
+          <div style="font-size:22px;font-weight:900;color:#065f46">${avgScore} / 100</div>
+          <div style="font-size:11px;color:#64748b">Cao nhất: ${maxScore} · Thấp nhất: ${minScore}</div>
+        </div>
+        <div style="background:#fff;border:1.5px solid #fecaca;border-radius:10px;padding:10px;text-align:center">
+          <div style="font-size:12px;color:#b91c1c;font-weight:800">⚠️ SỐ CÂU SAI TB</div>
+          <div style="font-size:22px;font-weight:900;color:#991b1b">${avgWrong} / ${totQ} câu</div>
+          <div style="font-size:11px;color:#64748b">Đúng TB: ${avgOk} câu</div>
+        </div>
+      </div>
+
+      <div style="background:#fff;border:1.5px solid #e2e8f0;border-radius:10px;padding:12px;margin-bottom:10px">
+        <b style="font-size:13px;color:#1e293b;display:block;margin-bottom:8px">📈 Phân bổ phổ điểm lớp học:</b>
+        <div style="display:flex;align-items:center;gap:6px;font-size:13px;margin-bottom:4px">
+          <span style="width:110px;font-weight:700;color:#047857">🌟 Giỏi (80-100đ):</span>
+          <div style="flex:1;background:#f1f5f9;border-radius:6px;height:14px;overflow:hidden">
+            <div style="width:${Math.round(g80 / total * 100)}%;background:#10b981;height:100%"></div>
+          </div>
+          <span style="font-weight:800;width:55px;text-align:right">${g80} (${Math.round(g80 / total * 100)}%)</span>
+        </div>
+        <div style="display:flex;align-items:center;gap:6px;font-size:13px;margin-bottom:4px">
+          <span style="width:110px;font-weight:700;color:#1d4ed8">👍 Khá (65-79đ):</span>
+          <div style="flex:1;background:#f1f5f9;border-radius:6px;height:14px;overflow:hidden">
+            <div style="width:${Math.round(g65 / total * 100)}%;background:#3b82f6;height:100%"></div>
+          </div>
+          <span style="font-weight:800;width:55px;text-align:right">${g65} (${Math.round(g65 / total * 100)}%)</span>
+        </div>
+        <div style="display:flex;align-items:center;gap:6px;font-size:13px;margin-bottom:4px">
+          <span style="width:110px;font-weight:700;color:#d97706">👌 Đạt (50-64đ):</span>
+          <div style="flex:1;background:#f1f5f9;border-radius:6px;height:14px;overflow:hidden">
+            <div style="width:${Math.round(g50 / total * 100)}%;background:#f59e0b;height:100%"></div>
+          </div>
+          <span style="font-weight:800;width:55px;text-align:right">${g50} (${Math.round(g50 / total * 100)}%)</span>
+        </div>
+        <div style="display:flex;align-items:center;gap:6px;font-size:13px">
+          <span style="width:110px;font-weight:700;color:#dc2626">💪 Cần cố gắng (&lt;50đ):</span>
+          <div style="flex:1;background:#f1f5f9;border-radius:6px;height:14px;overflow:hidden">
+            <div style="width:${Math.round(gUnder / total * 100)}%;background:#ef4444;height:100%"></div>
+          </div>
+          <span style="font-weight:800;width:55px;text-align:right">${gUnder} (${Math.round(gUnder / total * 100)}%)</span>
+        </div>
+      </div>
+
+      <div style="font-size:12px;color:#6b21a8;font-weight:700;text-align:right">
+        💡 Đánh giá sư phạm: ${avgScore >= 80 ? 'Lớp nắm bài rất xuất sắc!' : avgScore >= 65 ? 'Lớp nắm vững kiến thức căn bản, cần rèn thêm các câu nâng cao.' : 'Cần tổ chức 1 buổi chữa kỹ các câu sai trước khi sang bài mới.'}
+      </div>
+    `;
+  };
+}
+
 if ($('bGbCsv')) {
   $('bGbCsv').onclick = () => {
     if (!gbCurrentRows.length) return toast('⚠️ Chưa có dữ liệu để xuất Excel', 2200);
@@ -2479,11 +2629,11 @@ async function checkResume() {
   try {
     net = await GC.makeNet();
     if (net.mode === 'mqtt') { $('netB').className = 'badge ok'; $('netB').textContent = '🟢 Sẵn sàng — học sinh vào bằng điện thoại/iPad' }
-    else if (net.mode === 'firebase') { $('netB').className = 'badge ok'; $('netB').textContent = '🟢 Đã kết nối Firebase' }
+    else if (net.mode === 'firebase') { $('netB').className = 'badge ok'; $('netB').textContent = '🟢 Đã kết nối máy chủ' }
     else { $('netB').className = 'badge warn'; $('netB').textContent = '🟡 Chế độ thử: tab trên máy này' }
     selectMode(gMode);
     checkResume();
-    renderBank(true); // Tự động đồng bộ kho đề Firebase ngay khi mở trang
+    renderBank(true); // Tự động đồng bộ kho đề từ máy chủ ngay khi mở trang
   } catch (e) { $('netB').className = 'badge warn'; $('netB').textContent = '❌ ' + e.message }
 })();
 </script>

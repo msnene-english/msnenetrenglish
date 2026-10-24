@@ -71,7 +71,7 @@ body{display:flex;flex-direction:column;overflow:hidden}
 .item b{font-size:16px}.item .ic{font-size:30px}.item .cost{margin-left:auto;font-weight:800;background:#fff;border-radius:10px;padding:4px 9px;white-space:nowrap}
 .item small{display:block;font-size:13px;color:#7a6aa8}
 
-/* ═════ GIAO DIỆN BÀI TẬP PHÁT ÂM (SPEAKING AI STUDIO) ═════ */
+/* ═════ GIAO DIỆN BÀI TẬP PHÁT ÂM (SPEAKING STUDIO) ═════ */
 .spk-box { background: #faf5ff; border: 2px solid #d8b4fe; border-radius: 16px; padding: 18px; margin: 10px 0; text-align: center; }
 .spk-target { font-size: 22px; font-weight: 900; color: #581c87; line-height: 1.4; margin: 12px 0; letter-spacing: 0.2px; }
 .spk-ipa { display: inline-block; font-size: 14px; font-family: monospace; color: #9333ea; background: #f3e8ff; padding: 4px 10px; border-radius: 8px; margin-bottom: 12px; }
@@ -424,7 +424,7 @@ body{display:flex;flex-direction:column;overflow:hidden}
   #trQText, .t-qtext { font-size: 15px !important; line-height: 1.55; margin-bottom: 12px; }
 }
 
-/* ═════ GIAO DIỆN BÀI TẬP PHÁT ÂM (SPEAKING AI STUDIO) ═════ */
+/* ═════ GIAO DIỆN BÀI TẬP PHÁT ÂM (SPEAKING STUDIO) ═════ */
 .spk-box { background: #faf5ff; border: 2px solid #d8b4fe; border-radius: 16px; padding: 18px; margin: 10px 0; text-align: center; }
 .spk-target { font-size: 22px; font-weight: 900; color: #581c87; line-height: 1.4; margin: 12px 0; letter-spacing: 0.2px; }
 .spk-ipa { display: inline-block; font-size: 14px; font-family: monospace; color: #9333ea; background: #f3e8ff; padding: 4px 10px; border-radius: 8px; margin-bottom: 12px; }
@@ -701,7 +701,7 @@ function renderSpeakingResultUI(evalRes, isTestMode) {
       </div>
       <div class="spk-ai-note">
         <div style="font-weight:900;color:#6b21a8;display:flex;align-items:center;gap:6px;margin-bottom:4px">
-          <span>🤖 Nhận xét từ AI Cô Nene:</span>
+          <span>👩‍🏫 Lời nhận xét từ Cô Nene:</span>
         </div>
         <div style="font-size:14px;color:#1e293b">${GC.safe(evalRes.feedback || '')}</div>
         ${evalRes.tips ? `<div style="font-size:13px;color:#7c3aed;margin-top:4px;font-weight:700">💡 Mẹo phát âm: ${GC.safe(evalRes.tips)}</div>` : ''}
@@ -719,7 +719,7 @@ window.simulateSpeakingInput = async function(spokenText) {
   if (transcriptEl) transcriptEl.textContent = '“' + spokenText + '”';
   const statusEl = $('spkStatus');
   if (statusEl) {
-    statusEl.innerHTML = '⏳ <b>AI đang phân tích ngữ âm...</b>';
+    statusEl.innerHTML = '⏳ <b>Đang phân tích ngữ âm...</b>';
     statusEl.style.color = '#6d28d9';
   }
   const evalRes = await GC.evaluatePronunciationAI(spokenText, targetText, ipa);
@@ -813,7 +813,7 @@ window.toggleSpeakingRecord = function(targetText, ipa, isTestMode) {
       }
 
       if (statusEl) {
-        statusEl.innerHTML = '⏳ <b>AI đang phân tích ngữ âm...</b>';
+        statusEl.innerHTML = '⏳ <b>Đang phân tích ngữ âm...</b>';
         statusEl.style.color = '#6d28d9';
       }
 
@@ -1060,7 +1060,7 @@ function submitTestExam(auto) {
   const ansCount = Object.values(trAnswers).filter(v => v !== undefined && String(v).trim() !== '').length;
   const elapsedTxt = fmt(Date.now() - (t0 || Date.now()));
 
-  // Gửi trạng thái nộp bài chính thức về Firebase (Phòng trực tiếp)
+  // Gửi trạng thái nộp bài chính thức về máy chủ (Phòng trực tiếp)
   if (path && net) {
     const nowT = net.now();
     net.update(path, {
@@ -1148,7 +1148,7 @@ function submitTestExam(auto) {
                   ${spk.score != null ? spk.score + '%' : (isOk ? '100%' : '0%')} - ${isOk ? '✅ ĐẠT' : '❌ CHƯA ĐẠT'}
                 </span>
               </div>
-              ${spk.feedback ? `<div style="font-size:13px;color:#581c87;margin-top:6px;background:#f3e8ff;padding:6px 10px;border-radius:8px">🤖 <b>AI nhận xét:</b> ${spk.feedback}</div>` : ''}
+              ${spk.feedback ? `<div style="font-size:13px;color:#581c87;margin-top:6px;background:#f3e8ff;padding:6px 10px;border-radius:8px">👩‍🏫 <b>Nhận xét:</b> ${spk.feedback}</div>` : ''}
             </div>
             <div style="font-size:13px;color:#1e293b;background:#f3f4f6;padding:8px 12px;border-radius:10px;margin-top:6px;border-left:4px solid #8b5cf6">
               💡 <b>Quy tắc phát âm &amp; Giải thích:</b> ${q.e ? q.e : 'Học sinh chú ý đọc to, rõ ràng từng âm tiết và đúng trọng âm.'}
