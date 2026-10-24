@@ -1,0 +1,2953 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Ms Nene English – Phòng Game của Cô Chí Nên</title>
+<link rel="stylesheet" href="assets/fonts.css">
+<link rel="stylesheet" href="assets/game.css">
+<style>
+body{background:linear-gradient(160deg,#ffe4f2,#e6efff 45%,#efe6ff);min-height:100%;overflow-x:hidden}
+.wrap{max-width:1180px;margin:0 auto;padding:18px max(16px,env(safe-area-inset-right,0px)) 40px max(16px,env(safe-area-inset-left,0px))}
+.top{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:14px}
+.top h1{font:800 30px/1.1 'Baloo 2',Nunito,sans-serif;color:#5b4bb0}
+.badge{border-radius:20px;padding:6px 14px;font-weight:800;font-size:13px;background:#fff;box-shadow:0 2px 8px #5b4bb015}
+.badge.ok{color:#1d8a5a;background:#e3f9ee}.badge.warn{color:#b0670b;background:#fff7e0}
+.panel{background:#fff;border-radius:22px;padding:18px;box-shadow:0 8px 26px #5b4bb022;min-width:0}
+.grid2{display:grid;grid-template-columns:1.25fr 1fr;gap:16px}
+@media(max-width:900px){.grid2{grid-template-columns:1fr}}
+h2{font:800 20px 'Baloo 2',Nunito,sans-serif;margin-bottom:10px;color:#2d2350}
+.tabs{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px}
+.tab{border:2px solid var(--line);background:#faf8ff;border-radius:14px;padding:8px 14px;font-weight:800;cursor:pointer;transition:.15s}
+.tab.on{border-color:var(--purple);background:#efe8ff;color:#5b4bb0}
+textarea{width:100%;min-height:210px;border:2px solid var(--line);border-radius:14px;padding:10px 12px;font:600 14px/1.5 Nunito,sans-serif;resize:vertical}
+select,.inp{width:100%;border:2px solid var(--line);border-radius:12px;padding:9px 11px;font-weight:700;font-size:15px;background:#fff}
+.hint{font-size:13px;color:#7a6aa8;font-weight:700;line-height:1.5;margin-top:6px}
+.hint code{background:#f3eeff;border-radius:6px;padding:1px 5px}
+.stat{margin-top:10px;font-weight:800}
+.stat.ok{color:#1d8a5a}.stat.bad{color:#c23a55}
+.errs{font-size:13px;color:#c23a55;font-weight:700;margin-top:4px;max-height:110px;overflow:auto}
+.prev{margin-top:10px;display:grid;gap:6px;max-height:230px;overflow:auto}
+.prev div{background:#f6f3ff;border-radius:12px;padding:8px 12px;font-size:14px;font-weight:700}
+.prev div:nth-child(3n+1){background:#ffeef6}.prev div:nth-child(3n+2){background:#eaf4ff}
+.lab{font-weight:800;font-size:14px;color:#7a6aa8;margin:12px 0 6px}
+.modes{display:grid;grid-template-columns:repeat(2,1fr);gap:8px}
+.mode{display:flex;align-items:center;gap:10px;text-align:left;border:3px solid transparent;border-radius:16px;padding:10px 12px;font-weight:800;font-size:16px;cursor:pointer;color:#2d2350;box-shadow:0 3px 0 #5b4bb022;transition:.15s}
+.mode b{font-size:30px;line-height:1;flex:none}
+.mode[data-m=climb]{background:linear-gradient(135deg,#e3f6ff,#efe6ff)}.mode[data-m=brick]{background:linear-gradient(135deg,#fff3e0,#ffe4f2)}
+.mode[data-m=tank]{background:linear-gradient(135deg,#e8f6ff,#e2fff2)}.mode[data-m=bomb]{background:linear-gradient(135deg,#fff7d6,#e8f8f0)}
+.mode:hover{transform:translateY(-2px)}
+.mode.on{border-color:#ff7eb6;box-shadow:0 0 0 3px #ffd6ea,0 4px 0 #ff7eb6}
+.mode small{display:block;font-size:12px;color:#7a6aa8;font-weight:700}
+.hero{background:#fff;border-radius:24px;overflow:hidden;margin-bottom:14px;box-shadow:0 10px 30px #5b4bb033;border:4px solid #fff}
+.heroTxt{padding:16px 18px 10px;text-align:center;background:linear-gradient(180deg,#fff,#fbf8ff)}
+.hello{font-weight:800;color:#7a6aa8;font-size:16px}
+.brand{font:800 clamp(24px,3.6vw,40px)/1.15 'Baloo 2',Nunito,sans-serif;background:linear-gradient(90deg,#ff7eb6,#9b7bff,#5ab0ff);-webkit-background-clip:text;background-clip:text;color:transparent;text-wrap:balance}
+.hchips{display:flex;gap:8px;flex-wrap:wrap;justify-content:center;margin-top:8px}
+.hchips span{border-radius:14px;padding:4px 12px;font-weight:800;font-size:14px;box-shadow:0 2px 0 #0001}
+.hchips span:nth-child(1){background:#e3f6ff}.hchips span:nth-child(2){background:#ffe9d6}.hchips span:nth-child(3){background:#e2fff2}.hchips span:nth-child(4){background:#fff3c4}
+#heroCv{display:block;width:100%;height:190px}
+.licbar{display:flex;align-items:center;gap:12px;flex-wrap:wrap;border-radius:18px;padding:12px 16px;margin-bottom:14px;font-weight:700;font-size:15px;line-height:1.5;background:linear-gradient(90deg,#e3f9ee,#e3f1ff);border:3px solid #3fbf86}
+.licbar .li{font-size:28px;line-height:1}.licbar .lic-t{flex:1;min-width:220px;color:#2d2350}
+.sw{display:flex;align-items:center;gap:10px;font-weight:800;cursor:pointer;background:#f6f3ff;border-radius:14px;padding:10px 12px}
+.sw input{width:22px;height:22px;accent-color:#9b7bff}
+.sw small{display:block;font-weight:700;font-size:12px;color:#7a6aa8}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.sw+.sw{margin-top:8px}
+.lobby{display:grid;grid-template-columns:auto 1fr;gap:20px;align-items:start}
+@media(max-width:800px){.lobby{grid-template-columns:1fr}}
+.code{font:800 min(16vw,96px)/1 'Baloo 2',Nunito,sans-serif;letter-spacing:.08em;color:#5b4bb0;text-align:center}
+#qr{background:#fff;padding:10px;border-radius:16px;display:flex;justify-content:center}
+#qr img,#qr canvas{max-width:100%;height:auto}
+.url{font-weight:800;font-size:14px;word-break:break-all;text-align:center;color:#7a6aa8;margin-top:8px}
+.plist{display:flex;flex-wrap:wrap;gap:8px}
+.pp{display:flex;align-items:center;gap:7px;background:#f6f3ff;border-radius:20px;padding:6px 8px 6px 12px;font-weight:800;font-size:16px;animation:pop .3s}
+@keyframes pop{from{transform:scale(.6);opacity:0}}
+.pp button{border:0;background:#fff;border-radius:50%;width:24px;height:24px;cursor:pointer;font-size:12px}
+.pp.off{opacity:.5}
+.live{display:grid;grid-template-columns:1fr 300px;gap:16px}
+@media(max-width:960px){.live{grid-template-columns:1fr}}
+.timer{font:800 44px/1 'Baloo 2',Nunito,sans-serif;color:#5b4bb0;font-variant-numeric:tabular-nums}
+.timer.low{color:#e0457a;animation:pulse 1s infinite}
+@keyframes pulse{50%{opacity:.55}}
+.board{display:grid;gap:7px}
+.lr{display:grid;grid-template-columns:44px minmax(90px,200px) 1fr auto;gap:10px;align-items:center;background:#faf8ff;border-radius:14px;padding:7px 10px;transition:.3s}
+.lr:nth-child(1){background:#fff6d6}.lr:nth-child(2){background:#f1f1fb}.lr:nth-child(3){background:#ffeee2}
+.rk{font:800 20px 'Baloo 2',Nunito,sans-serif;text-align:center}
+.nm{font-weight:800;font-size:17px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.bar{height:18px;border-radius:10px;background:#ece6ff;position:relative;overflow:hidden}
+.bar i{position:absolute;left:0;top:0;bottom:0;border-radius:10px;transition:width .5s}
+.bar b{position:absolute;top:0;bottom:0;width:2px;background:#ffffffcc}
+.meta{font-weight:800;font-size:14px;white-space:nowrap;font-variant-numeric:tabular-nums}
+.feed{display:flex;flex-direction:column;gap:6px;max-height:60vh;overflow:auto}
+.feed div{background:#f6f3ff;border-radius:12px;padding:7px 10px;font-weight:800;font-size:14px;animation:pop .3s}
+.confirm{display:none;background:#fff0f3;border:3px solid #ff8fa8;border-radius:16px;padding:12px 14px;margin-top:10px;font-weight:800}
+.confirm.on{display:block}
+.podium{display:flex;justify-content:center;align-items:flex-end;gap:14px;margin:18px 0}
+.pod{text-align:center;width:min(30%,200px)}
+.pod .av{width:64px;height:64px;border-radius:50%;margin:0 auto 6px;border:5px solid #fff;box-shadow:0 4px 12px #0002}
+.pod .nm{font-size:18px;white-space:normal}
+.pod .st{border-radius:14px 14px 0 0;color:#fff;font:800 34px 'Baloo 2',Nunito,sans-serif;display:flex;align-items:flex-start;justify-content:center;padding-top:8px}
+table{width:100%;border-collapse:collapse;font-weight:700}
+th,td{padding:8px 10px;text-align:left;border-bottom:2px solid #f0ebff;white-space:nowrap}
+th{color:#7a6aa8;font-size:13px}
+.tw{overflow-x:auto}
+.bank-item{display:flex;justify-content:space-between;align-items:center;background:#f6f3ff;border-radius:12px;padding:10px 14px;font-weight:800;margin-bottom:8px}
+.bank-item .binfo{cursor:pointer;flex:1}
+.bank-item .bacts{display:flex;gap:6px}
+.review-box{background:#fff8f0;border:2px solid #ffcb80;border-radius:18px;padding:16px;margin:18px 0}
+.mistake-row{background:#fff;border-radius:12px;padding:10px 14px;margin-top:8px;display:flex;justify-content:space-between;align-items:center;font-weight:800}
+.mistake-row b{color:#c23a55}
+/* Responsive Table with Sticky Headers (modern-web-guidance: responsive-table) */
+.gb-table-wrap{overflow:auto;max-inline-size:100%;max-block-size:min(480px,65vh);container-type:inline-size;border-radius:14px;border:2px solid #e4dcff;background:#fff}
+.gb-table-wrap table{border-collapse:separate;border-spacing:0;width:100%}
+.gb-table-wrap thead{position:sticky;inset-block-start:0;z-index:2;background:#f3eeff}
+.gb-table-wrap tbody th{position:sticky;inset-inline-start:0;background:#fff;z-index:1;font-weight:800;text-align:left;padding:9px 10px;border-bottom:1px solid #f0ecff}
+/* Visual Question Editor Cards */
+.ve-card{background:#fff;border:2px solid #e2d9ff;border-radius:14px;padding:12px;margin-bottom:10px;box-shadow:0 2px 6px rgba(80,60,160,.06)}
+.ve-card:focus-within{border-color:#8b5cf6;box-shadow:0 0 0 3px rgba(139,92,246,.15)}
+.ve-row{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:8px}
+.ve-inp{width:100%;padding:7px 10px;border:1.5px solid #d8d0f5;border-radius:10px;font:700 13px/1.4 'Nunito',sans-serif;color:#2d2350;background:#fcfbff}
+.ve-inp:focus{outline:none;border-color:#7c5cff;background:#fff}
+.ve-opt-row{display:flex;align-items:center;gap:6px;margin-top:5px}
+.ve-ans-btn{width:28px;height:28px;border-radius:50%;border:2px solid #cbd5e1;background:#f1f5f9;font-weight:900;font-size:12px;cursor:pointer;color:#475569;flex-shrink:0}
+.ve-ans-btn.on{background:#10b981;border-color:#059669;color:#fff}
+[hidden]{display:none!important}
+</style>
+</head>
+<body>
+<div class="wrap">
+ <div class="top">
+  <h1>🎮 Phòng game Cô Chí Nên</h1>
+  <button class="btn b" id="bOpenGradebook" type="button" style="padding:8px 14px;font-size:14px">📊 Sổ điểm BTVN</button>
+  <span class="badge" id="netB">⏳ Đang kết nối…</span>
+  <span class="badge ok" id="licTag">✅ Bản quyền: Cô Chí Nên · Mở trọn bộ 10 Game & Phòng thi</span>
+ </div>
+
+ <!-- 1. CÀI ĐẶT -->
+ <section id="vSetup">
+  <div class="hero">
+   <div class="heroTxt">
+    <div class="hello">🌟 Chào mừng các con và các thầy cô đến với</div>
+    <div class="brand">Ms Nene English · Bộ Game của Cô Chí Nên</div>
+    <div class="hchips"><span>🧗 Leo núi</span><span>🍄 Nấm Mario</span><span>🛡 Xe tăng</span><span>💣 Đặt bom</span></div>
+   </div>
+   <canvas id="heroCv" aria-label="Tranh pixel động: thế giới trò chơi Ms Nene English"></canvas>
+  </div>
+
+  <div class="licbar" id="licBar">
+   <span class="li" id="licIcon">🔒</span>
+   <div class="lic-t" id="licText">
+    <b>Bản tiêu chuẩn:</b> 🧗 Leo núi &amp; 🍄 Nấm Mario.
+    <button type="button" class="btn b" id="bTriggerUnlockModal" style="padding:3px 12px;font-size:12px;margin-left:8px;background:linear-gradient(135deg,#7c3aed,#db2777);border:none;color:#fff;font-weight:800;cursor:pointer">🔑 Kích hoạt bản quyền Pro</button>
+   </div>
+  </div>
+
+  <div id="resumeBox" class="panel" hidden style="margin-bottom:14px"></div>
+
+  <div class="grid2">
+   <!-- CỘT 1: CHỌN CÂU HỎI & KHO ĐỀ -->
+   <div class="panel">
+    <h2>① Quản lý Bộ câu hỏi</h2>
+    <div class="tabs">
+     <button class="tab on" data-t="paste">📋 Dán câu hỏi</button>
+     <button class="tab" data-t="mau">⭐ Bộ đề mẫu</button>
+     <button class="tab" data-t="bank">📚 Thư viện đề thi</button>
+    </div>
+
+    <!-- TAB 1: DÁN TỪ WORD / EXCEL -->
+    <div id="tPaste">
+     <!-- TÍNH NĂNG NẠP ĐỀ ĐA NĂNG (GAME + TEST + ẢNH CHỤP MÀN HÌNH CTRL+V) -->
+      <div style="background:#eef7ff;border:2px dashed #38bdf8;border-radius:16px;padding:12px 14px;margin-bottom:12px">
+       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
+        <span style="font-weight:800;color:#0284c7;font-size:14px">🤖 Nạp đề từ link bài tập, ảnh chụp (Ctrl+V) hoặc file:</span>
+        <div style="display:flex;gap:6px">
+         <button class="btn w" id="bPickImg" style="padding:3px 8px;font-size:12px" title="Chọn ảnh chụp đề từ máy tính">📷 Chọn ảnh</button>
+         <button class="btn w" id="bPickDoc" style="padding:3px 8px;font-size:12px" title="Nạp file văn bản / Word / Text">📄 Nạp file</button>
+         <input type="file" id="inpFileImg" accept="image/*" multiple hidden>
+         <input type="file" id="inpFileDoc" accept=".txt,.html,.md,.json" hidden>
+        </div>
+       </div>
+
+       <!-- Ô dán link & 2 nút: Tạo Game vs Tạo Test -->
+       <div style="display:flex;gap:8px;flex-wrap:wrap">
+        <input id="inpWebLink" class="inp" style="flex:1;min-width:220px;padding:9px 12px;font-size:14px" placeholder="Dán link bài tập (test 1 p1.html, voca p2.html, matching p1.html...)">
+        <button class="btn" id="bLoadGame" style="font-size:13px;padding:9px 14px;font-weight:800;background:#0284c7;color:#fff" title="AI trích đoạn trọng tâm (Context Focus) tối ưu cho Game đối kháng nhanh">🎮 Nạp đề tạo Game</button>
+        <button class="btn g" id="bLoadTest" style="font-size:13px;padding:9px 14px;font-weight:800" title="Nạp đề thi đầy đủ mọi dạng bài (phát âm, trọng âm, ngữ pháp, bài đọc, từ vựng) cho bài kiểm tra chuẩn">📝 Nạp đề tạo Test</button>
+       </div>
+
+       <!-- VÙNG DÁN ẢNH CHỤP MÀN HÌNH / KÉO THẢ / CHỌN FILE -->
+       <div id="dropZoneImg" style="margin-top:10px;border:2px dashed #0284c7;border-radius:14px;background:#f0f9ff;padding:14px 16px;text-align:center;cursor:pointer;transition:all .2s">
+        <div style="font-size:26px;margin-bottom:4px">📸</div>
+        <div style="font-weight:800;font-size:14px;color:#0284c7">Bấm vào đây hoặc nhấn Ctrl + V để dán ảnh chụp màn hình</div>
+        <div style="font-size:12px;color:#64748b;margin-top:3px">
+         Dùng <b>Win + Shift + S</b> chụp đề rồi nhấn <b>Ctrl + V</b> · Hoặc kéo thả ảnh vào đây · Hỗ trợ chụp nhiều trang
+        </div>
+        <div style="margin-top:10px;display:flex;justify-content:center;gap:8px;flex-wrap:wrap">
+         <button class="btn b" id="bPasteClipboard" type="button" style="font-size:12px;padding:6px 14px;font-weight:700">📋 Dán ảnh từ Clipboard</button>
+         <button class="btn w" id="bPickImgZone" type="button" style="font-size:12px;padding:6px 14px;font-weight:700">📁 Chọn ảnh từ máy tính</button>
+        </div>
+       </div>
+
+       <!-- Khung preview danh sách ảnh chụp màn hình đã dán -->
+       <div id="pasteImgPreview" style="display:none;margin-top:10px;background:#fff;border:2px solid #38bdf8;border-radius:14px;padding:12px">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+         <span style="font-weight:800;font-size:13px;color:#0284c7" id="pastedImgCount">📸 Đã nhận 1 ảnh chụp màn hình</span>
+         <div style="display:flex;gap:6px">
+          <button class="btn b" id="bAddMoreImg" type="button" style="padding:3px 10px;font-size:12px" title="Chụp thêm ảnh màn hình và dán Ctrl+V hoặc bấm vào đây">➕ Thêm ảnh</button>
+          <button class="btn r" id="bClearAllImg" type="button" style="padding:3px 8px;font-size:12px">✕ Xóa tất cả</button>
+         </div>
+        </div>
+        <div id="pastedImgGallery" style="display:flex;gap:8px;overflow-x:auto;padding-bottom:4px"></div>
+        <div style="font-size:12px;color:#0369a1;margin-top:6px">
+         💡 Cô có thể chụp nhiều trang/phần của đề thi (Win + Shift + S) rồi <b>Ctrl + V</b> từng ảnh vào đây. Hệ thống sẽ tự động đọc gộp tất cả ảnh lại thành một bài thi hoàn chỉnh!
+        </div>
+       </div>
+
+       <div class="hint" id="linkFetchStatus" style="margin-top:8px;color:#0369a1;font-size:13px">
+        💡 <b>Mẹo:</b> Cô có thể chụp màn hình (Win + Shift + S) rồi nhấn <b>Ctrl + V</b> ngay vào đây để tự động đọc đề!
+       </div>
+      </div>
+
+      <textarea id="pTxt" placeholder="Cách 1 — Copy các ô từ Excel rồi dán vào (cột: Câu hỏi | A | B | C | D | Đáp án | Giải thích)
+
+Cách 2 — Dán từ Word theo mẫu:
+1. She ___ to school every day.
+A. go
+*B. goes
+C. going
+D. gone
+Giải thích: Chủ ngữ số ít đi với goes
+
+Cách 3 — Dán câu luyện phát âm (tự động điền IPA & mẹo):
+1. SPK: environmental protection
+2. SPK: photography
+3. SPK: Practice makes perfect."></textarea>
+     <div class="hint">Đánh dấu đáp án đúng bằng <code>*</code> trước chữ cái, hoặc thêm dòng <code>Đáp án: B</code>. Bài phát âm gạch chân dùng <code>&lt;u&gt;ea&lt;/u&gt;</code>.</div>
+     <div class="row" style="justify-content:flex-start;margin-top:8px">
+      <button class="btn g" id="bSaveToBank" disabled style="font-size:13px;padding:6px 12px">🌐 Chia sẻ lên Thư viện chung</button>
+      <button class="btn b" id="bSaveLocal" disabled style="font-size:13px;padding:6px 12px">🔒 Lưu riêng máy này</button>
+      <button class="btn w" id="bClearPaste" style="font-size:13px;padding:6px 12px">🧹 Xóa trắng</button>
+     </div>
+    </div>
+
+    <!-- TAB 2: BỘ ĐỀ MẪU CÓ SẴN (ĐỀ CŨ LỚP 7 + IELTS) -->
+    <div id="tMau" hidden>
+     <div id="mList" class="prev"></div>
+    </div>
+
+    <!-- TAB 3: KHO ĐỀ CỦA CÔ (LƯU LOCAL + EXPORT/IMPORT FILE + CLOUD) -->
+    <div id="tBank" hidden>
+     <div style="display:flex;gap:8px;margin-bottom:10px;flex-wrap:wrap;align-items:center">
+      <input id="searchBank" class="inp" style="flex:1;min-width:160px;padding:7px 12px;font-size:13px" placeholder="🔍 Tìm kiếm đề thi...">
+      <button class="btn b" id="bRefreshBank" type="button" style="font-size:12px;padding:7px 11px">🔄 Làm mới thư viện</button>
+      <button class="btn g" id="bExportBank" style="font-size:12px;padding:7px 10px">⬇️ Xuất file</button>
+      <label class="btn w" style="font-size:12px;padding:7px 10px;cursor:pointer">
+       ⬆️ Nạp file
+       <input type="file" id="fImportBank" accept=".json" hidden>
+      </label>
+     </div>
+     <div style="display:flex;gap:6px;margin:8px 0">
+       <button class="btn g" id="bFiltAll" style="padding:4px 10px;font-size:12px">Tất cả đề</button>
+       <button class="btn w" id="bFiltGame" style="padding:4px 10px;font-size:12px">🎮 Chỉ Game</button>
+       <button class="btn w" id="bFiltTest" style="padding:4px 10px;font-size:12px">📝 Chỉ Bài Test</button>
+      </div>
+      <div style="font-weight:800;font-size:13px;color:#5b4bb0;margin:6px 0">🌐 THƯ VIỆN ĐỀ CHUNG (Mọi thầy cô đều dùng được)</div>
+     <div id="commBankList" class="prev" style="max-height:220px"></div>
+     <div style="font-weight:800;font-size:13px;color:#7a6aa8;margin:12px 0 6px">🔒 KHO ĐỀ RIÊNG CỦA MÁY NÀY</div>
+     <div id="bankList" class="prev" style="max-height:160px"></div>
+    </div>
+
+    <div class="stat" id="qStat"></div>
+    <div class="errs" id="qErr"></div>
+    <div class="prev" id="qPrev"></div>
+
+    <!-- THANH CÔNG CỤ SỬA TỪNG CÂU TRỰC QUAN & THÊM CÂU HỎI -->
+    <div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:8px">
+     <button class="btn b" type="button" id="bToggleVisualEditor" style="padding:7px 12px;font-size:13px;flex:1">✏️ Sửa chi tiết từng câu (0)</button>
+     <button class="btn w" type="button" id="bAddMcQ" style="padding:7px 10px;font-size:12px" title="Thêm 1 câu hỏi trắc nghiệm A/B/C/D">➕ Câu Trắc nghiệm</button>
+     <button class="btn w" type="button" id="bAddTextQ" style="padding:7px 10px;font-size:12px" title="Thêm 1 câu hỏi tự luận ngắn / điền từ / viết lại câu">✍️ Câu Tự luận / Điền từ</button>
+     <button class="btn w" type="button" id="bAddSpeakingQ" style="padding:7px 10px;font-size:12px;background:#fdf2f8;border-color:#f472b6;color:#9d174d" title="Thêm 1 câu hỏi phát âm tiếng Anh (chấm điểm ngữ âm tự động)">🗣 Câu Phát âm (Speaking)</button>
+     <button class="btn b" type="button" id="bOpenQuickSpkModal" style="padding:7px 12px;font-size:12px;background:linear-gradient(135deg,#7c3aed,#db2777);color:#fff;border:none;box-shadow:0 2px 8px rgba(124,58,237,0.3)" title="Soạn danh sách từ/câu cần phát âm, hệ thống sẽ tự động điền phiên âm IPA và mẹo">⚡ Tạo nhanh bài Phát âm tự động</button>
+    </div>
+    <div id="qVisualEditor" hidden style="max-height:520px;overflow:auto;margin-top:8px;padding:8px;background:#f5f0ff;border:2px solid #d8ccff;border-radius:14px"></div>
+
+    <div class="steps">
+     <div class="sh">🚀 4 bước tổ chức chơi</div>
+     <div><b>1</b><span>Chọn <i>bộ câu hỏi</i>: dán từ Word/Excel, chọn bộ mẫu, hoặc mở từ Kho đề</span></div>
+     <div><b>2</b><span>Chọn <i>game</i> (Leo núi / Mario / Xe tăng / Đặt bom), độ khó, thời gian và năng lượng</span></div>
+     <div><b>3</b><span>Bấm <i>Mở phòng</i> → chiếu mã QR lên bảng, học sinh quét là vào chơi</span></div>
+     <div><b>4</b><span>Theo dõi BXH trực tiếp · bấm <i>⏹ Kết thúc cả lớp</i> khi đủ giờ</span></div>
+    </div>
+   </div>
+
+   <!-- CỘT 2: CÀI ĐẶT TRÒ CHƠI -->
+   <div class="panel">
+    <h2>② Cài đặt trò chơi</h2>
+    <div class="lab">Tên bộ đề (hiện cho học sinh)</div>
+    <input id="gTitle" class="inp" maxlength="60" placeholder="VD: English 7 · Unit 5 hoặc Đề kiểm tra học kỳ">
+
+    <div class="lab">Kiểu game &amp; Kiểm tra (Đã mở full)</div>
+    <div class="modes" id="gModes">
+     <button class="mode on" data-m="climb"><b>🧗</b><span>Leo núi<small>Leo đỉnh · cứu công chúa</small></span></button>
+     <button class="mode" data-m="brick"><b>🍄</b><span>Nấm Mario<small>5 màn · biển sâu · rồng</small></span></button>
+     <button class="mode" data-m="tank"><b>🛡</b><span>Xe tăng<small>4 stage · bảo vệ cứ điểm</small></span></button>
+     <button class="mode" data-m="bomb"><b>💣</b><span>Bomberman<small>8 màn · cổ điển</small></span></button>
+     <button class="mode" data-m="pac"><b>🟡</b><span>Pac-Man<small>5 mê cung · quái lạ</small></span></button>
+     <button class="mode" data-m="race"><b>🏎</b><span>Đua xe<small>5 chặng · cảnh đẹp</small></span></button>
+     <button class="mode" data-m="temple"><b>🏃</b><span>Temple Run P1<small>5 màn · xe goòng · quái vật</small></span></button>
+     <button class="mode" data-m="temple2"><b>🏃</b><span>Temple Run P2<small>5 màn · khó hơn · mỏ pha lê</small></span></button>
+     <button class="mode" data-m="bounce"><b>🔴</b><span>Bounce Tales<small>6 màn · lăn bóng · trứng vàng</small></span></button>
+     <button class="mode" data-m="bounce2"><b>🐸</b><span>Bounce Tales P2<small>6 màn · lá nảy · đáy biển · trùm ếch</small></span></button>
+     <button class="mode" data-m="test" style="border:2px solid #8b5cf6"><b>📝</b><span>Bài kiểm tra<small>Đề thi tổng hợp · Khảo thí</small></span></button>
+    </div>
+
+    <!-- CẤU HÌNH 1: DÀNH CHO GAME ARCADE (LEO NÚI, MARIO, XE TĂNG, ĐẶT BOM) -->
+    <div id="arcadeSettings">
+     <div class="lab">🎚 Độ khó</div>
+     <select id="gLv">
+      <option value="1">😊 Dễ — núi thấp, ít quái</option>
+      <option value="2" selected>🔥 Vừa — nhiều quái, bậc hẹp, có băng trơn</option>
+      <option value="3">💀 Khó — núi rất cao, quái dày đặc, bậc sụp nhanh</option>
+     </select>
+
+     <div class="lab">Thời gian chơi</div>
+     <select id="gDur">
+      <option value="5">5 phút</option>
+      <option value="7">7 phút</option>
+      <option value="10" selected>10 phút</option>
+      <option value="15">15 phút</option>
+      <option value="20">20 phút</option>
+      <option value="30">30 phút</option>
+     </select>
+
+     <div class="two">
+      <div><div class="lab">⚡ Mỗi câu đúng được</div><select id="gEq"><option value="100" selected>100 năng lượng</option><option value="200">200 năng lượng</option><option value="300">300 năng lượng</option></select></div>
+      <div><div class="lab">🔋 Bình năng lượng đầy</div><select id="gEm"><option value="500">500</option><option value="1000" selected>1000</option><option value="1500">1500</option><option value="2000">2000</option><option value="0">Không giới hạn</option></select></div>
+     </div>
+     <div class="hint">Mỗi bước nhảy tốn 6 ⚡, đi bộ tốn liên tục. Đầy bình thì phải đi leo để tiêu hao bớt năng lượng.</div>
+
+     <div class="lab">Tương tác &amp; âm thanh</div>
+     <label class="sw"><input type="checkbox" id="gIa" checked><span>🎒 Cho phép trêu nhau<small>❄️ đóng băng · 🧲 hút năng lượng · 🛡 khiên (tốn ⚡)</small></span></label>
+     <label class="sw"><input type="checkbox" id="gMu" checked><span>🎵 Nhạc nền trên máy học sinh<small>Bỏ tick nếu cả lớp ồn quá · máy chiếu bật/tắt bằng nút 🎵</small></span></label>
+    </div>
+
+    <!-- CẤU HÌNH 2: DÀNH CHO BÀI KIỂM TRA (TEST MODE) -->
+    <div id="testSettings" style="display:none;background:#f5f3ff;border:2px solid #ddd6fe;border-radius:16px;padding:12px;margin:10px 0">
+     <div style="font-weight:800;color:#6d28d9;font-size:14px;margin-bottom:8px">⚙️ Cấu hình Bài Kiểm Tra:</div>
+     <div class="lab" style="margin-top:4px">🎨 Theme giao diện bài test</div>
+     <select id="testTheme" class="inp">
+      <option value="cambridge" selected>🏛️ Cambridge Chuẩn thi (Nền giấy trắng, chữ đen đậm tương phản cao - Dễ đọc nhất)</option>
+      <option value="sepia">📜 Giấy thi cổ điển / Vàng dịu mắt (Chống lóa, chống mỏi mắt)</option>
+      <option value="pastel">🌈 Vui nhộn Pastel (Màu sắc tươi sáng vui vẻ)</option>
+      <option value="fresh">🌿 Xanh Mint tươi mát (Dịu mắt, tập trung)</option>
+      <option value="cyber">🌌 Giao diện Tối / Cyber (Chữ trắng sáng rõ, Dark Mode)</option>
+     </select>
+
+     <div class="lab">⏱ Thời gian làm bài kiểm tra (Chọn nhanh hoặc tự gõ số phút tùy ý)</div>
+     <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px" id="testDurPresets">
+      <button type="button" class="btn w" data-dur="5" style="padding:5px 9px;font-size:12px">5p</button>
+      <button type="button" class="btn w" data-dur="10" style="padding:5px 9px;font-size:12px">10p</button>
+      <button type="button" class="btn w" data-dur="15" style="padding:5px 9px;font-size:12px">15p</button>
+      <button type="button" class="btn w" data-dur="20" style="padding:5px 9px;font-size:12px">20p</button>
+      <button type="button" class="btn w" data-dur="30" style="padding:5px 9px;font-size:12px">30p</button>
+      <button type="button" class="btn g" data-dur="45" style="padding:5px 9px;font-size:12px">45p (Chuẩn)</button>
+      <button type="button" class="btn w" data-dur="60" style="padding:5px 9px;font-size:12px">60p</button>
+      <button type="button" class="btn w" data-dur="90" style="padding:5px 9px;font-size:12px">90p</button>
+      <button type="button" class="btn w" data-dur="0" style="padding:5px 9px;font-size:12px">♾ Tự do</button>
+     </div>
+     <div style="display:flex;align-items:center;gap:8px">
+      <span style="font-weight:700;font-size:13px;color:#475569">Hoặc tự nhập:</span>
+      <input type="number" id="testDurInp" min="0" max="300" class="inp" value="45" style="width:110px;padding:7px 12px;font-size:15px;font-weight:900;color:#6d28d9">
+      <span style="font-weight:800;font-size:14px;color:#475569">phút (0 = không giới hạn)</span>
+     </div>
+     <select id="testDur" class="inp" hidden><option value="45" selected>45</option></select>
+
+     <div class="lab">Quy chế bài thi</div>
+     <label class="sw" style="background:#fff"><input type="checkbox" id="testShuffle" checked><span>🔀 Trộn trật tự câu hỏi &amp; phương án<small>Chống học sinh nhìn bài nhau</small></span></label>
+     <label class="sw" style="background:#fff"><input type="checkbox" id="testReview" checked><span>🔄 Cho phép xem lại và sửa câu trả lời trước khi nộp</span></label>
+     <label class="sw" style="background:#fff"><input type="checkbox" id="testShowExp" checked><span>📖 Xem lời giải chi tiết sau khi nộp bài</span></label>
+    </div>
+
+    <div class="row" style="justify-content:stretch"><div class="row" style="justify-content:stretch">
+     <button class="btn" id="bOpen" style="flex:1;font-size:17px;padding:13px" disabled>🚪 Mở phòng chơi chung</button>
+     <button class="btn w" id="bSolo" disabled>📚 Giao bài về nhà</button>
+    </div>
+    <div class="hint" id="soloHint"></div>
+   </div>
+  </div>
+ </section>
+
+ <!-- 2. SẢNH CHỜ -->
+ <section id="vLobby" hidden>
+  <div class="panel lobby">
+   <div style="min-width:260px">
+    <div class="lab" style="text-align:center;margin-top:0">Mã phòng</div>
+    <div class="code" id="lCode"></div>
+    <div id="qr"></div>
+    <div class="url" id="lUrl"></div>
+    <div class="row" style="margin-top:8px">
+     <button class="btn w" onclick="copyLink()">📋 Copy link gửi Zalo</button>
+    </div>
+   </div>
+   <div>
+    <h2 id="lTitle"></h2>
+    <div class="sub" style="text-align:left" id="lCount">Chưa có bạn nào vào phòng…</div>
+    <div class="plist" id="lList"></div>
+    <div class="row" style="justify-content:flex-start;margin-top:18px">
+     <button class="btn g" id="bStart" style="font-size:19px;padding:14px 28px">▶️ Bắt đầu cho cả lớp</button>
+     <button class="btn w" id="bCancel">✖ Huỷ phòng</button>
+    </div>
+   </div>
+  </div>
+ </section>
+
+ <!-- 3. ĐANG CHƠI TRỰC TIẾP -->
+ <section id="vLive" hidden>
+  <div class="panel" style="margin-bottom:14px;display:flex;align-items:center;gap:14px;flex-wrap:wrap">
+   <div><div class="lab" style="margin:0">⏳ Còn lại</div><div class="timer" id="tLeft">10:00</div></div>
+   <div style="flex:1;min-width:180px"><h2 id="vTitle" style="margin:0"></h2><div class="hint">Mã phòng <b id="vCode"></b> · vào muộn vẫn chơi được · <span id="vEn"></span></div></div>
+   <button class="btn g" id="bInvite">📲 Mời bạn vào muộn</button>
+   <button class="btn w" id="bMusic">🎵 Nhạc: bật</button>
+   <button class="btn b" id="bPlus">➕ 1 phút</button>
+   <button class="btn r" id="bEnd" style="font-size:17px;padding:12px 20px">⏹ Kết thúc cả lớp</button>
+   <div class="confirm" id="cEnd" style="flex-basis:100%">
+    Kết thúc trò chơi cho <b>cả lớp</b> ngay bây giờ? Màn hình các em sẽ dừng lại và hiện kết quả.
+    <div class="row" style="justify-content:flex-start">
+     <button class="btn r" id="bEndYes">⏹ Kết thúc ngay</button>
+     <button class="btn w" id="bEndNo">Chơi tiếp</button>
+    </div>
+   </div>
+  </div>
+  <div class="live">
+   <div class="panel"><h2>🏔 Bảng xếp hạng trực tiếp</h2><div class="board" id="board"></div></div>
+   <div class="panel"><h2>📣 Diễn biến</h2><div class="feed" id="feed"></div></div>
+  </div>
+ </section>
+
+ <!-- 4. VINH DANH & REVIEW BÀI HỌC -->
+ <section id="vEnd" hidden>
+  <div class="panel">
+   <div class="big">🏆 Bảng Vinh Danh</div>
+   <div class="sub" id="eTitle"></div>
+   <div class="podium" id="podium"></div>
+
+   <!-- MỤC NÂNG CẤP MỚI: PHÂN TÍCH CÂU HỎI SAI NHIỀU NHẤT -->
+   <div class="review-box" id="revBox" hidden>
+    <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px">
+     <div>
+      <h3 style="color:#c2410c;font-size:18px;margin-bottom:4px">⚠️ Thống kê câu làm sai &amp; Chiếu lời giải chi tiết:</h3>
+      <div class="hint" style="margin-bottom:6px">Bấm "🔍 Xem lời giải" từng câu hoặc chiếu lời giải toàn bộ đề thi lên máy chiếu cho cả lớp.</div>
+     </div>
+     <button type="button" class="btn g" id="bExpAllQs" style="padding:9px 16px;font-size:14px;font-weight:800">📖 Chiếu lời giải toàn bộ đề thi</button>
+    </div>
+    <div id="mistakeList"></div>
+   </div>
+
+   <div class="tw"><table id="eTable"></table></div>
+   <div class="row" style="margin-top:20px">
+    <button class="btn g" id="bCsv">⬇️ Tải bảng điểm (Excel)</button>
+    <button class="btn" id="bAgain">🔁 Chơi lại bộ này</button>
+    <button class="btn w" id="bClose">🧹 Xoá phòng · về trang đầu</button>
+   </div>
+  </div>
+ </section>
+</div>
+
+<div class="wrap" style="padding-top:0">
+ <div class="foot">🎮 Ms Nene English · Cô Chí Nên · Zalo 0852639652</div>
+</div>
+<div id="toast"></div>
+
+<!-- MODAL GIAO BÀI VỀ NHÀ -->
+<div class="ov" id="ovHw"><div class="card" style="max-width:640px">
+ <div class="big">📚 Giao bài tập về nhà</div>
+ <div class="sub" id="hwSum"></div>
+ <div class="two">
+  <div><div class="lab">⏰ Hạn nộp</div><input type="datetime-local" id="hwDl" class="inp"></div>
+  <div><div class="lab">⏱ Thời gian mỗi lượt chơi</div><select id="hwDur" class="inp"><option value="5">5 phút</option><option value="10" selected>10 phút</option><option value="15">15 phút</option><option value="20">20 phút</option><option value="30">30 phút</option><option value="0">Không giới hạn</option></select></div>
+ </div>
+ <label class="sw" style="margin-top:10px"><input type="checkbox" id="hwNoDl"><span>Không đặt hạn nộp</span></label>
+ <label class="sw"><input type="checkbox" id="hwExp" checked><span>Kèm lời giải thích sau mỗi câu<small>Bỏ tick nếu link dài quá</small></span></label>
+ 
+ <!-- QUYẾT ĐỊNH CỦA GIÁO VIÊN: LƯU VÀO THƯ VIỆN CHUNG HAY KHÔNG -->
+ <div style="background:#f4f0ff;border-radius:14px;padding:12px;margin-top:12px">
+  <label class="sw" style="background:#fff">
+   <input type="checkbox" id="hwShareCloud" checked>
+   <span>🌐 Lưu &amp; Chia sẻ lên Thư viện chung<small>Bật để lưu lại đề & tạo Link ngắn (gửi Zalo không bao giờ bị cắt link)</small></span>
+  </label>
+  <div id="hwAuthorRow" style="margin-top:8px;display:flex;gap:8px;align-items:center">
+   <span style="font-size:13px;font-weight:800;color:#7a6aa8;white-space:nowrap">Tác giả / Nguồn đề:</span>
+   <input id="hwAuthor" class="inp" style="padding:6px 10px;font-size:14px" placeholder="Cô Chí Nên" value="Cô Chí Nên">
+  </div>
+ </div>
+
+ <div class="row"><button class="btn g" id="bHwMake">🔗 Tạo link bài tập</button><button class="btn w" onclick="$('ovHw').classList.remove('on')">Đóng</button></div>
+ 
+ <div id="hwOut" hidden>
+  <div id="hwMsg" style="white-space:pre-wrap;word-break:break-all;background:#e8f8f0;border-radius:14px;padding:12px;font-weight:700;font-size:14px;margin-top:12px;max-height:220px;overflow:auto"></div>
+  <div class="row">
+   <button class="btn" id="bHwCopy">📋 Copy tin nhắn gửi Zalo</button>
+   <button class="btn g" id="bHwLink">🔗 Copy link bài tập</button>
+  </div>
+  <div class="hint" id="hwLen" style="text-align:center"></div>
+ </div>
+</div></div>
+
+<!-- MODAL SOẠN BÀI TẬP PHÁT ÂM SIÊU TỐC VỚI AI -->
+<div class="ov" id="ovQuickSpk">
+ <div class="card" style="max-width:680px;width:96%;border-top:6px solid #8b5cf6">
+  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
+   <div style="font-size:20px;font-weight:900;color:#581c87;display:flex;align-items:center;gap:8px">
+    <span>🎙 Soạn bài tập Phát âm siêu tốc tự động</span>
+   </div>
+   <button type="button" class="btn w" style="padding:4px 10px;font-size:14px" onclick="$('ovQuickSpk').classList.remove('on')">✕ Đóng</button>
+  </div>
+  
+  <div style="font-size:14px;color:#475569;margin-bottom:10px;line-height:1.5">
+   Cô chỉ cần nhập hoặc dán danh sách <b>từ hoặc câu tiếng Anh</b> cần học sinh luyện đọc (mỗi từ/câu trên 1 dòng, hoặc dán theo định dạng <code>1. SPK: từ</code>). <b>Hệ thống sẽ tự động tra phiên âm IPA chuẩn và viết mẹo phát âm</b>! Cô vẫn có thể chỉnh sửa lại sau khi tạo xong.
+  </div>
+
+  <textarea id="quickSpkInput" rows="8" style="width:100%;padding:12px;font:700 15px/1.6 'Nunito',sans-serif;border:2px solid #c084fc;border-radius:12px;background:#faf5ff;color:#1e1b4b" placeholder="Ví dụ nhập danh sách từ/câu:
+environmental protection
+photography
+extraordinary
+Practice makes perfect.
+The project was successful.
+
+Hoặc dán theo mẫu:
+1. SPK: communication
+2. SPK: schedule
+3. SPK: comfortable"></textarea>
+
+  <div style="display:flex;align-items:center;gap:12px;margin:12px 0;flex-wrap:wrap">
+   <label style="font-size:13px;font-weight:700;color:#475569;display:flex;align-items:center;gap:6px;cursor:pointer">
+    <input type="checkbox" id="chkQuickSpkReplace" checked style="accent-color:#8b5cf6">
+    <span>Thay thế toàn bộ câu hỏi hiện tại (bỏ chọn để nối thêm vào cuối)</span>
+   </label>
+  </div>
+
+  <div style="display:flex;gap:10px;justify-content:flex-end">
+   <button type="button" class="btn w" onclick="$('ovQuickSpk').classList.remove('on')">Hủy</button>
+   <button type="button" class="btn b" id="bDoQuickSpkGen" style="padding:10px 20px;font-size:15px;font-weight:800;background:linear-gradient(135deg,#7c3aed,#db2777);border:none;box-shadow:0 4px 12px rgba(124,58,237,0.35)">
+    ✨ Tạo đề &amp; Điền IPA tự động
+   </button>
+  </div>
+ </div>
+</div>
+
+<!-- MODAL XÁC NHẬN CHUẨN HÓA CHÍNH TẢ TIẾNG ANH CHO CÂU PHÁT ÂM -->
+<div class="ov" id="ovStandardizeSpk">
+ <div class="card" style="max-width:700px;width:96%;border-top:6px solid #f59e0b;box-shadow:0 24px 50px rgba(0,0,0,0.35);border-radius:18px">
+  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
+   <div style="font-size:20px;font-weight:900;color:#92400e;display:flex;align-items:center;gap:8px">
+    <span>🔍 Kiểm tra &amp; Chuẩn hóa Tiếng Anh</span>
+   </div>
+   <button type="button" class="btn w" style="padding:4px 10px;font-size:14px" id="bCloseStdSpk">✕ Đóng</button>
+  </div>
+
+  <div style="font-size:14px;color:#475569;margin-bottom:14px;line-height:1.5">
+   Hệ thống phát hiện một số từ hoặc câu có thể bị viết sai chính tả. Cô có muốn chuẩn hóa lại cho chuẩn xác trước khi tạo bài và tra phiên âm IPA không?
+  </div>
+
+  <div id="stdSpkList" style="max-height:360px;overflow-y:auto;display:flex;flex-direction:column;gap:10px;margin-bottom:16px;padding:2px">
+   <!-- Các mục cần chuẩn hóa -->
+  </div>
+
+  <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;border-top:1px solid #fed7aa;padding-top:14px">
+   <button type="button" class="btn w" id="bStdKeepOriginal" style="font-weight:800;color:#64748b;padding:10px 16px">
+    ↩️ Giữ nguyên bản gốc
+   </button>
+   <button type="button" class="btn b" id="bStdApplySelected" style="font-weight:900;background:linear-gradient(135deg,#f59e0b,#ea580c);border:none;box-shadow:0 4px 14px rgba(245,158,11,0.4);color:#fff;padding:10px 20px;font-size:15px">
+    ✨ Đồng ý chuẩn hóa &amp; Tiếp tục
+   </button>
+  </div>
+ </div>
+</div>
+
+
+
+<!-- MODAL KÍCH HOẠT BẢN QUYỀN TRỌN BỘ GAME -->
+<div class="ov" id="ovUnlockGames">
+ <div class="card" style="max-width:440px;width:94%;border-top:6px solid #8b5cf6;border-radius:18px;text-align:center;box-shadow:0 20px 45px rgba(0,0,0,0.3)">
+  <div style="font-size:46px;margin-bottom:6px">🔐</div>
+  <div style="font-size:20px;font-weight:900;color:#581c87;margin-bottom:8px">Kích hoạt Bản quyền Trọn bộ Game</div>
+  <div style="font-size:13px;color:#64748b;line-height:1.5;margin-bottom:16px">
+   Trò chơi này thuộc phiên bản nâng cao (bản tiêu chuẩn gồm <b>🧗 Leo núi</b> &amp; <b>🍄 Nấm Mario</b>). Cô vui lòng nhập <b>Mã kích hoạt bản quyền</b> để mở khóa:
+  </div>
+  <div style="margin-bottom:16px">
+   <input type="password" id="gameUnlockPass" class="inp" maxlength="20" placeholder="Nhập mã kích hoạt..." style="font-size:18px;text-align:center;letter-spacing:4px;font-weight:800;width:100%;padding:10px;border:2px solid #8b5cf6;border-radius:12px">
+   <div id="gameUnlockErr" style="color:#dc2626;font-size:13px;font-weight:700;margin-top:6px;display:none">❌ Mã kích hoạt không chính xác! Vui lòng thử lại.</div>
+  </div>
+  <div style="display:flex;gap:10px;justify-content:center">
+   <button type="button" class="btn w" id="bCloseUnlockGames" style="padding:10px 18px;font-weight:700">Đóng</button>
+   <button type="button" class="btn b" id="bDoUnlockGames" style="padding:10px 22px;font-size:15px;font-weight:800;background:linear-gradient(135deg,#7c3aed,#db2777);border:none;box-shadow:0 4px 12px rgba(124,58,237,0.35)">
+    ✨ Kích hoạt ngay
+   </button>
+  </div>
+ </div>
+</div>
+
+<!-- MODAL CHIẾU LỜI GIẢI CHI TIẾT (REVIEW TOÀN BỘ CÂU HỎI & ĐÁP ÁN) -->
+<div class="ov" id="ovExp"><div class="card" style="max-width:820px;width:96%">
+ <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px">
+  <div class="big" style="font-size:22px;margin:0">📖 Chiếu Lời Giải &amp; Toàn Bộ Đáp Án Cho Cả Lớp</div>
+  <div style="display:flex;align-items:center;gap:6px">
+   <button type="button" class="btn w" style="padding:6px 12px;font-size:13px" onclick="expNav(-1)">← Câu trước</button>
+   <select id="expJumpSel" class="inp" style="width:auto;padding:5px 10px;font-size:13px;font-weight:800" onchange="showExplanation(+this.value)"></select>
+   <button type="button" class="btn b" style="padding:6px 12px;font-size:13px" onclick="expNav(1)">Câu sau →</button>
+  </div>
+ </div>
+ <div class="sub" id="expSub" style="margin-top:6px"></div>
+ <div id="expBody" style="background:#f8f6ff;border-radius:16px;border:2px solid #e4dcff;padding:16px;line-height:1.6;font-size:16px;max-height:62vh;overflow:auto;margin:10px 0"></div>
+ <div class="row"><button class="btn g" type="button" onclick="$('ovExp').classList.remove('on')">Đóng lời giải</button></div>
+</div></div>
+
+<!-- MODAL SỔ ĐIỂM BÀI TẬP VỀ NHÀ (HOMEWORK GRADEBOOK) -->
+<div class="ov" id="ovGradebook"><div class="card" style="max-width:920px;width:96%">
+ <div class="big" style="font-size:24px">📊 Sổ Điểm Bài Tập Về Nhà &amp; Đề Tự Luyện</div>
+ <div class="sub">Theo dõi tự động học sinh làm bài qua link Bài tập về nhà / Mã đề Thư viện (đồng bộ thời gian thực trên máy chủ)</div>
+
+ <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin:12px 0">
+  <select id="gbSelect" class="sel" style="flex:1;min-width:220px"></select>
+  <button class="btn b" type="button" id="bGbRefresh" style="padding:9px 12px;font-size:13px">🔄 Làm mới</button>
+  <button class="btn b" type="button" id="bGbAnalytics" style="padding:9px 12px;font-size:13px;background:#ede9fe;color:#6d28d9;border:1.5px solid #c4b5fd">📊 Phân tích câu sai</button>
+  <button class="btn g" type="button" id="bGbCsv" style="padding:9px 12px;font-size:13px">⬇️ Xuất Excel</button>
+  <button class="btn r" type="button" id="bGbDeleteHw" style="padding:9px 12px;font-size:13px;background:#fef2f2;color:#dc2626;border:1.5px solid #fecaca" title="Xóa toàn bộ bài tập đang chọn (Dành cho Quản trị viên)">🗑️ Xóa bài này</button>
+ </div>
+
+ <div id="gbSummary" style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:10px"></div>
+ <div id="gbAnalyticsBox" hidden style="background:#faf5ff;border:2px solid #ddd6fe;border-radius:14px;padding:16px;margin-bottom:12px">
+   <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
+     <b style="color:#5b21b6;font-size:16px">📊 Báo cáo Điểm &amp; Phân tích Câu sai (Item Analytics)</b>
+     <button type="button" class="btn w" style="padding:3px 8px;font-size:12px" onclick="$('gbAnalyticsBox').hidden = true">✕ Đóng</button>
+   </div>
+   <div id="gbAnalyticsContent"></div>
+ </div>
+
+ <div tabindex="0" role="region" aria-label="Bảng điểm bài tập về nhà" class="tw gb-table-wrap">
+  <table id="gbTable">
+   <thead>
+    <tr>
+     <th>Hạng</th>
+     <th>Họ tên học sinh</th>
+     <th>Bài tập / Bộ đề</th>
+     <th>Hình thức</th>
+     <th>Điểm số</th>
+     <th>Số câu đúng</th>
+     <th>Thời gian</th>
+     <th>Nộp lúc</th>
+     <th>Thao tác</th>
+    </tr>
+   </thead>
+   <tbody id="gbTbody">
+    <tr><td colspan="9" style="text-align:center;padding:20px;color:#64748b">⏳ Đang tải dữ liệu sổ điểm…</td></tr>
+   </tbody>
+  </table>
+ </div>
+
+ <div class="row" style="margin-top:14px">
+  <button class="btn w" type="button" onclick="$('ovGradebook').classList.remove('on')">Đóng sổ điểm</button>
+ </div>
+</div></div>
+
+<!-- MODAL MỜI BẠN VÀO MUỘN -->
+<div class="ov" id="ovInv"><div class="card" style="max-width:560px;text-align:center">
+ <div class="big">📲 Vào muộn vẫn chơi được!</div>
+ <div class="sub">Quét mã QR hoặc mở link, gõ tên là vào chơi ngay</div>
+ <div class="code" id="iCode"></div>
+ <div id="qr2" style="display:flex;justify-content:center;margin:10px 0"></div>
+ <div class="url" id="iUrl"></div>
+ <div class="row"><button class="btn" onclick="copyLink()">📋 Copy link gửi Zalo</button><button class="btn w" onclick="$('ovInv').classList.remove('on')">Đóng</button></div>
+</div></div>
+
+<!-- SCRIPTS HỆ THỐNG -->
+<script src="assets/shield.js?v=2.1"></script>
+<script src="assets/qrcode.min.js"></script>
+<script src="assets/config.js?v=2.1"></script>
+<script src="assets/core.js?v=2.1"></script>
+<script src="assets/mau.js"></script>
+<script src="assets/climb.js"></script>
+<script src="assets/brick.js"></script>
+<script src="assets/tank.js"></script>
+<script src="assets/bomb.js"></script>
+ <script src="assets/pac.js"></script>
+ <script src="assets/race.js"></script>
+ <script src="assets/bounce.js"></script>
+ <script src="assets/temple.js"></script>
+ <script src="assets/scene.js"></script>
+<script src="assets/hero.js"></script>
+<script src="assets/license.js?v=2.1"></script>
+
+<script>
+const { $, esc, fmt, stamp, clean, toast, confetti, sfx } = GC;
+const C = window.GAME_CONFIG || {};
+let net = null, src = 'paste', qs = [], code = '', info = null, players = {}, TOP = 1, offs = [], timerI = 0, mauI = -1;
+let mistakeStats = {}; // Theo dõi thống kê câu làm sai
+
+const show = v => ['vSetup', 'vLobby', 'vLive', 'vEnd'].forEach(id => $(id).hidden = id !== v);
+const store = {
+  get: k => { try { return localStorage.getItem(k) } catch (e) { return null } },
+  set: (k, v) => { try { v == null ? localStorage.removeItem(k) : localStorage.setItem(k, v) } catch (e) { } }
+};
+
+/* ═════ ① QUẢN LÝ BỘ CÂU HỎI ═════ */
+document.querySelectorAll('.tab').forEach(b => b.onclick = () => {
+  document.querySelectorAll('.tab').forEach(x => x.classList.toggle('on', x === b));
+  src = b.dataset.t;
+  $('tPaste').hidden = src !== 'paste';
+  $('tMau').hidden = src !== 'mau';
+  $('tBank').hidden = src !== 'bank';
+  if (src === 'bank') renderBank(true);
+});
+
+function refreshQsPreviewOnly() {
+  const list = qs;
+  $('qStat').className = 'stat ' + (list.length ? 'ok' : '');
+  $('qStat').textContent = list.length ? '✅ Đang có ' + list.length + ' câu hỏi sẵn sàng' : '';
+  $('qPrev').innerHTML = list.slice(0, 40).map((q, i) => {
+    const isSpeaking = q.type === 'speaking';
+    const isText = !isSpeaking && (q.type === 'text' || (!!q.ansText && (!q.o || q.o.length < 2)));
+    const ansLabel = isSpeaking
+      ? ('🗣 [Phát âm] “' + esc(q.targetText || q.ansText || '') + '”' + (q.ipa ? ' ' + esc(q.ipa) : ''))
+      : isText ? ('✍️ [Tự luận] ' + esc(q.ansText || '')) : GC.safe((q.o && q.o[q.a]) || '');
+    return '<div>' + (i + 1) + '. ' + GC.safe(q.q).replace(/<br>/g, ' ') + ' <span style="color:#1d8a5a;font-weight:800">→ ' + ansLabel + '</span></div>';
+  }).join('');
+  if ($('bToggleVisualEditor')) {
+    const isOpen = !$('qVisualEditor').hidden;
+    $('bToggleVisualEditor').textContent = (isOpen ? '🔽 Thu gọn trình sửa câu hỏi (' : '✏️ Sửa chi tiết từng câu (') + list.length + ')';
+  }
+  $('bOpen').disabled = !list.length;
+  $('bSolo').disabled = !list.length;
+  $('bSaveToBank').disabled = !list.length;
+  $('soloHint').textContent = list.length ? '📚 Giao bài về nhà: tạo link có hạn nộp + thời gian chơi để gửi các em qua Zalo.' : '';
+}
+
+function setQs(list, title, errs) {
+  qs = (list || []).map(q => {
+    const isSpeaking = q.type === 'speaking' || !!q.targetText;
+    const isText = !isSpeaking && (q.type === 'text' || (!!q.ansText && (!q.o || q.o.length < 2)));
+    return {
+      type: isSpeaking ? 'speaking' : isText ? 'text' : 'mc',
+      q: q.q || (isSpeaking ? 'Read aloud the following sentence / word clearly:' : ''),
+      targetText: q.targetText || (isSpeaking ? (q.ansText || (q.o && q.o[0]) || q.q || '') : ''),
+      ipa: q.ipa || '',
+      o: isSpeaking || isText ? [] : (Array.isArray(q.o) && q.o.length ? q.o.slice() : ['Đáp án A', 'Đáp án B', 'Đáp án C', 'Đáp án D']),
+      a: isSpeaking || isText ? 0 : (typeof q.a === 'number' && q.a >= 0 ? q.a : 0),
+      ansText: isSpeaking ? (q.targetText || q.ansText || '') : isText ? (q.ansText || (q.o && q.o[0]) || '') : '',
+      e: q.e || '',
+      s: q.s || (isSpeaking ? 'Speaking / Pronunciation' : ''),
+      passage: q.passage || '',
+      audio: q.audio || '',
+      img: q.img || ''
+    };
+  });
+  errs = errs || [];
+  $('qStat').className = 'stat ' + (qs.length ? 'ok' : errs.length ? 'bad' : '');
+  $('qStat').textContent = qs.length ? '✅ Đọc được ' + qs.length + ' câu hỏi' + (errs.length ? ' · ⚠️ ' + errs.length + ' dòng bị bỏ qua' : '') : errs.length ? '❌ Chưa đọc được câu nào' : '';
+  $('qErr').innerHTML = errs.slice(0, 30).map(esc).join('<br>');
+  if (title && !$('gTitle').value) $('gTitle').value = title.replace(/<[^>]+>/g, '');
+  refreshQsPreviewOnly();
+  if ($('qVisualEditor') && !$('qVisualEditor').hidden) renderVisualEditor();
+
+  // Tự động kiểm tra câu hỏi speaking chưa có IPA hoặc mẹo phát âm để chuẩn hóa & hoàn thiện
+  const unenriched = qs.filter(q => q.type === 'speaking' && (!q.ipa || !q.e));
+  if (unenriched.length > 0) {
+    GC.checkEnglishStandardizationAI(unenriched).then(stdResults => {
+      const needsStd = (stdResults || []).filter(r => r.isMisspelled && r.suggested && r.suggested.trim().toLowerCase() !== r.original.trim().toLowerCase());
+      if (needsStd.length > 0) {
+        openStandardizeModal(unenriched, needsStd, () => {
+          refreshQsPreviewOnly();
+          if ($('qVisualEditor') && !$('qVisualEditor').hidden) renderVisualEditor();
+          toast(`✨ Đang tự động tạo phiên âm IPA và mẹo phát âm cho ${unenriched.length} câu...`, 3000);
+          GC.enrichSpeakingQuestionsAI(qs).then(() => {
+            refreshQsPreviewOnly();
+            if ($('qVisualEditor') && !$('qVisualEditor').hidden) renderVisualEditor();
+            toast(`✨ Đã điền xong phiên âm IPA và mẹo phát âm cho ${unenriched.length} câu! Cô có thể bấm nghe thử hoặc chỉnh sửa trực tiếp.`, 3500);
+          }).catch(() => {});
+        });
+      } else {
+        toast(`✨ Đang tự động tạo phiên âm IPA và mẹo phát âm cho ${unenriched.length} câu...`, 3000);
+        GC.enrichSpeakingQuestionsAI(qs).then(() => {
+          refreshQsPreviewOnly();
+          if ($('qVisualEditor') && !$('qVisualEditor').hidden) renderVisualEditor();
+          toast(`✨ Đã điền xong phiên âm IPA và mẹo phát âm cho ${unenriched.length} câu! Cô có thể bấm nghe thử hoặc chỉnh sửa trực tiếp.`, 3500);
+        }).catch(() => {});
+      }
+    }).catch(() => {
+      GC.enrichSpeakingQuestionsAI(qs).then(() => {
+        refreshQsPreviewOnly();
+        if ($('qVisualEditor') && !$('qVisualEditor').hidden) renderVisualEditor();
+      }).catch(() => {});
+    });
+  }
+}
+
+/* ═════ TRÌNH CHỈNH SỬA TỪNG CÂU HỎI TRỰC QUAN (VISUAL QUESTION EDITOR) ═════ */
+function renderVisualEditor() {
+  const box = $('qVisualEditor');
+  if (!box) return;
+  if (!qs.length) {
+    box.innerHTML = '<div style="text-align:center;color:#64748b;padding:16px;font-weight:700">Chưa có câu hỏi nào. Cô hãy nạp đề hoặc bấm <b>➕ Câu Trắc nghiệm</b> / <b>✍️ Câu Tự luận</b> bên trên nhé!</div>';
+    return;
+  }
+  box.innerHTML = qs.map((q, idx) => {
+    const isSpeaking = q.type === 'speaking';
+    const isText = !isSpeaking && q.type === 'text';
+    let optsHtml = '';
+    if (isSpeaking) {
+      const targetSpeech = q.targetText || q.ansText || '';
+      const stdCheck = GC.checkEnglishStandardizationLocal ? GC.checkEnglishStandardizationLocal(targetSpeech) : null;
+      const stdTipHtml = (stdCheck && stdCheck.isMisspelled && stdCheck.suggested && stdCheck.suggested.toLowerCase() !== targetSpeech.toLowerCase()) ? `
+        <div style="margin-top:6px;background:#fffbeb;border:1px dashed #f59e0b;padding:6px 10px;border-radius:8px;display:flex;align-items:center;justify-content:space-between;gap:8px">
+          <div style="font-size:12px;color:#92400e;font-weight:700">
+            💡 Gợi ý chuẩn hóa: <span style="text-decoration:line-through;color:#dc2626">${esc(targetSpeech)}</span> ➔ <b style="color:#16a34a">${esc(stdCheck.suggested)}</b>
+          </div>
+          <button type="button" class="btn w" style="padding:2px 10px;font-size:11px;background:#fef3c7;border-color:#f59e0b;color:#b45309;font-weight:900;white-space:nowrap" onclick="veApplyStdSingle(${idx}, '${esc(stdCheck.suggested).replace(/'/g, "\\'")}')">✨ Chuẩn hóa ngay</button>
+        </div>
+      ` : '';
+      optsHtml = `
+        <div style="margin-top:6px;background:#fdf2f8;padding:10px;border-radius:10px;border:1px solid #fbcfe8">
+          <div style="font-size:12px;font-weight:800;color:#9d174d;margin-bottom:4px">🗣 Câu/Từ chuẩn cần học sinh phát âm (Target Speech):</div>
+          <input class="ve-inp" style="width:100%;font-weight:800;color:#831843" value="${esc(q.targetText || q.ansText || '')}" placeholder="VD: The environmental protection project was successful." oninput="veUpdateField(${idx}, 'targetText', this.value); veUpdateField(${idx}, 'ansText', this.value)">
+          ${stdTipHtml}
+          <div style="display:flex;gap:8px;margin-top:6px;flex-wrap:wrap">
+            <div style="flex:1;min-width:180px">
+              <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:2px">
+                <span style="font-size:11px;font-weight:700;color:#6b7280">Phiên âm IPA:</span>
+                <button type="button" class="btn w" style="padding:2px 8px;font-size:10px;color:#7c3aed;background:#fdf4ff;border-color:#d8b4fe;font-weight:800" onclick="veAiGenSingleSpeaking(${idx})">✨ Tự động tạo IPA &amp; Mẹo</button>
+              </div>
+              <input class="ve-inp" style="width:100%;font-size:12px" value="${esc(q.ipa || '')}" placeholder="VD: /ˌkɒnvəˈseɪʃn/" oninput="veUpdateField(${idx}, 'ipa', this.value)">
+            </div>
+            <div style="flex:1;min-width:180px;display:flex;align-items:flex-end">
+              <button type="button" class="btn w" style="padding:6px 12px;font-size:12px;width:100%" onclick="GC.speakText(qs[${idx}].targetText || qs[${idx}].ansText || qs[${idx}].q)">🔊 Nghe thử giọng đọc mẫu</button>
+            </div>
+          </div>
+          <div style="margin-top:8px">
+            <div style="font-size:11px;font-weight:700;color:#6b7280;margin-bottom:2px">💡 Mẹo phát âm &amp; Quy tắc trọng âm (tự động tạo, cô có thể sửa):</div>
+            <textarea class="ve-inp" rows="2" style="width:100%;font-size:12px;line-height:1.5" placeholder="VD: Trọng âm rơi vào âm tiết thứ hai..." oninput="veUpdateField(${idx}, 'e', this.value)">${esc(q.e || '')}</textarea>
+          </div>
+        </div>
+      `;
+    } else if (isText) {
+      optsHtml = `<div style="margin-top:6px">
+           <div style="font-size:12px;font-weight:800;color:#047857;margin-bottom:4px">✍️ Đáp án đúng chấp nhận (ngăn cách nhiều cách viết bằng dấu <code>/</code>, VD: <code>went / did go</code>):</div>
+           <input class="ve-inp" value="${esc(q.ansText || '')}" placeholder="Nhập đáp án đúng..." oninput="veUpdateAnsText(${idx}, this.value)">
+         </div>`;
+    } else {
+      optsHtml = (q.o || ['', '', '', '']).map((optVal, oi) => `
+           <div class="ve-opt-row">
+             <button type="button" class="ve-ans-btn ${q.a === oi ? 'on' : ''}" title="Chọn làm đáp án đúng" onclick="veSetCorrect(${idx}, ${oi})">${'ABCD'[oi]}</button>
+             <input class="ve-inp" id="veOpt_${idx}_${oi}" value="${esc(optVal)}" placeholder="Phương án ${'ABCD'[oi]}" oninput="veUpdateOpt(${idx}, ${oi}, this.value)">
+             <button type="button" class="btn w" style="padding:4px 8px;font-size:11px" title="Gạch chân phần đang bôi đen (dùng cho bài Phát âm)" onclick="veUnderlineField('veOpt_${idx}_${oi}', ${idx}, ${oi})">U̲</button>
+           </div>
+         `).join('');
+    }
+
+    return `
+      <div class="ve-card">
+        <div class="ve-row" style="justify-content:space-between">
+          <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">
+            <span style="background:#6d28d9;color:#fff;font-weight:900;font-size:12px;padding:3px 9px;border-radius:12px">Câu ${idx + 1}</span>
+            <select class="ve-inp" style="width:auto;padding:4px 8px;font-size:12px" onchange="veChangeType(${idx}, this.value)">
+              <option value="mc" ${!isText && !isSpeaking ? 'selected' : ''}>🎯 Trắc nghiệm (A/B/C/D)</option>
+              <option value="text" ${isText ? 'selected' : ''}>✍️ Tự luận / Điền từ / Viết lại câu</option>
+              <option value="speaking" ${isSpeaking ? 'selected' : ''}>🗣 Phát âm / Nói (Speaking)</option>
+            </select>
+            <input class="ve-inp" style="width:135px;padding:4px 8px;font-size:12px" value="${esc(q.s || '')}" placeholder="Dạng bài (VD: Reading)" oninput="veUpdateField(${idx}, 's', this.value)">
+          </div>
+          <div style="display:flex;gap:4px">
+            <button type="button" class="btn w" style="padding:4px 8px;font-size:11px" title="Gạch chân chữ đang bôi đen trong câu hỏi" onclick="veUnderlineField('veQ_${idx}', ${idx}, -1)">U̲ Gạch chân</button>
+            <button type="button" class="btn r" style="padding:4px 8px;font-size:11px" onclick="veDeleteQ(${idx})">🗑 Xoá</button>
+          </div>
+        </div>
+
+        <textarea class="ve-inp" id="veQ_${idx}" rows="2" placeholder="Nhập nội dung câu hỏi..." oninput="veUpdateField(${idx}, 'q', this.value)">${esc(q.q)}</textarea>
+        ${optsHtml}
+
+        <details style="margin-top:8px;font-size:12px">
+          <summary style="cursor:pointer;font-weight:800;color:#5b4bb0">📎 Lời giải · Đoạn văn Reading · Link Audio / Hình ảnh ${(q.passage || q.audio || q.img || q.e) ? '✅' : ''}</summary>
+          <div style="display:grid;gap:6px;margin-top:6px;padding-top:6px;border-top:1px dashed #dcd3ff">
+            <div>
+              <div style="font-weight:800;color:#475569;margin-bottom:2px">💡 Giải thích đáp án:</div>
+              <input class="ve-inp" value="${esc(q.e || '')}" placeholder="Giải thích vì sao chọn đáp án này..." oninput="veUpdateField(${idx}, 'e', this.value)">
+            </div>
+            <div>
+              <div style="font-weight:800;color:#475569;margin-bottom:2px">📖 Đoạn văn bài đọc (Reading Passage - nếu có):</div>
+              <textarea class="ve-inp" rows="3" placeholder="Dán đoạn văn Reading vào đây..." oninput="veUpdateField(${idx}, 'passage', this.value)">${esc(q.passage || '')}</textarea>
+            </div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px">
+              <div>
+                <div style="font-weight:800;color:#475569;margin-bottom:2px">🎧 Link Audio MP3 (Listening):</div>
+                <input class="ve-inp" value="${esc(q.audio || '')}" placeholder="https://.../audio.mp3" oninput="veUpdateField(${idx}, 'audio', this.value)">
+              </div>
+              <div>
+                <div style="font-weight:800;color:#475569;margin-bottom:2px">🖼 Link Hình ảnh minh hoạ:</div>
+                <input class="ve-inp" value="${esc(q.img || '')}" placeholder="https://.../image.png" oninput="veUpdateField(${idx}, 'img', this.value)">
+              </div>
+            </div>
+          </div>
+        </details>
+      </div>
+    `;
+  }).join('');
+}
+
+window.veUpdateField = function(idx, field, val) {
+  if (!qs[idx]) return;
+  qs[idx][field] = val;
+  refreshQsPreviewOnly();
+};
+window.veUpdateOpt = function(idx, oi, val) {
+  if (!qs[idx] || !qs[idx].o) return;
+  qs[idx].o[oi] = val;
+  refreshQsPreviewOnly();
+};
+window.veSetCorrect = function(idx, oi) {
+  if (!qs[idx]) return;
+  qs[idx].a = oi;
+  refreshQsPreviewOnly();
+  renderVisualEditor();
+};
+window.veUpdateAnsText = function(idx, val) {
+  if (!qs[idx]) return;
+  qs[idx].ansText = val;
+  refreshQsPreviewOnly();
+};
+window.veChangeType = function(idx, newType) {
+  if (!qs[idx]) return;
+  qs[idx].type = newType;
+  if (newType === 'speaking') {
+    if (!qs[idx].targetText) {
+      qs[idx].targetText = qs[idx].ansText || (qs[idx].o && qs[idx].o[qs[idx].a]) || qs[idx].q || '';
+    }
+    if (!qs[idx].ansText) qs[idx].ansText = qs[idx].targetText;
+    if (!qs[idx].s) qs[idx].s = 'Speaking / Pronunciation';
+    if (!qs[idx].q || qs[idx].q.startsWith('Câu hỏi mới')) {
+      qs[idx].q = 'Read aloud the following sentence / word clearly:';
+    }
+  } else if (newType === 'text') {
+    if (!qs[idx].ansText && qs[idx].o && qs[idx].o[qs[idx].a]) {
+      qs[idx].ansText = qs[idx].o[qs[idx].a].replace(/<[^>]+>/g, '');
+    }
+    if (!qs[idx].s) qs[idx].s = 'Tự luận / Điền từ';
+  } else {
+    if (!qs[idx].o || qs[idx].o.length < 2) {
+      qs[idx].o = [qs[idx].ansText || qs[idx].targetText || 'Phương án A', 'Phương án B', 'Phương án C', 'Phương án D'];
+      qs[idx].a = 0;
+    }
+  }
+  refreshQsPreviewOnly();
+  renderVisualEditor();
+};
+window.veDeleteQ = function(idx) {
+  if (!qs[idx]) return;
+  qs.splice(idx, 1);
+  refreshQsPreviewOnly();
+  renderVisualEditor();
+  toast('🗑 Đã xoá câu ' + (idx + 1), 1600);
+};
+window.veUnderlineField = function(elId, idx, optIdx) {
+  const el = $(elId);
+  if (!el) return;
+  const start = el.selectionStart, end = el.selectionEnd;
+  if (start == null || end == null || start === end) {
+    toast('💡 Cô hãy bôi đen chữ cái cần gạch chân rồi bấm nút U̲ nhé!', 2400);
+    return;
+  }
+  const v = el.value;
+  const updated = v.slice(0, start) + '<u>' + v.slice(start, end) + '</u>' + v.slice(end);
+  el.value = updated;
+  if (optIdx >= 0) veUpdateOpt(idx, optIdx, updated);
+  else veUpdateField(idx, 'q', updated);
+  toast('✨ Đã gạch chân: <u>' + v.slice(start, end) + '</u>', 1800);
+};
+
+if ($('bToggleVisualEditor')) {
+  $('bToggleVisualEditor').onclick = () => {
+    const box = $('qVisualEditor');
+    box.hidden = !box.hidden;
+    if (!box.hidden) renderVisualEditor();
+    refreshQsPreviewOnly();
+  };
+}
+if ($('bAddMcQ')) {
+  $('bAddMcQ').onclick = () => {
+    qs.push({ type: 'mc', q: 'Câu hỏi mới ' + (qs.length + 1), o: ['Phương án A', 'Phương án B', 'Phương án C', 'Phương án D'], a: 0, ansText: '', e: '', s: 'Grammar', passage: '', audio: '', img: '' });
+    $('qVisualEditor').hidden = false;
+    refreshQsPreviewOnly();
+    renderVisualEditor();
+    $('qVisualEditor').scrollTop = $('qVisualEditor').scrollHeight;
+  };
+}
+if ($('bAddTextQ')) {
+  $('bAddTextQ').onclick = () => {
+    qs.push({ type: 'text', q: 'Complete the sentence: She _______ (go) to school yesterday.', o: [], a: 0, ansText: 'went / did go', e: 'Thì quá khứ đơn (yesterday) của go là went.', s: 'Word Form / Rewrite', passage: '', audio: '', img: '' });
+    $('qVisualEditor').hidden = false;
+    refreshQsPreviewOnly();
+    renderVisualEditor();
+    $('qVisualEditor').scrollTop = $('qVisualEditor').scrollHeight;
+  };
+}
+
+window.veApplyStdSingle = function(idx, sugg) {
+  if (qs[idx]) {
+    qs[idx].targetText = sugg;
+    qs[idx].ansText = sugg;
+    renderVisualEditor();
+    refreshQsPreviewOnly();
+    toast('✨ Đã chuẩn hóa thành: ' + sugg, 1800);
+  }
+};
+
+window.veAiGenSingleSpeaking = async function(idx) {
+  const q = qs[idx];
+  if (!q) return;
+  let target = (q.targetText || q.ansText || q.q || '').trim();
+  if (!target) return toast('⚠️ Cô hãy nhập từ/câu cần phát âm trước nhé!', 2000);
+
+  // Kiểm tra chính tả tiếng Anh trước
+  const std = GC.checkEnglishStandardizationLocal ? GC.checkEnglishStandardizationLocal(target) : null;
+  if (std && std.isMisspelled && std.suggested && std.suggested.toLowerCase() !== target.toLowerCase()) {
+    const wantStd = confirm(`🔍 Phát hiện từ/câu có thể bị gõ nhầm chính tả:\n"${target}"\n\nCô có muốn chuẩn hóa thành:\n"${std.suggested}"\nkhông?`);
+    if (wantStd) {
+      target = std.suggested;
+      q.targetText = std.suggested;
+      q.ansText = std.suggested;
+    }
+  }
+
+  toast(`⏳ Đang tạo phiên âm IPA & mẹo cho "${target}"...`, 2500);
+  const genRes = await GC.generateSingleSpeakingAI(target);
+  if (genRes.ipa) q.ipa = genRes.ipa;
+  if (genRes.tips) q.e = genRes.tips;
+  if (genRes.prompt && (!q.q || q.q.startsWith('Câu hỏi') || q.q.includes('clearly:'))) q.q = genRes.prompt;
+
+  refreshQsPreviewOnly();
+  renderVisualEditor();
+  toast(`✨ Đã điền xong IPA: ${genRes.ipa || ''}`, 2000);
+};
+
+/* Hiển thị Modal yêu cầu chuẩn hóa từ vựng tiếng Anh nếu phát hiện lỗi gõ nhầm (typo) */
+function openStandardizeModal(items, needsStd, onDone) {
+  const ov = $('ovStandardizeSpk');
+  const list = $('stdSpkList');
+  if (!ov || !list) {
+    onDone(items);
+    return;
+  }
+
+  list.innerHTML = needsStd.map(n => `
+    <div style="background:#fff;border:1px solid #fed7aa;border-radius:12px;padding:12px;display:flex;align-items:center;justify-content:space-between;gap:12px">
+      <div style="display:flex;align-items:center;gap:12px;flex:1">
+        <input type="checkbox" id="stdChk_${n.id}" class="chk-std-item" data-id="${n.id}" checked style="width:20px;height:20px;accent-color:#ea580c;cursor:pointer">
+        <label for="stdChk_${n.id}" style="cursor:pointer;flex:1">
+          <div style="display:flex;align-items:center;gap:8px;font-size:15px;flex-wrap:wrap">
+            <span style="color:#b91c1c;text-decoration:line-through;font-weight:800;background:#fef2f2;padding:3px 8px;border-radius:6px;border:1px solid #fecaca">${esc(n.original)}</span>
+            <span style="color:#94a3b8;font-weight:900">➔</span>
+            <span style="color:#15803d;font-weight:900;background:#f0fdf4;padding:3px 8px;border-radius:6px;border:1px solid #bbf7d0">${esc(n.suggested)}</span>
+          </div>
+          <div style="font-size:12px;color:#78350f;margin-top:4px;font-weight:600">${esc(n.reason || 'Gợi ý chuẩn hóa theo tiếng Anh chuẩn')}</div>
+        </label>
+      </div>
+    </div>
+  `).join('');
+
+  ov.classList.add('on');
+
+  $('bStdApplySelected').onclick = () => {
+    needsStd.forEach(n => {
+      const chk = $('stdChk_' + n.id);
+      if (chk && chk.checked) {
+        if (items[n.id]) {
+          items[n.id].targetText = n.suggested;
+          items[n.id].ansText = n.suggested;
+        }
+      }
+    });
+    ov.classList.remove('on');
+    onDone(items);
+  };
+
+  $('bStdKeepOriginal').onclick = () => {
+    ov.classList.remove('on');
+    onDone(items);
+  };
+
+  $('bCloseStdSpk').onclick = () => {
+    ov.classList.remove('on');
+    $('ovQuickSpk').classList.add('on');
+  };
+}
+
+if ($('bOpenQuickSpkModal')) {
+  $('bOpenQuickSpkModal').onclick = () => {
+    $('ovQuickSpk').classList.add('on');
+    setTimeout(() => $('quickSpkInput')?.focus(), 100);
+  };
+}
+
+if ($('bDoQuickSpkGen')) {
+  $('bDoQuickSpkGen').onclick = async () => {
+    const text = ($('quickSpkInput').value || '').trim();
+    if (!text) return toast('⚠️ Cô hãy nhập ít nhất 1 từ hoặc câu cần phát âm nhé!', 2000);
+
+    const lines = text.split('\n').map(l => l.trim()).filter(Boolean);
+    const items = [];
+    lines.forEach(line => {
+      const m = line.match(/^(?:(?:câu|question)?\s*(?:\d+\s*[.:)]\s*)+)?(?:spk|speaking|phát âm|phat am|nói|speak)\s*[:：]\s*(.+)$/i);
+      const target = m ? m[1].trim() : line.replace(/^\d+\s*[.:)]\s*/, '').trim();
+      if (target) {
+        items.push({
+          type: 'speaking',
+          q: 'Listen to the sample audio and read aloud clearly:',
+          targetText: target,
+          ipa: '',
+          e: '',
+          s: 'Speaking / Pronunciation',
+          o: [],
+          a: 0,
+          ansText: target
+        });
+      }
+    });
+
+    if (!items.length) return toast('⚠️ Chưa tìm thấy từ hoặc câu hợp lệ!', 2000);
+
+    const btn = $('bDoQuickSpkGen');
+    btn.disabled = true;
+    const oldBtnHtml = btn.innerHTML;
+    btn.innerHTML = '🔍 <b>Đang kiểm tra chính tả...</b>';
+
+    // Hàm thực hiện tạo phiên âm IPA và đưa câu hỏi vào danh sách
+    const proceedEnrichAndAdd = async (finalItems) => {
+      $('ovQuickSpk').classList.remove('on');
+      if ($('ovStandardizeSpk')) $('ovStandardizeSpk').classList.remove('on');
+      toast(`⏳ Đang tạo phiên âm & mẹo cho ${finalItems.length} câu phát âm...`, 3000);
+
+      const enriched = await GC.enrichSpeakingQuestionsAI(finalItems);
+      const replace = $('chkQuickSpkReplace') ? $('chkQuickSpkReplace').checked : true;
+      if (replace) {
+        qs = enriched;
+      } else {
+        qs = qs.concat(enriched);
+      }
+
+      btn.disabled = false;
+      btn.innerHTML = oldBtnHtml;
+
+      $('qVisualEditor').hidden = false;
+      refreshQsPreviewOnly();
+      renderVisualEditor();
+      toast(`🎉 Đã tạo thành công ${enriched.length} câu phát âm với đầy đủ IPA & mẹo! Cô có thể bấm nghe thử hoặc chỉnh sửa trực tiếp.`, 3500);
+    };
+
+    // Kiểm tra chính tả tiếng Anh trước
+    let checkResults = [];
+    try {
+      checkResults = await GC.checkEnglishStandardizationAI(items);
+    } catch (e) {
+      checkResults = items.map(it => GC.checkEnglishStandardizationLocal(it.targetText));
+    }
+
+    const needsStd = checkResults.filter(r => r.isMisspelled && r.suggested && r.suggested.trim().toLowerCase() !== r.original.trim().toLowerCase());
+
+    if (needsStd.length > 0) {
+      btn.disabled = false;
+      btn.innerHTML = oldBtnHtml;
+      $('ovQuickSpk').classList.remove('on');
+      openStandardizeModal(items, needsStd, proceedEnrichAndAdd);
+      return;
+    }
+
+    // Không có lỗi chính tả -> Đi thẳng vào làm giàu IPA
+    btn.innerHTML = '⏳ <b>Đang tạo phiên âm &amp; mẹo...</b>';
+    await proceedEnrichAndAdd(items);
+  };
+}
+
+if ($('bAddSpeakingQ')) {
+  $('bAddSpeakingQ').onclick = () => {
+    qs.push({
+      type: 'speaking',
+      q: 'Read aloud the following sentence / word clearly:',
+      targetText: 'Practice makes perfect.',
+      ipa: '/ˈpræktɪs meɪks ˈpɜːrfɪkt/',
+      o: [],
+      a: 0,
+      ansText: 'Practice makes perfect.',
+      e: 'Phát âm rõ âm đuôi /s/ trong "makes" và trọng âm của "perfect" rơi vào âm tiết đầu.',
+      s: 'Speaking / Pronunciation',
+      passage: '',
+      audio: '',
+      img: ''
+    });
+    $('qVisualEditor').hidden = false;
+    refreshQsPreviewOnly();
+    renderVisualEditor();
+    $('qVisualEditor').scrollTop = $('qVisualEditor').scrollHeight;
+    toast('🗣 Đã thêm 1 câu hỏi phát âm Speaking!', 1800);
+  };
+}
+
+let pT = 0;
+$('pTxt').oninput = () => {
+  clearTimeout(pT);
+  pT = setTimeout(() => {
+    const t = $('pTxt').value;
+    if (!t.trim()) return setQs([], '', []);
+    const r = GC.parsePaste(t);
+    setQs(r.qs, '', r.errs);
+  }, 350);
+};
+
+$('bClearPaste').onclick = () => { $('pTxt').value = ''; setQs([], '', []); };
+
+/* Render danh sách đề mẫu (Đề người trước tạo) */
+$('mList').innerHTML = (window.SAMPLE_SETS || []).map((s, i) =>
+  '<div><label style="cursor:pointer;display:block"><input type="radio" name="mau" value="' + i + '"> <b>' + esc(s.title) + '</b> (' + (s.raw ? s.raw.length : 0) + ' câu)</label></div>'
+).join('');
+
+$('mList').onchange = e => {
+  mauI = +e.target.value;
+  const s = GC.sampleSet(mauI);
+  if (s) setQs(s.qs, s.title, []);
+};
+
+/* ═════ THƯ VIỆN ĐỀ THI (CHIA SẺ CỘNG ĐỒNG + KHO RIÊNG) ═════ */
+let cachedCommunity = [];
+
+function getBank() {
+  try { return JSON.parse((store.get('msnene_bank') || store.get('msnenet_bank')) || '[]'); } catch (e) { return []; }
+}
+function saveBank(list) {
+  store.set('msnene_bank', JSON.stringify(list));
+  renderBank();
+}
+
+let bankFilter = 'all'; // 'all', 'game', 'test'
+let isFetchingBank = false;
+
+function getTestDurMinutes() {
+  const inpVal = $('testDurInp') ? +($('testDurInp').value) : NaN;
+  if (!isNaN(inpVal) && inpVal >= 0) return inpVal;
+  return +($('testDur')?.value || 45);
+}
+
+function setTestDurMinutes(m) {
+  m = Math.max(0, +m || 0);
+  if ($('testDurInp')) $('testDurInp').value = m;
+  if ($('testDur')) $('testDur').value = String(m);
+  if ($('testDurPresets')) {
+    [...$('testDurPresets').children].forEach(btn => {
+      const bDur = +btn.dataset.dur;
+      btn.className = 'btn ' + (bDur === m ? 'g' : 'w');
+    });
+  }
+}
+
+if ($('testDurPresets')) {
+  $('testDurPresets').onclick = e => {
+    const btn = e.target.closest('button');
+    if (!btn || btn.dataset.dur === undefined) return;
+    setTestDurMinutes(+btn.dataset.dur);
+  };
+}
+if ($('testDurInp')) {
+  $('testDurInp').oninput = () => {
+    const val = +$('testDurInp').value;
+    if ($('testDurPresets')) {
+      [...$('testDurPresets').children].forEach(btn => {
+        btn.className = 'btn ' + (+btn.dataset.dur === val ? 'g' : 'w');
+      });
+    }
+  };
+}
+
+async function renderBank(forceCloud) {
+  if (forceCloud || !window.communityQuizzesCache) {
+    if ($('commBankList')) {
+      $('commBankList').innerHTML = '<div class="hint" style="text-align:center;padding:16px">⏳ Đang đồng bộ Thư viện đề thi từ máy chủ…</div>';
+    }
+    isFetchingBank = true;
+    try {
+      window.communityQuizzesCache = await GC.getCommunityLibrary();
+    } catch(err) {
+      console.warn('Load community library error:', err);
+    } finally {
+      isFetchingBank = false;
+    }
+  }
+
+  const query = clean($('searchBank') ? $('searchBank').value : '').toLowerCase();
+
+  // 1. Render Thư viện chung
+  let commList = (window.communityQuizzesCache || []).slice();
+  if (bankFilter === 'game') commList = commList.filter(q => q.type !== 'test' && q.m !== 'test');
+  if (bankFilter === 'test') commList = commList.filter(q => q.type === 'test' || q.m === 'test');
+  if (query) {
+    commList = commList.filter(q => (q.title || '').toLowerCase().includes(query) || (q.author || '').toLowerCase().includes(query) || (q.id || '').toLowerCase().includes(query));
+  }
+
+  if (!commList.length) {
+    $('commBankList').innerHTML = '<div class="hint" style="text-align:center;padding:16px">Không tìm thấy bộ đề nào phù hợp. Cô hãy bấm <b>"🔄 Làm mới thư viện"</b> hoặc tạo đề mới nhé!</div>';
+  } else {
+    $('commBankList').innerHTML = commList.map(item => {
+      const isTest = item.type === 'test' || item.m === 'test';
+      const badgeHtml = isTest 
+        ? '<span style="background:#8b5cf6;color:#fff;font-size:11px;font-weight:800;padding:2px 6px;border-radius:6px;margin-right:6px">📝 BÀI TEST</span>'
+        : '<span style="background:#0284c7;color:#fff;font-size:11px;font-weight:800;padding:2px 6px;border-radius:6px;margin-right:6px">🎮 GAME</span>';
+
+      return `
+      <div class="bank-item" style="border-left:4px solid ${isTest ? '#8b5cf6' : '#5ab0ff'}">
+        <div class="binfo" onclick="loadQuizData('${item.id}')">
+          <span style="font-size:15px;color:#2d2350">${badgeHtml}📘 ${esc(item.title || item.id)}</span>
+          <span style="font-size:12px;color:#7a6aa8;display:block">
+            Mã: <code style="color:#5b4bb0;font-weight:800">${esc(item.id)}</code> · ${item.qs ? item.qs.length : 0} câu · Tác giả: <b>${esc(item.author || 'Ms Nene')}</b> · ${esc(item.date || '')}
+          </span>
+        </div>
+        <div class="bacts">
+          <button class="btn g" style="padding:5px 9px;font-size:12px" title="Dùng đề này mở phòng" onclick="loadQuizData('${item.id}')">${isTest ? '📝 Mở phòng thi' : '🎯 Mở phòng'}</button>
+          <button class="btn w" style="padding:5px 9px;font-size:12px" title="Giao bài" onclick="assignHwFor('${item.id}')">${isTest ? '📋 Giao bài test' : '📚 Giao bài'}</button>
+          <button class="btn r" style="padding:5px 8px;font-size:12px;background:#fef2f2;color:#dc2626;border:1px solid #fecaca" title="Xóa đề này khỏi thư viện (Dành cho Quản trị viên)" onclick="adminDeleteQuiz('${esc(item.id)}')">🗑️</button>
+        </div>
+      </div>
+      `;
+    }).join('');
+  }
+
+  // 2. Render Kho riêng
+  const bank = getBank();
+  let localFiltered = bank;
+  if (bankFilter === 'game') localFiltered = localFiltered.filter(q => q.type !== 'test' && q.m !== 'test');
+  if (bankFilter === 'test') localFiltered = localFiltered.filter(q => q.type === 'test' || q.m === 'test');
+  if (query) {
+    localFiltered = localFiltered.filter(q => (q.title || '').toLowerCase().includes(query));
+  }
+  if (!localFiltered.length) {
+    $('bankList').innerHTML = '<div class="hint" style="text-align:center;padding:10px">Kho riêng trên máy này chưa có đề nào.</div>';
+  } else {
+    $('bankList').innerHTML = localFiltered.map((item, idx) => {
+      const isTest = item.type === 'test' || item.m === 'test';
+      const badgeHtml = isTest 
+        ? '<span style="background:#8b5cf6;color:#fff;font-size:11px;font-weight:800;padding:2px 6px;border-radius:6px;margin-right:6px">📝 TEST</span>'
+        : '<span style="background:#0284c7;color:#fff;font-size:11px;font-weight:800;padding:2px 6px;border-radius:6px;margin-right:6px">🎮 GAME</span>';
+
+      return `
+      <div class="bank-item">
+        <div class="binfo" onclick="loadFromBank(${idx})">
+          <span style="font-size:15px">${badgeHtml}🔒 ${esc(item.title)}</span>
+          <span style="font-size:12px;color:#7a6aa8;display:block">${item.qs.length} câu · ${item.date || ''}</span>
+        </div>
+        <div class="bacts">
+          <button class="btn" style="padding:4px 8px;font-size:12px" onclick="loadFromBank(${idx})">Chọn đề</button>
+          <button class="btn g" style="padding:4px 8px;font-size:12px" title="Chia sẻ lên Thư viện chung" onclick="shareLocalToCommunity(${idx})">🌐 Chia sẻ</button>
+          <button class="btn r" style="padding:4px 8px;font-size:12px" onclick="deleteFromBank(${idx})">✕</button>
+        </div>
+      </div>
+      `;
+    }).join('');
+  }
+}
+
+// Bắt sự kiện bộ lọc đề
+if ($('bRefreshBank')) $('bRefreshBank').onclick = () => { toast('🔄 Đang đồng bộ lại thư viện từ máy chủ…', 1500); renderBank(true); };
+if ($('bFiltAll')) $('bFiltAll').onclick = () => { bankFilter = 'all'; updateFilterButtons(); renderBank(); };
+if ($('bFiltGame')) $('bFiltGame').onclick = () => { bankFilter = 'game'; updateFilterButtons(); renderBank(); };
+if ($('bFiltTest')) $('bFiltTest').onclick = () => { bankFilter = 'test'; updateFilterButtons(); renderBank(); };
+
+function updateFilterButtons() {
+  if ($('bFiltAll')) $('bFiltAll').className = 'btn ' + (bankFilter === 'all' ? 'g' : 'w');
+  if ($('bFiltGame')) $('bFiltGame').className = 'btn ' + (bankFilter === 'game' ? 'g' : 'w');
+  if ($('bFiltTest')) $('bFiltTest').className = 'btn ' + (bankFilter === 'test' ? 'g' : 'w');
+}
+
+if ($('searchBank'))if ($('searchBank')) {
+  $('searchBank').oninput = () => renderBank();
+}
+
+window.loadQuizData = async function(id) {
+  toast('⏳ Đang tải bộ đề ' + id + '…', 1500);
+  const quiz = await GC.getQuizById(id);
+  if (quiz && quiz.qs) {
+    const isTest = quiz.type === 'test' || quiz.m === 'test';
+    selectMode(isTest ? 'test' : (quiz.m || 'climb'));
+    setQs(quiz.qs, quiz.title || id, []);
+    toast('✅ Đã nạp đề: ' + (quiz.title || id) + ' (' + quiz.qs.length + ' câu) ' + (isTest ? '📝 Bài Test' : '🎮 Game'), 2800);
+  } else {
+    toast('❌ Không tải được nội dung câu hỏi của mã đề ' + id, 3000);
+  }
+};
+
+
+window.assignHwFor = async function(id) {
+  const quiz = await GC.getQuizById(id);
+  if (quiz && quiz.qs) {
+    setQs(quiz.qs, quiz.title, []);
+    $('bSolo').click();
+  }
+};
+
+window.copyShortLinkFor = function(id) {
+  const u = new URL('play.html', location.href);
+  u.searchParams.set('quiz', id);
+  navigator.clipboard.writeText(u.href).then(() => {
+    toast('📋 Đã copy link ngắn: ' + u.href + ' (Dán vào Zalo/Messenger)');
+  }).catch(() => prompt('Link bài tập:', u.href));
+};
+
+window.shareLocalToCommunity = async function(idx) {
+  const bank = getBank();
+  const item = bank[idx];
+  if (!item) return;
+  const author = prompt('Nhập tên giáo viên / nguồn đề chia sẻ:', 'Cô Chí Nên') || 'Cô Chí Nên';
+  const saved = await GC.saveCommunityQuiz({
+    title: item.title,
+    author,
+    qs: item.qs,
+    m: gMode,
+    lv: +$('gLv').value
+  });
+  toast('🎉 Đã chia sẻ đề "' + item.title + '" lên Thư viện chung với mã: ' + saved.id, 3500);
+  renderBank();
+};
+
+window.loadFromBank = function(idx) {
+  const bank = getBank();
+  if (bank[idx]) {
+    setQs(bank[idx].qs, bank[idx].title, []);
+    toast('✅ Đã nạp đề từ kho riêng: ' + bank[idx].title);
+  }
+};
+
+window.deleteFromBank = function(idx) {
+  if (confirm('Cô có chắc muốn xóa bộ đề này khỏi kho riêng?')) {
+    const bank = getBank();
+    bank.splice(idx, 1);
+    saveBank(bank);
+    toast('🗑 Đã xóa bộ đề');
+  }
+};
+
+/* Nút lưu lên Thư viện chung */
+$('bSaveToBank').onclick = async () => {
+  if (!qs.length) return;
+  const isTest = gMode === 'test';
+  const title = clean($('gTitle').value) || prompt('Nhập tên bộ đề chia sẻ:') || (isTest ? 'Bài kiểm tra tiếng Anh' : 'Bài ôn tập');
+  const author = prompt('Tên giáo viên / Nguồn đề:', 'Cô Chí Nên') || 'Cô Chí Nên';
+  const saved = await GC.saveCommunityQuiz({
+    title,
+    author,
+    qs,
+    m: gMode,
+    type: isTest ? 'test' : 'game',
+    theme: $('testTheme')?.value || 'cambridge',
+    lv: +$('gLv').value
+  });
+  toast('🎉 Đã lưu & chia sẻ thành công lên Thư viện chung! Mã đề: ' + saved.id, 3500);
+  renderBank();
+};
+
+/* Nút lưu riêng máy này */
+if ($('bSaveLocal')) {
+  $('bSaveLocal').onclick = () => {
+    if (!qs.length) return;
+    const isTest = gMode === 'test';
+    const title = clean($('gTitle').value) || prompt('Nhập tên bộ đề lưu riêng:') || (isTest ? 'Bài kiểm tra tiếng Anh' : 'Bài ôn tập');
+    const bank = getBank();
+    const d = new Date();
+    bank.unshift({
+      title,
+      qs,
+      m: gMode,
+      type: isTest ? 'test' : 'game',
+      theme: $('testTheme')?.value || 'cambridge',
+      date: d.toLocaleDateString('vi-VN')
+    });
+    saveBank(bank);
+    toast('🔒 Đã lưu đề vào kho riêng trên máy này!', 2500);
+  };
+}
+
+$('bExportBank').onclick = async () => {
+  const comm = await GC.getCommunityLibrary();
+  const bank = getBank();
+  const all = { community: comm, local: bank };
+  const blob = new Blob([JSON.stringify(all, null, 2)], { type: 'application/json' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'Thu_Vien_De_MsNeneEnglish_' + new Date().toISOString().slice(0,10) + '.json';
+  a.click();
+};
+
+$('fImportBank').onchange = e => {
+  const file = e.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = async ev => {
+    try {
+      const data = JSON.parse(ev.target.result);
+      if (Array.isArray(data)) {
+        const bank = getBank().concat(data);
+        saveBank(bank);
+        toast('🎉 Đã nạp thành công ' + data.length + ' bộ đề!');
+      } else if (data && typeof data === 'object') {
+        if (data.local && Array.isArray(data.local)) saveBank(getBank().concat(data.local));
+        if (data.community && Array.isArray(data.community)) {
+          for (const q of data.community) await GC.saveCommunityQuiz(q);
+        }
+        toast('🎉 Đã nạp dữ liệu thư viện thành công!');
+        renderBank();
+      }
+    } catch (err) { toast('❌ Lỗi đọc file: ' + err.message); }
+  };
+  reader.readAsText(file);
+};
+/* ═════ GIAO BÀI TẬP VỀ NHÀ ═════ */
+const LVN = { 1: 'Dễ', 2: 'Vừa', 3: 'Khó' };
+let hwLink = '', hwShortLink = '', hwText = '';
+$('bSolo').onclick = () => {
+  if (window.LIC && !window.LIC.allowed(gMode)) {
+    promptUnlockModal(gMode);
+    return;
+  }
+  const d = new Date(); d.setDate(d.getDate() + 1); d.setHours(21, 0, 0, 0);
+  const p2 = x => String(x).padStart(2, '0');
+  if (!$('hwDl').value) $('hwDl').value = d.getFullYear() + '-' + p2(d.getMonth() + 1) + '-' + p2(d.getDate()) + 'T21:00';
+  $('hwSum').textContent = '📘 ' + (clean($('gTitle').value) || 'Bài ôn tập') + ' · ' + MNAME[gMode] + ' · ' + LVN[$('gLv').value] + ' · ' + qs.length + ' câu';
+  $('hwOut').hidden = true; $('ovHw').classList.add('on');
+};
+$('hwNoDl').onchange = () => { $('hwDl').disabled = $('hwNoDl').checked };
+
+$('bHwMake').onclick = async () => {
+  const dl = $('hwNoDl').checked ? 0 : Date.parse($('hwDl').value);
+  if (!$('hwNoDl').checked && (!dl || dl < Date.now())) return toast('⏰ Cô chọn hạn nộp ở tương lai nhé', 2400);
+  const isTest = gMode === 'test';
+  const title = clean($('gTitle').value) || (isTest ? 'Bài kiểm tra tiếng Anh' : 'Bài ôn tập');
+  const dur = isTest ? getTestDurMinutes() : +$('hwDur').value;
+  const withE = $('hwExp').checked;
+  const payload = {
+    v: 1,
+    t: title,
+    m: gMode,
+    theme: $('testTheme')?.value || 'cambridge',
+    testShuffle: $('testShuffle')?.checked ?? true,
+    testReview: $('testReview')?.checked ?? true,
+    testShowExp: $('testShowExp')?.checked ?? true,
+    lv: +$('gLv').value,
+    eq: +$('gEq').value,
+    em: +$('gEm').value,
+    mu: $('gMu')?.checked ?? false,
+    dl,
+    dur,
+    lic: 'Cô Chí Nên (Ms Nene)',
+    qs: qs.map(q => ({
+      type: q.type || 'mc',
+      ansText: q.ansText || '',
+      q: q.q,
+      o: q.o,
+      a: q.a,
+      e: withE ? q.e || '' : '',
+      s: q.s || '',
+      passage: q.passage || '',
+      audio: q.audio || '',
+      img: q.img || ''
+    }))
+  };
+
+  let hwId = 'HW-' + Math.floor(100000 + Math.random() * 900000);
+  payload.id = hwId;
+
+  // XỬ LÝ QUYẾT ĐỊNH CỦA GIÁO VIÊN: LƯU VÀO THƯ VIỆN CHUNG & TẠO LINK RÚT GỌN
+  hwShortLink = '';
+  if ($('hwShareCloud') && $('hwShareCloud').checked) {
+    const author = clean($('hwAuthor').value) || 'Cô Chí Nên';
+    const saved = await GC.saveCommunityQuiz({
+      title,
+      author,
+      qs: payload.qs,
+      m: gMode,
+      type: isTest ? 'test' : 'game',
+      theme: payload.theme,
+      lv: payload.lv,
+      dur,
+      dl
+    });
+    hwId = saved.id;
+    payload.id = hwId;
+    const su = new URL('play.html', location.href);
+    su.searchParams.set('quiz', saved.id);
+    hwShortLink = su.href;
+    toast('🌐 Đã lưu & chia sẻ vào Thư viện chung với mã: ' + saved.id, 3500);
+    renderBank();
+  }
+
+  const u = new URL('play.html', location.href);
+  hwLink = u.href + '?hw=' + await GC.packHw(payload);
+  await GC.saveHwMeta({ id: hwId, title, m: gMode, dur, dl });
+
+  const finalLink = hwShortLink || hwLink;
+  if (isTest) {
+    hwText = `📝 BÀI KIỂM TRA — Ms Nene English\n` +
+      `📘 ` + title + `\n` +
+      `⏱ Thời gian làm bài: ` + (dur ? dur + ' phút' : 'không giới hạn') + `\n` +
+      `⏰ Hạn nộp: ` + (dl ? stamp(dl) : 'không đặt hạn') + `\n` +
+      `👉 Link vào thi: ` + finalLink + `\n\n` +
+      `✍️ Các con bấm link, nhập họ tên rồi làm bài thi. Làm xong bấm "Nộp bài" để nộp kết quả cho cô nhé!`;
+  } else {
+    hwText = `📚 BÀI TẬP VỀ NHÀ — Ms Nene English\n` +
+      `📘 ` + title + `\n` +
+      `🎮 Game: ` + (MNAME[gMode] || 'Trò chơi') + ` · độ khó ` + (LVN[payload.lv] || 'Vừa') + ` · ` + qs.length + ` câu\n` +
+      `⏱ Mỗi lượt chơi: ` + (dur ? dur + ' phút' : 'không giới hạn') + `\n` +
+      `⏰ Hạn nộp: ` + (dl ? stamp(dl) : 'không đặt hạn') + `\n` +
+      `👉 Link vào làm: ` + finalLink + `\n\n` +
+      `✍️ Chơi xong các con bấm "📋 Copy kết quả gửi cô" rồi dán vào Zalo nhé!`;
+  }
+  
+  $('hwMsg').textContent = hwText;
+  $('hwOut').hidden = false;
+  $('hwLen').textContent = hwShortLink ? '✅ Link ngắn (' + hwShortLink.length + ' ký tự) — Đã lưu vào Thư viện chung, gửi Zalo/Facebook thoải mái không bao giờ bị cắt link!' : '⚠️ Link tự thân (' + hwLink.length + ' ký tự).';
+};
+
+$('bHwCopy').onclick = () => navigator.clipboard.writeText(hwText).then(() => toast('📋 Đã copy tin nhắn — dán vào nhóm Zalo lớp nhé!', 2800)).catch(() => prompt('Copy:', hwText));
+if ($('bHwShortLink')) {
+  $('bHwShortLink').onclick = () => {
+    const linkToCopy = hwShortLink || hwLink;
+    navigator.clipboard.writeText(linkToCopy).then(() => toast('📋 Đã copy link: ' + linkToCopy, 2200)).catch(() => prompt('Copy link:', linkToCopy));
+  };
+}
+$('bHwLink').onclick = () => navigator.clipboard.writeText(hwLink).then(() => toast('📋 Đã copy link đầy đủ', 2000)).catch(() => prompt('Copy:', hwLink));
+
+/* Chọn chế độ game (Free 2 game: Leo núi & Nấm Mario) */
+let gMode = 'climb';
+const MNAME = { climb: '🧗 Leo núi', brick: '🍄 Nấm Mario', tank: '🛡 Xe tăng', bomb: '💣 Bomberman', test: '📝 Phòng thi A2-B1', pac: '🟡 Pac-Man', race: '🏎 Đua xe', temple: '🏃 Temple Run P1', temple2: '🏃 Temple Run P2', bounce: '🔴 Bounce Tales', bounce2: '🐸 Bounce Tales P2' };
+
+let pendingUnlockTargetMode = null;
+function promptUnlockModal(targetMode) {
+  pendingUnlockTargetMode = targetMode || null;
+  const ov = $('ovUnlockGames');
+  const passInp = $('gameUnlockPass');
+  const errDiv = $('gameUnlockErr');
+  if (errDiv) errDiv.style.display = 'none';
+  if (passInp) passInp.value = '';
+  if (ov) ov.classList.add('on');
+  setTimeout(() => passInp && passInp.focus(), 100);
+}
+
+function doUnlockGamesSubmit() {
+  const passInp = $('gameUnlockPass');
+  const errDiv = $('gameUnlockErr');
+  const key = (passInp ? passInp.value : '').trim();
+  const res = window.LIC ? window.LIC.verify(key) : { ok: false };
+  if (res.ok) {
+    if (errDiv) errDiv.style.display = 'none';
+    $('ovUnlockGames').classList.remove('on');
+    toast('🎉 Kích hoạt bản quyền thành công trọn bộ 10 game & phòng thi!', 3000);
+    renderModesLockState();
+    if (pendingUnlockTargetMode) {
+      selectMode(pendingUnlockTargetMode);
+      pendingUnlockTargetMode = null;
+    }
+  } else {
+    if (errDiv) {
+      errDiv.style.display = 'block';
+      errDiv.textContent = '❌ Mã kích hoạt không chính xác! Vui lòng thử lại.';
+    }
+    if (passInp) {
+      passInp.focus();
+      passInp.select();
+    }
+  }
+}
+
+if ($('bDoUnlockGames')) $('bDoUnlockGames').onclick = doUnlockGamesSubmit;
+if ($('gameUnlockPass')) $('gameUnlockPass').onkeydown = e => { if (e.key === 'Enter') doUnlockGamesSubmit(); };
+if ($('bCloseUnlockGames')) $('bCloseUnlockGames').onclick = () => $('ovUnlockGames').classList.remove('on');
+
+function renderModesLockState() {
+  const unlocked = window.LIC ? window.LIC.isUnlocked() : false;
+  document.querySelectorAll('#gModes .mode').forEach(b => {
+    const m = b.dataset.m;
+    const isFree = (m === 'climb' || m === 'brick');
+    const isLocked = !isFree && !unlocked;
+
+    b.classList.toggle('locked-mode', isLocked);
+    let lockBadge = b.querySelector('.mode-lock-badge');
+    if (isLocked) {
+      if (!lockBadge) {
+        lockBadge = document.createElement('span');
+        lockBadge.className = 'mode-lock-badge';
+        lockBadge.innerHTML = '🔒';
+        lockBadge.style.cssText = 'position:absolute;top:6px;right:6px;font-size:12px;background:#fef2f2;border-radius:50%;width:20px;height:20px;display:flex;align-items:center;justify-content:center;box-shadow:0 2px 5px rgba(0,0,0,0.12);border:1px solid #fecaca;pointer-events:none';
+        b.style.position = 'relative';
+        b.appendChild(lockBadge);
+      }
+    } else {
+      if (lockBadge) lockBadge.remove();
+    }
+  });
+
+  const licBar = $('licBar');
+  const licText = $('licText');
+  const licIcon = $('licIcon');
+  if (licBar && licText) {
+    if (unlocked) {
+      if (licIcon) licIcon.textContent = '🌟';
+      licText.innerHTML = `
+        <b>Phiên bản Pro:</b> Đã kích hoạt trọn bộ 10 game &amp; Phòng thi cho Cô Chí Nên.
+        <button type="button" class="btn w" id="bRelockGames" style="padding:1px 8px;font-size:11px;margin-left:8px;color:#dc2626;border-color:#fca5a5;background:#fef2f2" title="Khóa lại bản quyền">🔒 Khóa lại</button>
+      `;
+      if ($('bRelockGames')) {
+        $('bRelockGames').onclick = (e) => {
+          e.stopPropagation();
+          if (window.LIC) window.LIC.lock();
+          toast('🔒 Đã khóa lại trò chơi! Hiện chỉ còn 2 game free (Leo núi & Nấm Mario).', 2000);
+          selectMode('climb');
+          renderModesLockState();
+        };
+      }
+    } else {
+      if (licIcon) licIcon.textContent = '🔒';
+      licText.innerHTML = `
+        <b>Bản tiêu chuẩn:</b> 🧗 Leo núi &amp; 🍄 Nấm Mario.
+        <button type="button" class="btn b" id="bTriggerUnlockModal" style="padding:3px 12px;font-size:12px;margin-left:8px;background:linear-gradient(135deg,#7c3aed,#db2777);border:none;color:#fff;font-weight:800;cursor:pointer">🔑 Kích hoạt bản quyền Pro</button>
+      `;
+      if ($('bTriggerUnlockModal')) {
+        $('bTriggerUnlockModal').onclick = (e) => {
+          e.stopPropagation();
+          promptUnlockModal();
+        };
+      }
+    }
+  }
+}
+
+$('gModes').onclick = e => {
+  const b = e.target.closest('[data-m]'); if (!b) return;
+  const m = b.dataset.m;
+  if (window.LIC && !window.LIC.allowed(m)) {
+    promptUnlockModal(m);
+    return;
+  }
+  selectMode(m);
+};
+
+/* ═════ ② MỞ PHÒNG CHƠI CHUNG ═════ *//* ═════ ② MỞ PHÒNG CHƠI CHUNG ═════ */
+$('bOpen').onclick = async () => {
+  if (window.LIC && !window.LIC.allowed(gMode)) {
+    promptUnlockModal(gMode);
+    return;
+  }
+  $('bOpen').disabled = true;
+  try {
+    code = await net.newCode(); await net.host(code);
+    const isTest = gMode === 'test';
+    const tDur = isTest ? getTestDurMinutes() : +$('gDur').value;
+    info = {
+      t: clean($('gTitle').value) || (isTest ? 'Bài kiểm tra tiếng Anh' : 'Game ôn tập'),
+      m: gMode,
+      theme: $('testTheme')?.value || 'cambridge',
+      testDur: tDur,
+      testShuffle: $('testShuffle')?.checked ?? true,
+      testReview: $('testReview')?.checked ?? true,
+      testShowExp: $('testShowExp')?.checked ?? true,
+      st: 'lobby',
+      seed: Math.floor(Math.random() * 1e9) + 1,
+      dur: tDur,
+      ia: $('gIa') ? $('gIa').checked : false,
+      lic: 'Cô Chí Nên (Ms Nene)',
+      eq: +$('gEq').value,
+      em: +$('gEm').value,
+      lv: +$('gLv').value,
+      mu: $('gMu') ? $('gMu').checked : false,
+      cr: net.now()
+    };
+    const clean_qs = qs.map(q => ({
+      type: q.type || 'mc',
+      ansText: q.ansText || '',
+      q: q.q,
+      o: q.o,
+      a: q.a,
+      e: q.e || '',
+      s: q.s || '',
+      passage: q.passage || '',
+      audio: q.audio || '',
+      img: q.img || ''
+    }));
+    await net.set('rooms/' + code, { info, qs: clean_qs });
+    store.set('gHost', JSON.stringify({ code, qs: clean_qs }));
+    enterRoom();
+  } catch (e) { toast('❌ ' + e.message, 4000) } finally { $('bOpen').disabled = !qs.length }
+};
+
+let joinUrl = '';
+function enterRoom() {
+  mistakeStats = {};
+  TOP = info.m === 'test' ? 100 : ((info.m === 'brick' ? Brick : info.m === 'tank' ? Tank : info.m === 'bomb' ? Bomb : info.m === 'pac' ? Pac : info.m === 'race' ? Race : info.m === 'temple' || info.m === 'temple2' ? Temple : info.m === 'bounce' || info.m === 'bounce2' ? Bounce : Climb).measure(info.seed, info.lv || 2) || 1);
+  offs.forEach(f => f()); offs = [];
+  const url = new URL('play.html', location.href); url.searchParams.set('room', code); if (info && info.m) url.searchParams.set('m', info.m);
+  $('lCode').textContent = code; $('vCode').textContent = code; $('lUrl').textContent = url.href; $('lTitle').textContent = '📘 ' + info.t; $('vTitle').textContent = '📘 ' + info.t;
+  joinUrl = url.href;
+  $('qr').innerHTML = '';
+  if (window.QRCode) new QRCode($('qr'), { text: url.href, width: 240, height: 240, colorDark: '#2d2350', colorLight: '#ffffff' });
+  else $('qr').hidden = true;
+
+  offs.push(net.on('rooms/' + code + '/info', v => {
+    if (!v) return; info = v;
+    $('vEn').textContent = '⚡ ' + (v.eq || 100) + '/câu · 🔋 ' + (v.em ? 'đầy ' + v.em : 'không giới hạn');
+    if (v.st === 'lobby') show('vLobby');
+    else if (v.st === 'play') { show('vLive'); tick(); const mTrack = v.m === 'temple2' ? 'temple' : v.m === 'bounce2' ? 'bounce' : (v.m || 'climb'); GC.music.start(false, mTrack); paintMusic(); }
+    else if (v.st === 'end') { GC.music.stop(); showEnd(); }
+  }));
+  offs.push(net.on('rooms/' + code + '/players', v => { players = v || {}; renderLobby(); renderBoard(); if (info && info.st === 'end') showEnd(); }));
+  offs.push(net.onAdded('rooms/' + code + '/ev', (k, e) => {
+    if (!e) return;
+    feedLine(e);
+    // Ghi nhận nếu học sinh làm sai câu nào
+    if (e.ty === 'wrong' && e.q != null) {
+      mistakeStats[e.q] = (mistakeStats[e.q] || 0) + 1;
+    }
+  }));
+  clearInterval(timerI); timerI = setInterval(tick, 500);
+}
+
+function renderLobby() {
+  const L = Object.entries(players);
+  $('lCount').textContent = L.length ? '🙌 ' + L.length + ' bạn đã vào phòng' : 'Chưa có bạn nào vào phòng…';
+  $('lList').innerHTML = L.map(([id, p]) => '<span class="pp' + (p.on ? '' : ' off') + '"><i class="dot" style="background:' + esc(p.c) + '"></i>' + esc(p.n) + '<button title="Mời ra khỏi phòng" onclick="kick(\'" + id + "\')">✕</button></span>').join('');
+}
+function kick(id) { net.remove('rooms/' + code + '/players/' + id) }
+$('bStart').onclick = () => { const now = net.now(); net.update('rooms/' + code + '/info', { st: 'play', sa: now, ea: now + info.dur * 60000 }); sfx('cp') };
+$('bCancel').onclick = async () => { await net.remove('rooms/' + code); leave() };
+function leave() { GC.music.stop(); offs.forEach(f => f()); offs = []; clearInterval(timerI); store.set('gHost', null); code = ''; players = {}; $('feed').innerHTML = ''; show('vSetup'); checkResume() }
+
+/* ═════ ③ ĐANG CHƠI ═════ */
+function tick() {
+  if (!info || info.st !== 'play') return;
+  const left = info.ea - net.now();
+  $('tLeft').textContent = fmt(left);
+  $('tLeft').classList.toggle('low', left < 60000);
+  const L = Object.values(players);
+  if (left <= 0 || (L.length && L.every(p => p.tt || p.st === 'submitted'))) endGame();
+}
+function renderBoard() {
+  if (!info || info.st === 'lobby') return;
+  const isTest = info.m === 'test';
+  const now = net.now(), cps = [1, 2, 3, 4].map(i => i / 5 * 100);
+  $('board').innerHTML = GC.rank(players).map(([id, p], i) => {
+    if (isTest) {
+      const tot = p.tot || qs.length || 1;
+      const ans = p.ans || 0;
+      const pct = p.st === 'submitted' ? 100 : Math.min(100, Math.round(ans / tot * 100));
+      const icons = (p.st === 'submitted' ? '✅' : '✍️') + (p.on ? '' : ' 💤');
+      const sc = p.score ?? Math.round((p.ok || 0) / tot * 100);
+      const statusTxt = p.st === 'submitted' ? ('✅ Đã nộp · ' + sc + ' điểm') : ('✍️ Đang làm ' + ans + '/' + tot + ' câu');
+      return '<div class="lr"><div class="rk">' + (['🥇', '🥈', '🥉'][i] || i + 1) + '</div><div class="nm"><i class="dot" style="background:' + esc(p.c) + '"></i> ' + esc(p.n) + ' ' + icons + '</div>' +
+        '<div class="bar"><i style="width:' + pct + '%;background:linear-gradient(90deg,' + esc(p.c) + ',#10b981)"></i></div>' +
+        '<div class="meta">' + statusTxt + ' · 🎯 Đúng ' + (p.ok || 0) + '/' + tot + '</div></div>';
+    }
+    const pct = p.tt ? 100 : Math.min(100, (p.alt || 0) / TOP * 100);
+    const icons = (p.tt ? '👸' : '') + (p.fz > now ? '❄️' : '') + (p.sh > now ? '🛡' : '') + (p.on ? '' : '💤');
+    return '<div class="lr"><div class="rk">' + (['🥇', '🥈', '🥉'][i] || i + 1) + '</div><div class="nm"><i class="dot" style="background:' + esc(p.c) + '"></i> ' + esc(p.n) + ' ' + icons + '</div>' +
+      '<div class="bar"><i style="width:' + pct + '%;background:linear-gradient(90deg,' + esc(p.c) + ',#9b7bff)"></i>' + cps.map(c => '<b style="left:' + c + '%"></b>').join('') + '</div>' +
+      '<div class="meta">' + (p.tt ? (info && info.m === 'test' ? '✅ Đã nộp' : (['climb','brick'].includes(info?.m) ? '👸 Cứu' : '🏆 Phá đảo')) : p.lb ? '🏁 ' + esc(p.lb) + (p.cn != null ? ' · 🪙 ' + p.cn : '') : '⛰ ' + (p.alt || 0) + 'm') + ' · ✅ ' + (p.ok || 0) + '/' + (p.ans || 0) + ' · 🔥' + (p.st || 0) + '</div></div>';
+  }).join('') || '<div class="sub">Chưa có bạn nào…</div>';
+}
+setInterval(() => { if (info && info.st === 'play') renderBoard() }, 1000);
+
+function feedLine(e) {
+  const t = e.ty === 'cp' ? '🚩 ' + e.nm + ' lên Trạm ' + e.n : e.ty === 'lv' ? '🏁 ' + e.nm + (e.k === 'stage' ? ' qua Stage ' : ' qua Màn ') + e.n : e.ty === 'win' ? (info && info.m === 'test' ? '📥 ' + e.nm + ' đã nộp bài kiểm tra (' + (e.score ?? 0) + ' điểm)!' : '👸 ' + e.nm + ' đã giải cứu công chúa!') : e.ty === 'fz' ? '❄️ ' + e.nm + ' đóng băng ' + e.tn : e.ty === 'st' ? '🧲 ' + e.nm + ' hút ⚡ của ' + e.tn : e.ty === 'blk' ? '🛡 ' + e.nm + ' chặn được chiêu trêu' : '';
+  if (!t) return; const d = document.createElement('div'); d.textContent = t; $('feed').prepend(d); while ($('feed').children.length > 40) $('feed').lastChild.remove();
+  if (e.ty === 'win') { sfx('fanfare'); confetti(60); }
+}
+const paintMusic = () => { $('bMusic').textContent = GC.music.pref() ? '🎵 Nhạc: bật' : '🔇 Nhạc: tắt' };
+$('bMusic').onclick = () => { GC.music.toggle(); paintMusic() };
+
+function copyLink() { navigator.clipboard.writeText(joinUrl).then(() => toast('📋 Đã copy link phòng — dán vào Zalo/Messenger cho các em!', 2600)).catch(() => prompt('Copy link này:', joinUrl)) }
+$('bInvite').onclick = () => {
+  $('iCode').textContent = code; $('iUrl').textContent = joinUrl; $('qr2').innerHTML = '';
+  if (window.QRCode) new QRCode($('qr2'), { text: joinUrl, width: 260, height: 260, colorDark: '#2d2350', colorLight: '#ffffff' });
+  $('ovInv').classList.add('on');
+};
+$('ovInv').onclick = e => { if (e.target.id === 'ovInv') $('ovInv').classList.remove('on') };
+$('bPlus').onclick = () => { net.update('rooms/' + code + '/info', { ea: info.ea + 60000 }); toast('➕ Thêm 1 phút cho cả lớp!') };
+$('bEnd').onclick = () => $('cEnd').classList.add('on');
+$('bEndNo').onclick = () => $('cEnd').classList.remove('on');
+$('bEndYes').onclick = () => { $('cEnd').classList.remove('on'); endGame() };
+function endGame() { if (info && info.st !== 'end') { net.update('rooms/' + code + '/info', { st: 'end', en: net.now() }); net.push('rooms/' + code + '/ev', { ty: 'end', t: net.now() }) } }
+
+/* ═════ ④ VINH DANH & REVIEW BÀI HỌC ═════ */
+function showEnd() {
+  show('vEnd'); clearInterval(timerI);
+  if (!showEnd.done) { showEnd.done = code; sfx('fanfare'); confetti(120); }
+  const R = GC.rank(players);
+  const isTest = info && info.m === 'test';
+  const totQ = qs.length || 1;
+  $('eTitle').textContent = (isTest ? '📝 ' : '📘 ') + info.t + ' · ' + R.length + ' bạn tham gia';
+  const H = [150, 115, 90], COL = ['#f5b942', '#a7a7c9', '#e39a6a'];
+  $('podium').innerHTML = [1, 0, 2].filter(i => R[i]).map(i => {
+    const p = R[i][1];
+    const metaTxt = isTest
+      ? ('🏆 ' + (p.score ?? Math.round((p.ok || 0) / (p.tot || totQ) * 100)) + ' điểm · ✅ ' + (p.ok || 0) + '/' + (p.tot || totQ))
+      : ((p.tt ? '👸 Cứu công chúa' : p.lb ? esc(p.lb) : '⛰ ' + (p.alt || 0) + 'm') + ' · ✅ ' + (p.ok || 0));
+    return '<div class="pod"><div class="av" style="background:' + esc(p.c) + '"></div><div class="nm">' + esc(p.n) + '</div><div class="meta">' + metaTxt + '</div><div class="st" style="height:' + H[i] + 'px;background:' + COL[i] + '">' + (i + 1) + '</div></div>'
+  }).join('');
+
+  window.exportPlayerReport = function(pidKey) {
+    const p = players[pidKey];
+    if (!p) return;
+    const tot = p.tot || totQ;
+    const sc = isTest ? (p.score ?? Math.round((p.ok || 0) / tot * 100)) : (p.ans ? Math.round((p.ok || 0) / p.ans * 100) : 0);
+    GC.showReportCard({
+      name: p.n,
+      title: info.t,
+      score: sc,
+      ok: p.ok || 0,
+      tot: isTest ? tot : (p.ans || tot),
+      m: info.m,
+      timeText: p.tt ? fmt(p.tt) : 'Hoàn thành'
+    });
+  };
+  if (isTest) {
+    $('eTable').innerHTML = '<tr><th>Hạng</th><th>Họ tên</th><th>Trạng thái</th><th>Điểm số</th><th>Số câu đúng</th><th>Đã làm</th><th>Thao tác</th></tr>' +
+      R.map(([idKey, p], i) => {
+        const tot = p.tot || totQ;
+        const sc = p.score ?? Math.round((p.ok || 0) / tot * 100);
+        return '<tr><td>' + (i + 1) + '</td><td>' + esc(p.n) + '</td><td>' + (p.st === 'submitted' ? '✅ Đã nộp bài' : '⏳ Chưa nộp') + '</td><td><b>' + sc + ' / 100</b></td><td>' + (p.ok || 0) + ' / ' + tot + '</td><td>' + (p.ans || 0) + ' / ' + tot + '</td><td><button class="btn b" style="padding:4px 10px;font-size:12px" onclick="exportPlayerReport(\'' + esc(idKey) + '\')">🏅 Phiếu điểm</button></td></tr>';
+      }).join('');
+  } else {
+    $('eTable').innerHTML = '<tr><th>Hạng</th><th>Họ tên</th><th>Tiến độ</th><th>Đúng</th><th>% đúng</th><th>🔥 Chuỗi</th><th>🍄 Giẫm</th><th>😱 Rơi</th><th>Thao tác</th></tr>' +
+      R.map(([idKey, p], i) => '<tr><td>' + (i + 1) + '</td><td>' + esc(p.n) + '</td><td>' + (p.tt ? (info && info.m === 'test' ? '✅ Đã nộp' : (['climb','brick'].includes(info?.m) ? '👸 Cứu công chúa' : '🏆 Phá đảo')) : p.lb ? esc(p.lb) + (p.cn != null ? ' · 🪙 ' + p.cn : '') : (p.alt || 0) + ' m') + '</td><td>' + (p.ok || 0) + '/' + (p.ans || 0) + '</td><td>' + (p.ans ? Math.round(p.ok / p.ans * 100) : 0) + '%</td><td>' + (p.bs || 0) + '</td><td>' + (p.sp || 0) + '</td><td>' + (p.fl || 0) + '</td><td><button class="btn b" style="padding:4px 10px;font-size:12px" onclick="exportPlayerReport(\'' + esc(idKey) + '\')">🏅 Phiếu điểm</button></td></tr>').join('');
+  }
+
+  // PHÂN TÍCH CÂU LÀM SAI & CHIẾU LỜI GIẢI TOÀN BỘ ĐỀ
+  if (qs.length) {
+    $('revBox').hidden = false;
+    if ($('bExpAllQs')) $('bExpAllQs').onclick = () => showExplanation(1);
+    const mEntries = Object.entries(mistakeStats).sort((a,b) => b[1] - a[1]);
+    if (mEntries.length) {
+      $('mistakeList').innerHTML = mEntries.slice(0, 8).map(([qIdx, count]) => {
+        const qNum = +qIdx;
+        const question = qs[qNum - 1] || qs[qNum] || { q: 'Câu hỏi ' + qNum };
+        return `
+          <div class="mistake-row">
+            <div style="flex:1;margin-right:12px">
+              <b>⚠️ Câu ${qNum}:</b> ${GC.safe(question.q).slice(0, 90)}... 
+              <span style="color:#c23a55;font-size:13px">(${count} lượt làm sai)</span>
+            </div>
+            <button class="btn" style="padding:6px 12px;font-size:13px" onclick="showExplanation(${qNum})">🔍 Xem lời giải</button>
+          </div>
+        `;
+      }).join('');
+    } else {
+      $('mistakeList').innerHTML = '<div style="background:#fff;border-radius:12px;padding:10px 14px;margin-top:8px;font-weight:700;color:#047857">🎉 Các bạn làm bài rất tốt! Bấm nút <b>"📖 Chiếu lời giải toàn bộ đề thi"</b> bên trên để cùng lớp xem lại đáp án từng câu nhé.</div>';
+    }
+  } else {
+    $('revBox').hidden = true;
+  }
+}
+
+let currentExpQNum = 1;
+
+window.expNav = function(delta) {
+  const next = currentExpQNum + delta;
+  if (next >= 1 && next <= qs.length) {
+    showExplanation(next);
+  }
+};
+
+window.showExplanation = function(qNum) {
+  currentExpQNum = Math.max(1, Math.min(qs.length, +qNum || 1));
+  const q = qs[currentExpQNum - 1];
+  if (!q) return;
+
+  const jumpSel = $('expJumpSel');
+  if (jumpSel) {
+    jumpSel.innerHTML = qs.map((_, i) => `<option value="${i + 1}" ${i + 1 === currentExpQNum ? 'selected' : ''}>Câu ${i + 1} / ${qs.length}</option>`).join('');
+    jumpSel.value = String(currentExpQNum);
+  }
+
+  const isSpeaking = q.type === 'speaking';
+  const isText = !isSpeaking && (q.type === 'text' || (!!q.ansText && (!q.o || q.o.length < 2)));
+  const target = q.targetText || q.ansText || q.q;
+  const safeTarget = esc(target).replace(/'/g, "\\'");
+  const correctLabel = isSpeaking
+    ? ('🗣 “' + esc(target) + '”' + (q.ipa ? ' ' + esc(q.ipa) : ''))
+    : isText ? esc(q.ansText) : (q.o ? ('ABCD'[q.a] + '. ' + GC.safe(q.o[q.a])) : 'Chưa rõ');
+  $('expSub').innerHTML = `<b>Câu ${currentExpQNum} / ${qs.length}</b> ${q.s ? ' · 📌 <i>' + esc(q.s) + '</i>' : ''} · <span style="color:#047857">🎯 Đáp án đúng: <b>${correctLabel}</b></span>`;
+
+  let passageHtml = '';
+  if (q.passage && q.passage.trim()) {
+    passageHtml = `
+      <div style="background:#fff;border:1.5px solid #cbd5e1;border-radius:12px;padding:12px;margin-bottom:12px;font-size:14px;line-height:1.7;color:#334155">
+        <b style="color:#5b4bb0;display:block;margin-bottom:6px">📖 Đoạn văn bài đọc (Reading Passage):</b>
+        ${q.passage}
+      </div>
+    `;
+  }
+
+  let optionsHtml = '';
+  if (isSpeaking) {
+    optionsHtml = `
+      <div style="background:#fdf2f8;border:2px solid #f472b6;border-radius:12px;padding:12px;margin:12px 0">
+        <div style="font-weight:800;color:#9d174d;margin-bottom:4px">🗣 Dạng câu phát âm tiếng Anh (Speaking):</div>
+        <div style="font-size:16px;color:#831843;font-weight:900">Câu chuẩn: “${GC.safe(target)}”</div>
+        ${q.ipa ? `<div style="font-size:13px;color:#be185d;font-family:monospace;margin-top:4px">Phiên âm IPA: ${GC.safe(q.ipa)}</div>` : ''}
+        <button type="button" class="btn w" style="margin-top:8px;padding:4px 10px;font-size:12px" onclick="GC.speakText('${safeTarget}')">🔊 Nghe thử giọng đọc mẫu</button>
+      </div>
+    `;
+  } else if (isText) {
+    optionsHtml = `
+      <div style="background:#ecfdf5;border:2px solid #6ee7b7;border-radius:12px;padding:12px;margin:12px 0">
+        <div style="font-weight:800;color:#065f46;margin-bottom:4px">✍️ Dạng câu tự luận / điền từ / viết lại câu:</div>
+        <div style="font-size:16px;color:#047857;font-weight:800">Đáp án chính xác được chấp nhận: <code>${esc(q.ansText)}</code></div>
+      </div>
+    `;
+  } else {
+    optionsHtml = `
+      <div style="margin:12px 0;display:grid;gap:8px">
+        <div style="font-weight:800;color:#475569;font-size:13px">TOÀN BỘ PHƯƠNG ÁN LỰA CHỌN (A, B, C, D):</div>
+        ${(q.o || []).map((optText, oi) => {
+          const isRight = oi === q.a;
+          return `
+            <div style="display:flex;align-items:center;gap:10px;padding:10px 14px;border-radius:12px;border:2px solid ${isRight ? '#10b981' : '#e2e8f0'};background:${isRight ? '#ecfdf5' : '#fff'};font-weight:700">
+              <span style="width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:900;background:${isRight ? '#10b981' : '#f1f5f9'};color:${isRight ? '#fff' : '#475569'}">${'ABCD'[oi]}</span>
+              <span style="flex:1;font-size:15px;color:${isRight ? '#065f46' : '#1e293b'}">${optText}</span>
+              ${isRight ? '<span style="background:#10b981;color:#fff;font-size:12px;font-weight:900;padding:3px 10px;border-radius:12px">✅ ĐÁP ÁN ĐÚNG</span>' : ''}
+            </div>
+          `;
+        }).join('')}
+      </div>
+    `;
+  }
+
+  const expText = q.e ? q.e : ('Đáp án chính xác là <b>' + correctLabel + '</b>. Học sinh cần chú ý cấu trúc ngữ pháp và từ khóa quan trọng của câu này.');
+
+  $('expBody').innerHTML = `
+    ${passageHtml}
+    <div style="font-size:18px;font-weight:900;color:#1e1b4b;margin-bottom:10px">
+      <span style="color:#6d28d9">Câu ${currentExpQNum}:</span> ${GC.safe(q.q)}
+    </div>
+    ${optionsHtml}
+    <div style="background:#fffbeb;border:2px solid #fde68a;border-radius:14px;padding:12px 14px;margin-top:10px">
+      <div style="font-weight:900;color:#b45309;margin-bottom:4px">💡 Lời giải &amp; Phân tích chi tiết:</div>
+      <div style="font-size:15px;color:#1e293b;line-height:1.6">${expText}</div>
+    </div>
+  `;
+  $('ovExp').classList.add('on');
+};
+
+$('bCsv').onclick = () => {
+  const R = GC.rank(players), q = s => '"' + String(s).replace(/"/g, '""') + '"';
+  const isTest = info && info.m === 'test';
+  const totQ = qs.length || 1;
+  const rows = isTest
+    ? [['Hạng', 'Họ tên', 'Trạng thái', 'Điểm (thang 100)', 'Số câu đúng', 'Đã làm', 'Tổng số câu']].concat(
+        R.map(([, p], i) => {
+          const tot = p.tot || totQ;
+          const sc = p.score ?? Math.round((p.ok || 0) / tot * 100);
+          return [i + 1, p.n, p.st === 'submitted' ? 'Đã nộp bài' : 'Chưa nộp', sc, p.ok || 0, p.ans || 0, tot];
+        })
+      )
+    : [['Hạng', 'Họ tên', 'Về đích', 'Tiến độ', 'Đúng', 'Đã trả lời', '% đúng', 'Chuỗi dài nhất', 'Giẫm bẹp', 'Số lần rơi']].concat(
+        R.map(([, p], i) => [i + 1, p.n, p.tt ? 'Có' : '', p.tt ? 'Phá đảo' : p.lb || (p.alt || 0) + ' m', p.ok || 0, p.ans || 0, p.ans ? Math.round(p.ok / p.ans * 100) : 0, p.bs || 0, p.sp || 0, p.fl || 0]));
+  const blob = new Blob(['\ufeff' + 'Bộ đề:,' + q(info.t) + ',Ngày:,' + q(stamp(info.en || Date.now())) + '\n' + rows.map(r => r.map(q).join(',')).join('\n')], { type: 'text/csv;charset=utf-8' });
+  const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'Bang diem - ' + info.t.replace(/[\\/:*?"<>|]/g, '') + ' - ' + code + '.csv'; a.click();
+};
+$('bAgain').onclick = async () => { const saved = JSON.parse(store.get('gHost') || '{}'); qs = saved.qs || qs; showEnd.done = 0; await net.remove('rooms/' + code); leave(); if (qs.length) { $('bOpen').disabled = false; $('bOpen').click() } };
+$('bClose').onclick = async () => { await net.remove('rooms/' + code); showEnd.done = 0; leave() };
+
+
+/* ═════ TỰ ĐỘNG CÀO ĐỀ TỪ LINK BÀI TẬP GITHUB.IO & GEMINI AI ═════ */
+// Key Gemini mặc định của cô (Mã hóa an toàn) & Tự động đồng bộ từ máy chủ
+const DEFAULT_AI_KEY = atob('QVEuQWI4Uk42SXY0Mm9BVTFySEFWNEItTVlMb0U2eThEaHFvd2pybFZ3QXVkbUEyQkxYOWc=');
+let systemAiKey = DEFAULT_AI_KEY;
+
+if (window.firebaseConfig && firebaseConfig.databaseURL) {
+  fetch(firebaseConfig.databaseURL + '/system_config/gemini_key.json')
+    .then(r => r.json())
+    .then(k => { if (k && typeof k === 'string') systemAiKey = k; })
+    .catch(() => {});
+}
+
+// Hàm trích xuất Universal Parser (hỗ trợ Q, SECS, quizData, DOM)
+function parseQuestionsUniversal(html) {
+  let titleMatch = html.match(/<title>(.*?)<\/title>/i);
+  let title = titleMatch ? titleMatch[1].replace(/<[^>]+>/g, '').trim() : 'Bài tập tiếng Anh';
+  title = title.replace(/\|.*$/, '').replace(/–.*$/, '').replace(/-.*$/, '').trim();
+
+  let extractedQs = [];
+  const scriptMatches = html.match(/<script[^>]*>([\s\S]*?)<\/script>/gi) || [];
+
+  for (const scriptTag of scriptMatches) {
+    const code = scriptTag.replace(/<\/?script[^>]*>/gi, '');
+
+    // Định dạng 1: Q = [...] (đề thi cuối kỳ, giữa kỳ như test 1 p1.html)
+    if (/const\s+Q\s*=|let\s+Q\s*=|var\s+Q\s*=|Q\s*=\s*\[/.test(code)) {
+      const idx = code.search(/(?:const|let|var)?\s*Q\s*=\s*\[/);
+      if (idx > -1) {
+        const sub = code.substring(idx).replace(/(?:const|let|var)?\s*Q\s*=/, 'const Q_PARSED=');
+        const endIdx = sub.indexOf('];');
+        if (endIdx > -1) {
+          try {
+            const evalCode = sub.substring(0, endIdx + 2) + '; return Q_PARSED;';
+            const fn = new Function(evalCode);
+            const qList = fn();
+            if (Array.isArray(qList) && qList.length) {
+              qList.forEach(item => {
+                const opts = (item.opts || []).map(o => (typeof o === 'string' ? o : (o.h || o.text || '')));
+                let correctIdx = 0;
+                if (item.opts && Array.isArray(item.opts)) {
+                  const found = item.opts.findIndex(o => typeof o === 'object' && (o.c === true || o.correct === true));
+                  if (found > -1) correctIdx = found;
+                }
+                extractedQs.push({
+                  q: (item.sec ? '<b>[' + item.sec + ']</b><br>' : '') + (item.q || 'Chọn đáp án đúng:'),
+                  o: opts,
+                  a: correctIdx,
+                  e: item.exp || item.explain || '',
+                  s: item.sec || ''
+                });
+              });
+              if (extractedQs.length) break;
+            }
+          } catch (e) {
+            console.error('Error evaluating Q:', e);
+          }
+        }
+      }
+    }
+
+    // Định dạng 2: SECS = [...] (bài tập Unit như voca p2.html)
+    if (/const\s+SECS\s*=|let\s+SECS\s*=|var\s+SECS\s*=|SECS\s*=\s*\[/.test(code)) {
+      const idx = code.search(/(?:const|let|var)?\s*SECS\s*=\s*\[/);
+      if (idx > -1) {
+        const sub = code.substring(idx).replace(/(?:const|let|var)?\s*SECS\s*=/, 'const SECS_PARSED=');
+        const endIdx = sub.indexOf('];');
+        if (endIdx > -1) {
+          try {
+            const evalCode = sub.substring(0, endIdx + 2) + '; return SECS_PARSED;';
+            const fn = new Function(evalCode);
+            const secs = fn();
+            secs.forEach(sec => {
+              if (sec.type === 'mcq' && sec.items) {
+                sec.items.forEach(it => {
+                  extractedQs.push({
+                    q: (sec.title ? '<b>' + sec.title + '</b><br>' : '') + (it.text || 'Chọn đáp án đúng:'),
+                    o: it.opts || [],
+                    a: it.correct != null ? it.correct : 0,
+                    e: it.explain || '',
+                    s: sec.short || sec.title || ''
+                  });
+                });
+              } else if (sec.type === 'fill' && sec.items) {
+                sec.items.forEach(it => {
+                  const correctWord = it.ans && it.ans[0] ? it.ans[0][0] : '';
+                  if (correctWord) {
+                    const qPart = it.parts ? it.parts.filter(p => p.trim() && !p.startsWith('<input')).join(' ') : (it.text || sec.title);
+                    extractedQs.push({
+                      q: (sec.title ? '<b>' + sec.title + '</b><br>' : '') + qPart,
+                      o: [correctWord, 'Teacher', 'Student', 'School'],
+                      a: 0,
+                      e: it.explain || '',
+                      s: sec.short || ''
+                    });
+                  }
+                });
+              }
+            });
+            if (extractedQs.length) break;
+          } catch (e) {
+            console.error('Error evaluating SECS:', e);
+          }
+        }
+      }
+    }
+
+    // Định dạng 3: quizData = [...]
+    if (/const\s+quizData\s*=|let\s+quizData\s*=|var\s+quizData\s*=|quizData\s*=\s*\[/.test(code)) {
+      const idx = code.search(/(?:const|let|var)?\s*quizData\s*=\s*\[/);
+      if (idx > -1) {
+        const sub = code.substring(idx).replace(/(?:const|let|var)?\s*quizData\s*=/, 'const QUIZ_PARSED=');
+        const endIdx = sub.indexOf('];');
+        if (endIdx > -1) {
+          try {
+            const evalCode = sub.substring(0, endIdx + 2) + '; return QUIZ_PARSED;';
+            const fn = new Function(evalCode);
+            const qList = fn();
+            if (Array.isArray(qList) && qList.length) {
+              extractedQs = qList.map(GC.fromOld);
+              if (extractedQs.length) break;
+            }
+          } catch (e) {
+            console.error('Error evaluating quizData:', e);
+          }
+        }
+      }
+    }
+  }
+
+  return { title, questions: extractedQs };
+}
+
+// Hàm gọi AI Gemini đọc hiểu & trích xuất câu hỏi tự động (hỗ trợ nhiều ảnh chụp màn hình & văn bản)
+async function callGeminiAiExtract(contentOrImages, isTestMode) {
+  const key = systemAiKey || DEFAULT_AI_KEY;
+  const isImageList = Array.isArray(contentOrImages) && contentOrImages.length > 0;
+  const isSingleImage = typeof contentOrImages === 'string' && contentOrImages.startsWith('data:image/');
+
+  let promptText = '';
+  if (isTestMode) {
+    promptText = `Bạn là chuyên gia khảo thí và giáo viên Tiếng Anh xuất sắc (Cambridge / IELTS / THCS & THPT).
+Nhiệm vụ: Phân tích CỰC KỲ KỸ LƯỠNG tài liệu/ảnh chụp đề thi tiếng Anh đính kèm để trích xuất đầy đủ BẢN CHẤT VÀ CỐT LÕI CỦA TỪNG BÀI TẬP.
+
+CÁC NGUYÊN TẮC CỐT LÕI BẮT BUỘC CHO TEST MODE:
+1. Nhận diện dạng bài tập & Yêu cầu đề thi (Section Instructions):
+   - BÀI PHÁT ÂM (Pronunciation):
+     + 'q' PHẢI là chỉ dẫn bài làm: "Choose the word whose underlined part differs from the other three in pronunciation:"
+     + 'o': Giữ lại 4 phương án và BẮT BUỘC ĐÁNH DẤU CHÍNH XÁC PHẦN GẠCH CHÂN BẰNG THẺ HTML <u>...</u> (ví dụ: ["g<u>a</u>rbage", "<u>a</u>rtist", "m<u>a</u>ny", "h<u>a</u>ndcraft"] hoặc ["balanc<u>ed</u>", "research<u>ed</u>", "process<u>ed</u>", "manag<u>ed</u>"]). TUYỆT ĐỐI không bỏ sót phần gạch chân vì nếu không học sinh không biết đang hỏi chữ cái nào!
+     + 'e': Giải thích phiên âm IPA của âm gạch chân và lý do chọn đáp án đúng.
+     + 's': "Pronunciation"
+
+   - BÀI TRỌNG ÂM (Stress):
+     + 'q' PHẢI là chỉ dẫn bài làm: "Choose the word that differs from the other three in the position of primary stress:"
+     + 'o': 4 từ vựng lựa chọn của đề.
+     + 'e': Giải thích vị trí trọng âm (âm tiết 1, 2, 3...) của từng từ.
+     + 's': "Stress"
+
+   - BÀI ĐỌC HIỂU (Reading Comprehension / Cloze Test):
+     + 'passage': Lưu trọn vẹn văn bản bài đọc ngữ cảnh, không cắt xén.
+     + 'q': Câu hỏi cụ thể của bài đọc.
+     + 's': "Reading"
+
+   - BÀI NGỮ PHÁP / TỪ VỰNG / TÌM LỖI SAI:
+     + 'q': Toàn bộ câu hỏi / câu văn chứa chỗ trống (ví dụ: "She went to the market to buy some _______.")
+     + 's': "Grammar" hoặc "Vocabulary"
+
+   - BÀI NỐI THÔNG TIN (Matching):
+     + Mỗi câu hỏi là 1 người/đoạn cần ghép, 4 phương án là các đối tượng đối chiếu kèm tóm tắt nội dung.
+     + 's': "Matching"
+
+
+   - BÀI PHÁT ÂM NÓI / ĐỌC THÀNH TIẾNG (Speaking / Read Aloud / Pronunciation Evaluation):
+     + Nếu bài tập yêu cầu học sinh đọc to câu/từ hoặc kiểm tra kỹ năng Nói:
+     + Đặt "type": "speaking", "o": [], "a": 0.
+     + 'q': Lời nhắc bài làm (VD: "Read aloud the following sentence / word clearly:")
+     + 'targetText': Câu hoặc từ tiếng Anh chuẩn cần đọc.
+     + 'ipa': Phiên âm IPA chuẩn.
+     + 's': "Speaking"
+     + 'e': Lời khuyên phát âm, trọng âm và các âm đuôi cần lưu ý.
+
+   - BÀI TỰ LUẬN NGẮN / ĐIỀN TỪ / CHIA DẠNG TỪ / VIẾT LẠI CÂU (Short Answer / Word Form / Sentence Transformation - KHÔNG có A, B, C, D):
+     + Nếu bài gốc yêu cầu học sinh tự điền từ vào chỗ trống, chia động từ/từ loại trong ngoặc, hoặc viết lại câu (Sentence Rewrite) mà KHÔNG có 4 đáp án A, B, C, D:
+     + Đặt "type": "text", "o": [], "a": 0, và ghi đáp án đúng vào "ansText" (có thể ghi nhiều cách viết đúng cách nhau bởi dấu "/", ví dụ: "went / did go" hoặc "has lived / has been living").
+     + 's': "Word Form" hoặc "Rewrite" hoặc "Fill in the blank".
+
+2. TUYỆT ĐỐI KHÔNG BAO GIỜ đặt 'q' chỉ vỏn vẹn là "Question 1", "Question 2"!
+   Học sinh khi nhìn vào màn hình làm bài PHẢI ĐỌC ĐƯỢC RÕ RÀNG yêu cầu bài làm hoặc câu hỏi đề bài!
+
+3. TUYỆT ĐỐI KHÔNG ép bài thi về dạng điền từ ngô nghê với các đáp án tự bịa như 'Teacher', 'Student', 'School'. Phải dùng phương án và nội dung thực tế của đề thi.
+
+4. ĐÁP ÁN 'a':
+   Phải là số nguyên 0, 1, 2, 3 tương ứng với vị trí đúng trong mảng 'o' (0 cho A, 1 cho B, 2 cho C, 3 cho D). Phải suy luận học thuật chính xác 100%.
+
+5. 'passage': Bài đọc đầy đủ (nếu bài đọc chung cho nhiều câu hỏi, giữ nguyên toàn bộ bài đọc ở trường 'passage' này; nếu không có bài đọc thì để rỗng "")
+
+Trả về strictly JSON danh sách:
+[
+  { "q": "...", "passage": "...", "o": ["...", "...", "...", "..."], "a": 0, "e": "...", "s": "..." }
+]`;
+  } else {
+    // Game mode: Áp dụng Giải pháp C - Context Focus (trích đoạn ngắn gọn cho game phản xạ nhanh)
+    promptText = `Bạn là chuyên gia giáo dục tiếng Anh. Dưới đây là nội dung bài tập (bằng ảnh chụp hoặc văn bản).
+Hãy trích xuất thành danh sách câu hỏi trắc nghiệm tiếng Anh TỐI ƯU CHO GAME ĐỐI KHÁNG NHANH (tối đa 25 câu).
+QUY TẮC ĐẶC BIỆT:
+1. TUYỆT ĐỐI KHÔNG BAO GIỜ đặt 'q' chỉ là "Question 1", "Question 2"! Phải ghi rõ câu hỏi hoặc yêu cầu bài làm.
+2. Với bài phát âm (Pronunciation): Trong 'o' PHẢI ĐÁNH DẤU PHẦN GẠCH CHÂN BẰNG THẺ HTML <u>...</u> (ví dụ: "g<u>a</u>rbage", "balanc<u>ed</u>").
+3. ÁP DỤNG GIẢI PHÁP C (Context Focus): Với bài đọc dài hoặc bài nối Matching, hãy trích đoạn ngữ cảnh trọng tâm (2-3 câu ngắn gọn chứa manh mối then chốt) ghép thẳng vào câu hỏi 'q' để học sinh dễ đọc nhanh trên điện thoại mà không bị tràn màn hình.
+4. 'q': Câu hỏi ngắn gọn (kèm ngữ cảnh ngắn nếu cần; giữ lại <u>, <b> nếu là câu phát âm/trọng âm).
+5. 'o': Mảng 4 phương án lựa chọn ["A", "B", "C", "D"].
+6. 'a': Chỉ số (0, 1, 2, 3) của đáp án đúng.
+7. 'e': Lời giải thích ngắn gọn, phiên âm IPA hoặc từ khóa đối chiếu.
+8. 's': Dạng bài (Pronunciation, Stress, Grammar, Vocabulary, Reading).
+
+Trả về strictly JSON danh sách:
+[
+  { "q": "...", "o": ["...", "...", "...", "..."], "a": 0, "e": "...", "s": "..." }
+]`;
+  }
+
+  let requestBody = {};
+  if (isImageList || isSingleImage) {
+    const imgArray = isImageList ? contentOrImages : [contentOrImages];
+    const parts = [{ text: promptText }];
+    imgArray.forEach(imgData => {
+      const commaIdx = imgData.indexOf(',');
+      const mimeType = imgData.substring(5, imgData.indexOf(';'));
+      const b64Data = imgData.substring(commaIdx + 1);
+      parts.push({ inlineData: { mimeType, data: b64Data } });
+    });
+    requestBody = {
+      contents: [{ parts }],
+      generationConfig: {
+        responseMimeType: 'application/json',
+        temperature: 0.1
+      }
+    };
+  } else {
+    let cleanText = contentOrImages;
+    if (cleanText.includes('<html') || cleanText.includes('<body') || cleanText.includes('</div>')) {
+      const d = document.createElement('div');
+      d.innerHTML = cleanText;
+      d.querySelectorAll('script, style, svg, iframe, noscript, nav, header, footer').forEach(e => e.remove());
+      cleanText = d.innerText;
+    }
+    cleanText = cleanText.replace(/\s+/g, ' ').trim().substring(0, 32000);
+
+    requestBody = {
+      contents: [{
+        parts: [
+          { text: promptText + '\n\nNội dung đề bài:\n---\n' + cleanText + '\n---' }
+        ]
+      }],
+      generationConfig: {
+        responseMimeType: 'application/json',
+        temperature: 0.1
+      }
+    };
+  }
+
+  const models = ['gemini-flash-latest', 'gemini-pro-latest', 'gemini-3.8-flash', 'gemini-3.5-flash', 'gemini-flash-lite-latest'];
+  let lastError = null;
+
+  for (const m of models) {
+    try {
+      const url = `https://generativelanguage.googleapis.com/v1beta/models/${m}:generateContent?key=${key}`;
+      const resp = await fetch(url, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(requestBody)
+      });
+
+      if (!resp.ok) {
+        const errObj = await resp.json().catch(() => ({}));
+        throw new Error(errObj.error?.message || resp.statusText);
+      }
+
+      const data = await resp.json();
+      const textOut = data.candidates?.[0]?.content?.parts?.[0]?.text;
+      if (!textOut) throw new Error('AI không trả về nội dung.');
+
+      const parsed = JSON.parse(textOut);
+      if (Array.isArray(parsed) && parsed.length) {
+        return parsed;
+      }
+    } catch (err) {
+      lastError = err;
+    }
+  }
+
+  throw new Error('Lỗi khi gọi AI: ' + (lastError ? lastError.message : 'Không nhận diện được phản hồi.'));
+}
+
+// Mảng lưu nhiều ảnh chụp màn hình từ Ctrl + V hoặc chọn file
+let pastedImages = [];
+
+function handleImageBlob(blob, filename) {
+  if (!blob) return false;
+  const reader = new FileReader();
+  reader.onload = evt => {
+    addPastedImage(evt.target.result);
+    toast('📸 Đã thêm ảnh chụp trang ' + pastedImages.length + '!', 2000);
+  };
+  reader.readAsDataURL(blob);
+  return true;
+}
+
+function addPastedImage(dataUrl) {
+  pastedImages.push(dataUrl);
+  renderPastedImages();
+}
+
+window.removePastedImage = function(idx) {
+  pastedImages.splice(idx, 1);
+  renderPastedImages();
+  toast('🗑 Đã xóa bớt 1 ảnh chụp', 1500);
+};
+
+function clearAllPastedImages() {
+  pastedImages = [];
+  renderPastedImages();
+  toast('🧹 Đã xóa toàn bộ ảnh chụp', 1500);
+}
+
+function renderPastedImages() {
+  const box = $('pasteImgPreview');
+  const gallery = $('pastedImgGallery');
+  const countLabel = $('pastedImgCount');
+  if (!pastedImages.length) {
+    if (box) {
+      box.hidden = true;
+      box.style.display = 'none';
+    }
+    if ($('linkFetchStatus')) $('linkFetchStatus').innerHTML = '💡 <b>Mẹo:</b> Cô có thể chụp màn hình (Win + Shift + S) rồi nhấn <b>Ctrl + V</b> ngay vào đây để tự động đọc đề!';
+    return;
+  }
+  if (box) {
+    box.hidden = false;
+    box.style.display = 'block';
+  }
+  if (countLabel) countLabel.innerHTML = '📸 <b>Đã nhận ' + pastedImages.length + ' ảnh chụp màn hình</b> (AI sẽ đọc gộp tất cả ảnh)';
+
+  if (gallery) {
+    gallery.innerHTML = pastedImages.map((src, idx) => `
+      <div style="position:relative;flex-shrink:0;border:2px solid #38bdf8;border-radius:10px;overflow:hidden;background:#fff;box-shadow:0 2px 6px rgba(0,0,0,.08)">
+        <img src="${src}" style="height:75px;width:115px;object-fit:cover;display:block">
+        <button onclick="removePastedImage(${idx})" type="button" style="position:absolute;top:3px;right:3px;background:#ef4444;color:#fff;border:none;border-radius:50%;width:22px;height:22px;font-size:12px;font-weight:900;cursor:pointer;line-height:22px;padding:0;box-shadow:0 1px 4px rgba(0,0,0,.3)">✕</button>
+        <span style="position:absolute;bottom:3px;left:4px;background:#000a;color:#fff;font-size:11px;padding:1px 6px;border-radius:4px;font-weight:700">Trang ${idx + 1}</span>
+      </div>
+    `).join('');
+  }
+
+  $('linkFetchStatus').innerHTML = '📸 Đã có <b>' + pastedImages.length + ' ảnh chụp màn hình</b>! Bấm nút <b>"🎮 Nạp đề tạo Game"</b> hoặc <b>"📝 Nạp đề tạo Test"</b> bên trên để AI đọc chữ từ ảnh.';
+}
+
+// 1. Lắng nghe Ctrl + V dán ảnh trên toàn trang (hỗ trợ cả clipboardData.items, clipboardData.files)
+window.addEventListener('paste', e => {
+  const cd = e.clipboardData || e.originalEvent?.clipboardData;
+  if (!cd) return;
+
+  let imageHandled = false;
+
+  // A. Kiểm tra clipboard items
+  const items = cd.items;
+  if (items && items.length) {
+    for (let i = 0; i < items.length; i++) {
+      const item = items[i];
+      if (item.type && item.type.indexOf('image') !== -1) {
+        const blob = item.getAsFile();
+        if (blob && handleImageBlob(blob)) {
+          imageHandled = true;
+          e.preventDefault();
+          break;
+        }
+      }
+    }
+  }
+
+  // B. Kiểm tra clipboard files (ví dụ copy file ảnh từ folder/desktop)
+  if (!imageHandled && cd.files && cd.files.length) {
+    for (let i = 0; i < cd.files.length; i++) {
+      const file = cd.files[i];
+      if (file.type && file.type.indexOf('image') !== -1) {
+        if (handleImageBlob(file, file.name)) {
+          imageHandled = true;
+          e.preventDefault();
+          break;
+        }
+      }
+    }
+  }
+
+  // C. Nếu không phải ảnh nhưng nhấn Ctrl+V ngoài các ô gõ văn bản
+  if (!imageHandled) {
+    const activeTag = document.activeElement ? document.activeElement.tagName.toLowerCase() : '';
+    if (activeTag !== 'textarea' && activeTag !== 'input') {
+      const textData = cd.getData('text');
+      if (textData) {
+        if (textData.startsWith('http://') || textData.startsWith('https://')) {
+          if ($('inpWebLink')) $('inpWebLink').value = textData.trim();
+          toast('🔗 Đã tự động dán link vào ô bài tập!', 2500);
+        } else {
+          toast('💡 Clipboard đang chứa văn bản. Để dán ảnh: hãy dùng Win + Shift + S chụp đề rồi nhấn Ctrl + V nhé!', 3500);
+        }
+      }
+    }
+  }
+});
+
+// 2. Nút dán trực tiếp từ Clipboard (Clipboard API)
+async function pasteFromClipboard() {
+  try {
+    if (!navigator.clipboard || !navigator.clipboard.read) {
+      toast('💡 Cô nhấn tổ hợp phím Ctrl + V trên bàn phím để dán ảnh nhé!', 3000);
+      return;
+    }
+    const clipItems = await navigator.clipboard.read();
+    let found = false;
+    for (const item of clipItems) {
+      for (const type of item.types) {
+        if (type.startsWith('image/')) {
+          const blob = await item.getType(type);
+          if (handleImageBlob(blob)) {
+            found = true;
+            break;
+          }
+        }
+      }
+      if (found) break;
+    }
+    if (!found) {
+      toast('⚠️ Clipboard chưa có ảnh chụp! Cô hãy dùng Win + Shift + S chụp đề rồi dán lại nhé.', 3500);
+    }
+  } catch (err) {
+    console.warn('Clipboard read notice:', err);
+    toast('💡 Hãy nhấn phím Ctrl + V trên bàn phím để dán ảnh chụp đề!', 3000);
+  }
+}
+
+// 3. Kéo thả file ảnh trực tiếp (Drag & Drop)
+['dragenter', 'dragover'].forEach(evtName => {
+  window.addEventListener(evtName, e => {
+    e.preventDefault();
+    const dz = $('dropZoneImg');
+    if (dz) { dz.style.borderColor = '#0284c7'; dz.style.background = '#e0f2fe'; }
+  });
+});
+['dragleave', 'drop'].forEach(evtName => {
+  window.addEventListener(evtName, e => {
+    e.preventDefault();
+    const dz = $('dropZoneImg');
+    if (dz) { dz.style.borderColor = '#0284c7'; dz.style.background = '#f0f9ff'; }
+  });
+});
+window.addEventListener('drop', e => {
+  e.preventDefault();
+  const dt = e.dataTransfer;
+  if (!dt) return;
+  const files = dt.files;
+  if (files && files.length) {
+    let count = 0;
+    for (let i = 0; i < files.length; i++) {
+      const f = files[i];
+      if (f.type.startsWith('image/')) {
+        handleImageBlob(f, f.name);
+        count++;
+      }
+    }
+    if (count > 0) {
+      toast('📸 Đã thêm ' + count + ' ảnh từ kéo thả!', 2500);
+    }
+  }
+});
+
+// 4. Các nút bấm chọn file & Clipboard
+if ($('bPasteClipboard')) $('bPasteClipboard').onclick = e => { e.stopPropagation(); pasteFromClipboard(); };
+if ($('bPickImg')) $('bPickImg').onclick = () => $('inpFileImg').click();
+if ($('bPickImgZone')) $('bPickImgZone').onclick = e => { e.stopPropagation(); $('inpFileImg').click(); };
+if ($('bAddMoreImg')) $('bAddMoreImg').onclick = () => $('inpFileImg').click();
+if ($('bClearAllImg')) $('bClearAllImg').onclick = () => clearAllPastedImages();
+if ($('dropZoneImg')) {
+  $('dropZoneImg').onclick = e => {
+    if (e.target.tagName.toLowerCase() === 'button') return;
+    $('inpFileImg').click();
+  };
+}
+
+if ($('inpFileImg')) {
+  $('inpFileImg').onchange = e => {
+    const files = Array.from(e.target.files || []);
+    if (files.length) {
+      let loaded = 0;
+      files.forEach(f => {
+        const reader = new FileReader();
+        reader.onload = evt => {
+          addPastedImage(evt.target.result);
+          loaded++;
+          if (loaded === files.length) {
+            toast('📸 Đã thêm ' + files.length + ' ảnh chụp!', 2500);
+          }
+        };
+        reader.readAsDataURL(f);
+      });
+      $('inpFileImg').value = '';
+    }
+  };
+}
+
+if ($('bPickDoc')) $('bPickDoc').onclick = () => $('inpFileDoc').click();
+if ($('inpFileDoc')) {
+  $('inpFileDoc').onchange = e => {
+    const file = e.target.files[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onload = evt => {
+        $('pTxt').value = evt.target.result;
+        toast('📄 Đã nạp nội dung file: ' + file.name, 2500);
+        $('linkFetchStatus').innerHTML = '📄 Đã nạp nội dung từ <b>' + esc(file.name) + '</b>. Bấm tạo Game hoặc Test để tiếp tục.';
+      };
+      reader.readAsText(file);
+    }
+  };
+}
+
+async function processLoadQuiz(isTestMode) {
+  const url = clean($('inpWebLink').value);
+  const pasteTxt = clean($('pTxt')?.value || '');
+  const status = $('linkFetchStatus');
+
+  if (!pastedImages.length && !url && !pasteTxt) {
+    return toast('Cô dán link bài tập, dán ảnh chụp (Ctrl+V) hoặc dán văn bản trước nhé!', 2500);
+  }
+
+  status.innerHTML = '⏳ Đang phân tích bài tập…';
+  if ($('bLoadGame')) $('bLoadGame').disabled = true;
+  if ($('bLoadTest')) $('bLoadTest').disabled = true;
+
+  try {
+    let extractedQs = [];
+    let docTitle = isTestMode ? 'Bài kiểm tra tiếng Anh' : 'Game ôn tập tiếng Anh';
+
+    // 1. Trường hợp có ảnh chụp màn hình (Ctrl + V hoặc chọn file ảnh)
+    if (pastedImages.length > 0) {
+      status.innerHTML = '🧠 <b>AI Gemini đang đọc chữ và câu hỏi từ ' + pastedImages.length + ' ảnh chụp màn hình…</b>';
+      extractedQs = await callGeminiAiExtract(pastedImages, isTestMode);
+      docTitle = (isTestMode ? 'Bài kiểm tra' : 'Game') + ' (Từ ' + pastedImages.length + ' ảnh chụp)';
+    }
+    // 2. Trường hợp có Link web
+    else if (url) {
+      const res = await fetch(url);
+      if (!res.ok) throw new Error('Không mở được link (Mã lỗi ' + res.status + ')');
+      const html = await res.text();
+
+      // Nếu tạo game và web có sẵn cấu trúc chuẩn: đọc siêu tốc
+      if (!isTestMode) {
+        const parsed = parseQuestionsUniversal(html);
+        if (parsed.questions && parsed.questions.length > 0) {
+          extractedQs = parsed.questions;
+          if (parsed.title) docTitle = parsed.title;
+        }
+      }
+
+      // Nếu chưa có câu hỏi hoặc là chế độ Test (cần giữ trọn bài đọc/listening/matching): dùng AI
+      if (!extractedQs.length) {
+        status.innerHTML = '🧠 <b>AI Gemini đang đọc hiểu ngữ nghĩa & phân tích bài tập…</b>';
+        extractedQs = await callGeminiAiExtract(html, isTestMode);
+        const tm = html.match(/<title>(.*?)<\/title>/i);
+        if (tm) docTitle = tm[1].replace(/<[^>]+>/g, '').trim();
+      }
+    }
+    // 3. Trường hợp dán văn bản
+    else if (pasteTxt) {
+      status.innerHTML = '🧠 <b>AI Gemini đang phân tích văn bản bài tập…</b>';
+      extractedQs = await callGeminiAiExtract(pasteTxt, isTestMode);
+    }
+
+    if (!extractedQs || !extractedQs.length) {
+      throw new Error('Không trích xuất được câu hỏi nào từ nội dung.');
+    }
+
+    // Tự động chuyển mode nếu chọn Test
+    if (isTestMode) {
+      selectMode('test');
+    } else if (gMode === 'test') {
+      selectMode('climb');
+    }
+
+    window.currentQuizType = isTestMode ? 'test' : 'game';
+
+    setQs(extractedQs, docTitle, []);
+    status.innerHTML = '🎉 <b>Thành công!</b> Đã nạp <b>' + extractedQs.length + ' câu hỏi</b> (' + (isTestMode ? '📝 Dạng Bài Test' : '🎮 Dạng Game') + ').';
+    toast('🎉 Nạp thành công ' + extractedQs.length + ' câu hỏi!', 3500);
+  } catch (err) {
+    status.innerHTML = '❌ ' + err.message;
+    toast('❌ ' + err.message, 3500);
+  } finally {
+    if ($('bLoadGame')) $('bLoadGame').disabled = false;
+    if ($('bLoadTest')) $('bLoadTest').disabled = false;
+  }
+}
+
+if ($('bLoadGame')) $('bLoadGame').onclick = () => processLoadQuiz(false);
+if ($('bLoadTest')) $('bLoadTest').onclick = () => processLoadQuiz(true);
+
+// Chuyển đổi Kiểu game & Cấu hình (Ẩn/Hiện triệt để bằng style.display)
+function selectMode(m) {
+  gMode = m;
+  document.querySelectorAll('#gModes .mode').forEach(b => {
+    b.classList.toggle('on', b.dataset.m === m);
+  });
+  updateModeView();
+}
+
+function updateModeView() {
+  const isTest = gMode === 'test';
+  const arcadeBox = $('arcadeSettings');
+  const testBox = $('testSettings');
+  if (arcadeBox) {
+    arcadeBox.hidden = isTest;
+    arcadeBox.style.display = isTest ? 'none' : 'block';
+  }
+  if (testBox) {
+    testBox.hidden = !isTest;
+    testBox.style.display = isTest ? 'block' : 'none';
+  }
+  if ($('bOpen')) $('bOpen').textContent = isTest ? '📝 Mở phòng kiểm tra' : '🚪 Mở phòng chơi chung';
+  if ($('bSolo')) $('bSolo').textContent = isTest ? '📋 Giao bài kiểm tra về nhà' : '📚 Giao bài về nhà';
+}
+
+
+
+/* ═════ SỔ ĐIỂM BÀI TẬP VỀ NHÀ (GRADEBOOK CONTROLLER) ═════ */
+let gbDataCache = { list: [], subsByHw: {} };
+let gbCurrentRows = [];
+
+async function openHwGradebook(preferHwId) {
+  $('ovGradebook').classList.add('on');
+  $('gbTbody').innerHTML = '<tr><td colspan="9" style="text-align:center;padding:20px;color:#64748b">⏳ Đang đồng bộ sổ điểm từ máy chủ…</td></tr>';
+  gbDataCache = await GC.getHwGradebook();
+
+  const sel = $('gbSelect');
+  const prevVal = preferHwId || sel.value || 'ALL';
+  const opts = ['<option value="ALL">📚 Tất cả bài tập về nhà & đề tự luyện (' + Object.values(gbDataCache.subsByHw).reduce((s, a) => s + a.length, 0) + ' lượt nộp)</option>'];
+  gbDataCache.list.forEach(item => {
+    const cnt = (gbDataCache.subsByHw[item.id] || []).length;
+    opts.push(`<option value="${esc(item.id)}">${item.m === 'test' ? '📝' : '🎮'} ${esc(item.title)} [${esc(item.id)}] — ${cnt} lượt nộp</option>`);
+  });
+  sel.innerHTML = opts.join('');
+  if ([...sel.options].some(o => o.value === prevVal)) sel.value = prevVal;
+  renderGradebookTable();
+}
+
+function renderGradebookTable() {
+  const hid = $('gbSelect').value || 'ALL';
+  let rows = [];
+  if (hid === 'ALL') {
+    for (const arr of Object.values(gbDataCache.subsByHw)) {
+      rows = rows.concat(arr || []);
+    }
+    rows.sort((a, b) => (b.at || 0) - (a.at || 0));
+  } else {
+    rows = (gbDataCache.subsByHw[hid] || []).slice();
+  }
+  gbCurrentRows = rows;
+
+  const total = rows.length;
+  const avg = total ? Math.round(rows.reduce((s, r) => s + (r.score || 0), 0) / total) : 0;
+  const high = rows.filter(r => (r.score || 0) >= 80).length;
+  $('gbSummary').innerHTML = `
+    <div style="background:#f5f3ff;border:1.5px solid #ddd6fe;border-radius:12px;padding:8px 14px;font-weight:800;font-size:13px;color:#5b21b6">👥 Tổng lượt nộp: <b>${total}</b></div>
+    <div style="background:#ecfdf5;border:1.5px solid #a7f3d0;border-radius:12px;padding:8px 14px;font-weight:800;font-size:13px;color:#047857">🎯 Điểm trung bình: <b>${avg} / 100</b></div>
+    <div style="background:#fffbeb;border:1.5px solid #fde68a;border-radius:12px;padding:8px 14px;font-weight:800;font-size:13px;color:#b45309">🌟 Đạt ≥ 80 điểm: <b>${high} bạn</b></div>
+  `;
+
+  if (!rows.length) {
+    $('gbTbody').innerHTML = '<tr><td colspan="9" style="text-align:center;padding:24px;color:#64748b;font-weight:700">Chưa có học sinh nào nộp bài cho mục này. Khi học sinh hoàn thành link Bài tập về nhà, điểm sẽ tự động hiện tại đây!</td></tr>';
+    return;
+  }
+
+  $('gbTbody').innerHTML = rows.map((r, i) => `
+    <tr>
+      <td><b>#${i + 1}</b></td>
+      <th>${esc(r.n)}</th>
+      <td>${esc(r.title || r.hwId)}</td>
+      <td>${r.m === 'test' ? '📝 Bài kiểm tra' : '🎮 Game'}</td>
+      <td><b style="color:${(r.score || 0) >= 80 ? '#047857' : (r.score || 0) >= 50 ? '#1d4ed8' : '#dc2626'}">${r.score ?? 0} / 100</b></td>
+      <td>${r.ok ?? 0} / ${r.tot ?? 0}</td>
+      <td>${esc(r.durText || '—')}</td>
+      <td style="font-size:12px;color:#64748b">${esc(r.date || '')}</td>
+      <td style="white-space:nowrap">
+         <button type="button" class="btn b" style="padding:4px 8px;font-size:12px" onclick="openGbReportCard(${i})">🏅 Phiếu</button>
+         <button type="button" class="btn r" style="padding:4px 7px;font-size:12px;background:#fef2f2;color:#dc2626;border:1px solid #fecaca;margin-left:4px" title="Xóa bản ghi này (Dành cho Quản trị viên)" onclick="adminDeleteSubmission(${i})">🗑️</button>
+       </td>
+    </tr>
+  `).join('');
+}
+
+window.openGbReportCard = function(idx) {
+  const r = gbCurrentRows[idx];
+  if (!r) return;
+  GC.showReportCard({
+    name: r.n,
+    title: r.title || 'Bài tập tiếng Anh',
+    score: r.score ?? 0,
+    ok: r.ok ?? 0,
+    tot: r.tot ?? 1,
+    m: r.m || 'test',
+    timeText: r.durText || 'Hoàn thành',
+    dateText: r.date || ''
+  });
+};
+
+if ($('bOpenGradebook')) $('bOpenGradebook').onclick = () => openHwGradebook();
+if ($('gbSelect')) $('gbSelect').onchange = () => renderGradebookTable();
+if ($('bGbRefresh')) $('bGbRefresh').onclick = () => openHwGradebook($('gbSelect').value);
+
+/* ═════ QUẢN TRỊ ADMIN XÓA BỘ ĐỀ & BẢN GHI ĐIỂM ═════ */
+window.adminDeleteQuiz = async function(id) {
+  if (!id) return;
+  const key = prompt('🔐 Nhập mã quản trị (Admin Key) để xóa bộ đề [' + id + ']:');
+  if (key === null) return;
+  if (!window.LIC || !window.LIC.verifyAdmin(key)) {
+    toast('❌ Sai mã quản trị (Admin Key)!', 2500);
+    return;
+  }
+  if (!confirm('Cô có chắc chắn muốn xóa vĩnh viễn bộ đề [' + id + '] khỏi thư viện không?')) return;
+  toast('⏳ Đang xóa bộ đề khỏi hệ thống...', 1800);
+  await GC.deleteCommunityQuiz(id);
+  toast('🗑️ Đã xóa bộ đề [' + id + '] thành công!', 2200);
+  renderBank(true);
+};
+
+window.adminDeleteSubmission = async function(idx) {
+  const r = gbCurrentRows[idx];
+  if (!r) return;
+  const key = prompt('🔐 Nhập mã quản trị (Admin Key) để xóa bản ghi điểm của học sinh: ' + r.n + ':');
+  if (key === null) return;
+  if (!window.LIC || !window.LIC.verifyAdmin(key)) {
+    toast('❌ Sai mã quản trị (Admin Key)!', 2500);
+    return;
+  }
+  if (!confirm('Cô có chắc chắn muốn xóa bản ghi điểm của ' + r.n + ' không?')) return;
+  toast('⏳ Đang xóa bản ghi điểm...', 1800);
+  await GC.deleteHwSubmission(r.hwId, r.id);
+  toast('🗑️ Đã xóa bản ghi điểm của ' + r.n + ' thành công!', 2200);
+  openHwGradebook($('gbSelect').value);
+};
+
+if ($('bGbDeleteHw')) {
+  $('bGbDeleteHw').onclick = async () => {
+    const hid = $('gbSelect').value;
+    if (!hid || hid === 'ALL') {
+      return toast('⚠️ Cô hãy chọn 1 bài tập cụ thể trong danh sách thả xuống trước khi xóa nhé!', 2800);
+    }
+    const key = prompt('🔐 Nhập mã quản trị (Admin Key) để xóa toàn bộ bài tập [' + hid + '] và tất cả điểm số:');
+    if (key === null) return;
+    if (!window.LIC || !window.LIC.verifyAdmin(key)) {
+      toast('❌ Sai mã quản trị (Admin Key)!', 2500);
+      return;
+    }
+    if (!confirm('⚠️ CẢNH BÁO: Thao tác này sẽ xóa vĩnh viễn bài tập [' + hid + '] và TOÀN BỘ điểm nộp của học sinh. Cô có chắc chắn muốn xóa không?')) return;
+    toast('⏳ Đang xóa toàn bộ bài tập và dữ liệu nộp bài...', 2500);
+    await GC.deleteHwSubmission(hid);
+    toast('🗑️ Đã xóa bài tập [' + hid + '] thành công!', 2500);
+    openHwGradebook('ALL');
+  };
+}
+
+/* ═════ PHÂN TÍCH BÁO CÁO ĐIỂM & THỐNG KÊ CÂU SAI (ITEM ANALYTICS) ═════ */
+if ($('bGbAnalytics')) {
+  $('bGbAnalytics').onclick = () => {
+    if (!gbCurrentRows || !gbCurrentRows.length) {
+      return toast('⚠️ Chưa có dữ liệu nộp bài để phân tích!', 2200);
+    }
+    const box = $('gbAnalyticsBox');
+    const content = $('gbAnalyticsContent');
+    box.hidden = !box.hidden;
+    if (box.hidden) return;
+
+    const rows = gbCurrentRows;
+    const total = rows.length;
+    const avgScore = Math.round(rows.reduce((s, r) => s + (r.score || 0), 0) / total);
+    const maxScore = Math.max(...rows.map(r => r.score || 0));
+    const minScore = Math.min(...rows.map(r => r.score || 0));
+
+    const g80 = rows.filter(r => (r.score || 0) >= 80).length;
+    const g65 = rows.filter(r => (r.score || 0) >= 65 && (r.score || 0) < 80).length;
+    const g50 = rows.filter(r => (r.score || 0) >= 50 && (r.score || 0) < 65).length;
+    const gUnder = rows.filter(r => (r.score || 0) < 50).length;
+
+    // Tính tỷ lệ câu đúng trung bình
+    const avgOk = (rows.reduce((s, r) => s + (r.ok || 0), 0) / total).toFixed(1);
+    const totQ = rows[0]?.tot || 0;
+    const avgWrong = totQ > 0 ? (totQ - avgOk).toFixed(1) : 0;
+
+    content.innerHTML = `
+      <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(180px, 1fr));gap:10px;margin-bottom:14px">
+        <div style="background:#fff;border:1.5px solid #ddd6fe;border-radius:10px;padding:10px;text-align:center">
+          <div style="font-size:12px;color:#6b21a8;font-weight:800">📊 TỔNG SỐ BÀI NỘP</div>
+          <div style="font-size:22px;font-weight:900;color:#1e1b4b">${total} học sinh</div>
+        </div>
+        <div style="background:#fff;border:1.5px solid #bbf7d0;border-radius:10px;padding:10px;text-align:center">
+          <div style="font-size:12px;color:#047857;font-weight:800">🎯 ĐIỂM TRUNG BÌNH</div>
+          <div style="font-size:22px;font-weight:900;color:#065f46">${avgScore} / 100</div>
+          <div style="font-size:11px;color:#64748b">Cao nhất: ${maxScore} · Thấp nhất: ${minScore}</div>
+        </div>
+        <div style="background:#fff;border:1.5px solid #fecaca;border-radius:10px;padding:10px;text-align:center">
+          <div style="font-size:12px;color:#b91c1c;font-weight:800">⚠️ SỐ CÂU SAI TB</div>
+          <div style="font-size:22px;font-weight:900;color:#991b1b">${avgWrong} / ${totQ} câu</div>
+          <div style="font-size:11px;color:#64748b">Đúng TB: ${avgOk} câu</div>
+        </div>
+      </div>
+
+      <div style="background:#fff;border:1.5px solid #e2e8f0;border-radius:10px;padding:12px;margin-bottom:10px">
+        <b style="font-size:13px;color:#1e293b;display:block;margin-bottom:8px">📈 Phân bổ phổ điểm lớp học:</b>
+        <div style="display:flex;align-items:center;gap:6px;font-size:13px;margin-bottom:4px">
+          <span style="width:110px;font-weight:700;color:#047857">🌟 Giỏi (80-100đ):</span>
+          <div style="flex:1;background:#f1f5f9;border-radius:6px;height:14px;overflow:hidden">
+            <div style="width:${Math.round(g80 / total * 100)}%;background:#10b981;height:100%"></div>
+          </div>
+          <span style="font-weight:800;width:55px;text-align:right">${g80} (${Math.round(g80 / total * 100)}%)</span>
+        </div>
+        <div style="display:flex;align-items:center;gap:6px;font-size:13px;margin-bottom:4px">
+          <span style="width:110px;font-weight:700;color:#1d4ed8">👍 Khá (65-79đ):</span>
+          <div style="flex:1;background:#f1f5f9;border-radius:6px;height:14px;overflow:hidden">
+            <div style="width:${Math.round(g65 / total * 100)}%;background:#3b82f6;height:100%"></div>
+          </div>
+          <span style="font-weight:800;width:55px;text-align:right">${g65} (${Math.round(g65 / total * 100)}%)</span>
+        </div>
+        <div style="display:flex;align-items:center;gap:6px;font-size:13px;margin-bottom:4px">
+          <span style="width:110px;font-weight:700;color:#d97706">👌 Đạt (50-64đ):</span>
+          <div style="flex:1;background:#f1f5f9;border-radius:6px;height:14px;overflow:hidden">
+            <div style="width:${Math.round(g50 / total * 100)}%;background:#f59e0b;height:100%"></div>
+          </div>
+          <span style="font-weight:800;width:55px;text-align:right">${g50} (${Math.round(g50 / total * 100)}%)</span>
+        </div>
+        <div style="display:flex;align-items:center;gap:6px;font-size:13px">
+          <span style="width:110px;font-weight:700;color:#dc2626">💪 Cần cố gắng (&lt;50đ):</span>
+          <div style="flex:1;background:#f1f5f9;border-radius:6px;height:14px;overflow:hidden">
+            <div style="width:${Math.round(gUnder / total * 100)}%;background:#ef4444;height:100%"></div>
+          </div>
+          <span style="font-weight:800;width:55px;text-align:right">${gUnder} (${Math.round(gUnder / total * 100)}%)</span>
+        </div>
+      </div>
+
+      <div style="font-size:12px;color:#6b21a8;font-weight:700;text-align:right">
+        💡 Đánh giá sư phạm: ${avgScore >= 80 ? 'Lớp nắm bài rất xuất sắc!' : avgScore >= 65 ? 'Lớp nắm vững kiến thức căn bản, cần rèn thêm các câu nâng cao.' : 'Cần tổ chức 1 buổi chữa kỹ các câu sai trước khi sang bài mới.'}
+      </div>
+    `;
+  };
+}
+
+if ($('bGbCsv')) {
+  $('bGbCsv').onclick = () => {
+    if (!gbCurrentRows.length) return toast('⚠️ Chưa có dữ liệu để xuất Excel', 2200);
+    const q = s => '"' + String(s ?? '').replace(/"/g, '""') + '"';
+    const header = ['Hạng', 'Họ tên học sinh', 'Mã bài', 'Tên bài tập', 'Hình thức', 'Điểm (thang 100)', 'Số câu đúng', 'Tổng số câu', 'Thời gian làm', 'Thời điểm nộp'];
+    const csvRows = [header].concat(gbCurrentRows.map((r, i) => [
+      i + 1, r.n, r.hwId, r.title, r.m === 'test' ? 'Bài kiểm tra' : 'Game', r.score ?? 0, r.ok ?? 0, r.tot ?? 0, r.durText || '', r.date || ''
+    ]));
+    const blob = new Blob(['\ufeff' + csvRows.map(r => r.map(q).join(',')).join('\n')], { type: 'text/csv;charset=utf-8' });
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = 'So_Diem_BTVN_MsNene_' + new Date().toISOString().slice(0, 10) + '.csv';
+    a.click();
+  };
+}
+
+/* ═════ KHỞI ĐỘNG ═════ */
+async function checkResume() {
+  const s = JSON.parse(store.get('gHost') || 'null'); $('resumeBox').hidden = true; if (!s || !s.code) return;
+  let v = null; try { await net.host(s.code); v = await net.once('rooms/' + s.code + '/info') } catch (e) { }
+  if (!v) { store.set('gHost', null); return }
+  $('resumeBox').hidden = false;
+  $('resumeBox').innerHTML = '↩️ Cô đang có phòng <b>' + s.code + '</b> (' + esc(v.t) + ' · ' + (v.st === 'lobby' ? 'đang chờ' : v.st === 'play' ? 'đang chơi' : 'đã kết thúc') + ') <button class="btn b" id="bResume" style="margin-left:8px">Quay lại phòng</button>';
+  $('bResume').onclick = () => { code = s.code; info = v; qs = s.qs || []; enterRoom() };
+}
+
+(async () => {
+  try {
+    net = await GC.makeNet();
+    if (net.mode === 'mqtt') { $('netB').className = 'badge ok'; $('netB').textContent = '🟢 Sẵn sàng — học sinh vào bằng điện thoại/iPad' }
+    else if (net.mode === 'firebase') { $('netB').className = 'badge ok'; $('netB').textContent = '🟢 Đã kết nối máy chủ' }
+    else { $('netB').className = 'badge warn'; $('netB').textContent = '🟡 Chế độ thử: tab trên máy này' }
+    renderModesLockState();
+    if (window.LIC && !window.LIC.allowed(gMode)) selectMode('climb');
+    else selectMode(gMode);
+    checkResume();
+    renderBank(true); // Tự động đồng bộ kho đề từ máy chủ ngay khi mở trang
+  } catch (e) { $('netB').className = 'badge warn'; $('netB').textContent = '❌ ' + e.message }
+})();
+</script>
+</body>
+</html>
