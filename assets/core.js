@@ -221,7 +221,7 @@ function parseText(t) {
     parts.forEach(p => {
       let m;
       // Nhận diện mẫu dán: 1. SPK: từ / SPK: từ / 1. Speaking: từ / 1. Phát âm: từ
-      if ((m = p.match(/^(?:(?:câu|question)?\s*\d+\s*[.:)]\s*)?(?:spk|speaking|phát âm|phat am|nói|speak)\s*[:：]\s*(.+)$/i))) {
+      if ((m = p.match(/^(?:(?:câu|question)?\s*(?:\d+\s*[.:)]\s*)+)?(?:spk|speaking|phát âm|phat am|nói|speak)\s*[:：]\s*(.+)$/i))) {
         flush();
         const target = m[1].trim();
         cur = {

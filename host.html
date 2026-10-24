@@ -916,7 +916,7 @@ if ($('bDoQuickSpkGen')) {
     const lines = text.split('\n').map(l => l.trim()).filter(Boolean);
     const items = [];
     lines.forEach(line => {
-      const m = line.match(/^(?:(?:câu|question)?\s*\d+\s*[.:)]\s*)?(?:spk|speaking|phát âm|phat am|nói|speak)\s*[:：]\s*(.+)$/i);
+      const m = line.match(/^(?:(?:câu|question)?\s*(?:\d+\s*[.:)]\s*)+)?(?:spk|speaking|phát âm|phat am|nói|speak)\s*[:：]\s*(.+)$/i);
       const target = m ? m[1].trim() : line.replace(/^\d+\s*[.:)]\s*/, '').trim();
       if (target) {
         items.push({
