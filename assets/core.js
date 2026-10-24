@@ -1525,6 +1525,384 @@ Trả về strictly JSON:
 }
 
 
+/* ══════════════════════════════════════════════════════════════════
+   CHUẨN HÓA CHÍNH TẢ & NGỮ PHÁP TIẾNG ANH CHO CÂU HỎI PHÁT ÂM (SPEAKING)
+   ══════════════════════════════════════════════════════════════════ */
+const COMMON_TYPOS = {
+  'hitory': 'history',
+  'histroy': 'history',
+  'hisotry': 'history',
+  'techer': 'teacher',
+  'teachr': 'teacher',
+  'stuent': 'student',
+  'studnet': 'student',
+  'gramar': 'grammar',
+  'grammer': 'grammar',
+  'libary': 'library',
+  'librery': 'library',
+  'unversity': 'university',
+  'univercity': 'university',
+  'untill': 'until',
+  'moring': 'morning',
+  'moning': 'morning',
+  'beautifull': 'beautiful',
+  'beutiful': 'beautiful',
+  'beatiful': 'beautiful',
+  'alot': 'a lot',
+  'enviroment': 'environment',
+  'environmet': 'environment',
+  'goverment': 'government',
+  'govertment': 'government',
+  'comunication': 'communication',
+  'communiction': 'communication',
+  'succefull': 'successful',
+  'succesful': 'successful',
+  'successfull': 'successful',
+  'tomorow': 'tomorrow',
+  'tommorrow': 'tomorrow',
+  'tomrw': 'tomorrow',
+  'yesterdy': 'yesterday',
+  'yestaday': 'yesterday',
+  'truely': 'truly',
+  'experiance': 'experience',
+  'expereince': 'experience',
+  'diferent': 'different',
+  'diffrent': 'different',
+  'freind': 'friend',
+  'freinds': 'friends',
+  'peaple': 'people',
+  'peple': 'people',
+  'becuase': 'because',
+  'becuse': 'because',
+  'bcs': 'because',
+  'langauge': 'language',
+  'famouse': 'famous',
+  'dangerouse': 'dangerous',
+  'intresting': 'interesting',
+  'interseting': 'interesting',
+  'imediately': 'immediately',
+  'necesary': 'necessary',
+  'neccessary': 'necessary',
+  'accomodation': 'accommodation',
+  'shedule': 'schedule',
+  'comforatble': 'comfortable',
+  'occured': 'occurred',
+  'recieve': 'receive',
+  'recieved': 'received',
+  'seperate': 'separate',
+  'definitly': 'definitely',
+  'definately': 'definitely',
+  'pronounciation': 'pronunciation',
+  'pronouce': 'pronounce',
+  'embarass': 'embarrass',
+  'beleive': 'believe',
+  'acheive': 'achieve',
+  'calender': 'calendar',
+  'collegue': 'colleague',
+  'disapear': 'disappear',
+  'disapoint': 'disappoint',
+  'dissappoint': 'disappoint',
+  'foriegn': 'foreign',
+  'guarentee': 'guarantee',
+  'happend': 'happened',
+  'heigth': 'height',
+  'independant': 'independent',
+  'knowlege': 'knowledge',
+  'noticable': 'noticeable',
+  'ocassion': 'occasion',
+  'occassion': 'occasion',
+  'paralell': 'parallel',
+  'prefered': 'preferred',
+  'priviledge': 'privilege',
+  'publically': 'publicly',
+  'realy': 'really',
+  'religous': 'religious',
+  'rember': 'remember',
+  'remeber': 'remember',
+  'sentance': 'sentence',
+  'suprise': 'surprise',
+  'thier': 'their',
+  'twelth': 'twelfth',
+  'unfortunatly': 'unfortunately',
+  'usefull': 'useful',
+  'vehical': 'vehicle',
+  'wierd': 'weird',
+  'writting': 'writing',
+  'writen': 'written',
+  'wether': 'whether',
+  'wich': 'which',
+  'appologize': 'apologize',
+  'bussiness': 'business',
+  'carreer': 'career',
+  'choclate': 'chocolate',
+  'colourfull': 'colourful',
+  'decission': 'decision',
+  'developement': 'development',
+  'diffcult': 'difficult',
+  'dificult': 'difficult',
+  'dosent': 'doesn\'t',
+  'dosen\'t': 'doesn\'t',
+  'elaphant': 'elephant',
+  'engish': 'English',
+  'englsih': 'English',
+  'excelent': 'excellent',
+  'exellent': 'excellent',
+  'excercise': 'exercise',
+  'famly': 'family',
+  'febrary': 'February',
+  'finaly': 'finally',
+  'fourty': 'forty',
+  'freindly': 'friendly',
+  'gardern': 'garden',
+  'girafe': 'giraffe',
+  'happyness': 'happiness',
+  'helfull': 'helpful',
+  'holliday': 'holiday',
+  'hoptial': 'hospital',
+  'invatation': 'invitation',
+  'judgement': 'judgment',
+  'knive': 'knife',
+  'learnning': 'learning',
+  'leson': 'lesson',
+  'listning': 'listening',
+  'litature': 'literature',
+  'machne': 'machine',
+  'marraige': 'marriage',
+  'medecine': 'medicine',
+  'monky': 'monkey',
+  'musuem': 'museum',
+  'natrual': 'natural',
+  'nieghbor': 'neighbor',
+  'oposite': 'opposite',
+  'passanger': 'passenger',
+  'peice': 'piece',
+  'plaese': 'please',
+  'pleas': 'please',
+  'populer': 'popular',
+  'possibe': 'possible',
+  'practce': 'practice',
+  'practise': 'practice',
+  'prepair': 'prepare',
+  'resturant': 'restaurant',
+  'sandwhich': 'sandwich',
+  'scence': 'scene',
+  'scinece': 'science',
+  'sholder': 'shoulder',
+  'similiar': 'similar',
+  'speach': 'speech',
+  'strenght': 'strength',
+  'strugle': 'struggle',
+  'succes': 'success',
+  'swiming': 'swimming',
+  'technolgy': 'technology',
+  'telivision': 'television',
+  'temprature': 'temperature',
+  'thursdy': 'Thursday',
+  'togather': 'together',
+  'trafic': 'traffic',
+  'tuesday': 'Tuesday',
+  'vaction': 'vacation',
+  'vegtables': 'vegetables',
+  'vegetabel': 'vegetable',
+  'villiage': 'village',
+  'vollyball': 'volleyball',
+  'wedensday': 'Wednesday',
+  'wensday': 'Wednesday',
+  'womam': 'woman',
+  'wonderfull': 'wonderful',
+  'yestaday': 'yesterday'
+};
+
+const COMMON_VOCAB = [
+  "history", "teacher", "student", "classroom", "school", "education", "beautiful", "environment",
+  "protection", "successful", "practice", "perfect", "speaking", "pronunciation", "vocabulary",
+  "grammar", "listening", "reading", "writing", "communication", "technology", "computer", "internet",
+  "science", "knowledge", "university", "library", "tomorrow", "yesterday", "morning", "afternoon",
+  "evening", "welcome", "question", "answer", "elephant", "giraffe", "monkey", "animal", "hospital",
+  "doctor", "medicine", "restaurant", "sandwich", "chocolate", "holiday", "vacation", "weather",
+  "different", "difficult", "important", "necessary", "experience", "wonderful", "dangerous",
+  "favorite", "family", "friend", "friendly", "children", "people", "language", "english", "exercise",
+  "homework", "remember", "understand", "believe", "achieve", "decision", "development", "situation",
+  "traditional", "culture", "celebration", "festival", "interesting", "amazing", "special", "simple",
+  "complex", "century", "future", "present", "country", "international", "delicious", "information",
+  "activity", "community", "pollution", "traffic", "government", "challenge", "opportunity", "president"
+];
+
+function levenshtein(s1, s2) {
+  if (s1.length < s2.length) return levenshtein(s2, s1);
+  if (s2.length === 0) return s1.length;
+  let prev = Array.from({ length: s2.length + 1 }, (_, i) => i);
+  for (let i = 0; i < s1.length; i++) {
+    let curr = [i + 1];
+    for (let j = 0; j < s2.length; j++) {
+      let ins = prev[j + 1] + 1;
+      let del = curr[j] + 1;
+      let sub = prev[j] + (s1[i] !== s2[j] ? 1 : 0);
+      curr.push(Math.min(ins, del, sub));
+    }
+    prev = curr;
+  }
+  return prev[s2.length];
+}
+
+/* Kiểm tra chính tả & chuẩn hóa tiếng Anh cục bộ (offline / tức thì) */
+function checkEnglishStandardizationLocal(text) {
+  const original = String(text || '').trim();
+  if (!original) return { original: '', suggested: '', isMisspelled: false, reason: '' };
+
+  const tokens = original.split(/\s+/);
+  const correctedTokens = [];
+  let isMisspelled = false;
+  const reasons = [];
+
+  tokens.forEach(tok => {
+    const m = tok.match(/^([^a-zA-Z0-9]*)([a-zA-Z0-9'-]+)([^a-zA-Z0-9]*)$/);
+    if (!m) {
+      correctedTokens.push(tok);
+      return;
+    }
+    const lead = m[1] || '';
+    const word = m[2];
+    const trail = m[3] || '';
+    const lower = word.toLowerCase();
+
+    // 1. Tra cứu trực tiếp từ bảng lỗi phổ biến
+    if (COMMON_TYPOS[lower]) {
+      let repl = COMMON_TYPOS[lower];
+      if (word[0] === word[0].toUpperCase() && word.length > 1) {
+        repl = repl.charAt(0).toUpperCase() + repl.slice(1);
+      }
+      correctedTokens.push(lead + repl + trail);
+      isMisspelled = true;
+      reasons.push(`'${word}' ➔ '${repl}'`);
+      return;
+    }
+
+    // 2. Tra cứu khoảng cách Levenshtein = 1 đối với từ dài >= 4 ký tự
+    if (lower.length >= 4 && !COMMON_VOCAB.includes(lower)) {
+      const match = COMMON_VOCAB.find(v => levenshtein(lower, v) === 1);
+      if (match) {
+        let repl = match;
+        if (word[0] === word[0].toUpperCase() && word.length > 1) {
+          repl = repl.charAt(0).toUpperCase() + repl.slice(1);
+        }
+        correctedTokens.push(lead + repl + trail);
+        isMisspelled = true;
+        reasons.push(`'${word}' ➔ '${repl}'`);
+        return;
+      }
+    }
+
+    correctedTokens.push(tok);
+  });
+
+  const suggested = correctedTokens.join(' ');
+  const reason = isMisspelled ? `Phát hiện từ có thể viết sai chính tả: ${reasons.join(', ')}` : '';
+
+  return {
+    original,
+    suggested,
+    isMisspelled,
+    reason
+  };
+}
+
+/* Thẩm định & chuẩn hóa danh sách từ/câu phát âm bằng AI (kết hợp offline + Gemini) */
+async function checkEnglishStandardizationAI(items) {
+  if (!Array.isArray(items) || !items.length) return [];
+
+  const list = items.map((it, idx) => {
+    const raw = typeof it === 'string' ? it : (it.targetText || it.ansText || it.q || '');
+    return { id: idx, original: String(raw || '').trim(), rawObj: it };
+  });
+
+  // 1. Quét cục bộ nhanh trước
+  const localResults = list.map(item => {
+    const local = checkEnglishStandardizationLocal(item.original);
+    return {
+      id: item.id,
+      original: item.original,
+      suggested: local.suggested,
+      isMisspelled: local.isMisspelled,
+      reason: local.reason,
+      rawObj: item.rawObj
+    };
+  });
+
+  // 2. Nếu có key AI, gửi Gemini để kiểm tra ngữ pháp sâu & ngữ cảnh
+  const key = getAiKey();
+  if (!key || typeof fetch === 'undefined') {
+    return localResults;
+  }
+
+  const promptItems = list.map(l => ({ id: l.id, text: l.original }));
+  const prompt = `Bạn là chuyên gia thẩm định và chuẩn hóa chính tả, ngữ pháp Tiếng Anh (English Proofreader & Standardizer).
+Giáo viên đang soạn danh sách từ/câu để học sinh luyện đọc và phát âm:
+${JSON.stringify(promptItems)}
+
+Nhiệm vụ:
+Kiểm tra xem từng từ/câu có bị gõ nhầm chính tả (typo), viết sai từ tiếng Anh hoặc ngữ pháp không chuẩn không (ví dụ: 'hitory' -> 'history', 'Good moring' -> 'Good morning', 'beautifull' -> 'beautiful', 'Practice make perfect' -> 'Practice makes perfect').
+
+Yêu cầu:
+1. Nếu có lỗi chính tả/ngữ pháp tiếng Anh:
+   - "isMisspelled": true
+   - "suggested": "<từ hoặc câu đã được sửa chuẩn xác nhất>"
+   - "reason": "<giải thích ngắn gọn 1 câu bằng tiếng Việt về lỗi sai và cách sửa>"
+2. Nếu từ/câu đã hoàn toàn chuẩn xác tiếng Anh:
+   - "isMisspelled": false
+   - "suggested": "<giữ nguyên bản gốc>"
+   - "reason": ""
+
+QUAN TRỌNG:
+- Trả về STRICT JSON mảng:
+[
+  { "id": 0, "original": "...", "suggested": "...", "isMisspelled": true, "reason": "..." }
+]`;
+
+  const models = ['gemini-3.5-flash', 'gemini-3.8-flash', 'gemini-flash-latest', 'gemini-flash-lite-latest'];
+  for (const m of models) {
+    try {
+      const ctrl = new AbortController();
+      const tid = setTimeout(() => ctrl.abort(), 6000);
+      const resp = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${m}:generateContent?key=${key}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          contents: [{ parts: [{ text: prompt }] }],
+          generationConfig: { responseMimeType: 'application/json', temperature: 0.1 }
+        }),
+        signal: ctrl.signal
+      });
+      clearTimeout(tid);
+
+      if (resp.ok) {
+        const data = await resp.json();
+        const txt = data.candidates?.[0]?.content?.parts?.[0]?.text;
+        if (txt) {
+          const parsed = JSON.parse(txt);
+          if (Array.isArray(parsed)) {
+            parsed.forEach(pItem => {
+              const res = localResults[pItem.id];
+              if (res) {
+                if (pItem.isMisspelled && pItem.suggested && pItem.suggested.toLowerCase() !== res.original.toLowerCase()) {
+                  res.isMisspelled = true;
+                  res.suggested = pItem.suggested;
+                  res.reason = pItem.reason || res.reason || `Chuẩn hóa thành "${pItem.suggested}"`;
+                }
+              }
+            });
+            return localResults;
+          }
+        }
+      }
+    } catch (e) {
+      console.warn(`Model ${m} standardization check failed:`, e);
+    }
+  }
+
+  return localResults;
+}
+
 /* Tự động làm giàu danh sách câu phát âm bằng AI: điền phiên âm IPA, chỉ dẫn và mẹo phát âm */
 async function enrichSpeakingQuestionsAI(qList) {
   if (!Array.isArray(qList) || !qList.length) return qList;
@@ -1674,5 +2052,5 @@ Trả về STRICT JSON:
   };
 }
 
-return { $, shuffle, pick, clamp, esc, fmt, stamp, clean, rng, COLORS, BADGE, safe, normAns, checkTextAns, fromOld, prep, parseCSV, rowsToQs, parseText, parsePaste, sheetSets, sheetSet, sampleSet, packHw, unpackHw, tone, sfx, confetti, toast, rank, makeNet, music, saveCommunityQuiz, getCommunityLibrary, getQuizById, saveHwMeta, submitHwResult, getHwGradebook, showReportCard, getAiKey, diffPronunciation, speakText, evaluatePronunciationAI, enrichSpeakingQuestionsAI, generateSingleSpeakingAI, deleteCommunityQuiz, deleteHwSubmission , copy, copyText, sfxFiles, kvPut, kvGet, kvScan, live, liveWatch};
+return { $, shuffle, pick, clamp, esc, fmt, stamp, clean, rng, COLORS, BADGE, safe, normAns, checkTextAns, fromOld, prep, parseCSV, rowsToQs, parseText, parsePaste, sheetSets, sheetSet, sampleSet, packHw, unpackHw, tone, sfx, confetti, toast, rank, makeNet, music, saveCommunityQuiz, getCommunityLibrary, getQuizById, saveHwMeta, submitHwResult, getHwGradebook, showReportCard, getAiKey, diffPronunciation, speakText, evaluatePronunciationAI, enrichSpeakingQuestionsAI, generateSingleSpeakingAI, checkEnglishStandardizationLocal, checkEnglishStandardizationAI, COMMON_TYPOS, deleteCommunityQuiz, deleteHwSubmission , copy, copyText, sfxFiles, kvPut, kvGet, kvScan, live, liveWatch};
 })();

@@ -535,6 +535,36 @@ Hoặc dán theo mẫu:
  </div>
 </div>
 
+<!-- MODAL XÁC NHẬN CHUẨN HÓA CHÍNH TẢ TIẾNG ANH CHO CÂU PHÁT ÂM -->
+<div class="ov" id="ovStandardizeSpk">
+ <div class="card" style="max-width:700px;width:96%;border-top:6px solid #f59e0b;box-shadow:0 24px 50px rgba(0,0,0,0.35);border-radius:18px">
+  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
+   <div style="font-size:20px;font-weight:900;color:#92400e;display:flex;align-items:center;gap:8px">
+    <span>🔍 Kiểm tra &amp; Chuẩn hóa Tiếng Anh</span>
+   </div>
+   <button type="button" class="btn w" style="padding:4px 10px;font-size:14px" id="bCloseStdSpk">✕ Đóng</button>
+  </div>
+
+  <div style="font-size:14px;color:#475569;margin-bottom:14px;line-height:1.5">
+   Hệ thống phát hiện một số từ hoặc câu có thể bị viết sai chính tả. Cô có muốn chuẩn hóa lại cho chuẩn xác trước khi tạo bài và tra phiên âm IPA không?
+  </div>
+
+  <div id="stdSpkList" style="max-height:360px;overflow-y:auto;display:flex;flex-direction:column;gap:10px;margin-bottom:16px;padding:2px">
+   <!-- Các mục cần chuẩn hóa -->
+  </div>
+
+  <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;border-top:1px solid #fed7aa;padding-top:14px">
+   <button type="button" class="btn w" id="bStdKeepOriginal" style="font-weight:800;color:#64748b;padding:10px 16px">
+    ↩️ Giữ nguyên bản gốc
+   </button>
+   <button type="button" class="btn b" id="bStdApplySelected" style="font-weight:900;background:linear-gradient(135deg,#f59e0b,#ea580c);border:none;box-shadow:0 4px 14px rgba(245,158,11,0.4);color:#fff;padding:10px 20px;font-size:15px">
+    ✨ Đồng ý chuẩn hóa &amp; Tiếp tục
+   </button>
+  </div>
+ </div>
+</div>
+
+
 <!-- MODAL CHIẾU LỜI GIẢI CHI TIẾT (REVIEW TOÀN BỘ CÂU HỎI & ĐÁP ÁN) -->
 <div class="ov" id="ovExp"><div class="card" style="max-width:820px;width:96%">
  <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px">
@@ -696,15 +726,36 @@ function setQs(list, title, errs) {
   refreshQsPreviewOnly();
   if ($('qVisualEditor') && !$('qVisualEditor').hidden) renderVisualEditor();
 
-  // Tự động kiểm tra câu hỏi speaking chưa có IPA hoặc mẹo phát âm để AI hoàn thiện giúp giáo viên
+  // Tự động kiểm tra câu hỏi speaking chưa có IPA hoặc mẹo phát âm để chuẩn hóa & hoàn thiện
   const unenriched = qs.filter(q => q.type === 'speaking' && (!q.ipa || !q.e));
   if (unenriched.length > 0) {
-    toast(`✨ Đang tự động tạo phiên âm IPA và mẹo phát âm cho ${unenriched.length} câu...`, 3000);
-    GC.enrichSpeakingQuestionsAI(qs).then(() => {
-      refreshQsPreviewOnly();
-      if ($('qVisualEditor') && !$('qVisualEditor').hidden) renderVisualEditor();
-      toast(`✨ Đã điền xong phiên âm IPA và mẹo phát âm cho ${unenriched.length} câu! Cô có thể bấm nghe thử hoặc chỉnh sửa trực tiếp.`, 3500);
-    }).catch(() => {});
+    GC.checkEnglishStandardizationAI(unenriched).then(stdResults => {
+      const needsStd = (stdResults || []).filter(r => r.isMisspelled && r.suggested && r.suggested.trim().toLowerCase() !== r.original.trim().toLowerCase());
+      if (needsStd.length > 0) {
+        openStandardizeModal(unenriched, needsStd, () => {
+          refreshQsPreviewOnly();
+          if ($('qVisualEditor') && !$('qVisualEditor').hidden) renderVisualEditor();
+          toast(`✨ Đang tự động tạo phiên âm IPA và mẹo phát âm cho ${unenriched.length} câu...`, 3000);
+          GC.enrichSpeakingQuestionsAI(qs).then(() => {
+            refreshQsPreviewOnly();
+            if ($('qVisualEditor') && !$('qVisualEditor').hidden) renderVisualEditor();
+            toast(`✨ Đã điền xong phiên âm IPA và mẹo phát âm cho ${unenriched.length} câu! Cô có thể bấm nghe thử hoặc chỉnh sửa trực tiếp.`, 3500);
+          }).catch(() => {});
+        });
+      } else {
+        toast(`✨ Đang tự động tạo phiên âm IPA và mẹo phát âm cho ${unenriched.length} câu...`, 3000);
+        GC.enrichSpeakingQuestionsAI(qs).then(() => {
+          refreshQsPreviewOnly();
+          if ($('qVisualEditor') && !$('qVisualEditor').hidden) renderVisualEditor();
+          toast(`✨ Đã điền xong phiên âm IPA và mẹo phát âm cho ${unenriched.length} câu! Cô có thể bấm nghe thử hoặc chỉnh sửa trực tiếp.`, 3500);
+        }).catch(() => {});
+      }
+    }).catch(() => {
+      GC.enrichSpeakingQuestionsAI(qs).then(() => {
+        refreshQsPreviewOnly();
+        if ($('qVisualEditor') && !$('qVisualEditor').hidden) renderVisualEditor();
+      }).catch(() => {});
+    });
   }
 }
 
@@ -721,10 +772,21 @@ function renderVisualEditor() {
     const isText = !isSpeaking && q.type === 'text';
     let optsHtml = '';
     if (isSpeaking) {
+      const targetSpeech = q.targetText || q.ansText || '';
+      const stdCheck = GC.checkEnglishStandardizationLocal ? GC.checkEnglishStandardizationLocal(targetSpeech) : null;
+      const stdTipHtml = (stdCheck && stdCheck.isMisspelled && stdCheck.suggested && stdCheck.suggested.toLowerCase() !== targetSpeech.toLowerCase()) ? `
+        <div style="margin-top:6px;background:#fffbeb;border:1px dashed #f59e0b;padding:6px 10px;border-radius:8px;display:flex;align-items:center;justify-content:space-between;gap:8px">
+          <div style="font-size:12px;color:#92400e;font-weight:700">
+            💡 Gợi ý chuẩn hóa: <span style="text-decoration:line-through;color:#dc2626">${esc(targetSpeech)}</span> ➔ <b style="color:#16a34a">${esc(stdCheck.suggested)}</b>
+          </div>
+          <button type="button" class="btn w" style="padding:2px 10px;font-size:11px;background:#fef3c7;border-color:#f59e0b;color:#b45309;font-weight:900;white-space:nowrap" onclick="veApplyStdSingle(${idx}, '${esc(stdCheck.suggested).replace(/'/g, "\\'")}')">✨ Chuẩn hóa ngay</button>
+        </div>
+      ` : '';
       optsHtml = `
         <div style="margin-top:6px;background:#fdf2f8;padding:10px;border-radius:10px;border:1px solid #fbcfe8">
           <div style="font-size:12px;font-weight:800;color:#9d174d;margin-bottom:4px">🗣 Câu/Từ chuẩn cần học sinh phát âm (Target Speech):</div>
           <input class="ve-inp" style="width:100%;font-weight:800;color:#831843" value="${esc(q.targetText || q.ansText || '')}" placeholder="VD: The environmental protection project was successful." oninput="veUpdateField(${idx}, 'targetText', this.value); veUpdateField(${idx}, 'ansText', this.value)">
+          ${stdTipHtml}
           <div style="display:flex;gap:8px;margin-top:6px;flex-wrap:wrap">
             <div style="flex:1;min-width:180px">
               <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:2px">
@@ -904,11 +966,32 @@ if ($('bAddTextQ')) {
   };
 }
 
+window.veApplyStdSingle = function(idx, sugg) {
+  if (qs[idx]) {
+    qs[idx].targetText = sugg;
+    qs[idx].ansText = sugg;
+    renderVisualEditor();
+    refreshQsPreviewOnly();
+    toast('✨ Đã chuẩn hóa thành: ' + sugg, 1800);
+  }
+};
+
 window.veAiGenSingleSpeaking = async function(idx) {
   const q = qs[idx];
   if (!q) return;
-  const target = (q.targetText || q.ansText || q.q || '').trim();
+  let target = (q.targetText || q.ansText || q.q || '').trim();
   if (!target) return toast('⚠️ Cô hãy nhập từ/câu cần phát âm trước nhé!', 2000);
+
+  // Kiểm tra chính tả tiếng Anh trước
+  const std = GC.checkEnglishStandardizationLocal ? GC.checkEnglishStandardizationLocal(target) : null;
+  if (std && std.isMisspelled && std.suggested && std.suggested.toLowerCase() !== target.toLowerCase()) {
+    const wantStd = confirm(`🔍 Phát hiện từ/câu có thể bị gõ nhầm chính tả:\n"${target}"\n\nCô có muốn chuẩn hóa thành:\n"${std.suggested}"\nkhông?`);
+    if (wantStd) {
+      target = std.suggested;
+      q.targetText = std.suggested;
+      q.ansText = std.suggested;
+    }
+  }
 
   toast(`⏳ Đang tạo phiên âm IPA & mẹo cho "${target}"...`, 2500);
   const genRes = await GC.generateSingleSpeakingAI(target);
@@ -920,6 +1003,58 @@ window.veAiGenSingleSpeaking = async function(idx) {
   renderVisualEditor();
   toast(`✨ Đã điền xong IPA: ${genRes.ipa || ''}`, 2000);
 };
+
+/* Hiển thị Modal yêu cầu chuẩn hóa từ vựng tiếng Anh nếu phát hiện lỗi gõ nhầm (typo) */
+function openStandardizeModal(items, needsStd, onDone) {
+  const ov = $('ovStandardizeSpk');
+  const list = $('stdSpkList');
+  if (!ov || !list) {
+    onDone(items);
+    return;
+  }
+
+  list.innerHTML = needsStd.map(n => `
+    <div style="background:#fff;border:1px solid #fed7aa;border-radius:12px;padding:12px;display:flex;align-items:center;justify-content:space-between;gap:12px">
+      <div style="display:flex;align-items:center;gap:12px;flex:1">
+        <input type="checkbox" id="stdChk_${n.id}" class="chk-std-item" data-id="${n.id}" checked style="width:20px;height:20px;accent-color:#ea580c;cursor:pointer">
+        <label for="stdChk_${n.id}" style="cursor:pointer;flex:1">
+          <div style="display:flex;align-items:center;gap:8px;font-size:15px;flex-wrap:wrap">
+            <span style="color:#b91c1c;text-decoration:line-through;font-weight:800;background:#fef2f2;padding:3px 8px;border-radius:6px;border:1px solid #fecaca">${esc(n.original)}</span>
+            <span style="color:#94a3b8;font-weight:900">➔</span>
+            <span style="color:#15803d;font-weight:900;background:#f0fdf4;padding:3px 8px;border-radius:6px;border:1px solid #bbf7d0">${esc(n.suggested)}</span>
+          </div>
+          <div style="font-size:12px;color:#78350f;margin-top:4px;font-weight:600">${esc(n.reason || 'Gợi ý chuẩn hóa theo tiếng Anh chuẩn')}</div>
+        </label>
+      </div>
+    </div>
+  `).join('');
+
+  ov.classList.add('on');
+
+  $('bStdApplySelected').onclick = () => {
+    needsStd.forEach(n => {
+      const chk = $('stdChk_' + n.id);
+      if (chk && chk.checked) {
+        if (items[n.id]) {
+          items[n.id].targetText = n.suggested;
+          items[n.id].ansText = n.suggested;
+        }
+      }
+    });
+    ov.classList.remove('on');
+    onDone(items);
+  };
+
+  $('bStdKeepOriginal').onclick = () => {
+    ov.classList.remove('on');
+    onDone(items);
+  };
+
+  $('bCloseStdSpk').onclick = () => {
+    ov.classList.remove('on');
+    $('ovQuickSpk').classList.add('on');
+  };
+}
 
 if ($('bOpenQuickSpkModal')) {
   $('bOpenQuickSpkModal').onclick = () => {
@@ -957,27 +1092,53 @@ if ($('bDoQuickSpkGen')) {
 
     const btn = $('bDoQuickSpkGen');
     btn.disabled = true;
-    btn.innerHTML = '⏳ <b>Đang tạo phiên âm &amp; mẹo...</b>';
+    const oldBtnHtml = btn.innerHTML;
+    btn.innerHTML = '🔍 <b>Đang kiểm tra chính tả...</b>';
 
-    $('ovQuickSpk').classList.remove('on');
-    toast(`⏳ Đang tự động xử lý ${items.length} từ/câu phát âm...`, 3000);
+    // Hàm thực hiện tạo phiên âm IPA và đưa câu hỏi vào danh sách
+    const proceedEnrichAndAdd = async (finalItems) => {
+      $('ovQuickSpk').classList.remove('on');
+      if ($('ovStandardizeSpk')) $('ovStandardizeSpk').classList.remove('on');
+      toast(`⏳ Đang tạo phiên âm & mẹo cho ${finalItems.length} câu phát âm...`, 3000);
 
-    const enriched = await GC.enrichSpeakingQuestionsAI(items);
+      const enriched = await GC.enrichSpeakingQuestionsAI(finalItems);
+      const replace = $('chkQuickSpkReplace') ? $('chkQuickSpkReplace').checked : true;
+      if (replace) {
+        qs = enriched;
+      } else {
+        qs = qs.concat(enriched);
+      }
 
-    const replace = $('chkQuickSpkReplace') ? $('chkQuickSpkReplace').checked : true;
-    if (replace) {
-      qs = enriched;
-    } else {
-      qs = qs.concat(enriched);
+      btn.disabled = false;
+      btn.innerHTML = oldBtnHtml;
+
+      $('qVisualEditor').hidden = false;
+      refreshQsPreviewOnly();
+      renderVisualEditor();
+      toast(`🎉 Đã tạo thành công ${enriched.length} câu phát âm với đầy đủ IPA & mẹo! Cô có thể bấm nghe thử hoặc chỉnh sửa trực tiếp.`, 3500);
+    };
+
+    // Kiểm tra chính tả tiếng Anh trước
+    let checkResults = [];
+    try {
+      checkResults = await GC.checkEnglishStandardizationAI(items);
+    } catch (e) {
+      checkResults = items.map(it => GC.checkEnglishStandardizationLocal(it.targetText));
     }
 
-    btn.disabled = false;
-    btn.innerHTML = '✨ Tạo đề &amp; Điền IPA tự động';
+    const needsStd = checkResults.filter(r => r.isMisspelled && r.suggested && r.suggested.trim().toLowerCase() !== r.original.trim().toLowerCase());
 
-    $('qVisualEditor').hidden = false;
-    refreshQsPreviewOnly();
-    renderVisualEditor();
-    toast(`🎉 Đã tạo thành công ${enriched.length} câu phát âm với đầy đủ IPA & mẹo! Cô có thể bấm nghe thử hoặc chỉnh sửa trực tiếp.`, 3500);
+    if (needsStd.length > 0) {
+      btn.disabled = false;
+      btn.innerHTML = oldBtnHtml;
+      $('ovQuickSpk').classList.remove('on');
+      openStandardizeModal(items, needsStd, proceedEnrichAndAdd);
+      return;
+    }
+
+    // Không có lỗi chính tả -> Đi thẳng vào làm giàu IPA
+    btn.innerHTML = '⏳ <b>Đang tạo phiên âm &amp; mẹo...</b>';
+    await proceedEnrichAndAdd(items);
   };
 }
 
