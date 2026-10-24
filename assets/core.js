@@ -343,8 +343,23 @@ function tone(f, d, type, vol, f2, delay) {
 }
 const DUCK = 'assets/duck.mp3';
 let duck = null;
+/* hiệu ứng âm thanh từ file (giải mã sẵn bằng Web Audio → phát tức thì, chồng nhau được) */
+const SB = {};
+function sfxFiles(map) {
+  try { AC = AC || new (window.AudioContext || window.webkitAudioContext)() } catch (e) { return }
+  for (const k in map) if (!(k in SB)) { SB[k] = null; const m = map[k]; fetch(m.src).then(r => r.arrayBuffer()).then(b => AC.decodeAudioData(b)).then(buf => { SB[k] = { buf, a: m.a || 0, d: m.d, vol: m.vol || .5 } }).catch(() => { delete SB[k] }) }
+}
+function playBuf(k) {
+  const s = SB[k]; if (!s) return false;
+  try { if (AC.state === 'suspended') AC.resume(); const src = AC.createBufferSource(), g = AC.createGain(); src.buffer = s.buf; g.gain.value = s.vol; src.connect(g); g.connect(AC.destination); src.start(0, s.a, s.d); return true } catch (e) { return false }
+}
 function sfx(k) {
+  if (k in SB) { if (playBuf(k)) return; k = { mjump: 'jump', mpipe: 'pipe', mdeath: 'fall', tshot: 'fireball', bplace: 'bump', bboom: 'boom', bdie: 'hurt', bitem: 'grow', pdie: 'fall', pfruit: 'coin', tjump: 'jump', troar: 'roar', tscore: 'flag', tscream: 'fall', tsplat: 'hurt', tswish: 'pop', twoosh: 'pop', bdeath: 'fall' }[k] || k }   // file chưa tải xong → dùng tiếng 8-bit
   if (k === 'jump') tone(420, .14, 'square', .05, 760);
+  else if (k === 'swim') tone(520, .09, 'square', .04, 760);
+  else if (k === 'kick') tone(240, .09, 'square', .09, 560);
+  else if (k === 'cannon') tone(120, .28, 'sawtooth', .12, 45);
+  else if (k === 'thud') { tone(90, .22, 'square', .14, 35); tone(60, .3, 'triangle', .12, 30) }
   else if (k === 'spring') tone(300, .3, 'sine', .12, 1100);
   else if (k === 'ok') [523, 659, 784, 1047].forEach((f, i) => tone(f, .18, 'triangle', .12, 0, i * .08));
   else if (k === 'cp' || k === 'win') [392, 523, 659, 784, 1047].forEach((f, i) => tone(f, .22, 'triangle', .12, 0, i * .09));
@@ -385,6 +400,14 @@ function confetti(n) {
   }
 }
 let toastT = 0;
+/* copy chạy được cả trên trang http:// (navigator.clipboard chỉ có ở https) */
+function copyText(t) {
+  const old = () => { const a = document.createElement('textarea'); a.value = t; a.setAttribute('readonly', ''); a.style.cssText = 'position:fixed;top:0;left:0;opacity:0;font-size:16px';
+    document.body.appendChild(a); a.focus(); a.select(); a.setSelectionRange(0, t.length); let ok = false; try { ok = document.execCommand('copy') } catch (e) { } a.remove(); return ok };
+  if (window.isSecureContext && navigator.clipboard && navigator.clipboard.writeText) return navigator.clipboard.writeText(t).catch(() => { if (!old()) throw 0 });
+  return old() ? Promise.resolve() : Promise.reject();
+}
+function copy(t, ok, ask) { return copyText(t).then(() => toast(ok, 2600)).catch(() => prompt(ask || 'Copy:', t)) }
 function toast(s, ms) { const t = $('toast'); if (!t) return; t.textContent = s; t.classList.add('on'); clearTimeout(toastT); toastT = setTimeout(() => t.classList.remove('on'), ms || 2200) }
 
 /* ── nhạc nền 8-bit tự soạn: mỗi game một bản (16 ô nhịp, đoạn A + đoạn B) · hoặc file mp3 trong config.music ──
@@ -393,7 +416,8 @@ const music = (function () {
   const PREF = 'gMusic', H = -1;   // H = ngân tiếp nốt trước
   const CH = {
     D: { b: 50, t: [62, 66, 69, 74] }, A: { b: 45, t: [61, 64, 69, 73] }, Bm: { b: 47, t: [59, 62, 66, 71] }, G: { b: 43, t: [59, 62, 67, 71] }, Em: { b: 40, t: [59, 64, 67, 71] },
-    C: { b: 48, t: [60, 64, 67, 72] }, F: { b: 41, t: [60, 65, 69, 72] }, Am: { b: 45, t: [57, 60, 64, 69] }, E: { b: 40, t: [56, 59, 64, 68] }
+    C: { b: 48, t: [60, 64, 67, 72] }, F: { b: 41, t: [60, 65, 69, 72] }, Am: { b: 45, t: [57, 60, 64, 69] }, E: { b: 40, t: [56, 59, 64, 68] }, Dm: { b: 50, t: [62, 65, 69, 74] },
+    Bb: { b: 46, t: [58, 62, 65, 70] }, Gm: { b: 43, t: [58, 62, 67, 70] }
   };
   const TRACKS = {
     climb: { bpm: 140, duty: .5, drum: 'pop', bass: 'walk', arp: true, stab: false, st: .9,
@@ -414,6 +438,43 @@ const music = (function () {
         [79, 81, 83, H, 79, H, 74, H], [76, 79, 83, H, 79, H, 76, H], [72, 76, 81, H, 79, 77, 76, 74], [74, H, H, 0, 78, H, 81, H],
         [84, H, 83, 81, 79, H, 76, H], [81, H, 79, 78, 74, H, 78, H], [83, H, 81, 78, 74, H, 78, 81], [79, H, 76, H, 71, H, H, 0],
         [76, 79, 84, H, 83, 81, 79, 76], [78, 81, 86, H, 84, 83, 81, 78], [79, H, 83, H, 86, H, 83, 79], [79, H, H, H, 0, 0, 74, 78]] },
+    breeze: { bpm: 112, duty: .5, drum: 'soft', bass: 'walk', arp: true, stab: false, st: .88,   // êm dịu, đi dạo — 32 ô nhịp mới lặp lại (≈ 70 giây)
+      ch: ['C', 'G', 'Am', 'F', 'C', 'G', 'F', 'G', 'C', 'G', 'Am', 'F', 'Dm', 'G', 'C', 'C', 'F', 'G', 'Em', 'Am', 'F', 'G', 'C', 'C', 'Am', 'F', 'C', 'G', 'Am', 'F', 'G', 'G'],
+      mel: [[72, H, 76, H, 79, H, 76, H], [74, H, 71, H, 74, 76, 74, H], [72, H, 69, H, 72, 76, 79, H], [77, H, H, 76, 74, H, 72, H],
+        [76, H, 79, H, 84, H, 79, H], [81, H, 79, 77, 76, H, 74, H], [72, H, 74, 76, 77, H, 81, H], [79, H, H, H, 0, 0, 0, 0],
+        [72, H, 76, H, 79, H, 76, H], [74, H, 71, H, 74, 76, 74, H], [72, H, 69, H, 72, 76, 81, H], [81, H, 79, H, 77, H, 76, H],
+        [74, H, 77, H, 81, H, 77, H], [79, H, 77, 76, 74, H, 71, H], [72, H, 76, 79, 84, H, 79, H], [72, H, H, H, 0, 0, 0, 0],
+        [81, H, 84, H, 81, H, 77, H], [79, H, 83, H, 86, H, 83, H], [79, H, 76, H, 71, H, 76, H], [81, H, H, 79, 76, H, 72, H],
+        [77, 79, 81, H, 84, H, 81, H], [83, H, 81, 79, 77, H, 74, H], [76, H, 79, H, 72, H, 76, H], [79, H, H, H, 0, 0, 76, 79],
+        [81, H, 79, H, 76, H, 72, H], [77, H, 76, H, 74, H, 72, H], [76, H, 79, H, 84, H, 83, 81], [79, H, H, H, 74, H, 76, 77],
+        [76, H, 72, H, 69, H, 72, H], [74, H, 77, H, 81, H, 77, H], [79, H, 77, H, 76, H, 74, H], [71, H, 74, H, 77, H, 79, H]] },
+    pac: { bpm: 148, duty: .25, drum: 'bounce', bass: 'bounce', arp: false, stab: true, st: .6,   // Pac-Man: vui nhộn tự soạn
+      ch: ['C', 'Am', 'F', 'G', 'C', 'Am', 'Dm', 'G', 'F', 'G', 'Em', 'Am', 'F', 'G', 'C', 'C'],
+      mel: [[72, 76, 79, 84, 79, 76, 72, 0], [69, 72, 76, 81, 76, 72, 69, 0], [77, H, 76, 74, 72, H, 74, 76], [79, H, 0, 74, 79, H, 83, H],
+        [84, 83, 81, 79, 76, H, 79, H], [81, H, 76, H, 72, 74, 76, H], [77, 76, 74, H, 77, 81, 86, H], [83, H, 79, H, 74, H, 71, H],
+        [81, 84, 81, 77, 72, H, 77, H], [83, 86, 83, 79, 74, H, 79, H], [79, 83, 79, 76, 71, H, 76, H], [76, 81, 84, H, 81, H, 76, H],
+        [77, 81, 84, 81, 89, H, 84, H], [86, H, 83, H, 79, 81, 83, H], [84, H, 79, H, 76, H, 79, H], [84, H, H, H, 0, 0, 79, 83]] },
+    pacpow: { bpm: 176, duty: .125, drum: 'disco', bass: 'drive', arp: true, stab: false, st: .5,   // ăn viên năng lượng: dồn dập
+      ch: ['Am', 'F', 'G', 'E'],
+      mel: [[81, 84, 81, 84, 81, 84, 88, H], [77, 81, 77, 81, 77, 81, 84, H], [79, 83, 79, 83, 79, 83, 86, H], [80, 83, 80, 83, 88, H, 86, 83]] },
+    race: { bpm: 160, duty: .25, drum: 'disco', bass: 'drive', arp: false, stab: true, st: .7,   // Đua xe: sôi động tự soạn
+      ch: ['Am', 'F', 'C', 'G', 'Am', 'F', 'G', 'E', 'F', 'G', 'Em', 'Am', 'F', 'G', 'E', 'E'],
+      mel: [[81, H, 76, 81, 84, H, 83, 81], [77, H, 72, 77, 81, H, 79, 77], [76, 79, 84, H, 79, H, 76, H], [74, H, 79, H, 83, H, 86, H],
+        [88, H, 84, 81, 76, H, 81, H], [84, H, 81, 77, 72, H, 77, H], [79, 83, 86, H, 83, 79, 74, H], [76, H, 80, H, 83, H, 88, H],
+        [81, 84, 89, H, 84, 81, 77, H], [83, 86, 91, H, 86, 83, 79, H], [79, 83, 88, H, 83, 79, 76, H], [81, 84, 88, H, 93, H, 88, H],
+        [89, H, 88, 86, 84, H, 81, H], [86, H, 84, 83, 79, H, 83, H], [80, 83, 88, H, 92, H, 88, 83], [88, H, H, H, 0, 0, 76, 80]] },
+    temple: { bpm: 132, duty: .25, drum: 'march', bass: 'drive', arp: true, stab: false, st: .75,   // Temple Run: phiêu lưu, dồn dập tự soạn
+      ch: ['Dm', 'Dm', 'Bb', 'C', 'Dm', 'Bb', 'A', 'A', 'Gm', 'Dm', 'Bb', 'A', 'Gm', 'C', 'A', 'A'],
+      mel: [[74, H, 77, H, 81, H, 79, 77], [76, H, 74, H, 69, H, H, 0], [70, H, 74, H, 77, H, 79, H], [76, H, 72, H, 79, H, H, 0],
+        [81, H, 79, 77, 74, H, 77, H], [79, H, 77, 74, 70, H, 74, H], [73, H, 76, H, 81, H, 79, 76], [73, H, H, H, 69, H, 73, 76],
+        [79, H, 82, H, 86, H, 82, 79], [77, H, 81, H, 86, H, 81, 77], [82, H, 81, 79, 77, H, 74, H], [76, H, 73, H, 69, H, 73, H],
+        [79, 82, 86, H, 84, 82, 79, H], [76, 79, 84, H, 82, 79, 76, H], [73, 76, 81, H, 85, H, 81, H], [85, H, H, H, 0, 0, 81, 85]] },
+    bounce: { bpm: 132, duty: .25, drum: 'bounce', bass: 'bounce', arp: false, stab: true, st: .65,   // Bounce Tales: vui tươi tự soạn
+      ch: ['C', 'G', 'Am', 'F', 'C', 'G', 'F', 'G', 'Am', 'Em', 'F', 'C', 'Dm', 'G', 'C', 'C'],
+      mel: [[72, H, 76, 79, 76, H, 72, H], [71, H, 74, 79, 74, H, 71, H], [72, 76, 81, H, 79, 76, 72, H], [77, H, 76, 74, 72, H, 69, H],
+        [76, 79, 84, H, 83, 81, 79, H], [74, H, 79, H, 83, H, 86, H], [81, H, 77, H, 72, 74, 77, H], [79, H, H, H, 74, 76, 77, 79],
+        [81, H, 84, 81, 76, H, 72, H], [79, H, 76, 79, 83, H, 79, H], [77, 81, 84, H, 81, 77, 72, H], [76, H, 79, H, 84, H, H, 0],
+        [74, 77, 81, H, 77, 74, 69, H], [79, H, 83, H, 86, H, 83, 79], [84, H, 79, H, 76, H, 79, H], [84, H, H, H, 0, 0, 79, 83]] },
     tank: { bpm: 126, duty: .125, drum: 'march', bass: 'drive', arp: false, stab: false, st: .85,
       ch: ['Am', 'Am', 'F', 'G', 'Am', 'F', 'G', 'E', 'Am', 'C', 'G', 'Am', 'F', 'G', 'E', 'E'],
       mel: [[69, H, H, 72, 76, H, 72, H], [74, 72, 71, H, 69, H, H, 0], [72, H, H, 77, 81, H, 77, H], [79, 77, 76, H, 74, H, H, 0],
@@ -422,6 +483,60 @@ const music = (function () {
         [77, H, 81, H, 84, H, 81, 77], [79, H, 83, H, 86, H, 83, 79], [80, H, 76, H, 71, H, 76, 80], [83, H, H, H, 80, H, H, 0]] }
   };
   let ac = null, master = null, noise = null, waves = {}, timer = 0, step = 0, next = 0, playing = false, el = null, lv = 1, cur = 'climb', T = TRACKS.climb, S16 = .1;
+  /* nhạc từ file theo cảnh (Nấm Mario: đồng cỏ · hầm · sao bất tử) — files({ over: {src, a, b} … }, 'brick') */
+  let FM = null, FMT = '', fel = {}, scn = '', fcur = null, hushed = false;
+  function files(map, track) {
+    FM = map; FMT = track;
+    for (const k in map) if (!fel[k] && map[k].src) {
+      const m = map[k], a = new Audio(m.src); if (m.then) a.addEventListener('ended', () => { if (scn === k && playing && fileMode()) scene(m.then) }); a.preload = 'auto'; a.loop = !m.once && !m.then; fel[k] = a;   // nhạc nền luôn tự lặp (kể cả khi trình duyệt lỡ mốc b) → không bao giờ tắt giữa chừng
+      if (m.b) a.addEventListener('timeupdate', () => { if (a.currentTime >= m.b) a.currentTime = m.a || 0 });   // bỏ đoạn im lặng đầu/cuối file khi lặp
+    }
+    if (!scn) scn = Object.keys(map)[0];
+    const unlock = () => { for (const k in fel) { const a = fel[k]; if (a !== fcur && a.paused) { a.muted = true; a.play().then(() => { if (a !== fcur) a.pause(); a.muted = false }).catch(() => { a.muted = false }) } } removeEventListener('pointerdown', unlock, true) };
+    addEventListener('pointerdown', unlock, true);   // iPhone/iPad: phải chạm 1 lần mới cho phát nhạc
+  }
+  const fileMode = () => FM && cur === FMT;
+  function playScene(restart) {
+    if (hushed) return;
+    const m = FM[scn]; if (m && m.synth) { if (fcur) fcur.pause(); fcur = null; synthOn(m.synth); return }   // cảnh dùng nhạc 8-bit tự soạn
+    synthOff(); const a = fel[scn]; if (!a) return;
+    if (fcur && fcur !== a) fcur.pause();
+    if (restart || fcur !== a) { try { a.currentTime = (FM[scn] && FM[scn].a) || 0 } catch (e) { } }
+    fcur = a; a.muted = false; a.volume = .45 * lv; a.playbackRate = (FM[scn] && FM[scn].rate) || 1; a.play().catch(() => { });
+  }
+  function scene(k, restart) { if (!FM || !FM[k]) return; const ch = k !== scn; scn = k; if (playing && fileMode() && (ch || restart)) playScene(restart) }
+  /* tiếng động cơ xe tăng ù ù như Battle City: 0 tắt · 1 đứng yên · 2 đang chạy */
+  let eng = null, engSt = 0;
+  function engine(st) {
+    if (!playing || !fileMode() || hushed) st = 0; if (st === engSt && (eng || !st)) return; engSt = st;
+    try {
+      if (!eng) {
+        if (!st) return; ac = ac || new (window.AudioContext || window.webkitAudioContext)(); if (ac.state === 'suspended') ac.resume();
+        const o = ac.createOscillator(), o2 = ac.createOscillator(), f = ac.createBiquadFilter(), g = ac.createGain(), lfo = ac.createOscillator(), lg = ac.createGain();
+        o.type = 'square'; o2.type = 'sawtooth'; f.type = 'lowpass'; f.frequency.value = 520; g.gain.value = 0; lfo.frequency.value = 14; lg.gain.value = 6;
+        lfo.connect(lg); lg.connect(o.frequency); lg.connect(o2.frequency); o.connect(f); o2.connect(f); f.connect(g); g.connect(ac.destination); o.start(); o2.start(); lfo.start();
+        eng = { o, o2, g };
+      }
+      const t = ac.currentTime, fr = st === 2 ? 92 : 58;
+      eng.o.frequency.setTargetAtTime(fr, t, .05); eng.o2.frequency.setTargetAtTime(fr * 1.01, t, .05); eng.g.gain.setTargetAtTime(st ? (st === 2 ? .022 : .012) * lv : 0, t, .06);
+    } catch (e) { }
+  }
+  /* tiếng động cơ ô tô: k = 0 tắt … 1 hết tốc lực (cao độ tăng theo tốc độ) */
+  let mot = null, motK = -1;
+  function motor(k) {
+    if (!playing || !fileMode() || hushed) k = 0; if (Math.abs(k - motK) < .02 && (mot || !k)) return; motK = k;
+    try {
+      if (!mot) {
+        if (!k) return; ac = ac || new (window.AudioContext || window.webkitAudioContext)(); if (ac.state === 'suspended') ac.resume();
+        const o = ac.createOscillator(), o2 = ac.createOscillator(), f = ac.createBiquadFilter(), g = ac.createGain();
+        o.type = 'sawtooth'; o2.type = 'square'; f.type = 'lowpass'; f.frequency.value = 700; g.gain.value = 0;
+        o.connect(f); o2.connect(f); f.connect(g); g.connect(ac.destination); o.start(); o2.start(); mot = { o, o2, g };
+      }
+      const t = ac.currentTime, fr = 48 + 150 * k;
+      mot.o.frequency.setTargetAtTime(fr, t, .06); mot.o2.frequency.setTargetAtTime(fr * 1.5, t, .06); mot.g.gain.setTargetAtTime(k ? (.01 + .022 * k) * lv : 0, t, .08);
+    } catch (e) { }
+  }
+  function hush(on) { hushed = !!on; if (on) { if (fcur) fcur.pause(); synthOff() } else if (playing && fileMode()) playScene(true) }   // tạm im lúc chết / chạm cờ
   const hz = m => 440 * Math.pow(2, (m - 69) / 12);
   function pref() { try { return localStorage.getItem(PREF) !== '0' } catch (e) { return true } }
   function setPref(v) { try { localStorage.setItem(PREF, v ? '1' : '0') } catch (e) { } }
@@ -439,6 +554,7 @@ const music = (function () {
     // trống
     if (T.drum === 'pop') { if (s % 8 === 0 || s === 10) kick(t); if (s === 4 || s === 12) hit(t, .12, .22, 1800); if (s % 2 === 1) hit(t, .03, .06, 7000) }
     else if (T.drum === 'bounce') { if (s === 0 || s === 8) kick(t, .45); if (s === 4 || s === 12) hit(t, .07, .16, 2400); if (s % 4 === 2) hit(t, .03, .08, 8000) }
+    else if (T.drum === 'soft') { if (s === 0 || s === 8) kick(t, .28); if (s === 12) hit(t, .06, .07, 3000); if (s % 4 === 2) hit(t, .02, .035, 9000) }
     else if (T.drum === 'disco') { if (s % 4 === 0) kick(t, .45); if (s === 4 || s === 12) hit(t, .1, .2, 2000); if (s % 4 === 2) hit(t, .08, .07, 6000); else if (s % 2 === 1) hit(t, .02, .04, 9000) }
     else { if (s % 8 === 0) kick(t, .55); if (s === 4 || s === 12) hit(t, .14, .26, 1500); else if ((bar % 2 === 1 && s >= 13) || s % 4 === 2) hit(t, .05, .1, 1800); if (s % 2 === 1) hit(t, .02, .05, 9000) }
     // bè trầm
@@ -455,32 +571,32 @@ const music = (function () {
   function start(force, track) {
     if (track && TRACKS[track] && track !== cur) { stop(); cur = track }
     if (playing || (!force && !pref())) return; playing = true;
+    if (fileMode()) { playScene(false); return }
     const url = CFG().music;
     if (url) { el = el || new Audio(url); el.loop = true; el.volume = .45 * lv; el.play().catch(() => { }); return }
+    synthOn(cur);
+  }
+  let synthing = false;
+  function synthOff() { if (synthing) { synthing = false; clearInterval(timer) } }
+  function synthOn(name) {
+    if (synthing && T === TRACKS[name]) return; synthOff();
     try {
       ac = ac || new (window.AudioContext || window.webkitAudioContext)(); if (ac.state === 'suspended') ac.resume();
       if (!master) { master = ac.createGain(); master.connect(ac.destination); noise = ac.createBuffer(1, ac.sampleRate * .5, ac.sampleRate); const d = noise.getChannelData(0); for (let i = 0; i < d.length; i++)d[i] = Math.random() * 2 - 1 }
-      T = TRACKS[cur]; S16 = 60 / T.bpm / 4;
+      T = TRACKS[name] || TRACKS.climb; S16 = 60 / T.bpm / 4; synthing = true;
       master.gain.setValueAtTime(.34 * lv, ac.currentTime); next = ac.currentTime + .05; step = 0; timer = setInterval(tick, 25);
-    } catch (e) { playing = false }
+    } catch (e) { synthing = false }
   }
-  function stop() { playing = false; clearInterval(timer); if (el) el.pause() }
-  function duck(on) { lv = on ? .35 : 1; if (el) el.volume = .45 * lv; if (master && ac) master.gain.setTargetAtTime(.34 * lv, ac.currentTime, .2) }
+  function stop() { engine(0); motor(0); playing = false; synthOff(); clearInterval(timer); if (el) el.pause(); if (fcur) fcur.pause() }
+  function duck(on) { lv = on ? .35 : 1; if (el) el.volume = .45 * lv; if (fcur) fcur.volume = .45 * lv; if (eng && engSt && ac) eng.g.gain.setTargetAtTime((engSt === 2 ? .022 : .012) * lv, ac.currentTime, .1); if (master && ac) master.gain.setTargetAtTime(.34 * lv, ac.currentTime, .2) }
   function toggle() { const v = !pref(); setPref(v); if (v) start(); else stop(); return v }
-  return { start, stop, duck, toggle, pref, get playing() { return playing }, get track() { return cur } };
+  return { start, stop, duck, toggle, pref, files, scene, hush, engine, motor, get now() { return (fcur && !fcur.paused ? scn + ':' + fcur.src.split('/').pop() + '@' + fcur.currentTime.toFixed(1) : '(im)') + (synthing ? ' synth' : '') + ' eng=' + engSt }, get playing() { return playing }, get track() { return cur } };
 })();
 
 /* ── xếp hạng: về đích trước → cao hơn → đúng nhiều hơn ── */
 function rank(players) {
   return Object.entries(players || {}).sort((A, B) => {
     const a = A[1], b = B[1];
-    if (a.score !== undefined || b.score !== undefined || a.st === 'submitted' || b.st === 'submitted' || a.st === 'playing' || b.st === 'playing') {
-      const sA = a.score ?? 0, sB = b.score ?? 0;
-      if (sB !== sA) return sB - sA;
-      if ((b.ok || 0) !== (a.ok || 0)) return (b.ok || 0) - (a.ok || 0);
-      if ((b.ans || 0) !== (a.ans || 0)) return (b.ans || 0) - (a.ans || 0);
-      return (a.submittedAt || Infinity) - (b.submittedAt || Infinity);
-    }
     if (!!a.tt !== !!b.tt) return a.tt ? -1 : 1;
     if (a.tt && b.tt) return a.tt - b.tt;
     return (b.alt || 0) - (a.alt || 0) || (b.ok || 0) - (a.ok || 0);
@@ -546,6 +662,56 @@ function localNet() {
   return new Promise(ok => setTimeout(() => { synced = true; ok(net) }, 350));
 }
 
+/* lưu / đọc 1 tin giữ lại (retained) trên cả 2 máy chủ MQTT — dùng cho link bài tập ngắn (play.html?h=mã) */
+const KV_LIBS = ['https://unpkg.com/mqtt@5.10.1/dist/mqtt.min.js', 'https://cdn.jsdelivr.net/npm/mqtt@5.10.1/dist/mqtt.min.js'];
+const KV_BROKERS = () => CFG().brokers || ['wss://broker.emqx.io:8084/mqtt', 'wss://broker.hivemq.com:8884/mqtt'];
+async function kvLib() { for (const u of KV_LIBS) { if (window.mqtt) break; try { await loadScript(u) } catch (e) { } } if (!window.mqtt) throw new Error('Không tải được bộ kết nối — kiểm tra mạng rồi tải lại trang') }
+function kvOne(url, topic, val) {   // val === undefined → đọc; có val → ghi
+  return new Promise(done => {
+    let c, fin = false; const end = v => { if (fin) return; fin = true; clearTimeout(to); try { c && c.end(true) } catch (e) { } done(v) };
+    const to = setTimeout(() => end(val === undefined ? null : false), 9000);
+    try { c = mqtt.connect(url, { clientId: 'kv_' + Math.random().toString(16).slice(2, 12), connectTimeout: 7000, reconnectPeriod: 0, clean: true }) } catch (e) { return end(val === undefined ? null : false) }
+    c.on('error', () => end(val === undefined ? null : false));
+    c.on('connect', () => {
+      if (val !== undefined) return c.publish(topic, val, { qos: 1, retain: true }, err => end(!err));
+      c.on('message', (t, buf) => end(new TextDecoder().decode(buf) || null));
+      c.subscribe(topic, { qos: 1 }, () => setTimeout(() => end(null), 3000));
+    });
+  });
+}
+async function kvPut(topic, val) { await kvLib(); const r = await Promise.all(KV_BROKERS().map(u => kvOne(u, topic, val))); return r.some(Boolean) }
+/* "đang online": mỗi trang khoảng 20 giây báo 1 lần (vai trò · game · phòng · tên thầy cô — KHÔNG có tên học sinh) */
+const LIVE = 'hoctienganh-dnx/v1/live/';
+function live(state) {
+  if (live.on) return; live.on = 1;
+  const sid = Math.random().toString(36).slice(2, 10); let c = null;
+  const send = () => { try { const d = state(); if (!d || !c || !c.connected) return; d.t = Date.now(); c.publish(LIVE + sid, JSON.stringify(d), { qos: 0 }) } catch (e) { } };
+  kvLib().then(() => {
+    c = mqtt.connect(KV_BROKERS()[0], { clientId: 'lv_' + sid, keepalive: 45, reconnectPeriod: 6000, clean: true });
+    c.on('connect', send); setInterval(send, 20000);
+    addEventListener('visibilitychange', () => { if (!document.hidden) send() });
+    addEventListener('pagehide', () => { try { c.publish(LIVE + sid, '', { qos: 0 }) } catch (e) { } });
+  }).catch(() => { });
+  return { send };
+}
+function liveWatch(cb) {   // trang tạo mã của cô: nghe tất cả
+  kvLib().then(() => {
+    const c = mqtt.connect(KV_BROKERS()[0], { clientId: 'lw_' + Math.random().toString(16).slice(2, 10), keepalive: 45, reconnectPeriod: 4000, clean: true });
+    c.on('connect', () => { c.subscribe(LIVE + '+'); cb('_conn', true) }); c.on('close', () => cb('_conn', false));
+    c.on('message', (t, b) => { const sid = t.slice(LIVE.length), s = new TextDecoder().decode(b); let d = null; try { d = s ? JSON.parse(s) : null } catch (e) { } cb(sid, d) });
+  }).catch(() => cb('_conn', false));
+}
+async function kvScan(filter, ms) {   // đọc TẤT CẢ tin giữ lại khớp mẫu (vd .../kbak/+) trên cả 2 máy chủ
+  await kvLib(); const out = {};
+  await Promise.all(KV_BROKERS().map(u => new Promise(done => {
+    let c; const end = () => { try { c && c.end(true) } catch (e) { } done() }; setTimeout(end, ms || 5000);
+    try { c = mqtt.connect(u, { clientId: 'ks_' + Math.random().toString(16).slice(2, 10), connectTimeout: 6000, reconnectPeriod: 0, clean: true }) } catch (e) { return end() }
+    c.on('error', end); c.on('connect', () => c.subscribe(filter, { qos: 1 }));
+    c.on('message', (t, b) => { const s = new TextDecoder().decode(b); if (s && !out[t]) out[t] = s });
+  })));
+  return out;
+}
+async function kvGet(topic) { await kvLib(); return new Promise(ok => { let n = 0; const L = KV_BROKERS(); L.forEach(u => kvOne(u, topic).then(v => { if (v) ok(v); else if (++n === L.length) ok(null) })) }) }
 async function mqttNet() {
   const LIBS = ['https://unpkg.com/mqtt@5.10.1/dist/mqtt.min.js', 'https://cdn.jsdelivr.net/npm/mqtt@5.10.1/dist/mqtt.min.js'];
   for (const u of LIBS) { if (window.mqtt) break; try { await loadScript(u) } catch (e) { } }
@@ -1508,5 +1674,5 @@ Trả về STRICT JSON:
   };
 }
 
-return { $, shuffle, pick, clamp, esc, fmt, stamp, clean, rng, COLORS, BADGE, safe, normAns, checkTextAns, fromOld, prep, parseCSV, rowsToQs, parseText, parsePaste, sheetSets, sheetSet, sampleSet, packHw, unpackHw, tone, sfx, confetti, toast, rank, makeNet, music, saveCommunityQuiz, getCommunityLibrary, getQuizById, saveHwMeta, submitHwResult, getHwGradebook, showReportCard, getAiKey, diffPronunciation, speakText, evaluatePronunciationAI, enrichSpeakingQuestionsAI, generateSingleSpeakingAI, deleteCommunityQuiz, deleteHwSubmission };
+return { $, shuffle, pick, clamp, esc, fmt, stamp, clean, rng, COLORS, BADGE, safe, normAns, checkTextAns, fromOld, prep, parseCSV, rowsToQs, parseText, parsePaste, sheetSets, sheetSet, sampleSet, packHw, unpackHw, tone, sfx, confetti, toast, rank, makeNet, music, saveCommunityQuiz, getCommunityLibrary, getQuizById, saveHwMeta, submitHwResult, getHwGradebook, showReportCard, getAiKey, diffPronunciation, speakText, evaluatePronunciationAI, enrichSpeakingQuestionsAI, generateSingleSpeakingAI, deleteCommunityQuiz, deleteHwSubmission , copy, copyText, sfxFiles, kvPut, kvGet, kvScan, live, liveWatch};
 })();

@@ -41,6 +41,8 @@ body{display:flex;flex-direction:column;overflow:hidden}
 .tank #bF{right:22px;bottom:34px;width:100px;height:100px;font-size:40px}
 .tank #stage{background:#0E1424}
 .bomb #stage{background:#1C2A1E}
+  .pac #stage{background:#000}.race #stage{background:#1A1033}.race #bF,.race #bX{display:none!important}.temple #stage{background:#1A1033}.temple #bF,.temple #bX{display:none!important}.pac #bF,.pac #bX{display:none!important}
+
 #bX{display:none}
 .remote #bX{display:block;right:132px;bottom:46px;width:64px;height:64px;font-size:26px;background:#fff3c4;color:#c2410c;box-shadow:0 4px 0 #f0c674}
 .tank #pad.on~#eBtn{bottom:190px}
@@ -469,7 +471,7 @@ body{display:flex;flex-direction:column;overflow:hidden}
 <div id="toast"></div>
 
 <div class="ov on" id="ovJoin"><div class="card">
- <div class="big">🧗 Đừng Nhìn Xuống!</div>
+ <div class="big" id="jTitle">🧗 Đừng Nhìn Xuống!</div>
  <div class="sub" id="jSub">Vào phòng của cô để tham gia trò chơi cùng cả lớp</div>
  <div id="jCodeBox"><div class="lab">🔢 Mã phòng</div><input id="jCode" class="fld" inputmode="numeric" maxlength="6" placeholder="6 chữ số trên màn hình của cô" autocomplete="off"></div>
  <div class="lab">👤 Họ tên</div><input id="jName" class="fld" maxlength="30" placeholder="✏️ Nhập họ tên của em" autocomplete="off">
@@ -503,11 +505,15 @@ body{display:flex;flex-direction:column;overflow:hidden}
 <script src="assets/brick.js"></script>
 <script src="assets/tank.js"></script>
 <script src="assets/bomb.js"></script>
+ <script src="assets/pac.js"></script>
+ <script src="assets/race.js"></script>
+ <script src="assets/bounce.js"></script>
+ <script src="assets/temple.js"></script>
 <script>
 const { $, esc, fmt, stamp, clean, pick, shuffle, COLORS, BADGE, sfx, toast, confetti } = GC;
 const U = new URLSearchParams(location.search), HWP = U.get('hw'), QUIZ_ID = U.get('quiz') || U.get('id'); let SOLO = U.get('solo') || (HWP || QUIZ_ID ? 'hw' : null);   // solo = "mau:0" · hw = bài tập về nhà (đề nén trong link)
 let HW = null;
-const GNAME = { climb: '🧗 Leo núi', brick: '🍄 Nấm Mario', tank: '🛡 Xe tăng', bomb: '💣 Đặt bom', test: '📝 Bài kiểm tra' };
+const GNAME = { climb: '🧗 Leo núi', brick: '🍄 Nấm Mario', tank: '🛡 Xe tăng', bomb: '💣 Bomberman', test: '📝 Bài kiểm tra', pac: '🟡 Pac-Man', race: '🏎 Đua xe', temple: '🏃 Temple Run P1', temple2: '🏃 Temple Run P2', bounce: '🔴 Bounce Tales', bounce2: '🐸 Bounce Tales P2' };
 const RULES = {
   test: [
     '📝 Đọc kỹ yêu cầu đề bài, đoạn văn (Reading) hoặc nghe kỹ audio trước khi chọn đáp án',
@@ -572,6 +578,13 @@ const TIPS = {
   brick: ['🧱 4 màn: Đồng cỏ → Hang ngầm → Xứ mây → Lâu đài dung nham', '❓ Hộp ? ra: 🪙 xu (+3⚡) · 🍄 nấm xanh (+20⚡) · 🍄 nấm đỏ hoá TO · 🌸 hoa lửa (bắn được) · ⭐ sao bất tử', '⬆ Giữ nút nhảy càng lâu thì nhảy càng cao — đội được cả khối ? trên cao!', '⬇ Ống có mũi tên: đứng lên + bấm ↓ để chui xuống hầm bí mật đầy xu!', '🌸 Hoa ăn thịt chui ra từ ống · 🔥 thanh lửa xoay · 🌋 dung nham — né hết nhé', '🏁 Chạm cột cờ để qua màn · màn 4: 🐉 rồng phun lửa canh công chúa — bắn 🔥 (phím F) hoặc chạm rìu 🪓 để hạ nó!'],
   test: ['📝 Đọc kỹ yêu cầu đề bài, đoạn văn hoặc nghe kỹ audio trước khi chọn đáp án', '🔀 Có thể chuyển qua lại giữa các câu bằng thanh số câu phía trên', '📥 Làm xong nhớ bấm nút Nộp bài để gửi điểm cho cô nhé!']
 };
+const BOUNCE_MSG = ['🏁 Qua Màn 1! Tiếp theo: Vách hoa 🌸 — LEO DỌC lên cao, nhảy từng bậc cỏ!', '🏁 Qua Màn 2! Hang động 🦇 — có nấm lò xo và ván gỗ trôi!', '🏁 Qua Màn 3! Bờ biển 🏖 — hố nước làm bóng nổi lên, cứ nhảy lên bờ!', '🏁 Qua Màn 4! Vách băng ❄️ — LEO DỌC, coi chừng bụi gai trên bậc!', '🏁 Qua Màn 5! Màn cuối: leo Tháp lâu đài 🏰 — cổng đích ở trên đỉnh!', '🏆 PHÁ ĐẢO!'];
+const BOUNCE_MSG2 = ['🏁 Qua Màn 1! Tiếp theo: Đầm sen 🪷 — nhảy trên lá sen, né cá chép nhảy!', '🏁 Qua Màn 2! Màn 3: 🐠 ĐÁY BIỂN — bấm ↑ liên tục để bơi, né gai bạc!', '🏁 Qua Màn 3! Hang nấm phát sáng 🍄 — LEO DỌC, nhún lá nảy lên cao!', '🏁 Qua Màn 4! Hang san hô 🪸 — lặn sâu hơn, nhiều sứa lắm đấy!', '🏁 Qua Màn 5! Màn cuối: Đầm lầy 🐸 — trùm HYPNOTOAD đang chờ, nhảy lên đầu nó 3 lần!', '🏆 PHÁ ĐẢO P2!'];
+const TEMPLE_MSG = {
+  temple: ['🏁 Qua Màn 1! Tiếp theo: Cầu đá trên mây 🌅 — có hố vực và đàn chim, nhảy chuẩn nhé!', '🏁 Qua Màn 2! Màn 3: ⛏ ĐƯỜNG HẦM MỎ — em sẽ ngồi XE GOÒNG lao vun vút!', '🏁 Qua Màn 3! Sa mạc kim tự tháp 🏜 — coi chừng xác ướp và bầy bọ hung!', '🏁 Qua Màn 4! Màn cuối P1: Thác nước ngọc bích 🌊 — hố nước có CÁ SẤU!', '🏆 PHÁ ĐẢO P1!'],
+  temple2: ['🏁 Qua Màn 1! Tiếp theo: Đền hoa anh đào 🌸 — lưỡi rìu đung đưa, canh nhịp mà chạy!', '🏁 Qua Màn 2! Màn 3: 💎 MỎ PHA LÊ — ngồi xe goòng xuyên lòng núi!', '🏁 Qua Màn 3! Hang dung nham 🌋 — hồn lửa zig-zag, vòi lửa thì TRƯỢT ↓!', '🏁 Qua Màn 4! Màn cuối: Đền vàng ban đêm 👑 — tượng vàng đang chờ em!', '👑 PHÁ ĐẢO!'] };
+const RACE_MSG = ['🏁 Về đích Chặng 1! Tiếp theo: Đồng hoa — có vết dầu đen, né nhé!', '🏁 Về đích Chặng 2! Sa mạc hoàng hôn — dốc cao, xe đông hơn!', '🏁 Về đích Chặng 3! Núi tuyết — đường TRƠN, phanh sớm trước khúc cua!', '🏁 Về đích Chặng 4! Chặng cuối: Thành phố đêm — xe cực đông, tập trung!', '🏆 Phá đảo 5 chặng!'];
+const PAC_MSG = ['🏁 Qua Màn 1! Mê cung kẹo hồng có MA TÀNG HÌNH — nhìn kỹ nhé!', '🏁 Qua Màn 2! Màn 3 có NHỆN giăng tơ — dính tơ là chạy chậm!', '🏁 Qua Màn 3! Màn 4 có RẮN dài — cả thân nó cũng cắn!', '🏁 Qua Màn 4! Màn cuối có QUỶ dịch chuyển — thấy vòng đỏ là né!', '🏆 Ăn sạch 5 mê cung!'];
 const BST_MSG = ['🏁 Qua màn 1! Quái củ hành bắt đầu chạy nhanh hơn — đặt bom chặn đường nó!', '🏁 Qua màn 2! Vào sa mạc nóng bỏng nào!', '🏁 Qua màn 3! Thùng gỗ đổi hướng liên tục — canh cho chuẩn!', '🏁 Qua màn 4! MÀN THƯỞNG: bất tử 25 giây, săn quái lấy ⚡!', '🎁 Hết màn thưởng! Vào băng tuyết — ma đi xuyên gạch được đấy!', '🏁 Qua màn 5! Quái đỏ biết đuổi theo em — đừng để bị dồn góc!', '🏁 Qua màn 6! Núi lửa phía trước — 2 màn cuối rồi!', '🏁 Qua màn 7! Màn cuối cùng — phá đảo thôi!', '🏆 Phá đảo!'];
 const ST_MSG = ['🏁 STAGE 1 CLEAR! Sông xanh rừng thẳm phía trước — núp rừng mà bắn nhé!', '🏁 STAGE 2 CLEAR! Pháo đài thép đang chờ — ăn ⭐ để súng bắn thủng thép!', '🏁 STAGE 3 CLEAR! Trận cuối: SIÊU TĂNG xuất hiện — giữ chặt căn cứ!'];
 const LV_MSG = ['🏁 Qua Màn 1! Hang ngầm đang chờ — nhớ chui ống tìm xu nhé!', '🏁 Qua Màn 2! Lên xứ mây hồng — nhảy cho khéo nha!', '🏁 Qua Màn 3! Lâu đài dung nham phía trước — công chúa đang đợi em!'];
@@ -1085,7 +1098,22 @@ function submitTestExam(auto) {
   }
 
   // Gửi tự động về Sổ điểm Bài tập về nhà của cô nếu làm qua link BTVN / Tự luyện
-  if (SOLO) {
+  /* khung vào phòng ghi đúng tên + luật của game cô đang chọn */
+const GKEY = m => ['brick', 'tank', 'bomb', 'test', 'pac', 'race', 'temple', 'temple2', 'bounce', 'bounce2'].includes(m) ? m : 'climb';
+function showGame(m, sub) {
+  const k = GKEY(m), nm = GNAME[k] || '🎮 Game';
+  if ($('jTitle')) $('jTitle').textContent = nm;
+  if (sub && $('jSub')) $('jSub').innerHTML = sub;
+  if (!started && $('hName')) { $('hName').textContent = nm; document.title = nm.replace(/^\S+\s/, '') + ' · Game ôn bài' }
+  const base = ['⚡ Trả lời ĐÚNG để nạp năng lượng · đúng liên tiếp 🔥 được thưởng thêm', '🏃 Di chuyển tốn ⚡ — hết ⚡ là đứng im, phải trả lời tiếp'];
+  if ($('jRules')) $('jRules').innerHTML = base.concat((TIPS[k] || []).slice(0, 3)).map(t => '<li>' + t + '</li>').join('');
+}
+async function peekRoom(c) {
+  try { net = net || await GC.makeNet(); const v = await net.once('rooms/' + c + '/info'); if (v && !joined) showGame(v.m, '🎮 Vào phòng <b>' + c + '</b> của cô chơi <b>' + esc(GNAME[GKEY(v.m)]) + '</b> cùng cả lớp' + (v.t ? '<br>📘 ' + esc(v.t) : '')) } catch (e) { }
+}
+
+if (SOLO && SOLO !== 'hw') showGame(U.get('m'), null);
+if (SOLO) {
     const hwId = QUIZ_ID || (HW && HW.id) || (HWP ? 'HW-' + HWP.slice(-10) : ('SOLO-' + SOLO));
     GC.submitHwResult(hwId, {
       title: setTitle || (HW && HW.t) || 'Bài kiểm tra tiếng Anh',
@@ -1204,6 +1232,21 @@ $('jCols').innerHTML = COLORS.map(c => '<button style="background:' + c + '" dat
 const paintCols = () => [...$('jCols').children].forEach(b => b.classList.toggle('on', b.dataset.c === myColor)); paintCols();
 $('jCols').onclick = e => { const c = e.target.dataset.c; if (c) { myColor = c; paintCols(); sfx('pop') } };
 if (U.get('m')) updateJoinUiForMode(U.get('m'));
+/* khung vào phòng ghi đúng tên + luật của game cô đang chọn */
+const GKEY = m => ['brick', 'tank', 'bomb', 'test', 'pac', 'race', 'temple', 'temple2', 'bounce', 'bounce2'].includes(m) ? m : 'climb';
+function showGame(m, sub) {
+  const k = GKEY(m), nm = GNAME[k] || '🎮 Game';
+  if ($('jTitle')) $('jTitle').textContent = nm;
+  if (sub && $('jSub')) $('jSub').innerHTML = sub;
+  if (!started && $('hName')) { $('hName').textContent = nm; document.title = nm.replace(/^\S+\s/, '') + ' · Game ôn bài' }
+  const base = ['⚡ Trả lời ĐÚNG để nạp năng lượng · đúng liên tiếp 🔥 được thưởng thêm', '🏃 Di chuyển tốn ⚡ — hết ⚡ là đứng im, phải trả lời tiếp'];
+  if ($('jRules')) $('jRules').innerHTML = base.concat((TIPS[k] || []).slice(0, 3)).map(t => '<li>' + t + '</li>').join('');
+}
+async function peekRoom(c) {
+  try { net = net || await GC.makeNet(); const v = await net.once('rooms/' + c + '/info'); if (v && !joined) showGame(v.m, '🎮 Vào phòng <b>' + c + '</b> của cô chơi <b>' + esc(GNAME[GKEY(v.m)]) + '</b> cùng cả lớp' + (v.t ? '<br>📘 ' + esc(v.t) : '')) } catch (e) { }
+}
+
+if (SOLO && SOLO !== 'hw') showGame(U.get('m'), null);
 if (SOLO) {
   $('jCodeBox').hidden = true;
   const isT = U.get('m') === 'test';
@@ -1253,6 +1296,7 @@ if (U.get('room')) {
 }
 ['jCode', 'jName'].forEach(id => $(id).addEventListener('keydown', e => { if (e.key === 'Enter') $('jGo').click() }));
 function bad(el, msg) { el.classList.remove('err'); void el.offsetWidth; el.classList.add('err'); el.focus(); $('jErr').textContent = msg }
+$('jCode') && $('jCode').addEventListener('input', e => { const c = e.target.value.replace(/\D/g, ''); if (c.length === 6) peekRoom(c); });
 $('jGo').onclick = async () => {
   nameV = clean($('jName').value);
   if (nameV.length < 2) return bad($('jName'), '✏️ Em nhập họ tên nhé (ít nhất 2 chữ)');
@@ -1268,7 +1312,7 @@ async function joinSolo() {
   else if (SOLO.startsWith('sheet:')) { const name = SOLO.slice(6), r = await GC.sheetSet(name); set = { title: name, qs: r.qs } }
   if (!set || !set.qs.length) throw new Error('Không tìm thấy bộ câu hỏi này. Em báo cô kiểm tra lại link nhé!');
   const P = HW || { eq: U.get('eq'), em: U.get('em'), lv: U.get('lv'), m: U.get('m') };
-  setGain(P.eq, P.em); LVL = +P.lv || 2; MODE = ['brick', 'tank', 'bomb', 'test'].includes(P.m) ? P.m : 'climb';
+  setGain(P.eq, P.em); LVL = +P.lv || 2; MODE = ['brick', 'tank', 'bomb', 'test', 'pac', 'race', 'temple', 'temple2', 'bounce', 'bounce2'].includes(P.m) ? P.m : 'climb';
   QS = GC.prep(set.qs, MODE === 'test' && P.testShuffle === false); setTitle = set.title;
   boot(20261019);
   begin();
@@ -1289,7 +1333,7 @@ async function joinRoom() {
   QS = GC.prep(Array.isArray(raw) ? raw : Object.values(raw || {}), info.m === 'test' && info.testShuffle === false);
   if (!QS.length) throw new Error('Phòng chưa có câu hỏi.');
   pid = myPid(code); path = 'rooms/' + code + '/players/' + pid; evp = 'rooms/' + code + '/ev';
-  joinT = net.now(); setTitle = info.t || ''; setGain(info.eq, info.em); LVL = info.lv || 2; MODE = ['brick', 'tank', 'bomb', 'test'].includes(info.m) ? info.m : 'climb';
+  joinT = net.now(); setTitle = info.t || ''; setGain(info.eq, info.em); LVL = info.lv || 2; MODE = ['brick', 'tank', 'bomb', 'test', 'pac', 'race', 'temple', 'temple2', 'bounce', 'bounce2'].includes(info.m) ? info.m : 'climb';
   updateJoinUiForMode(MODE);
   const old = await net.once(path);
   boot(info.seed);
@@ -1332,6 +1376,22 @@ function boot(seed) {
   if (MODE === 'bomb') {   // game Đặt Bom Cổ Điển (dùng chung bố cục nút chữ thập với xe tăng)
     window.Climb = Bomb; S = Bomb.S; document.body.classList.add('tank', 'bomb'); $('bJ').textContent = '▲'; $('bD').textContent = '▼'; $('bF').textContent = '💣';
     $('hName').textContent = '💣 Đặt Bom Cổ Điển'; $('keysT').innerHTML = '🎮 <kbd>↑</kbd><kbd>↓</kbd><kbd>←</kbd><kbd>→</kbd> đi · <kbd>Space</kbd> / <kbd>B</kbd> đặt bom · <kbd>X</kbd> kích nổ · <kbd>E</kbd> trả lời'; document.title = 'Đặt Bom Cổ Điển';
+  }
+  if (MODE === 'pac') {   // game Pac-Man (nút chữ thập như xe tăng, không có nút bắn)
+    window.Climb = Pac; S = Pac.S; document.body.classList.add('tank', 'pac'); $('bJ').textContent = '▲'; $('bD').textContent = '▼';
+    $('hName').textContent = '🟡 Pac-Man'; $('keysT').innerHTML = '🎮 <kbd>↑</kbd><kbd>↓</kbd><kbd>←</kbd><kbd>→</kbd> đi (bấm trước, tới ngã rẽ tự rẽ) · <kbd>E</kbd> trả lời'; document.title = 'Pac-Man';
+  }
+  if (MODE === 'race') {   // game Đua xe (← → lái · ▼ phanh · ▲ không cần: xe tự chạy)
+    window.Climb = Race; S = Race.S; document.body.classList.add('tank', 'race'); $('bJ').textContent = '▲'; $('bD').textContent = '🛑';
+    $('hName').textContent = '🏎 Đua xe'; $('keysT').innerHTML = '🎮 <kbd>←</kbd><kbd>→</kbd> lái · <kbd>↓</kbd> phanh (xe tự chạy khi còn ⚡) · <kbd>E</kbd> trả lời'; document.title = 'Đua xe';
+  }
+  if (MODE === 'bounce' || MODE === 'bounce2') {   // Bounce Tales P1 / P2: ← → lăn · ↑ nhảy (dưới nước: bơi)
+    Bounce.setPart(MODE === 'bounce2' ? 2 : 1); window.Climb = Bounce; S = Bounce.S; document.body.classList.add('bounce');
+    $('hName').textContent = GNAME[MODE]; $('keysT').innerHTML = '🎮 <kbd>←</kbd><kbd>→</kbd> lăn · <kbd>↑</kbd> / <kbd>Space</kbd> nhảy' + (MODE === 'bounce2' ? ' (dưới nước: bấm liên tục để bơi)' : '') + ' · <kbd>E</kbd> trả lời'; document.title = MODE === 'bounce2' ? 'Bounce Tales P2' : 'Bounce Tales';
+  }
+  if (MODE === 'temple' || MODE === 'temple2') {   // game Temple Run P1 / P2 (← → đổi làn · ▲ nhảy · ▼ trượt · vuốt trên điện thoại)
+    Temple.setPart(MODE === 'temple2' ? 2 : 1); window.Climb = Temple; S = Temple.S; document.body.classList.add('tank', 'temple'); $('bJ').textContent = '▲'; $('bD').textContent = '▼';
+    $('hName').textContent = GNAME[MODE]; $('keysT').innerHTML = '🎮 <kbd>←</kbd><kbd>→</kbd> đổi làn · <kbd>↑</kbd> nhảy · <kbd>↓</kbd> trượt (điện thoại: vuốt) · <kbd>E</kbd> trả lời'; document.title = GNAME[MODE].replace(/^\S+\s/, '');
   }
   S.cap = GAIN.cap; if (net) S.now = net.now;
   S.color = myColor; S.name = nameV; $('hSet').textContent = setTitle;
@@ -1419,12 +1479,16 @@ function begin() {
     return;
   }
   S.running = true; $('eBtn').hidden = false;
-  if (HW ? HW.mu !== false : (SOLO || !info || info.mu !== false)) GC.music.start(true, MODE);   // mỗi game một bản nhạc
+  if (HW ? HW.mu !== false : (SOLO || !info || info.mu !== false)) GC.music.start(true, MODE === 'temple2' ? 'temple' : MODE === 'bounce2' ? 'bounce' : MODE);   // mỗi game một bản nhạc
   setTimeout(() => $('keys').classList.add('mini'), 25000);   // sau 25 giây thu gọn hướng dẫn phím   // cô quyết định bật/tắt nhạc, học sinh không có nút tắt
   toast('💪 Chào ' + nameV + (MODE === 'brick' ? '! Trả lời đúng để nạp ⚡ rồi xông qua 4 màn cứu công chúa nào!' : '! Trả lời đúng để nạp ⚡ rồi leo lên đỉnh nào!'), 2600);
   if (S.energy <= 0) setTimeout(openQ, 700);
 }
 function onCP(n, kind) {
+    if (kind === 'stage' && (MODE === 'bounce' || MODE === 'bounce2')) { const BM = MODE === 'bounce2' ? BOUNCE_MSG2 : BOUNCE_MSG; toast(BM[Math.min(n - 1, BM.length - 1)], 3200); confetti(50); if (net) net.push(evp, { ty: 'lv', fr: pid, nm: nameV, n, t: net.now() }); return }
+  if (kind === 'stage' && (MODE === 'temple' || MODE === 'temple2')) { const TM = TEMPLE_MSG[MODE]; toast(TM[Math.min(n - 1, TM.length - 1)], 3200); confetti(50); if (net) net.push(evp, { ty: 'lv', fr: pid, nm: nameV, n, t: net.now() }); return }
+  if (kind === 'stage' && MODE === 'race') { toast(RACE_MSG[Math.min(n - 1, RACE_MSG.length - 1)], 3200); confetti(50); if (net) net.push(evp, { ty: 'lv', fr: pid, nm: nameV, n, t: net.now() }); return }
+  if (kind === 'stage' && MODE === 'pac') { toast(PAC_MSG[Math.min(n - 1, PAC_MSG.length - 1)], 3200); confetti(50); if (net) net.push(evp, { ty: 'lv', fr: pid, nm: nameV, n, t: net.now() }); return }
   if (kind === 'stage') { toast(MODE === 'bomb' ? BST_MSG[Math.min(n - 1, BST_MSG.length - 1)] : ST_MSG[(n - 1) % ST_MSG.length], 3200); confetti(50); if (net) net.push(evp, { ty: 'lv', k: 'stage', fr: pid, nm: nameV, n, t: net.now() }); return }
   if (kind === 'mid') { toast('🚩 Cờ giữa màn! Lỡ rơi sẽ quay lại đây — cứ thế xông lên!', 2200); return }
   if (kind === 'lv') { toast(LV_MSG[(n - 1) % LV_MSG.length], 3200); confetti(50); if (net) net.push(evp, { ty: 'lv', fr: pid, nm: nameV, n, t: net.now() }); return }
@@ -1578,7 +1642,22 @@ function showRes(why) {
   if (!subN) { try { const k = 'att:' + decodeURIComponent(location.pathname) + (SOLO === 'hw' ? 'hw' + HWP.length + HWP.slice(-16) : SOLO || ''); subN = (+localStorage.getItem(k) || 0) + 1; localStorage.setItem(k, subN) } catch (e) { subN = 1 } }
   const hwLate = HW && HW.dl && tEnd > HW.dl;
   const won = !!tt, pct = ans ? Math.round(okN / ans * 100) : 0, T = Climb.topAlt();
-  if (SOLO) {
+  /* khung vào phòng ghi đúng tên + luật của game cô đang chọn */
+const GKEY = m => ['brick', 'tank', 'bomb', 'test', 'pac', 'race', 'temple', 'temple2', 'bounce', 'bounce2'].includes(m) ? m : 'climb';
+function showGame(m, sub) {
+  const k = GKEY(m), nm = GNAME[k] || '🎮 Game';
+  if ($('jTitle')) $('jTitle').textContent = nm;
+  if (sub && $('jSub')) $('jSub').innerHTML = sub;
+  if (!started && $('hName')) { $('hName').textContent = nm; document.title = nm.replace(/^\S+\s/, '') + ' · Game ôn bài' }
+  const base = ['⚡ Trả lời ĐÚNG để nạp năng lượng · đúng liên tiếp 🔥 được thưởng thêm', '🏃 Di chuyển tốn ⚡ — hết ⚡ là đứng im, phải trả lời tiếp'];
+  if ($('jRules')) $('jRules').innerHTML = base.concat((TIPS[k] || []).slice(0, 3)).map(t => '<li>' + t + '</li>').join('');
+}
+async function peekRoom(c) {
+  try { net = net || await GC.makeNet(); const v = await net.once('rooms/' + c + '/info'); if (v && !joined) showGame(v.m, '🎮 Vào phòng <b>' + c + '</b> của cô chơi <b>' + esc(GNAME[GKEY(v.m)]) + '</b> cùng cả lớp' + (v.t ? '<br>📘 ' + esc(v.t) : '')) } catch (e) { }
+}
+
+if (SOLO && SOLO !== 'hw') showGame(U.get('m'), null);
+if (SOLO) {
     const hwId = QUIZ_ID || (HW && HW.id) || (HWP ? 'HW-' + HWP.slice(-10) : ('SOLO-' + SOLO));
     GC.submitHwResult(hwId, {
       title: setTitle || (HW && HW.t) || 'Bài tập ôn tập',
@@ -1596,8 +1675,8 @@ function showRes(why) {
     '<div class="wide">👤 ' + esc(nameV) + (SOLO ? '' : ' · <span id="rRank">' + rankText() + '</span>') + '</div>' +
     '<div>⏱ Thời gian: ' + fmt(tEnd - t0) + '</div><div>⏰ Nộp: ' + stamp(tEnd) + '</div>' +
     '<div>✅ Đúng: ' + okN + '/' + ans + ' (' + pct + '%)</div><div>🧩 Câu đã chinh phục: ' + solved.size + '/' + QS.length + '</div>' +
-    (Climb.kind === 'bomb' ? '<div>💣 Tiến độ: ' + (won ? 'Phá đảo 8/8 màn 🏆' : Climb.label()) + '</div><div>👾 Hạ quái: ' + S.stomps + '</div>' : Climb.kind === 'tank' ? '<div>🎯 Tiến độ: ' + (won ? 'Phá đảo ' + Climb.NL + '/' + Climb.NL + ' stage 🏆' : Climb.label()) + '</div><div>💥 Hạ xe tăng: ' + S.stomps + '</div>' : Climb.kind === 'brick' ? '<div>🗺 Tiến độ: ' + (won ? 'Phá đảo ' + Climb.NL + '/' + Climb.NL + ' màn 👸' : Climb.label()) + '</div><div>🪙 Xu: ' + S.coins + '</div>' : '<div>⛰ Độ cao: ' + (won ? 'ĐỈNH (' + T + ' m)' : S.maxAlt + ' / ' + T + ' m') + '</div>') + '<div>🔥 Chuỗi dài nhất: ' + best + '</div>' +
-    (Climb.kind === 'bomb' ? '<div>💣 Bom: ' + Climb.pl.bombs + ' · 🔥 Lửa: ' + Climb.pl.fire + '</div><div>😵 Bị trúng: ' + S.hits + '</div>' : Climb.kind === 'tank' ? '<div>⭐ Nâng cấp súng: ' + Climb.pl.up + '/3</div><div>🦅 Căn cứ bị phá: ' + S.falls + '</div>' : '<div>🍄 Giẫm bẹp: ' + S.stomps + '</div><div>😱 Số lần rơi: ' + S.falls + '</div>') +
+    (Climb.kind === 'bounce' ? '<div>🔴 Tiến độ: ' + (won ? 'Phá đảo 6/6 màn 🏆' : Climb.label()) + '</div><div>🥚 Trứng: ' + S.coins + ' · 💥 Mất mạng: ' + S.hits + '</div>' : Climb.kind === 'temple' ? '<div>🏃 Tiến độ: ' + (won ? 'Phá đảo ' + Climb.NL + '/' + Climb.NL + ' màn 👑' : Climb.label()) + '</div><div>🪙 Xu: ' + S.coins + ' · 💥 Vấp ngã: ' + S.hits + '</div>' : Climb.kind === 'race' ? '<div>🏎 Tiến độ: ' + (won ? 'Phá đảo 5/5 chặng 🏆' : Climb.label()) + '</div><div>💥 Tông xe: ' + S.hits + '</div>' : Climb.kind === 'pac' ? '<div>🟡 Tiến độ: ' + (won ? 'Phá đảo 5/5 màn 🏆' : Climb.label()) + '</div><div>👻 Ăn ma: ' + S.stomps + '</div>' : Climb.kind === 'bomb' ? '<div>💣 Tiến độ: ' + (won ? 'Phá đảo 8/8 màn 🏆' : Climb.label()) + '</div><div>👾 Hạ quái: ' + S.stomps + '</div>' : Climb.kind === 'tank' ? '<div>🎯 Tiến độ: ' + (won ? 'Phá đảo ' + Climb.NL + '/' + Climb.NL + ' stage 🏆' : Climb.label()) + '</div><div>💥 Hạ xe tăng: ' + S.stomps + '</div>' : Climb.kind === 'brick' ? '<div>🗺 Tiến độ: ' + (won ? 'Phá đảo ' + Climb.NL + '/' + Climb.NL + ' màn 👸' : Climb.label()) + '</div><div>🪙 Xu: ' + S.coins + '</div>' : '<div>⛰ Độ cao: ' + (won ? 'ĐỈNH (' + T + ' m)' : S.maxAlt + ' / ' + T + ' m') + '</div>') + '<div>🔥 Chuỗi dài nhất: ' + best + '</div>' +
+    (Climb.kind === 'race' ? '' : Climb.kind === 'pac' ? '<div>⭐ Điểm: ' + Climb.extra().sc + '</div><div>😵 Bị ma bắt: ' + S.hits + '</div>' : Climb.kind === 'bomb' ? '<div>💣 Bom: ' + Climb.pl.bombs + ' · 🔥 Lửa: ' + Climb.pl.fire + '</div><div>😵 Bị trúng: ' + S.hits + '</div>' : Climb.kind === 'tank' ? '<div>⭐ Nâng cấp súng: ' + Climb.pl.up + '/3</div><div>🦅 Căn cứ bị phá: ' + S.falls + '</div>' : '<div>🍄 Giẫm bẹp: ' + S.stomps + '</div><div>😱 Số lần rơi: ' + S.falls + '</div>') +
     (HW ? '<div class="wide">📚 Hạn nộp: ' + (HW.dl ? stamp(HW.dl) + (hwLate ? ' · ⚠️ <b>nộp trễ</b>' : ' · ✅ <b>đúng hạn</b>') : 'không đặt hạn') + '</div>' : '') +
     '<div class="wide">🔁 Lần nộp thứ ' + subN + ' trên máy này</div></div>' +
     '<div class="row" style="margin-bottom:6px"><button class="btn b" onclick="GC.showReportCard({name:nameV,title:setTitle,score:pct,ok:okN,tot:ans||QS.length,m:MODE,timeText:fmt(tEnd-t0)})">🏅 Xuất phiếu điểm gửi Phụ huynh</button></div>' +
@@ -1708,5 +1787,6 @@ function resume() { $('ovRes').classList.remove('on'); over = false; t0 += Date.
  </div>
 </div>
 
+<script src="assets/scene.js"></script>
 </body>
 </html>

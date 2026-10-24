@@ -289,9 +289,15 @@ Cách 3 — Dán câu luyện phát âm (tự động điền IPA & mẹo):
     <div class="lab">Kiểu game &amp; Kiểm tra (Đã mở full)</div>
     <div class="modes" id="gModes">
      <button class="mode on" data-m="climb"><b>🧗</b><span>Leo núi<small>Leo đỉnh · cứu công chúa</small></span></button>
-     <button class="mode" data-m="brick"><b>🍄</b><span>Nấm Mario<small>4 màn · chui ống</small></span></button>
+     <button class="mode" data-m="brick"><b>🍄</b><span>Nấm Mario<small>5 màn · biển sâu · rồng</small></span></button>
      <button class="mode" data-m="tank"><b>🛡</b><span>Xe tăng<small>4 stage · bảo vệ cứ điểm</small></span></button>
-     <button class="mode" data-m="bomb"><b>💣</b><span>Đặt bom<small>8 màn · Bomberman cổ điển</small></span></button>
+     <button class="mode" data-m="bomb"><b>💣</b><span>Bomberman<small>8 màn · cổ điển</small></span></button>
+     <button class="mode" data-m="pac"><b>🟡</b><span>Pac-Man<small>5 mê cung · quái lạ</small></span></button>
+     <button class="mode" data-m="race"><b>🏎</b><span>Đua xe<small>5 chặng · cảnh đẹp</small></span></button>
+     <button class="mode" data-m="temple"><b>🏃</b><span>Temple Run P1<small>5 màn · xe goòng · quái vật</small></span></button>
+     <button class="mode" data-m="temple2"><b>🏃</b><span>Temple Run P2<small>5 màn · khó hơn · mỏ pha lê</small></span></button>
+     <button class="mode" data-m="bounce"><b>🔴</b><span>Bounce Tales<small>6 màn · lăn bóng · trứng vàng</small></span></button>
+     <button class="mode" data-m="bounce2"><b>🐸</b><span>Bounce Tales P2<small>6 màn · lá nảy · đáy biển · trùm ếch</small></span></button>
      <button class="mode" data-m="test" style="border:2px solid #8b5cf6"><b>📝</b><span>Bài kiểm tra<small>Đề thi tổng hợp · Khảo thí</small></span></button>
     </div>
 
@@ -611,6 +617,11 @@ Hoặc dán theo mẫu:
 <script src="assets/brick.js"></script>
 <script src="assets/tank.js"></script>
 <script src="assets/bomb.js"></script>
+ <script src="assets/pac.js"></script>
+ <script src="assets/race.js"></script>
+ <script src="assets/bounce.js"></script>
+ <script src="assets/temple.js"></script>
+ <script src="assets/scene.js"></script>
 <script src="assets/hero.js"></script>
 <script src="assets/license.js"></script>
 
@@ -1420,7 +1431,7 @@ $('bHwLink').onclick = () => navigator.clipboard.writeText(hwLink).then(() => to
 
 /* Chọn chế độ game (Mở full cả 4 game) */
 let gMode = 'climb';
-const MNAME = { climb: '🧗 Leo núi', brick: '🍄 Nấm Mario', tank: '🛡 Xe tăng', bomb: '💣 Đặt bom' };
+const MNAME = { climb: '🧗 Leo núi', brick: '🍄 Nấm Mario', tank: '🛡 Xe tăng', bomb: '💣 Bomberman', test: '📝 Phòng thi A2-B1', pac: '🟡 Pac-Man', race: '🏎 Đua xe', temple: '🏃 Temple Run P1', temple2: '🏃 Temple Run P2', bounce: '🔴 Bounce Tales', bounce2: '🐸 Bounce Tales P2' };
 $('gModes').onclick = e => {
   const b = e.target.closest('[data-m]'); if (!b) return;
   selectMode(b.dataset.m);
@@ -1473,7 +1484,7 @@ $('bOpen').onclick = async () => {
 let joinUrl = '';
 function enterRoom() {
   mistakeStats = {};
-  TOP = info.m === 'test' ? 100 : ((info.m === 'brick' ? Brick : info.m === 'tank' ? Tank : info.m === 'bomb' ? Bomb : Climb).measure(info.seed, info.lv || 2) || 1);
+  TOP = info.m === 'test' ? 100 : ((info.m === 'brick' ? Brick : info.m === 'tank' ? Tank : info.m === 'bomb' ? Bomb : info.m === 'pac' ? Pac : info.m === 'race' ? Race : info.m === 'temple' || info.m === 'temple2' ? Temple : info.m === 'bounce' || info.m === 'bounce2' ? Bounce : Climb).measure(info.seed, info.lv || 2) || 1);
   offs.forEach(f => f()); offs = [];
   const url = new URL('play.html', location.href); url.searchParams.set('room', code); if (info && info.m) url.searchParams.set('m', info.m);
   $('lCode').textContent = code; $('vCode').textContent = code; $('lUrl').textContent = url.href; $('lTitle').textContent = '📘 ' + info.t; $('vTitle').textContent = '📘 ' + info.t;
