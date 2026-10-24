@@ -1497,7 +1497,7 @@ function enterRoom() {
     if (!v) return; info = v;
     $('vEn').textContent = '⚡ ' + (v.eq || 100) + '/câu · 🔋 ' + (v.em ? 'đầy ' + v.em : 'không giới hạn');
     if (v.st === 'lobby') show('vLobby');
-    else if (v.st === 'play') { show('vLive'); tick(); GC.music.start(false, v.m || 'climb'); paintMusic(); }
+    else if (v.st === 'play') { show('vLive'); tick(); const mTrack = v.m === 'temple2' ? 'temple' : v.m === 'bounce2' ? 'bounce' : (v.m || 'climb'); GC.music.start(false, mTrack); paintMusic(); }
     else if (v.st === 'end') { GC.music.stop(); showEnd(); }
   }));
   offs.push(net.on('rooms/' + code + '/players', v => { players = v || {}; renderLobby(); renderBoard(); if (info && info.st === 'end') showEnd(); }));
@@ -1551,7 +1551,7 @@ function renderBoard() {
     const icons = (p.tt ? '👸' : '') + (p.fz > now ? '❄️' : '') + (p.sh > now ? '🛡' : '') + (p.on ? '' : '💤');
     return '<div class="lr"><div class="rk">' + (['🥇', '🥈', '🥉'][i] || i + 1) + '</div><div class="nm"><i class="dot" style="background:' + esc(p.c) + '"></i> ' + esc(p.n) + ' ' + icons + '</div>' +
       '<div class="bar"><i style="width:' + pct + '%;background:linear-gradient(90deg,' + esc(p.c) + ',#9b7bff)"></i>' + cps.map(c => '<b style="left:' + c + '%"></b>').join('') + '</div>' +
-      '<div class="meta">' + (p.tt ? '👸 CỨU' : p.lb ? '🏁 ' + esc(p.lb) + (p.cn != null ? ' · 🪙 ' + p.cn : '') : '⛰ ' + (p.alt || 0) + 'm') + ' · ✅ ' + (p.ok || 0) + '/' + (p.ans || 0) + ' · 🔥' + (p.st || 0) + '</div></div>';
+      '<div class="meta">' + (p.tt ? (info && info.m === 'test' ? '✅ Đã nộp' : (['climb','brick'].includes(info?.m) ? '👸 Cứu' : '🏆 Phá đảo')) : p.lb ? '🏁 ' + esc(p.lb) + (p.cn != null ? ' · 🪙 ' + p.cn : '') : '⛰ ' + (p.alt || 0) + 'm') + ' · ✅ ' + (p.ok || 0) + '/' + (p.ans || 0) + ' · 🔥' + (p.st || 0) + '</div></div>';
   }).join('') || '<div class="sub">Chưa có bạn nào…</div>';
 }
 setInterval(() => { if (info && info.st === 'play') renderBoard() }, 1000);
@@ -1618,7 +1618,7 @@ function showEnd() {
       }).join('');
   } else {
     $('eTable').innerHTML = '<tr><th>Hạng</th><th>Họ tên</th><th>Tiến độ</th><th>Đúng</th><th>% đúng</th><th>🔥 Chuỗi</th><th>🍄 Giẫm</th><th>😱 Rơi</th><th>Thao tác</th></tr>' +
-      R.map(([idKey, p], i) => '<tr><td>' + (i + 1) + '</td><td>' + esc(p.n) + '</td><td>' + (p.tt ? '👸 Phá đảo' : p.lb ? esc(p.lb) + (p.cn != null ? ' · 🪙 ' + p.cn : '') : (p.alt || 0) + ' m') + '</td><td>' + (p.ok || 0) + '/' + (p.ans || 0) + '</td><td>' + (p.ans ? Math.round(p.ok / p.ans * 100) : 0) + '%</td><td>' + (p.bs || 0) + '</td><td>' + (p.sp || 0) + '</td><td>' + (p.fl || 0) + '</td><td><button class="btn b" style="padding:4px 10px;font-size:12px" onclick="exportPlayerReport(\'' + esc(idKey) + '\')">🏅 Phiếu điểm</button></td></tr>').join('');
+      R.map(([idKey, p], i) => '<tr><td>' + (i + 1) + '</td><td>' + esc(p.n) + '</td><td>' + (p.tt ? (info && info.m === 'test' ? '✅ Đã nộp' : (['climb','brick'].includes(info?.m) ? '👸 Cứu công chúa' : '🏆 Phá đảo')) : p.lb ? esc(p.lb) + (p.cn != null ? ' · 🪙 ' + p.cn : '') : (p.alt || 0) + ' m') + '</td><td>' + (p.ok || 0) + '/' + (p.ans || 0) + '</td><td>' + (p.ans ? Math.round(p.ok / p.ans * 100) : 0) + '%</td><td>' + (p.bs || 0) + '</td><td>' + (p.sp || 0) + '</td><td>' + (p.fl || 0) + '</td><td><button class="btn b" style="padding:4px 10px;font-size:12px" onclick="exportPlayerReport(\'' + esc(idKey) + '\')">🏅 Phiếu điểm</button></td></tr>').join('');
   }
 
   // PHÂN TÍCH CÂU LÀM SAI & CHIẾU LỜI GIẢI TOÀN BỘ ĐỀ

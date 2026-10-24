@@ -1104,22 +1104,7 @@ function submitTestExam(auto) {
   }
 
   // Gửi tự động về Sổ điểm Bài tập về nhà của cô nếu làm qua link BTVN / Tự luyện
-  /* khung vào phòng ghi đúng tên + luật của game cô đang chọn */
-const GKEY = m => ['brick', 'tank', 'bomb', 'test', 'pac', 'race', 'temple', 'temple2', 'bounce', 'bounce2'].includes(m) ? m : 'climb';
-function showGame(m, sub) {
-  const k = GKEY(m), nm = GNAME[k] || '🎮 Game';
-  if ($('jTitle')) $('jTitle').textContent = nm;
-  if (sub && $('jSub')) $('jSub').innerHTML = sub;
-  if (!started && $('hName')) { $('hName').textContent = nm; document.title = nm.replace(/^\S+\s/, '') + ' · Game ôn bài' }
-  const base = ['⚡ Trả lời ĐÚNG để nạp năng lượng · đúng liên tiếp 🔥 được thưởng thêm', '🏃 Di chuyển tốn ⚡ — hết ⚡ là đứng im, phải trả lời tiếp'];
-  if ($('jRules')) $('jRules').innerHTML = base.concat((TIPS[k] || []).slice(0, 3)).map(t => '<li>' + t + '</li>').join('');
-}
-async function peekRoom(c) {
-  try { net = net || await GC.makeNet(); const v = await net.once('rooms/' + c + '/info'); if (v && !joined) showGame(v.m, '🎮 Vào phòng <b>' + c + '</b> của cô chơi <b>' + esc(GNAME[GKEY(v.m)]) + '</b> cùng cả lớp' + (v.t ? '<br>📘 ' + esc(v.t) : '')) } catch (e) { }
-}
-
-if (SOLO && SOLO !== 'hw') showGame(U.get('m'), null);
-if (SOLO) {
+  if (SOLO) {
     const hwId = QUIZ_ID || (HW && HW.id) || (HWP ? 'HW-' + HWP.slice(-10) : ('SOLO-' + SOLO));
     GC.submitHwResult(hwId, {
       title: setTitle || (HW && HW.t) || 'Bài kiểm tra tiếng Anh',
@@ -1648,22 +1633,7 @@ function showRes(why) {
   if (!subN) { try { const k = 'att:' + decodeURIComponent(location.pathname) + (SOLO === 'hw' ? 'hw' + HWP.length + HWP.slice(-16) : SOLO || ''); subN = (+localStorage.getItem(k) || 0) + 1; localStorage.setItem(k, subN) } catch (e) { subN = 1 } }
   const hwLate = HW && HW.dl && tEnd > HW.dl;
   const won = !!tt, pct = ans ? Math.round(okN / ans * 100) : 0, T = Climb.topAlt();
-  /* khung vào phòng ghi đúng tên + luật của game cô đang chọn */
-const GKEY = m => ['brick', 'tank', 'bomb', 'test', 'pac', 'race', 'temple', 'temple2', 'bounce', 'bounce2'].includes(m) ? m : 'climb';
-function showGame(m, sub) {
-  const k = GKEY(m), nm = GNAME[k] || '🎮 Game';
-  if ($('jTitle')) $('jTitle').textContent = nm;
-  if (sub && $('jSub')) $('jSub').innerHTML = sub;
-  if (!started && $('hName')) { $('hName').textContent = nm; document.title = nm.replace(/^\S+\s/, '') + ' · Game ôn bài' }
-  const base = ['⚡ Trả lời ĐÚNG để nạp năng lượng · đúng liên tiếp 🔥 được thưởng thêm', '🏃 Di chuyển tốn ⚡ — hết ⚡ là đứng im, phải trả lời tiếp'];
-  if ($('jRules')) $('jRules').innerHTML = base.concat((TIPS[k] || []).slice(0, 3)).map(t => '<li>' + t + '</li>').join('');
-}
-async function peekRoom(c) {
-  try { net = net || await GC.makeNet(); const v = await net.once('rooms/' + c + '/info'); if (v && !joined) showGame(v.m, '🎮 Vào phòng <b>' + c + '</b> của cô chơi <b>' + esc(GNAME[GKEY(v.m)]) + '</b> cùng cả lớp' + (v.t ? '<br>📘 ' + esc(v.t) : '')) } catch (e) { }
-}
-
-if (SOLO && SOLO !== 'hw') showGame(U.get('m'), null);
-if (SOLO) {
+  if (SOLO) {
     const hwId = QUIZ_ID || (HW && HW.id) || (HWP ? 'HW-' + HWP.slice(-10) : ('SOLO-' + SOLO));
     GC.submitHwResult(hwId, {
       title: setTitle || (HW && HW.t) || 'Bài tập ôn tập',
@@ -1682,7 +1652,7 @@ if (SOLO) {
     '<div>⏱ Thời gian: ' + fmt(tEnd - t0) + '</div><div>⏰ Nộp: ' + stamp(tEnd) + '</div>' +
     '<div>✅ Đúng: ' + okN + '/' + ans + ' (' + pct + '%)</div><div>🧩 Câu đã chinh phục: ' + solved.size + '/' + QS.length + '</div>' +
     (Climb.kind === 'bounce' ? '<div>🔴 Tiến độ: ' + (won ? 'Phá đảo 6/6 màn 🏆' : Climb.label()) + '</div><div>🥚 Trứng: ' + S.coins + ' · 💥 Mất mạng: ' + S.hits + '</div>' : Climb.kind === 'temple' ? '<div>🏃 Tiến độ: ' + (won ? 'Phá đảo ' + Climb.NL + '/' + Climb.NL + ' màn 👑' : Climb.label()) + '</div><div>🪙 Xu: ' + S.coins + ' · 💥 Vấp ngã: ' + S.hits + '</div>' : Climb.kind === 'race' ? '<div>🏎 Tiến độ: ' + (won ? 'Phá đảo 5/5 chặng 🏆' : Climb.label()) + '</div><div>💥 Tông xe: ' + S.hits + '</div>' : Climb.kind === 'pac' ? '<div>🟡 Tiến độ: ' + (won ? 'Phá đảo 5/5 màn 🏆' : Climb.label()) + '</div><div>👻 Ăn ma: ' + S.stomps + '</div>' : Climb.kind === 'bomb' ? '<div>💣 Tiến độ: ' + (won ? 'Phá đảo 8/8 màn 🏆' : Climb.label()) + '</div><div>👾 Hạ quái: ' + S.stomps + '</div>' : Climb.kind === 'tank' ? '<div>🎯 Tiến độ: ' + (won ? 'Phá đảo ' + Climb.NL + '/' + Climb.NL + ' stage 🏆' : Climb.label()) + '</div><div>💥 Hạ xe tăng: ' + S.stomps + '</div>' : Climb.kind === 'brick' ? '<div>🗺 Tiến độ: ' + (won ? 'Phá đảo ' + Climb.NL + '/' + Climb.NL + ' màn 👸' : Climb.label()) + '</div><div>🪙 Xu: ' + S.coins + '</div>' : '<div>⛰ Độ cao: ' + (won ? 'ĐỈNH (' + T + ' m)' : S.maxAlt + ' / ' + T + ' m') + '</div>') + '<div>🔥 Chuỗi dài nhất: ' + best + '</div>' +
-    (Climb.kind === 'race' ? '' : Climb.kind === 'pac' ? '<div>⭐ Điểm: ' + Climb.extra().sc + '</div><div>😵 Bị ma bắt: ' + S.hits + '</div>' : Climb.kind === 'bomb' ? '<div>💣 Bom: ' + Climb.pl.bombs + ' · 🔥 Lửa: ' + Climb.pl.fire + '</div><div>😵 Bị trúng: ' + S.hits + '</div>' : Climb.kind === 'tank' ? '<div>⭐ Nâng cấp súng: ' + Climb.pl.up + '/3</div><div>🦅 Căn cứ bị phá: ' + S.falls + '</div>' : '<div>🍄 Giẫm bẹp: ' + S.stomps + '</div><div>😱 Số lần rơi: ' + S.falls + '</div>') +
+    (Climb.kind === 'race' || Climb.kind === 'temple' ? '' : Climb.kind === 'pac' ? '<div>⭐ Điểm: ' + Climb.extra().sc + '</div><div>😵 Bị ma bắt: ' + S.hits + '</div>' : Climb.kind === 'bomb' ? '<div>💣 Bom: ' + Climb.pl.bombs + ' · 🔥 Lửa: ' + Climb.pl.fire + '</div><div>😵 Bị trúng: ' + S.hits + '</div>' : Climb.kind === 'tank' ? '<div>⭐ Nâng cấp súng: ' + Climb.pl.up + '/3</div><div>🦅 Căn cứ bị phá: ' + S.falls + '</div>' : '<div>🍄 Giẫm bẹp: ' + S.stomps + '</div><div>😱 Số lần rơi: ' + S.falls + '</div>') +
     (HW ? '<div class="wide">📚 Hạn nộp: ' + (HW.dl ? stamp(HW.dl) + (hwLate ? ' · ⚠️ <b>nộp trễ</b>' : ' · ✅ <b>đúng hạn</b>') : 'không đặt hạn') + '</div>' : '') +
     '<div class="wide">🔁 Lần nộp thứ ' + subN + ' trên máy này</div></div>' +
     '<div class="row" style="margin-bottom:6px"><button class="btn b" onclick="GC.showReportCard({name:nameV,title:setTitle,score:pct,ok:okN,tot:ans||QS.length,m:MODE,timeText:fmt(tEnd-t0)})">🏅 Xuất phiếu điểm gửi Phụ huynh</button></div>' +
