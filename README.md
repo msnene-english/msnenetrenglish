@@ -1,6 +1,6 @@
-# Ms Nenet English – Trò Chơi Học Tập & Ôn Tập Trắc Nghiệm Tương Tác
+# Ms Nene English – Trò Chơi Học Tập & Ôn Tập Trắc Nghiệm Tương Tác
 
-Hệ thống trò chơi học tập tương tác thời gian thực (Gamified Live Quiz) kết hợp trắc nghiệm ôn tập, luyện phát âm AI và **10 mini-game pixel art & retro 3D**, xây dựng riêng cho **Ms Nenet English (Cô Chí Nên)**.
+Hệ thống trò chơi học tập tương tác thời gian thực (Gamified Live Quiz) kết hợp trắc nghiệm ôn tập, luyện phát âm AI và **10 mini-game pixel art & retro 3D**, xây dựng riêng cho **Ms Nene English (Cô Chí Nên)**.
 
 ---
 
@@ -45,7 +45,7 @@ Hệ thống trò chơi học tập tương tác thời gian thực (Gamified Li
 ## 📂 Cấu Trúc Thư Mục
 
 ```
-MsNenetEnglish/
+MsNeneEnglish/
 ├── index.html        # Trang cổng điều hướng (Dành cho Giáo viên & Học sinh)
 ├── host.html         # Bảng điều khiển của Giáo viên (Soạn đề, Thư viện, Máy chiếu)
 ├── play.html         # Giao diện thi đấu của Học sinh (Responsive Mobile & Tablet)
@@ -75,6 +75,6 @@ MsNenetEnglish/
 
 ## 👩‍🏫 Thông Tin Giáo Viên & Hỗ Trợ
 
-- **Giáo viên**: Cô Chí Nên (Ms Nenet English)
+- **Giáo viên**: Cô Chí Nên (Ms Nene English)
 - **Hotline / Zalo**: **0852639652**
 - **Zalo Chat**: [https://zalo.me/0852639652](https://zalo.me/0852639652)

@@ -841,7 +841,7 @@ async function fireNet(cfg) {
 
 
 /* ═════ THƯ VIỆN ĐỀ THI CHUNG & LINK RÚT GỌN (COMMUNITY LIBRARY) ═════ */
-const COMM_STORE_KEY = 'msnenet_community_library';
+const COMM_STORE_KEY = 'msnene_community_library';
 
 function getLocalCommunity() {
   try { return JSON.parse(localStorage.getItem(COMM_STORE_KEY) || '[]'); } catch (e) { return []; }
@@ -887,7 +887,7 @@ async function getCommunityLibrary() {
       bundled.push({
         id: idx === 0 ? 'MN-ENG7' : 'MN-IELTS7',
         title: s.title,
-        author: 'Ms Nenet English',
+        author: 'Ms Nene English',
         date: 'Có sẵn',
         qs: s.raw ? s.raw.map(fromOld) : [],
         isBundled: true
@@ -985,11 +985,11 @@ async function getQuizById(id) {
   // Kiểm tra bundled
   if (id === 'MN-ENG7' && window.SAMPLE_SETS && window.SAMPLE_SETS[0]) {
     const s = window.SAMPLE_SETS[0];
-    return { id, title: s.title, author: 'Ms Nenet English', qs: s.raw.map(fromOld) };
+    return { id, title: s.title, author: 'Ms Nene English', qs: s.raw.map(fromOld) };
   }
   if (id === 'MN-IELTS7' && window.SAMPLE_SETS && window.SAMPLE_SETS[1]) {
     const s = window.SAMPLE_SETS[1];
-    return { id, title: s.title, author: 'Ms Nenet English', qs: s.raw.map(fromOld) };
+    return { id, title: s.title, author: 'Ms Nene English', qs: s.raw.map(fromOld) };
   }
 
   // Kiểm tra local
@@ -1011,8 +1011,8 @@ async function getQuizById(id) {
 }
 
 /* ═════ SỔ ĐIỂM BÀI TẬP VỀ NHÀ (HOMEWORK GRADEBOOK) ═════ */
-const HW_META_KEY = 'msnenet_hw_meta';
-const HW_SUBS_KEY = 'msnenet_hw_subs';
+const HW_META_KEY = 'msnene_hw_meta';
+const HW_SUBS_KEY = 'msnene_hw_subs';
 
 function getLocalHwMetas() {
   try { return JSON.parse(localStorage.getItem(HW_META_KEY) || '{}'); } catch (e) { return {}; }
@@ -1162,7 +1162,7 @@ function showReportCard(data) {
   const modeName = data.modeName || (data.m === 'test' ? '📝 Bài kiểm tra khảo thí' : '🎮 Game ôn tập');
   const timeText = data.timeText || 'Hoàn thành';
   const dateText = data.dateText || stamp(Date.now());
-  const teacher = data.teacher || 'Cô Chí Nên (Ms Nenet English)';
+  const teacher = data.teacher || 'Cô Chí Nên (Ms Nene English)';
 
   const cv = document.createElement('canvas');
   cv.width = 1080;
@@ -1203,7 +1203,7 @@ function showReportCard(data) {
   ctx.fillStyle = '#ffffff';
   ctx.textAlign = 'center';
   ctx.font = '900 28px "Nunito", "Segoe UI", sans-serif';
-  ctx.fillText('🌟 PHIẾU BÁO KẾT QUẢ HỌC TẬP · MS NENET ENGLISH 🌟', 540, 112);
+  ctx.fillText('🌟 PHIẾU BÁO KẾT QUẢ HỌC TẬP · MS NENE ENGLISH 🌟', 540, 112);
   ctx.font = '700 17px "Nunito", "Segoe UI", sans-serif';
   ctx.fillStyle = '#fde68a';
   ctx.fillText(modeName + '  ·  Ngày: ' + dateText, 540, 142);
@@ -1278,7 +1278,7 @@ function showReportCard(data) {
   ctx.fillStyle = '#64748b';
   ctx.font = '700 18px "Nunito", "Segoe UI", sans-serif';
   ctx.textAlign = 'left';
-  ctx.fillText('🌐 Hệ thống học & khảo thí trực tuyến Ms Nenet English', 80, 675);
+  ctx.fillText('🌐 Hệ thống học & khảo thí trực tuyến Ms Nene English', 80, 675);
   ctx.textAlign = 'right';
   ctx.fillStyle = '#5b21b6';
   ctx.font = '900 20px "Nunito", "Segoe UI", sans-serif';

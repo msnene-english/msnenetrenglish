@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Ms Nenet English – Phòng Game của Cô Chí Nên</title>
+<title>Ms Nene English – Phòng Game của Cô Chí Nên</title>
 <link rel="stylesheet" href="assets/fonts.css">
 <link rel="stylesheet" href="assets/game.css">
 <style>
@@ -129,16 +129,16 @@ th{color:#7a6aa8;font-size:13px}
   <div class="hero">
    <div class="heroTxt">
     <div class="hello">🌟 Chào mừng các con và các thầy cô đến với</div>
-    <div class="brand">Ms Nenet English · Bộ Game của Cô Chí Nên</div>
+    <div class="brand">Ms Nene English · Bộ Game của Cô Chí Nên</div>
     <div class="hchips"><span>🧗 Leo núi</span><span>🍄 Nấm Mario</span><span>🛡 Xe tăng</span><span>💣 Đặt bom</span></div>
    </div>
-   <canvas id="heroCv" aria-label="Tranh pixel động: thế giới trò chơi Ms Nenet English"></canvas>
+   <canvas id="heroCv" aria-label="Tranh pixel động: thế giới trò chơi Ms Nene English"></canvas>
   </div>
 
   <div class="licbar">
    <span class="li">🎁</span>
    <div class="lic-t">
-    <b>Bản đầy đủ vĩnh viễn:</b> Đã kích hoạt trọn vẹn 10 game: 🧗 Leo núi, 🍄 Nấm Mario, 🛡 Xe tăng, 💣 Bomberman, 🟡 Pac-Man, 🏎 Đua xe, 🏃 Temple Run P1 & P2, 🔴 Bounce Tales P1 & P2 cho <b>Cô Chí Nên (Ms Nenet English)</b>.
+    <b>Bản đầy đủ vĩnh viễn:</b> Đã kích hoạt trọn vẹn 10 game: 🧗 Leo núi, 🍄 Nấm Mario, 🛡 Xe tăng, 💣 Bomberman, 🟡 Pac-Man, 🏎 Đua xe, 🏃 Temple Run P1 & P2, 🔴 Bounce Tales P1 & P2 cho <b>Cô Chí Nên (Ms Nene English)</b>.
    </div>
   </div>
 
@@ -454,7 +454,7 @@ Cách 3 — Dán câu luyện phát âm (tự động điền IPA & mẹo):
 </div>
 
 <div class="wrap" style="padding-top:0">
- <div class="foot">🎮 Ms Nenet English · Cô Chí Nên · Zalo 0852639652</div>
+ <div class="foot">🎮 Ms Nene English · Cô Chí Nên · Zalo 0852639652</div>
 </div>
 <div id="toast"></div>
 
@@ -640,8 +640,8 @@ Hoặc dán theo mẫu:
 
 <!-- SCRIPTS HỆ THỐNG -->
 <script src="assets/qrcode.min.js"></script>
-<script src="assets/config.js"></script>
-<script src="assets/core.js"></script>
+<script src="assets/config.js?v=2.1"></script>
+<script src="assets/core.js?v=2.1"></script>
 <script src="assets/mau.js"></script>
 <script src="assets/climb.js"></script>
 <script src="assets/brick.js"></script>
@@ -653,7 +653,7 @@ Hoặc dán theo mẫu:
  <script src="assets/temple.js"></script>
  <script src="assets/scene.js"></script>
 <script src="assets/hero.js"></script>
-<script src="assets/license.js"></script>
+<script src="assets/license.js?v=2.1"></script>
 
 <script>
 const { $, esc, fmt, stamp, clean, toast, confetti, sfx } = GC;
@@ -1194,10 +1194,10 @@ $('mList').onchange = e => {
 let cachedCommunity = [];
 
 function getBank() {
-  try { return JSON.parse(store.get('msnenet_bank') || '[]'); } catch (e) { return []; }
+  try { return JSON.parse((store.get('msnene_bank') || store.get('msnenet_bank')) || '[]'); } catch (e) { return []; }
 }
 function saveBank(list) {
-  store.set('msnenet_bank', JSON.stringify(list));
+  store.set('msnene_bank', JSON.stringify(list));
   renderBank();
 }
 
@@ -1279,7 +1279,7 @@ async function renderBank(forceCloud) {
         <div class="binfo" onclick="loadQuizData('${item.id}')">
           <span style="font-size:15px;color:#2d2350">${badgeHtml}📘 ${esc(item.title || item.id)}</span>
           <span style="font-size:12px;color:#7a6aa8;display:block">
-            Mã: <code style="color:#5b4bb0;font-weight:800">${esc(item.id)}</code> · ${item.qs ? item.qs.length : 0} câu · Tác giả: <b>${esc(item.author || 'Ms Nenet')}</b> · ${esc(item.date || '')}
+            Mã: <code style="color:#5b4bb0;font-weight:800">${esc(item.id)}</code> · ${item.qs ? item.qs.length : 0} câu · Tác giả: <b>${esc(item.author || 'Ms Nene')}</b> · ${esc(item.date || '')}
           </span>
         </div>
         <div class="bacts">
@@ -1452,7 +1452,7 @@ $('bExportBank').onclick = async () => {
   const blob = new Blob([JSON.stringify(all, null, 2)], { type: 'application/json' });
   const a = document.createElement('a');
   a.href = URL.createObjectURL(blob);
-  a.download = 'Thu_Vien_De_MsNenetEnglish_' + new Date().toISOString().slice(0,10) + '.json';
+  a.download = 'Thu_Vien_De_MsNeneEnglish_' + new Date().toISOString().slice(0,10) + '.json';
   a.click();
 };
 
@@ -1512,7 +1512,7 @@ $('bHwMake').onclick = async () => {
     mu: $('gMu')?.checked ?? false,
     dl,
     dur,
-    lic: 'Cô Chí Nên (Ms Nenet)',
+    lic: 'Cô Chí Nên (Ms Nene)',
     qs: qs.map(q => ({
       type: q.type || 'mc',
       ansText: q.ansText || '',
@@ -1560,14 +1560,14 @@ $('bHwMake').onclick = async () => {
 
   const finalLink = hwShortLink || hwLink;
   if (isTest) {
-    hwText = `📝 BÀI KIỂM TRA — Ms Nenet English\n` +
+    hwText = `📝 BÀI KIỂM TRA — Ms Nene English\n` +
       `📘 ` + title + `\n` +
       `⏱ Thời gian làm bài: ` + (dur ? dur + ' phút' : 'không giới hạn') + `\n` +
       `⏰ Hạn nộp: ` + (dl ? stamp(dl) : 'không đặt hạn') + `\n` +
       `👉 Link vào thi: ` + finalLink + `\n\n` +
       `✍️ Các con bấm link, nhập họ tên rồi làm bài thi. Làm xong bấm "Nộp bài" để nộp kết quả cho cô nhé!`;
   } else {
-    hwText = `📚 BÀI TẬP VỀ NHÀ — Ms Nenet English\n` +
+    hwText = `📚 BÀI TẬP VỀ NHÀ — Ms Nene English\n` +
       `📘 ` + title + `\n` +
       `🎮 Game: ` + (MNAME[gMode] || 'Trò chơi') + ` · độ khó ` + (LVN[payload.lv] || 'Vừa') + ` · ` + qs.length + ` câu\n` +
       `⏱ Mỗi lượt chơi: ` + (dur ? dur + ' phút' : 'không giới hạn') + `\n` +
@@ -1617,7 +1617,7 @@ $('bOpen').onclick = async () => {
       seed: Math.floor(Math.random() * 1e9) + 1,
       dur: tDur,
       ia: $('gIa') ? $('gIa').checked : false,
-      lic: 'Cô Chí Nên (Ms Nenet)',
+      lic: 'Cô Chí Nên (Ms Nene)',
       eq: +$('gEq').value,
       em: +$('gEm').value,
       lv: +$('gLv').value,
@@ -2782,7 +2782,7 @@ if ($('bGbCsv')) {
     const blob = new Blob(['\ufeff' + csvRows.map(r => r.map(q).join(',')).join('\n')], { type: 'text/csv;charset=utf-8' });
     const a = document.createElement('a');
     a.href = URL.createObjectURL(blob);
-    a.download = 'So_Diem_BTVN_MsNenet_' + new Date().toISOString().slice(0, 10) + '.csv';
+    a.download = 'So_Diem_BTVN_MsNene_' + new Date().toISOString().slice(0, 10) + '.csv';
     a.click();
   };
 }
