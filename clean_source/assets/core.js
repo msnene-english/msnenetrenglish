@@ -902,6 +902,110 @@ async function updateCommunityQuizMeta(id, patch) {
   return true;
 }
 
+
+const DEFAULT_COMMUNITY_TAGS = ['Lớp 6', 'Lớp 7', 'Lớp 8', 'Lớp 9', 'Lớp 10-12', 'IELTS', 'Phát âm'];
+
+async function getCommunityTags() {
+  if (typeof window !== 'undefined' && window.communityTagsCache && Array.isArray(window.communityTagsCache)) {
+    return window.communityTagsCache;
+  }
+  const cfg = (typeof window !== 'undefined' && window.GAME_CONFIG) || {};
+  if (cfg.firebase && cfg.firebase.databaseURL) {
+    try {
+      const url = cfg.firebase.databaseURL.replace(/\/$/, '') + '/community_tags.json';
+      const res = await fetch(url);
+      if (res.ok) {
+        const val = await res.json();
+        if (Array.isArray(val) && val.length) {
+          if (typeof window !== 'undefined') window.communityTagsCache = val;
+          return val;
+        }
+      }
+    } catch (e) {
+      console.warn('Firebase tags fetch error:', e);
+    }
+  }
+  const list = DEFAULT_COMMUNITY_TAGS.slice();
+  if (typeof window !== 'undefined') window.communityTagsCache = list;
+  return list;
+}
+
+async function saveCommunityTags(tags) {
+  if (!Array.isArray(tags)) return false;
+  const cleaned = tags.map(t => String(t || '').trim()).filter(Boolean);
+  if (typeof window !== 'undefined') window.communityTagsCache = cleaned;
+  const cfg = (typeof window !== 'undefined' && window.GAME_CONFIG) || {};
+  if (cfg.firebase && cfg.firebase.databaseURL) {
+    try {
+      const url = cfg.firebase.databaseURL.replace(/\/$/, '') + '/community_tags.json';
+      await fetch(url, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(cleaned) });
+    } catch (e) {
+      console.warn('Firebase tags save error:', e);
+    }
+  }
+  return cleaned;
+}
+
+async function addCommunityTag(newTag) {
+  if (!newTag) return false;
+  newTag = String(newTag).trim();
+  const list = await getCommunityTags();
+  if (!list.some(t => t.toLowerCase() === newTag.toLowerCase())) {
+    list.push(newTag);
+    await saveCommunityTags(list);
+  }
+  return list;
+}
+
+async function removeCommunityTag(tagToRemove) {
+  if (!tagToRemove) return false;
+  tagToRemove = String(tagToRemove).trim().toLowerCase();
+  const list = await getCommunityTags();
+  const next = list.filter(t => t.toLowerCase() !== tagToRemove);
+  await saveCommunityTags(next);
+  return next;
+}
+
+function matchQuizTag(quiz, filterTag) {
+  if (!quiz) return false;
+  if (!filterTag) return true;
+  const fTag = String(filterTag).trim().toLowerCase();
+  const qTag = String(quiz.tag || '').trim().toLowerCase();
+  const qTitle = String(quiz.title || '').trim().toLowerCase();
+
+  // 1. Khớp trực tiếp tag
+  if (qTag && (qTag === fTag || qTag.includes(fTag))) return true;
+
+  // 2. Khớp trực tiếp trong tiêu đề
+  if (qTitle.includes(fTag)) return true;
+
+  // 3. Khớp thông minh các khối lớp: Lớp 6, Lớp 7, Lớp 8, Lớp 9...
+  const gradeMatch = fTag.match(/^(?:lớp|lop|grade|g)\s*(\d+)$/i);
+  if (gradeMatch) {
+    const num = gradeMatch[1];
+    const reg = new RegExp('\\b(?:english|eng|tiếng anh|anh|lớp|lop|grade|g)\\s*' + num + '\\b', 'i');
+    if (reg.test(qTitle) || reg.test(qTag)) return true;
+    if (new RegExp('\\b' + num + '\\b').test(qTitle)) return true;
+  }
+
+  // 4. Khớp Lớp 10-12
+  if (fTag.includes('10-12') || fTag.includes('thpt')) {
+    if (/\b(?:10|11|12|thpt)\b/i.test(qTitle)) return true;
+  }
+
+  // 5. Khớp Phát âm
+  if (fTag.includes('phát âm') || fTag.includes('speaking') || fTag.includes('spk')) {
+    if (/(?:phát âm|phat am|speaking|spk|pronunciation)/i.test(qTitle) || (quiz.qs || []).some(q => q.type === 'speaking')) return true;
+  }
+
+  // 6. Khớp IELTS
+  if (fTag.includes('ielts')) {
+    if (/ielts/i.test(qTitle)) return true;
+  }
+
+  return false;
+}
+
 async function getCommunityLibrary() {
   // Bắt đầu với các bộ đề mẫu có sẵn
   const bundled = [];
@@ -2086,5 +2190,5 @@ function copyPhone() {
 }
 if (typeof window !== 'undefined') window.copyPhone = copyPhone;
 
-return { $, copyPhone, shuffle, pick, clamp, esc, fmt, stamp, clean, rng, COLORS, BADGE, safe, normAns, checkTextAns, fromOld, prep, parseCSV, rowsToQs, parseText, parsePaste, sheetSets, sheetSet, sampleSet, packHw, unpackHw, tone, sfx, confetti, toast, rank, makeNet, music, saveCommunityQuiz, updateCommunityQuizMeta, getCommunityLibrary, getQuizById, saveHwMeta, submitHwResult, getHwGradebook, showReportCard, getAiKey, diffPronunciation, speakText, evaluatePronunciationAI, enrichSpeakingQuestionsAI, generateSingleSpeakingAI, checkEnglishStandardizationLocal, checkEnglishStandardizationAI, COMMON_TYPOS, deleteCommunityQuiz, deleteHwSubmission , copy, copyText, sfxFiles, kvPut, kvGet, kvScan, live, liveWatch};
+return { $, copyPhone, getCommunityTags, saveCommunityTags, addCommunityTag, removeCommunityTag, matchQuizTag, shuffle, pick, clamp, esc, fmt, stamp, clean, rng, COLORS, BADGE, safe, normAns, checkTextAns, fromOld, prep, parseCSV, rowsToQs, parseText, parsePaste, sheetSets, sheetSet, sampleSet, packHw, unpackHw, tone, sfx, confetti, toast, rank, makeNet, music, saveCommunityQuiz, updateCommunityQuizMeta, getCommunityLibrary, getQuizById, saveHwMeta, submitHwResult, getHwGradebook, showReportCard, getAiKey, diffPronunciation, speakText, evaluatePronunciationAI, enrichSpeakingQuestionsAI, generateSingleSpeakingAI, checkEnglishStandardizationLocal, checkEnglishStandardizationAI, COMMON_TYPOS, deleteCommunityQuiz, deleteHwSubmission , copy, copyText, sfxFiles, kvPut, kvGet, kvScan, live, liveWatch};
 })();

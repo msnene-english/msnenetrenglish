@@ -411,6 +411,37 @@ html, body {
   display: none;
   border: 1px solid #334155;
 }
+
+/* TABS CHUYỂN ĐỔI QUẢN TRỊ */
+.admin-nav-tabs .btn {
+  transition: all .2s ease;
+}
+.tag-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: #f1f5f9;
+  border: 1.5px solid #cbd5e1;
+  color: #334155;
+  padding: 6px 12px;
+  border-radius: 999px;
+  font-weight: 800;
+  font-size: 13px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+}
+.tag-badge .btn-del-tag {
+  color: #94a3b8;
+  cursor: pointer;
+  font-weight: 900;
+  font-size: 12px;
+  border-radius: 50%;
+  padding: 0 4px;
+}
+.tag-badge .btn-del-tag:hover {
+  color: #dc2626;
+  background: #fee2e2;
+}
+
 </style>
 </head>
 <body>
@@ -452,6 +483,17 @@ html, body {
   </div>
  </header>
 
+ <!-- TABS ĐIỀU HƯỚNG QUẢN TRỊ -->
+ <div class="admin-nav-tabs" style="display:flex;gap:12px;margin:18px 0 24px;border-bottom:2px solid #e2e8f0;padding-bottom:14px;flex-wrap:wrap">
+  <button type="button" class="btn btn-primary" id="tabNavLicenses" onclick="switchAdminTab('licenses')" style="padding:11px 22px;font-size:15px;font-weight:800;border-radius:14px;display:flex;align-items:center;gap:8px">
+   🔐 Quản Lý Bản Quyền Key
+  </button>
+  <button type="button" class="btn btn-outline" id="tabNavQuizzes" onclick="switchAdminTab('quizzes')" style="padding:11px 22px;font-size:15px;font-weight:800;border-radius:14px;display:flex;align-items:center;gap:8px">
+   📚 Quản Lý Thư Viện Đề Thi Chung (Cộng đồng)
+  </button>
+ </div>
+
+ <div id="secLicenses">
  <!-- THỐNG KÊ NHANH -->
  <div class="stats-grid">
   <div class="stat-card active">
@@ -527,7 +569,90 @@ html, body {
    </table>
   </div>
  </section>
-</div>
+ </div> <!-- HẾT #secLicenses -->
+
+ <!-- ══════════ KHU VỰC 2: QUẢN LÝ THƯ VIỆN ĐỀ THI CHUNG TRÊN FIREBASE ══════════ -->
+ <div id="secQuizzes" style="display:none">
+  <!-- THỐNG KÊ ĐỀ THI -->
+  <div class="stats-grid">
+   <div class="stat-card total">
+    <div class="stat-label">📚 Tổng Đề Trên Firebase</div>
+    <div class="stat-val" id="statCommTotal">0</div>
+   </div>
+   <div class="stat-card active">
+    <div class="stat-label">🎮 Đề Game Tương Tác</div>
+    <div class="stat-val" id="statCommGame">0</div>
+   </div>
+   <div class="stat-card" style="border-top:4px solid #8b5cf6">
+    <div class="stat-label" style="color:#7c3aed">📝 Đề Kiểm Tra Chuẩn</div>
+    <div class="stat-val" id="statCommTest" style="color:#6d28d9">0</div>
+   </div>
+   <div class="stat-card" style="border-top:4px solid #f59e0b">
+    <div class="stat-label" style="color:#d97706">🧩 Tổng Số Câu Hỏi</div>
+    <div class="stat-val" id="statCommQs" style="color:#b45309">0</div>
+   </div>
+  </div>
+
+  <!-- QUẢN LÝ THẺ KHỐI LỚP (TAGS) -->
+  <section class="admin-card">
+   <div class="card-head">
+    <div>
+     <div class="card-title">🏷️ Quản Lý Danh Mục Khối Lớp &amp; Chủ Đề (Tags)</div>
+     <div class="card-sub">Thêm hoặc xóa khối lớp (Lớp 1-12, THPT, IELTS...). Cập nhật đồng bộ tức thì lên cả trang Host!</div>
+    </div>
+    <button type="button" class="btn btn-success btn-sm" onclick="adminAddTag()" style="padding:8px 16px;font-weight:800;border-radius:12px">
+     ➕ Thêm Khối Lớp Mới
+    </button>
+   </div>
+   <div id="adminTagsList" style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;min-height:38px">
+    <!-- Rendered dynamically -->
+   </div>
+  </section>
+
+  <!-- BẢNG DANH SÁCH BỘ ĐỀ TRÊN FIREBASE -->
+  <section class="admin-card" style="padding:0;overflow:hidden">
+   <div class="card-head" style="padding:20px 24px 16px;margin-bottom:0;flex-wrap:wrap;gap:12px">
+    <div>
+     <div class="card-title">🌐 Danh Sách Bộ Đề Thư Viện Chung Trên Máy Chủ</div>
+     <div class="card-sub">Chỉ Quản trị viên tại đây mới có quyền Xóa bộ đề hoặc chỉnh sửa dữ liệu gốc</div>
+    </div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+     <input type="text" id="inpSearchCommQuiz" class="inp" placeholder="🔍 Tìm tên đề, mã đề, tác giả..." style="max-width:240px;padding:8px 12px;font-size:13px" oninput="adminFilterQuizzes()">
+     <select id="selFilterCommTag" class="inp" style="width:auto;padding:8px 12px;font-size:13px" onchange="adminFilterQuizzes()">
+      <option value="">Tất cả khối lớp</option>
+     </select>
+     <select id="selFilterCommType" class="inp" style="width:auto;padding:8px 12px;font-size:13px" onchange="adminFilterQuizzes()">
+      <option value="all">Tất cả kiểu</option>
+      <option value="game">🎮 Chỉ Game</option>
+      <option value="test">📝 Chỉ Bài Test</option>
+     </select>
+     <label class="btn btn-primary" style="padding:8px 14px;font-size:13px;cursor:pointer;border-radius:12px;font-weight:800">
+      ⬆️ Nạp Đề File JSON
+      <input type="file" id="inpUploadCommQuiz" accept=".json" hidden onchange="adminUploadQuizFile(event)">
+     </label>
+     <button type="button" class="btn btn-outline" onclick="loadCommQuizzes()" title="Tải lại từ Firebase" style="padding:8px 14px;font-size:13px">🔄 Tải lại</button>
+    </div>
+   </div>
+   <div class="table-responsive">
+    <table class="key-table">
+     <thead>
+      <tr>
+       <th style="min-width:130px">Mã Đề</th>
+       <th style="min-width:280px">Tiêu Đề Bộ Đề &amp; Kiểu</th>
+       <th style="min-width:140px">Khối Lớp</th>
+       <th style="min-width:180px">Tác Giả</th>
+       <th style="min-width:140px">Số Câu &amp; Ngày</th>
+       <th style="min-width:220px;text-align:center">Thao Tác Quản Trị</th>
+      </tr>
+     </thead>
+     <tbody id="tbodyCommQuizzes">
+      <tr><td colspan="6" style="text-align:center;padding:40px 20px;color:#64748b">⏳ Đang tải thư viện từ máy chủ Firebase...</td></tr>
+     </tbody>
+    </table>
+   </div>
+  </section>
+ </div> <!-- HẾT #secQuizzes -->
+</div> <!-- HẾT #adminApp -->
 
 <!-- MODAL SỬA ĐỔI MÃ KEY -->
 <div class="modal-overlay" id="ovEdit">
@@ -586,6 +711,49 @@ html, body {
   <div style="display:flex;gap:10px;justify-content:flex-end">
    <button type="button" class="btn btn-outline" id="bCancelChangeMaster">Hủy</button>
    <button type="button" class="btn btn-success" id="bSaveMasterKey">💾 Lưu Lên Firebase</button>
+  </div>
+ </div>
+</div>
+
+<!-- MODAL SỬA THÔNG TIN ĐỀ THI (ADMIN) -->
+<div class="modal-overlay" id="ovAdminEditQuiz">
+ <div class="modal-box" style="max-width:520px">
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:18px">
+   <h3 style="font-size:18px;font-weight:900;color:#0284c7">✏️ Điều Chỉnh Bộ Đề Thư Viện Chung</h3>
+   <button type="button" class="btn btn-outline btn-sm" onclick="$('ovAdminEditQuiz').classList.remove('on')">✕</button>
+  </div>
+  <input type="hidden" id="adminEditQuizId">
+  <div class="form-group" style="margin-bottom:14px">
+   <label for="adminEditQuizTitle">Tiêu đề bộ đề:</label>
+   <input id="adminEditQuizTitle" class="inp" style="font-weight:800;font-size:15px">
+  </div>
+  <div class="form-grid" style="grid-template-columns:1fr 1fr;gap:12px;margin-bottom:14px">
+   <div class="form-group">
+    <label for="adminEditQuizAuthor">Tên giáo viên / Tác giả:</label>
+    <input id="adminEditQuizAuthor" class="inp">
+   </div>
+   <div class="form-group">
+    <label for="adminEditQuizType">Kiểu bộ đề:</label>
+    <select id="adminEditQuizType" class="inp">
+     <option value="game">🎮 Game tương tác</option>
+     <option value="test">📝 Bài kiểm tra chuẩn</option>
+    </select>
+   </div>
+  </div>
+  <div class="form-group" style="margin-bottom:14px">
+   <label for="adminEditQuizTag">Khối lớp / Phân loại (Tag):</label>
+   <div style="display:flex;gap:6px">
+    <input id="adminEditQuizTag" class="inp" placeholder="VD: Lớp 6, Lớp 7, IELTS...">
+    <select id="adminEditQuizTagPreset" class="inp" style="width:auto;padding:8px" onchange="if(this.value)$('adminEditQuizTag').value=this.value">
+     <option value="">Chọn nhanh tag</option>
+    </select>
+   </div>
+  </div>
+  <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:20px">
+   <button type="button" class="btn btn-outline" onclick="$('ovAdminEditQuiz').classList.remove('on')">Hủy bỏ</button>
+   <button type="button" class="btn btn-primary" id="bSaveAdminEditQuiz" onclick="adminSaveEditQuiz()">
+    💾 Lưu Thay Đổi Lên Firebase
+   </button>
   </div>
  </div>
 </div>
@@ -1061,6 +1229,372 @@ if (sessionStorage.getItem('msnene_admin_auth') === '1') {
 } else {
   setTimeout(() => $('inpMasterKey').focus(), 150);
 }
+
+// ══════════════════════════════════════════════════════════════
+// QUẢN TRỊ THƯ VIỆN ĐỀ THI CHUNG (COMMUNITY QUIZ MANAGER)
+// ══════════════════════════════════════════════════════════════
+let allCommQuizzes = [];
+let allCommTags = [];
+
+window.switchAdminTab = function(tab) {
+  if (tab === 'quizzes') {
+    $('tabNavLicenses').className = 'btn btn-outline';
+    $('tabNavQuizzes').className = 'btn btn-primary';
+    $('secLicenses').style.display = 'none';
+    $('secQuizzes').style.display = 'block';
+    loadCommTags();
+    loadCommQuizzes();
+  } else {
+    $('tabNavLicenses').className = 'btn btn-primary';
+    $('tabNavQuizzes').className = 'btn btn-outline';
+    $('secLicenses').style.display = 'block';
+    $('secQuizzes').style.display = 'none';
+    loadLicenses();
+  }
+};
+
+async function loadCommTags() {
+  const fbUrl = getFbUrl();
+  try {
+    const res = await fetch(`${fbUrl}/community_tags.json`);
+    const val = res.ok ? await res.json() : null;
+    allCommTags = Array.isArray(val) && val.length ? val : ['Lớp 6', 'Lớp 7', 'Lớp 8', 'Lớp 9', 'Lớp 10-12', 'IELTS', 'Phát âm'];
+  } catch (e) {
+    allCommTags = ['Lớp 6', 'Lớp 7', 'Lớp 8', 'Lớp 9', 'Lớp 10-12', 'IELTS', 'Phát âm'];
+  }
+  renderAdminTags();
+  renderAdminTagSelects();
+}
+
+function renderAdminTags() {
+  const container = $('adminTagsList');
+  if (!container) return;
+  if (!allCommTags.length) {
+    container.innerHTML = '<span style="color:#64748b;font-size:13px">Chưa có khối lớp nào. Bấm "+ Thêm Khối Lớp Mới" để thêm!</span>';
+    return;
+  }
+  container.innerHTML = allCommTags.map(tag => `
+    <span class="tag-badge">
+      <span>🏷️ ${esc(tag)}</span>
+      <span class="btn-del-tag" onclick="adminDeleteTag('${esc(tag)}')" title="Xóa thẻ ${esc(tag)} khỏi hệ thống">✕</span>
+    </span>
+  `).join('');
+}
+
+function renderAdminTagSelects() {
+  const filterSel = $('selFilterCommTag');
+  const presetSel = $('adminEditQuizTagPreset');
+  if (filterSel) {
+    const cur = filterSel.value;
+    filterSel.innerHTML = '<option value="">Tất cả khối lớp</option>' + allCommTags.map(t => `<option value="${esc(t)}">${esc(t)}</option>`).join('');
+    filterSel.value = cur;
+  }
+  if (presetSel) {
+    presetSel.innerHTML = '<option value="">Chọn nhanh tag</option>' + allCommTags.map(t => `<option value="${esc(t)}">${esc(t)}</option>`).join('');
+  }
+}
+
+async function adminAddTag() {
+  const name = prompt('➕ Nhập tên Khối lớp hoặc Chủ đề mới (VD: Lớp 1, Lớp 2, Lớp 3, Lớp 4, Lớp 5, THPT, TOEIC, Ngữ pháp...):');
+  if (!name || !name.trim()) return;
+  const tag = name.trim();
+  if (allCommTags.some(t => t.toLowerCase() === tag.toLowerCase())) {
+    return alert('Thẻ này đã tồn tại!');
+  }
+  allCommTags.push(tag);
+  toast('⏳ Đang lưu khối lớp lên Firebase...');
+  const fbUrl = getFbUrl();
+  await fetch(`${fbUrl}/community_tags.json`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(allCommTags) });
+  toast('🎉 Đã thêm khối lớp "' + tag + '" thành công!');
+  renderAdminTags();
+  renderAdminTagSelects();
+}
+
+async function adminDeleteTag(tag) {
+  if (!confirm(`Bạn có chắc chắn muốn xóa khối lớp "${tag}" khỏi danh sách?`)) return;
+  allCommTags = allCommTags.filter(t => t !== tag);
+  toast('⏳ Đang cập nhật Firebase...');
+  const fbUrl = getFbUrl();
+  await fetch(`${fbUrl}/community_tags.json`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(allCommTags) });
+  toast('🗑️ Đã xóa khối lớp "' + tag + '"!');
+  renderAdminTags();
+  renderAdminTagSelects();
+  adminFilterQuizzes();
+}
+
+async function loadCommQuizzes() {
+  const tbody = $('tbodyCommQuizzes');
+  if (tbody) tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;padding:40px 20px;color:#64748b">⏳ Đang tải dữ liệu từ máy chủ Firebase...</td></tr>';
+  
+  const fbUrl = getFbUrl();
+  try {
+    const res = await fetch(`${fbUrl}/community_quizzes.json`);
+    const data = res.ok ? await res.json() : null;
+    allCommQuizzes = [];
+    if (data && typeof data === 'object') {
+      for (const [id, q] of Object.entries(data)) {
+        if (q) allCommQuizzes.push(Object.assign({ id }, q));
+      }
+    }
+    updateCommStats();
+    adminFilterQuizzes();
+  } catch (e) {
+    if (tbody) tbody.innerHTML = `<tr><td colspan="6" style="text-align:center;padding:30px;color:#dc2626">❌ Không thể tải đề từ Firebase: ${e.message}</td></tr>`;
+  }
+}
+
+function updateCommStats() {
+  $('statCommTotal').textContent = allCommQuizzes.length;
+  $('statCommGame').textContent = allCommQuizzes.filter(q => q.type !== 'test' && q.m !== 'test').length;
+  $('statCommTest').textContent = allCommQuizzes.filter(q => q.type === 'test' || q.m === 'test').length;
+  let totalQs = 0;
+  allCommQuizzes.forEach(q => { totalQs += (q.qs || []).length; });
+  $('statCommQs').textContent = totalQs;
+}
+
+function adminFilterQuizzes() {
+  const qSearch = ($('inpSearchCommQuiz') ? $('inpSearchCommQuiz').value : '').toLowerCase().trim();
+  const fTag = ($('selFilterCommTag') ? $('selFilterCommTag').value : '').toLowerCase().trim();
+  const fType = ($('selFilterCommType') ? $('selFilterCommType').value : 'all');
+
+  let filtered = allCommQuizzes.slice();
+  if (fType === 'game') filtered = filtered.filter(q => q.type !== 'test' && q.m !== 'test');
+  if (fType === 'test') filtered = filtered.filter(q => q.type === 'test' || q.m === 'test');
+  
+  if (fTag) {
+    filtered = filtered.filter(q => {
+      const qTag = (q.tag || '').toLowerCase();
+      const qTitle = (q.title || '').toLowerCase();
+      if (qTag && (qTag === fTag || qTag.includes(fTag))) return true;
+      if (qTitle.includes(fTag)) return true;
+      const numMatch = fTag.match(/\d+/);
+      if (numMatch && (new RegExp('\\b' + numMatch[0] + '\\b').test(qTitle) || new RegExp('\\b' + numMatch[0] + '\\b').test(qTag))) return true;
+      return false;
+    });
+  }
+
+  if (qSearch) {
+    filtered = filtered.filter(q => (q.title || '').toLowerCase().includes(qSearch) || (q.author || '').toLowerCase().includes(qSearch) || (q.id || '').toLowerCase().includes(qSearch) || (q.tag || '').toLowerCase().includes(qSearch));
+  }
+
+  renderCommQuizzesTable(filtered);
+}
+
+function renderCommQuizzesTable(list) {
+  const tbody = $('tbodyCommQuizzes');
+  if (!tbody) return;
+  if (!list.length) {
+    tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;padding:40px;color:#64748b">Không tìm thấy bộ đề nào phù hợp.</td></tr>';
+    return;
+  }
+
+  tbody.innerHTML = list.map(q => {
+    const isTest = q.type === 'test' || q.m === 'test';
+    const hasSpk = (q.qs || []).some(item => item.type === 'speaking');
+    const badgeHtml = hasSpk
+      ? '<span style="background:linear-gradient(135deg,#db2777,#9333ea);color:#fff;font-size:11px;font-weight:800;padding:2px 7px;border-radius:6px;margin-right:6px">🗣 PHÁT ÂM</span>'
+      : isTest 
+        ? '<span style="background:#8b5cf6;color:#fff;font-size:11px;font-weight:800;padding:2px 7px;border-radius:6px;margin-right:6px">📝 TEST</span>'
+        : '<span style="background:#0284c7;color:#fff;font-size:11px;font-weight:800;padding:2px 7px;border-radius:6px;margin-right:6px">🎮 GAME</span>';
+
+    const tagBadge = q.tag 
+      ? `<span style="background:#e0e7ff;color:#3730a3;font-size:11px;font-weight:800;padding:2px 8px;border-radius:6px">🏷️ ${esc(q.tag)}</span>`
+      : '<span style="color:#94a3b8;font-size:11px">Chưa gắn tag</span>';
+
+    return `
+      <tr>
+        <td><code style="font-weight:900;color:#0284c7;font-size:13px">${esc(q.id)}</code></td>
+        <td>
+          <div style="font-weight:800;color:#0f172a;font-size:14px">${badgeHtml}📘 ${esc(q.title || q.id)}</div>
+        </td>
+        <td>${tagBadge}</td>
+        <td><span style="font-weight:700;color:#334155">${esc(q.author || 'Ms Nene')}</span></td>
+        <td>
+          <div style="font-weight:800;color:#0284c7">${(q.qs || []).length} câu</div>
+          <div style="font-size:11px;color:#64748b">${esc(q.date || '—')}</div>
+        </td>
+        <td style="text-align:center">
+          <div style="display:inline-flex;gap:6px;flex-wrap:wrap;justify-content:center">
+            <button type="button" class="btn btn-outline btn-sm" onclick="adminOpenEditQuiz('${esc(q.id)}')" title="Sửa tên, tác giả, khối lớp">✏️ Sửa</button>
+            <button type="button" class="btn btn-outline btn-sm" onclick="adminExportQuiz('${esc(q.id)}')" title="Tải file JSON về máy">⬇️ Tải</button>
+            <button type="button" class="btn btn-danger btn-sm" onclick="adminDeleteQuiz('${esc(q.id)}', '${esc(q.title || q.id)}')" title="XÓA VĨNH VIỄN KHỎI FIREBASE (Chỉ Admin)">🗑️ Xóa</button>
+          </div>
+        </td>
+      </tr>
+    `;
+  }).join('');
+}
+
+function adminOpenEditQuiz(id) {
+  const q = allCommQuizzes.find(item => item.id === id);
+  if (!q) return alert('Không tìm thấy thông tin đề: ' + id);
+  $('adminEditQuizId').value = id;
+  $('adminEditQuizTitle').value = q.title || '';
+  $('adminEditQuizAuthor').value = q.author || '';
+  $('adminEditQuizType').value = (q.type === 'test' || q.m === 'test') ? 'test' : 'game';
+  $('adminEditQuizTag').value = q.tag || '';
+  $('ovAdminEditQuiz').classList.add('on');
+}
+
+async function adminSaveEditQuiz() {
+  const id = $('adminEditQuizId').value;
+  const title = $('adminEditQuizTitle').value.trim();
+  if (!title) return alert('Vui lòng nhập tiêu đề bộ đề!');
+  const author = $('adminEditQuizAuthor').value.trim() || 'Cô Chí Nên';
+  const type = $('adminEditQuizType').value;
+  const tag = $('adminEditQuizTag').value.trim();
+
+  const patch = {
+    title,
+    author,
+    type,
+    m: type === 'test' ? 'test' : 'climb',
+    tag
+  };
+
+  const btn = $('bSaveAdminEditQuiz');
+  btn.disabled = true;
+  btn.textContent = '⏳ Đang lưu Firebase...';
+
+  const fbUrl = getFbUrl();
+  try {
+    await fetch(`${fbUrl}/community_quizzes/${encodeURIComponent(id)}.json`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(patch)
+    });
+    toast(`🎉 Đã cập nhật bộ đề [${id}] thành công!`);
+    $('ovAdminEditQuiz').classList.remove('on');
+    loadCommQuizzes();
+  } catch (e) {
+    alert('Lỗi cập nhật: ' + e.message);
+  } finally {
+    btn.disabled = false;
+    btn.textContent = '💾 Lưu Thay Đổi Lên Firebase';
+  }
+}
+
+async function adminDeleteQuiz(id, title) {
+  if (!confirm(`⚠️ CẢNH BÁO QUẢN TRỊ VIÊN:\n\nBạn có chắc chắn muốn XÓA VĨNH VIỄN bộ đề:\n[${id}] ${title}\nkhỏi Thư viện chung trên máy chủ Firebase không?\n\nHành động này không thể hoàn tác!`)) {
+    return;
+  }
+  
+  toast(`⏳ Đang xóa bộ đề [${id}] khỏi Firebase...`);
+  const fbUrl = getFbUrl();
+  try {
+    const res = await fetch(`${fbUrl}/community_quizzes/${encodeURIComponent(id)}.json`, { method: 'DELETE' });
+    if (res.ok) {
+      toast(`🗑️ Đã xóa thành công bộ đề [${id}] khỏi Thư viện chung!`, 3000);
+      loadCommQuizzes();
+    } else {
+      alert('Lỗi máy chủ khi xóa: ' + res.statusText);
+    }
+  } catch (e) {
+    alert('Lỗi xóa đề: ' + e.message);
+  }
+}
+
+function adminExportQuiz(id) {
+  const q = allCommQuizzes.find(item => item.id === id);
+  if (!q) return alert('Không tìm thấy đề!');
+  const blob = new Blob([JSON.stringify(q, null, 2)], { type: 'application/json' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = `Quiz_${q.id}_${(q.title || 'msnene').replace(/[^a-zA-Z0-9_-]/g, '_')}.json`;
+  a.click();
+}
+
+async function adminUploadQuizFile(event) {
+  const file = event.target.files && event.target.files[0];
+  if (!file) return;
+  try {
+    const text = await file.text();
+    const data = JSON.parse(text);
+    if (!data || (!data.qs && !Array.isArray(data))) {
+      return alert('File JSON không hợp lệ hoặc thiếu mảng câu hỏi (qs)!');
+    }
+    const quizId = data.id || ('MN-' + Math.floor(1000 + Math.random() * 9000));
+    const title = data.title || file.name.replace(/\.json$/i, '');
+    const payload = Object.assign({}, data, {
+      id: quizId,
+      title: title,
+      date: new Date().toLocaleDateString('vi-VN')
+    });
+    
+    toast(`⏳ Đang nạp bộ đề [${quizId}] lên Firebase...`);
+    const fbUrl = getFbUrl();
+    await fetch(`${fbUrl}/community_quizzes/${encodeURIComponent(quizId)}.json`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
+    toast(`🎉 Đã nạp thành công bộ đề [${quizId}] lên Thư viện chung!`, 3500);
+    event.target.value = '';
+    loadCommQuizzes();
+  } catch (err) {
+    alert('Lỗi đọc file JSON: ' + err.message);
+  }
+}
+
+
+// Hỗ trợ kéo thả file JSON từ máy tính vào trang Admin
+(function setupAdminDesktopDragDrop() {
+  const sec = document.getElementById('secQuizzes');
+  if (!sec || sec._dragSetup) return;
+  sec._dragSetup = true;
+
+  sec.addEventListener('dragover', function(e) {
+    if (e.dataTransfer && e.dataTransfer.types && (e.dataTransfer.types.includes('Files') || (e.dataTransfer.types.contains && e.dataTransfer.types.contains('Files')))) {
+      e.preventDefault();
+      e.dataTransfer.dropEffect = 'copy';
+      sec.style.outline = '3px dashed #3b82f6';
+    }
+  });
+
+  sec.addEventListener('dragleave', function(e) {
+    if (e.target === sec || !sec.contains(e.relatedTarget)) {
+      sec.style.outline = '';
+    }
+  });
+
+  sec.addEventListener('drop', async function(e) {
+    sec.style.outline = '';
+    if (e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+      e.preventDefault();
+      const file = e.dataTransfer.files[0];
+      if (!file.name.toLowerCase().endsWith('.json')) {
+        return alert('⚠️ Vui lòng thả file có định dạng .json!');
+      }
+      try {
+        const text = await file.text();
+        const data = JSON.parse(text);
+        if (!data || (!data.qs && !Array.isArray(data))) {
+          return alert('File JSON không hợp lệ hoặc thiếu mảng câu hỏi (qs)!');
+        }
+        const quizId = data.id || ('MN-' + Math.floor(1000 + Math.random() * 9000));
+        const title = data.title || file.name.replace(/\.json$/i, '');
+        const payload = Object.assign({}, data, {
+          id: quizId,
+          title: title,
+          date: new Date().toLocaleDateString('vi-VN')
+        });
+        
+        toast(`⏳ Đang nạp bộ đề [${quizId}] lên Firebase...`);
+        const fbUrl = getFbUrl();
+        await fetch(`${fbUrl}/community_quizzes/${encodeURIComponent(quizId)}.json`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+        toast(`🎉 Đã nạp thành công bộ đề [${quizId}] lên Thư viện chung!`, 3500);
+        loadCommQuizzes();
+      } catch (err) {
+        alert('Lỗi đọc file JSON: ' + err.message);
+      }
+    }
+  });
+})();
+
 </script>
 </body>
 </html>
