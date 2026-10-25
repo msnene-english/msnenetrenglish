@@ -20,6 +20,7 @@ html, body {
   font-family: 'Nunito', system-ui, -apple-system, sans-serif;
   min-height: 100vh;
   line-height: 1.5;
+  overflow-x: hidden;
 }
 
 /* MÀN HÌNH KHÓA TỐI CAO (GATEKEEPER) */
@@ -415,6 +416,9 @@ html, body {
 /* TABS CHUYỂN ĐỔI QUẢN TRỊ */
 .admin-nav-tabs .btn {
   transition: all .2s ease;
+  white-space: normal;
+  line-height: 1.35;
+  text-align: center;
 }
 .tag-badge {
   display: inline-flex;
@@ -440,6 +444,33 @@ html, body {
 .tag-badge .btn-del-tag:hover {
   color: #dc2626;
   background: #fee2e2;
+}
+
+
+/* RESPONSIVE CHO ĐIỆN THOẠI & TABLET */
+@media (max-width: 640px) {
+  .admin-container {
+    padding: 14px 10px 36px !important;
+  }
+  .admin-header {
+    padding: 14px !important;
+    flex-direction: column;
+    align-items: flex-start !important;
+  }
+  .admin-nav-tabs .btn {
+    width: 100% !important;
+    justify-content: center !important;
+    font-size: 13.5px !important;
+    padding: 10px 14px !important;
+    white-space: normal !important;
+  }
+  .stats-grid {
+    grid-template-columns: 1fr !important;
+  }
+  .card-head {
+    flex-direction: column;
+    align-items: flex-start !important;
+  }
 }
 
 </style>
