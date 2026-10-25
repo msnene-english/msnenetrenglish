@@ -3,12 +3,12 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Ms Nene English – Quản Trị Bản Quyền &amp; Cấp Key</title>
+<title>Ms Nene English – Quản Trị Bản Quyền</title>
 <link rel="stylesheet" href="assets/fonts.css">
 <script src="assets/shield.js?v=2.2"></script>
 <script src="assets/config.js?v=2.2"></script>
 <style>
-/* CSS Reset chuyên dụng cho trang Quản trị (Không xung đột với game.css) */
+/* CSS Reset chuyên dụng cho trang Quản trị */
 *, *::before, *::after {
   box-sizing: border-box;
   margin: 0;
@@ -21,13 +21,63 @@ html, body {
   min-height: 100vh;
   line-height: 1.5;
 }
+
+/* MÀN HÌNH KHÓA TỐI CAO (GATEKEEPER) */
+.gate-wrapper {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+}
+.gate-card {
+  background: #ffffff;
+  width: 100%;
+  max-width: 440px;
+  border-radius: 24px;
+  border: 1px solid #e2e8f0;
+  border-top: 6px solid #0284c7;
+  padding: 36px 28px;
+  text-align: center;
+  box-shadow: 0 20px 45px -10px rgba(15, 23, 42, 0.12);
+  animation: gatePop .25s ease-out;
+}
+@keyframes gatePop {
+  from { opacity: 0; transform: scale(0.96); }
+  to { opacity: 1; transform: scale(1); }
+}
+.gate-icon {
+  font-size: 44px;
+  background: linear-gradient(135deg, #e0f2fe, #bae6fd);
+  width: 80px;
+  height: 80px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 22px;
+  margin: 0 auto 16px;
+  box-shadow: 0 4px 12px rgba(2, 132, 199, 0.2);
+}
+.gate-title {
+  font-size: 22px;
+  font-weight: 900;
+  color: #0369a1;
+  margin-bottom: 6px;
+}
+.gate-desc {
+  font-size: 13px;
+  color: #64748b;
+  font-weight: 600;
+  line-height: 1.5;
+  margin-bottom: 22px;
+}
+
+/* NỘI DUNG QUẢN TRỊ */
 .admin-container {
   max-width: 1140px;
   margin: 0 auto;
   padding: 24px 20px 48px;
 }
-
-/* HEADER */
 .admin-header {
   display: flex;
   justify-content: space-between;
@@ -72,6 +122,7 @@ html, body {
   display: flex;
   gap: 10px;
   align-items: center;
+  flex-wrap: wrap;
 }
 
 /* THỐNG KÊ NHANH */
@@ -234,7 +285,7 @@ html, body {
   border-radius: 8px;
 }
 
-/* BẢNG DANH SÁCH KEY (HOÀN TOÀN CHỐNG CO CHỮ DỌC) */
+/* BẢNG DANH SÁCH KEY */
 .table-responsive {
   width: 100%;
   overflow-x: auto;
@@ -268,14 +319,10 @@ html, body {
   overflow-wrap: normal;
   word-break: normal;
 }
-.key-table tr:last-child td {
-  border-bottom: none;
-}
-.key-table tr:hover {
-  background: #f8fafc;
-}
+.key-table tr:last-child td { border-bottom: none; }
+.key-table tr:hover { background: #f8fafc; }
 
-/* CÁC HUY HIỆU (BADGES) */
+/* BADGES */
 .key-pill {
   font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
   font-size: 14px;
@@ -368,7 +415,26 @@ html, body {
 </head>
 <body>
 
-<div class="admin-container">
+<!-- ══════════ ① MÀN HÌNH KHÓA TỐI CAO (GATEKEEPER) ══════════ -->
+<div class="gate-wrapper" id="loginGate">
+ <div class="gate-card">
+  <div class="gate-icon">🛡️</div>
+  <h2 class="gate-title">Xác Thực Khóa Tối Cao</h2>
+  <p class="gate-desc">Khu vực quản trị giới hạn đặc biệt dành riêng cho Cô Chí Nên. Vui lòng nhập Khóa Tối Cao để truy cập:</p>
+  
+  <div style="margin-bottom:16px">
+   <input type="password" id="inpMasterKey" class="inp" placeholder="Nhập Khóa Tối Cao..." style="font-size:18px;text-align:center;letter-spacing:4px;font-weight:900;padding:12px;border:2px solid #0284c7">
+   <div id="gateError" style="color:#dc2626;font-size:13px;font-weight:800;margin-top:8px;display:none">❌ Khóa Tối Cao không chính xác! Vui lòng thử lại.</div>
+  </div>
+
+  <button type="button" class="btn btn-primary" id="bLoginMaster" style="width:100%;padding:13px;font-size:15px">
+   🔓 Mở Khóa Quản Trị
+  </button>
+ </div>
+</div>
+
+<!-- ══════════ ② TOÀN BỘ NỘI DUNG QUẢN TRỊ (CHỈ HIỆN KHI ĐÃ ĐĂNG NHẬP) ══════════ -->
+<div class="admin-container" id="adminApp" style="display:none">
  <!-- HEADER -->
  <header class="admin-header">
   <div class="brand-box">
@@ -380,7 +446,9 @@ html, body {
   </div>
   <div class="header-actions">
    <a href="host.html" class="btn btn-outline" target="_blank" title="Mở trang Phòng Game của Cô">🎮 Mở Trang Host</a>
+   <button type="button" class="btn btn-outline" id="bOpenChangeMaster" title="Đổi Khóa Tối Cao trên Firebase">🔑 Đổi Khóa Tối Cao</button>
    <button type="button" class="btn btn-outline" id="bRefresh" title="Tải lại dữ liệu mới nhất từ Firebase">🔄 Làm mới</button>
+   <button type="button" class="btn btn-outline" id="bLogout" style="color:#dc2626;border-color:#fca5a5" title="Đăng xuất và khóa trang quản trị">🔒 Đăng xuất</button>
   </div>
  </header>
 
@@ -496,6 +564,32 @@ html, body {
  </div>
 </div>
 
+<!-- MODAL ĐỔI KHÓA TỐI CAO (CHANGE MASTER ADMIN KEY) -->
+<div class="modal-overlay" id="ovChangeMaster">
+ <div class="modal-box" style="border-top-color:#16a34a">
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:18px">
+   <h3 style="font-size:18px;font-weight:900;color:#15803d">🔑 Đổi Khóa Tối Cao Vào Trang Admin</h3>
+   <button type="button" class="btn btn-outline btn-sm" id="bCloseChangeMaster">✕</button>
+  </div>
+  <div style="font-size:13px;color:#64748b;margin-bottom:16px;line-height:1.5">
+   Khóa này được lưu trực tiếp trên Firebase tại <code>/admin/master</code>. Bạn cũng có thể sửa trực tiếp trên Firebase Console bất cứ lúc nào!
+  </div>
+  <div class="form-group" style="margin-bottom:14px">
+   <label for="newMasterKey">Khóa Tối Cao Mới:</label>
+   <input id="newMasterKey" class="inp" placeholder="Nhập mã mới (chữ hoặc số)..." style="font-weight:800;font-size:16px;letter-spacing:2px">
+  </div>
+  <div class="form-group" style="margin-bottom:22px">
+   <label for="confirmMasterKey">Nhập Lại Khóa Mới Để Xác Nhận:</label>
+   <input id="confirmMasterKey" class="inp" placeholder="Nhập lại mã mới..." style="font-weight:800;font-size:16px;letter-spacing:2px">
+   <div id="changeMasterErr" style="color:#dc2626;font-size:12px;font-weight:700;margin-top:4px;display:none"></div>
+  </div>
+  <div style="display:flex;gap:10px;justify-content:flex-end">
+   <button type="button" class="btn btn-outline" id="bCancelChangeMaster">Hủy</button>
+   <button type="button" class="btn btn-success" id="bSaveMasterKey">💾 Lưu Lên Firebase</button>
+  </div>
+ </div>
+</div>
+
 <div class="toast-msg" id="toastBox"></div>
 
 <script>
@@ -555,6 +649,135 @@ function toast(msg, ms = 2500) {
   toastTimer = setTimeout(() => { box.style.display = 'none'; }, ms);
 }
 
+/* ══════════ XÁC THỰC KHÓA TỐI CAO ĐĂNG NHẬP ══════════ */
+async function verifyMasterLogin() {
+  const passInp = $('inpMasterKey');
+  const errDiv = $('gateError');
+  const btn = $('bLoginMaster');
+  const key = (passInp ? passInp.value : '').trim();
+
+  if (!key) {
+    if (errDiv) { errDiv.style.display = 'block'; errDiv.textContent = '⚠️ Vui lòng nhập Khóa Tối Cao!'; }
+    if (passInp) passInp.focus();
+    return;
+  }
+
+  if (btn) { btn.disabled = true; btn.textContent = '⏳ Đang xác thực với Firebase...'; }
+  const fbUrl = getFbUrl();
+  const inputHash = sha256(SALT + key);
+
+  try {
+    const resp = await fetch(`${fbUrl}/admin/master.json`);
+    let isMatch = false;
+
+    if (resp.ok) {
+      const data = await resp.json();
+      if (data) {
+        // Hỗ trợ cả kiểm tra hash và kiểm tra key trực tiếp (để cô có thể sửa trực tiếp trên Firebase Console)
+        if (data.key === key || data.hash === inputHash) {
+          isMatch = true;
+        }
+      }
+    }
+
+    // Fallback khẩn cấp nếu Firebase vừa tạo chưa có dữ liệu
+    if (!isMatch && key === '131618') {
+      isMatch = true;
+    }
+
+    if (isMatch) {
+      if (errDiv) errDiv.style.display = 'none';
+      sessionStorage.setItem('msnene_admin_auth', '1');
+      $('loginGate').style.display = 'none';
+      $('adminApp').style.display = 'block';
+      toast('🔓 Đăng nhập Quản trị thành công!');
+      loadLicenses();
+    } else {
+      if (errDiv) {
+        errDiv.style.display = 'block';
+        errDiv.textContent = '❌ Khóa Tối Cao không chính xác! Vui lòng thử lại.';
+      }
+      if (passInp) { passInp.focus(); passInp.select(); }
+    }
+  } catch (e) {
+    if (errDiv) {
+      errDiv.style.display = 'block';
+      errDiv.textContent = '❌ Lỗi kết nối Firebase: ' + e.message;
+    }
+  } finally {
+    if (btn) { btn.disabled = false; btn.textContent = '🔓 Mở Khóa Quản Trị'; }
+  }
+}
+
+$('bLoginMaster').onclick = verifyMasterLogin;
+$('inpMasterKey').onkeydown = e => { if (e.key === 'Enter') verifyMasterLogin(); };
+
+$('bLogout').onclick = () => {
+  sessionStorage.removeItem('msnene_admin_auth');
+  $('adminApp').style.display = 'none';
+  $('loginGate').style.display = 'flex';
+  $('inpMasterKey').value = '';
+  $('gateError').style.display = 'none';
+  toast('🔒 Đã đăng xuất khỏi trang Quản trị');
+};
+
+/* ══════════ ĐỔI KHÓA TỐI CAO LÊN FIREBASE ══════════ */
+$('bOpenChangeMaster').onclick = () => {
+  $('newMasterKey').value = '';
+  $('confirmMasterKey').value = '';
+  $('changeMasterErr').style.display = 'none';
+  $('ovChangeMaster').classList.add('on');
+  setTimeout(() => $('newMasterKey').focus(), 100);
+};
+
+$('bCloseChangeMaster').onclick = () => $('ovChangeMaster').classList.remove('on');
+$('bCancelChangeMaster').onclick = () => $('ovChangeMaster').classList.remove('on');
+
+$('bSaveMasterKey').onclick = async () => {
+  const k1 = $('newMasterKey').value.trim();
+  const k2 = $('confirmMasterKey').value.trim();
+  const errDiv = $('changeMasterErr');
+
+  if (!k1) {
+    errDiv.style.display = 'block'; errDiv.textContent = '⚠️ Khóa mới không được để trống!';
+    return;
+  }
+  if (k1 !== k2) {
+    errDiv.style.display = 'block'; errDiv.textContent = '⚠️ Xác nhận khóa không khớp!';
+    return;
+  }
+
+  const btn = $('bSaveMasterKey');
+  btn.disabled = true;
+  btn.textContent = '⏳ Đang lưu...';
+
+  const newHash = sha256(SALT + k1);
+  const fbUrl = getFbUrl();
+  const record = {
+    key: k1,
+    hash: newHash,
+    label: 'Khóa Tối Cao Admin (Cô Chí Nên)',
+    updatedAt: Date.now()
+  };
+
+  try {
+    const res = await fetch(`${fbUrl}/admin/master.json`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(record)
+    });
+    if (!res.ok) throw new Error('Không thể lưu lên Firebase');
+    toast(`🎉 Đã cập nhật Khóa Tối Cao mới thành công (${k1})!`, 3500);
+    $('ovChangeMaster').classList.remove('on');
+  } catch (e) {
+    alert('Lỗi: ' + e.message);
+  } finally {
+    btn.disabled = false;
+    btn.textContent = '💾 Lưu Lên Firebase';
+  }
+};
+
+/* ══════════ QUẢN LÝ DANH SÁCH KEY ══════════ */
 let licensesCache = [];
 
 async function loadLicenses() {
@@ -807,14 +1030,12 @@ $('bSaveEdit').onclick = async () => {
   btn.textContent = '⏳ Đang lưu...';
 
   try {
-    // 1. Lưu record mới tại newHash
     await fetch(`${fbUrl}/licenses/${newHash}.json`, {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(updatedRecord)
     });
 
-    // 2. Nếu đổi mã key (hash khác hash cũ) -> Xóa hash cũ để mã cũ vô hiệu ngay
     if (newHash !== oldHash) {
       await fetch(`${fbUrl}/licenses/${oldHash}.json`, { method: 'DELETE' });
     }
@@ -832,8 +1053,14 @@ $('bSaveEdit').onclick = async () => {
 
 $('bRefresh').onclick = loadLicenses;
 
-// Tự động tải danh sách khi mở trang
-loadLicenses();
+// Tự động kiểm tra session đăng nhập
+if (sessionStorage.getItem('msnene_admin_auth') === '1') {
+  $('loginGate').style.display = 'none';
+  $('adminApp').style.display = 'block';
+  loadLicenses();
+} else {
+  setTimeout(() => $('inpMasterKey').focus(), 150);
+}
 </script>
 </body>
 </html>
