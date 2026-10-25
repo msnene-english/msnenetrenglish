@@ -1,0 +1,529 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Ms Nene English – Quản Trị Bản Quyền &amp; Cấp Key</title>
+<link rel="stylesheet" href="assets/fonts.css">
+<link rel="stylesheet" href="assets/game.css">
+<script src="assets/shield.js?v=2.2"></script>
+<script src="assets/config.js?v=2.2"></script>
+<style>
+:root{--p:#0284c7;--p-dark:#0369a1;--bg:#f8fafc;--card:#ffffff;--txt:#1e293b;--muted:#64748b;--border:#e2e8f0;--ok:#16a34a;--err:#dc2626}
+body{background:var(--bg);color:var(--txt);font-family:'Nunito',system-ui,-apple-system,sans-serif;margin:0;padding:20px;min-height:100vh}
+.admin-wrap{max-width:960px;margin:0 auto}
+.header{display:flex;justify-content:space-between;align-items:center;background:var(--card);padding:18px 24px;border-radius:18px;border:1px solid var(--border);box-shadow:0 4px 15px rgba(0,0,0,0.04);margin-bottom:20px}
+.brand{display:flex;align-items:center;gap:12px}
+.brand-icon{font-size:32px;background:#e0f2fe;width:52px;height:52px;display:flex;align-items:center;justify-content:center;border-radius:14px}
+.brand-title{font-size:20px;font-weight:900;color:var(--p-dark)}
+.brand-sub{font-size:12px;color:var(--muted);margin-top:2px}
+.card{background:var(--card);border:1px solid var(--border);border-radius:18px;padding:20px;box-shadow:0 4px 15px rgba(0,0,0,0.04);margin-bottom:20px}
+.stats-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:14px;margin-bottom:20px}
+.stat-box{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:16px;text-align:center;box-shadow:0 2px 8px rgba(0,0,0,0.03)}
+.stat-box.green{background:#f0fdf4;border-color:#bbf7d0}
+.stat-box.blue{background:#eff6ff;border-color:#bfdbfe}
+.stat-box.red{background:#fef2f2;border-color:#fecaca}
+.stat-label{font-size:12px;font-weight:800;letter-spacing:0.5px;margin-bottom:4px}
+.stat-box.green .stat-label{color:#15803d}
+.stat-box.blue .stat-label{color:#1d4ed8}
+.stat-box.red .stat-label{color:#b91c1c}
+.stat-val{font-size:28px;font-weight:900}
+.stat-box.green .stat-val{color:#16a34a}
+.stat-box.blue .stat-val{color:#2563eb}
+.stat-box.red .stat-val{color:#dc2626}
+.inp{width:100%;box-sizing:border-box;padding:10px 14px;border:1.5px solid var(--border);border-radius:12px;font-size:14px;font-family:inherit;outline:none;transition:all .2s}
+.inp:focus{border-color:var(--p);box-shadow:0 0 0 3px rgba(2,132,199,0.15)}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;padding:9px 18px;border-radius:12px;font-size:14px;font-weight:800;font-family:inherit;cursor:pointer;border:none;transition:all .15s;text-decoration:none}
+.btn:hover{transform:translateY(-1px);filter:brightness(1.05)}
+.btn:active{transform:translateY(0)}
+.btn:disabled{opacity:.6;cursor:not-allowed;transform:none}
+.btn.b{background:var(--p);color:#fff}
+.btn.g{background:var(--ok);color:#fff}
+.btn.r{background:var(--err);color:#fff}
+.btn.w{background:#fff;border:1.5px solid var(--border);color:var(--txt)}
+.btn.w:hover{background:#f1f5f9}
+.table-wrap{overflow-x:auto;border:1px solid var(--border);border-radius:14px;background:#fff}
+table{width:100%;border-collapse:collapse;font-size:13px;text-align:left}
+th{background:#f8fafc;padding:12px 14px;font-weight:800;color:#475569;border-bottom:1.5px solid var(--border)}
+td{padding:12px 14px;border-bottom:1px solid #f1f5f9;vertical-align:middle}
+tr:last-child td{border-bottom:none}
+.key-badge{background:#f1f5f9;padding:4px 10px;border-radius:8px;font-weight:900;font-family:monospace;font-size:15px;letter-spacing:1px;color:#0f172a;border:1px solid #cbd5e1;display:inline-block}
+.exp-badge{display:inline-block;padding:3px 10px;border-radius:8px;font-size:12px;font-weight:700}
+.exp-forever{background:#dcfce7;color:#15803d}
+.exp-active{background:#e0f2fe;color:#0369a1}
+.exp-warning{background:#fef3c7;color:#b45309}
+.exp-expired{background:#fee2e2;color:#b91c1c}
+.status-badge{font-weight:800;font-size:12px}
+.ov{position:fixed;inset:0;background:rgba(15,23,42,0.6);backdrop-filter:blur(3px);display:none;align-items:center;justify-content:center;z-index:9999;padding:16px}
+.ov.on{display:flex}
+.toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:#0f172a;color:#fff;padding:12px 24px;border-radius:30px;font-weight:700;font-size:14px;box-shadow:0 10px 25px rgba(0,0,0,0.3);z-index:10000;display:none}
+</style>
+</head>
+<body>
+
+<div class="admin-wrap">
+ <!-- HEADER -->
+ <div class="header">
+  <div class="brand">
+   <div class="brand-icon">🔐</div>
+   <div>
+    <div class="brand-title">Ms Nene English – Quản Trị Bản Quyền</div>
+    <div class="brand-sub">Hệ thống cấp khóa, đổi khóa và thu hồi bản quyền trực tiếp qua Firebase</div>
+   </div>
+  </div>
+  <div style="display:flex;gap:10px;align-items:center">
+   <a href="host.html" class="btn w" target="_blank" title="Mở trang Phòng Game của Cô">🎮 Trang Host Game</a>
+   <button type="button" class="btn w" id="bRefresh" title="Tải lại danh sách key từ Firebase">🔄 Làm mới</button>
+  </div>
+ </div>
+
+ <!-- STATS -->
+ <div class="stats-grid">
+  <div class="stat-box green">
+   <div class="stat-label">🟢 ĐANG HOẠT ĐỘNG</div>
+   <div class="stat-val" id="statActive">0</div>
+  </div>
+  <div class="stat-box blue">
+   <div class="stat-label">🔵 TỔNG SỐ KEY TRÊN FIREBASE</div>
+   <div class="stat-val" id="statTotal">0</div>
+  </div>
+  <div class="stat-box red">
+   <div class="stat-label">🔴 ĐÃ KHÓA / HẾT HẠN</div>
+   <div class="stat-val" id="statInactive">0</div>
+  </div>
+ </div>
+
+ <!-- FORM THÊM KEY MỚI -->
+ <div class="card">
+  <div style="font-size:16px;font-weight:900;color:var(--txt);margin-bottom:14px;display:flex;align-items:center;gap:8px">
+   ➕ Cấp Mã Kích Hoạt Mới
+  </div>
+  <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px;align-items:end">
+   <div>
+    <label style="font-size:12px;font-weight:700;color:var(--muted);display:block;margin-bottom:4px">Mã Key (tùy ý đặt hoặc bấm Tạo):</label>
+    <div style="display:flex;gap:6px">
+     <input id="inpKey" class="inp" placeholder="Nhập mã (VD: 1010, NENE...)" style="font-weight:800;letter-spacing:1px">
+     <button type="button" class="btn w" id="bGenKey" title="Tự động sinh mã ngẫu nhiên" style="padding:8px 12px">🎲 Tạo</button>
+    </div>
+   </div>
+   <div>
+    <label style="font-size:12px;font-weight:700;color:var(--muted);display:block;margin-bottom:4px">Tên giáo viên / Ghi chú:</label>
+    <input id="inpOwner" class="inp" placeholder="VD: Cô Mai - THCS Chu Văn An">
+   </div>
+   <div>
+    <label style="font-size:12px;font-weight:700;color:var(--muted);display:block;margin-bottom:4px">Thời hạn sử dụng:</label>
+    <select id="inpDuration" class="inp">
+     <option value="forever">Vĩnh viễn (Không giới hạn)</option>
+     <option value="1m">1 Tháng (30 ngày)</option>
+     <option value="3m">3 Tháng (90 ngày)</option>
+     <option value="6m">1 Học kỳ (180 ngày)</option>
+     <option value="1y">1 Năm học (365 ngày)</option>
+    </select>
+   </div>
+   <div>
+    <button type="button" class="btn g" id="bCreateKey" style="width:100%;padding:11px">
+     💾 Thêm &amp; Kích Hoạt Key
+    </button>
+   </div>
+  </div>
+ </div>
+
+ <!-- DANH SÁCH KEY -->
+ <div class="card" style="padding:0;overflow:hidden">
+  <div style="padding:16px 20px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center">
+   <div style="font-size:16px;font-weight:900;color:var(--txt)">📋 Danh Sách Tất Cả Mã Key Trên Firebase</div>
+   <div style="font-size:12px;color:var(--muted)">Đồng bộ tự động thời gian thực</div>
+  </div>
+  <div class="table-wrap" style="border:none;border-radius:0">
+   <table>
+    <thead>
+     <tr>
+      <th style="width:160px">Mã Key</th>
+      <th>Người dùng / Ghi chú</th>
+      <th style="width:180px">Hạn sử dụng</th>
+      <th style="width:130px">Trạng thái</th>
+      <th style="width:260px;text-align:center">Thao tác</th>
+     </tr>
+    </thead>
+    <tbody id="tbodyLicenses">
+     <tr><td colspan="5" style="text-align:center;padding:30px;color:var(--muted)">⏳ Đang tải dữ liệu từ máy chủ Firebase...</td></tr>
+    </tbody>
+   </table>
+  </div>
+ </div>
+</div>
+
+<!-- MODAL SỬA MÃ KEY -->
+<div class="ov" id="ovEdit">
+ <div class="card" style="max-width:480px;width:94%;border-top:6px solid var(--p);box-shadow:0 20px 45px rgba(0,0,0,0.3)">
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
+   <div style="font-size:18px;font-weight:900;color:var(--p-dark)">✏️ Chỉnh Sửa / Đổi Mã Key</div>
+   <button type="button" class="btn w" id="bCloseEdit" style="padding:4px 10px">✕</button>
+  </div>
+  <input type="hidden" id="editOldHash">
+  <div style="margin-bottom:14px">
+   <label style="font-size:12px;font-weight:700;color:var(--muted);display:block;margin-bottom:4px">Mã Key mới (Đổi từ mã cũ):</label>
+   <input id="editNewKey" class="inp" style="font-weight:800;font-size:16px;letter-spacing:1px">
+   <div style="font-size:11px;color:#d97706;margin-top:4px">⚠️ Khi đổi mã key, mã cũ sẽ bị xóa và vô hiệu hóa ngay lập tức.</div>
+  </div>
+  <div style="margin-bottom:14px">
+   <label style="font-size:12px;font-weight:700;color:var(--muted);display:block;margin-bottom:4px">Người dùng / Ghi chú:</label>
+   <input id="editNewOwner" class="inp">
+  </div>
+  <div style="margin-bottom:20px">
+   <label style="font-size:12px;font-weight:700;color:var(--muted);display:block;margin-bottom:4px">Thời hạn:</label>
+   <select id="editNewDuration" class="inp">
+    <option value="forever">Vĩnh viễn (Không giới hạn)</option>
+    <option value="1m">1 Tháng (30 ngày từ hôm nay)</option>
+    <option value="3m">3 Tháng (90 ngày từ hôm nay)</option>
+    <option value="6m">1 Học kỳ (180 ngày từ hôm nay)</option>
+    <option value="1y">1 Năm học (365 ngày từ hôm nay)</option>
+    <option value="keep">Giữ nguyên hạn sử dụng hiện tại</option>
+   </select>
+  </div>
+  <div style="display:flex;gap:10px;justify-content:flex-end">
+   <button type="button" class="btn w" id="bCancelEdit">Hủy</button>
+   <button type="button" class="btn b" id="bSaveEdit">💾 Lưu Thay Đổi</button>
+  </div>
+ </div>
+</div>
+
+<div class="toast" id="toastBox"></div>
+
+<script>
+const SALT = 'MsNeneEnglish_Salt_2026_';
+
+function getFbUrl() {
+  return (window.GAME_CONFIG && window.GAME_CONFIG.firebase && window.GAME_CONFIG.firebase.databaseURL)
+    || 'https://game-762ed-default-rtdb.firebaseio.com';
+}
+
+function sha256(ascii) {
+  function rightRotate(value, amount) { return (value >>> amount) | (value << (32 - amount)); }
+  const mathPow = Math.pow; const maxWord = mathPow(2, 32);
+  let i, j, result = ''; const words = []; const asciiBitLength = ascii.length * 8;
+  let hash = []; const k = []; let primeCounter = 0; const isComposite = {};
+  for (let candidate = 2; primeCounter < 64; candidate++) {
+    if (!isComposite[candidate]) {
+      for (i = 0; i < 313; i += candidate) isComposite[i] = candidate;
+      hash[primeCounter] = (mathPow(candidate, .5) * maxWord) | 0;
+      k[primeCounter++] = (mathPow(candidate, 1 / 3) * maxWord) | 0;
+    }
+  }
+  hash = hash.slice(0, 8);
+  words[asciiBitLength >> 5] |= 0x80 << (24 - asciiBitLength % 32);
+  words[(((asciiBitLength + 64) >> 9) << 4) + 15] = asciiBitLength;
+  for (i = 0; i < ascii.length; i++) words[i >> 2] |= ascii.charCodeAt(i) << ((3 - i % 4) * 8);
+  for (j = 0; j < words.length; j += 16) {
+    const w = words.slice(j, j + 16); const oldHash = hash; hash = hash.slice(0, 8);
+    for (i = 0; i < 64; i++) {
+      const w15 = w[i - 15], w2 = w[i - 2];
+      const a = hash[0], e = hash[4];
+      const temp1 = hash[7] + (rightRotate(e, 6) ^ rightRotate(e, 11) ^ rightRotate(e, 25)) + ((e & hash[5]) ^ ((~e) & hash[6])) + k[i] + (w[i] = (i < 16) ? (w[i] | 0) : (w[i - 16] + (rightRotate(w15, 7) ^ rightRotate(w15, 18) ^ (w15 >>> 3)) + w[i - 7] + (rightRotate(w2, 17) ^ rightRotate(w2, 19) ^ (w2 >>> 10))) | 0);
+      const temp2 = (rightRotate(a, 2) ^ rightRotate(a, 13) ^ rightRotate(a, 22)) + ((a & hash[1]) ^ (a & hash[2]) ^ (hash[1] & hash[2]));
+      hash = [(temp1 + temp2) | 0].concat(hash); hash[4] = (hash[4] + temp1) | 0;
+    }
+    for (i = 0; i < 8; i++) hash[i] = (hash[i] + oldHash[i]) | 0;
+  }
+  for (i = 0; i < 8; i++) {
+    for (j = 3; j >= 0; j--) {
+      const b = (hash[i] >> (j * 8)) & 255;
+      result += ((b < 16) ? 0 : '') + b.toString(16);
+    }
+  }
+  return result;
+}
+
+const $ = id => document.getElementById(id);
+const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+
+let toastTimer = null;
+function toast(msg, ms = 2500) {
+  const box = $('toastBox');
+  if (!box) return;
+  box.textContent = msg;
+  box.style.display = 'block';
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => { box.style.display = 'none'; }, ms);
+}
+
+let licensesCache = [];
+
+async function loadLicenses() {
+  const tbody = $('tbodyLicenses');
+  tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;padding:30px;color:var(--muted)">⏳ Đang đồng bộ danh sách key từ máy chủ Firebase...</td></tr>';
+  const fbUrl = getFbUrl();
+  try {
+    const resp = await fetch(`${fbUrl}/licenses.json`);
+    if (!resp.ok) throw new Error('Không thể kết nối Firebase');
+    const data = await resp.json();
+    if (!data) {
+      licensesCache = [];
+      renderTable([]);
+      return;
+    }
+    const list = Object.keys(data).map(h => ({ hash: h, ...data[h] }));
+    list.sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
+    licensesCache = list;
+    renderTable(list);
+  } catch (e) {
+    tbody.innerHTML = `<tr><td colspan="5" style="text-align:center;padding:30px;color:var(--err)">❌ Lỗi kết nối Firebase: ${esc(e.message)}</td></tr>`;
+  }
+}
+
+function renderTable(list) {
+  const tbody = $('tbodyLicenses');
+  const now = Date.now();
+  let act = 0, inact = 0;
+
+  list.forEach(item => {
+    const isAct = item.status === 'active';
+    const isExp = item.expiresAt && item.expiresAt > 0 && item.expiresAt < now;
+    if (isAct && !isExp) act++;
+    else inact++;
+  });
+
+  $('statActive').textContent = act;
+  $('statTotal').textContent = list.length;
+  $('statInactive').textContent = inact;
+
+  if (list.length === 0) {
+    tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;padding:30px;color:var(--muted)">Kho bản quyền trống. Hãy tạo mã key đầu tiên ở trên!</td></tr>';
+    return;
+  }
+
+  let html = '';
+  list.forEach(item => {
+    const isAct = item.status === 'active';
+    const isExp = item.expiresAt && item.expiresAt > 0 && item.expiresAt < now;
+    const keyVal = item.key || 'MÃ BÍ MẬT';
+
+    let expBadge = '';
+    if (!item.expiresAt || item.expiresAt === 0) {
+      expBadge = '<span class="exp-badge exp-forever">Vĩnh viễn</span>';
+    } else if (isExp) {
+      const dStr = new Date(item.expiresAt).toLocaleDateString('vi-VN');
+      expBadge = `<span class="exp-badge exp-expired">Đã hết hạn (${dStr})</span>`;
+    } else {
+      const dStr = new Date(item.expiresAt).toLocaleDateString('vi-VN');
+      const daysLeft = Math.ceil((item.expiresAt - now) / (24 * 3600 * 1000));
+      const cls = daysLeft <= 7 ? 'exp-warning' : 'exp-active';
+      expBadge = `<span class="exp-badge ${cls}">Còn ${daysLeft} ngày (${dStr})</span>`;
+    }
+
+    const stHtml = isAct
+      ? '<span class="status-badge" style="color:var(--ok)">🟢 Hoạt động</span>'
+      : '<span class="status-badge" style="color:var(--err)">🔴 Đã khóa</span>';
+
+    html += `
+      <tr style="background:${!isAct || isExp ? '#fffafa' : '#fff'}">
+        <td>
+          <span class="key-badge">${esc(keyVal)}</span>
+          <button type="button" class="btn w" style="padding:2px 6px;font-size:11px;margin-left:4px" onclick="copyText('${esc(keyVal)}')" title="Sao chép mã key">📋</button>
+        </td>
+        <td style="font-weight:700">
+          ${esc(item.owner || '—')}
+          ${item.note ? `<div style="font-size:11px;color:var(--muted)">${esc(item.note)}</div>` : ''}
+        </td>
+        <td>${expBadge}</td>
+        <td>${stHtml}</td>
+        <td style="text-align:center">
+          <div style="display:flex;gap:6px;justify-content:center;flex-wrap:wrap">
+            <button type="button" class="btn b" style="padding:4px 8px;font-size:12px" onclick="sendZalo('${esc(keyVal)}', '${esc(item.owner || '')}', ${item.expiresAt || 0})" title="Sao chép tin nhắn Zalo kèm mã và hướng dẫn">
+              📲 Zalo
+            </button>
+            <button type="button" class="btn w" style="padding:4px 8px;font-size:12px;color:var(--p-dark)" onclick="openEditModal('${item.hash}')" title="Đổi mã key hoặc sửa thông tin">
+              ✏️ Sửa
+            </button>
+            <button type="button" class="btn w" style="padding:4px 8px;font-size:12px;color:${isAct ? '#d97706' : '#16a34a'}" onclick="toggleStatus('${item.hash}', '${item.status}')" title="${isAct ? 'Tạm khóa key này' : 'Mở lại key này'}">
+              ${isAct ? '⏸ Khóa' : '▶ Mở'}
+            </button>
+            <button type="button" class="btn r" style="padding:4px 8px;font-size:12px" onclick="deleteKey('${item.hash}', '${esc(keyVal)}', '${esc(item.owner || '')}')" title="Xóa vĩnh viễn khỏi Firebase">
+              🗑 Xóa
+            </button>
+          </div>
+        </td>
+      </tr>
+    `;
+  });
+  tbody.innerHTML = html;
+}
+
+function copyText(txt) {
+  navigator.clipboard.writeText(txt);
+  toast(`📋 Đã sao chép: ${txt}`);
+}
+
+function sendZalo(key, owner, expiresAt) {
+  let expText = 'Vĩnh viễn';
+  if (expiresAt && expiresAt > 0) {
+    expText = `Đến ngày ${new Date(expiresAt).toLocaleDateString('vi-VN')}`;
+  }
+  const msg = `Kính gửi ${owner || 'Cô'},\nMs Nene English xin gửi mã kích hoạt Bản quyền Pro Trọn bộ 10 Game & Phòng thi:\n\n🔑 MÃ KÍCH HOẠT: ${key}\n⏰ Thời hạn: ${expText}\n\n👉 Hướng dẫn kích hoạt:\n1. Mở trang quản trị game.\n2. Bấm vào biểu tượng ổ khóa bất kỳ hoặc nút "Kích hoạt bản quyền Pro".\n3. Nhập mã ${key} và bấm Kích hoạt.\n\nChúc cô có những giờ dạy vui vẻ và hiệu quả!`;
+  navigator.clipboard.writeText(msg);
+  toast('📋 Đã sao chép tin nhắn Zalo mẫu kèm mã kích hoạt!');
+}
+
+function calcExpires(dur) {
+  const now = Date.now();
+  if (dur === '1m') return now + 30 * 24 * 3600 * 1000;
+  if (dur === '3m') return now + 90 * 24 * 3600 * 1000;
+  if (dur === '6m') return now + 180 * 24 * 3600 * 1000;
+  if (dur === '1y') return now + 365 * 24 * 3600 * 1000;
+  return 0; // forever
+}
+
+$('bGenKey').onclick = () => {
+  const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+  let rand = '';
+  for (let i = 0; i < 4; i++) rand += chars.charAt(Math.floor(Math.random() * chars.length));
+  $('inpKey').value = 'NENE-' + rand;
+};
+
+$('bCreateKey').onclick = async () => {
+  const key = $('inpKey').value.trim();
+  const owner = $('inpOwner').value.trim();
+  const dur = $('inpDuration').value;
+  const btn = $('bCreateKey');
+
+  if (!key) { alert('Vui lòng nhập mã key hoặc bấm "🎲 Tạo" để sinh mã!'); $('inpKey').focus(); return; }
+
+  const hash = sha256(SALT + key);
+  const fbUrl = getFbUrl();
+  const record = {
+    key: key,
+    hash: hash,
+    owner: owner || 'Giáo viên Ms Nene',
+    duration: dur,
+    expiresAt: calcExpires(dur),
+    status: 'active',
+    createdAt: Date.now()
+  };
+
+  btn.disabled = true;
+  btn.textContent = '⏳ Đang lưu Firebase...';
+  try {
+    const res = await fetch(`${fbUrl}/licenses/${hash}.json`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(record)
+    });
+    if (!res.ok) throw new Error('Lỗi máy chủ Firebase');
+    toast(`🎉 Đã thêm mã "${key}" lên Firebase thành công!`);
+    $('inpKey').value = '';
+    $('inpOwner').value = '';
+    loadLicenses();
+  } catch (e) {
+    alert('Lỗi: ' + e.message);
+  } finally {
+    btn.disabled = false;
+    btn.textContent = '💾 Thêm & Kích Hoạt Key';
+  }
+};
+
+async function toggleStatus(hash, curStatus) {
+  const next = curStatus === 'active' ? 'disabled' : 'active';
+  const fbUrl = getFbUrl();
+  try {
+    await fetch(`${fbUrl}/licenses/${hash}/status.json`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(next)
+    });
+    toast(next === 'active' ? '🟢 Đã kích hoạt lại key!' : '⏸ Đã tạm khóa key!');
+    loadLicenses();
+  } catch (e) {
+    alert('Lỗi: ' + e.message);
+  }
+}
+
+async function deleteKey(hash, key, owner) {
+  if (!confirm(`XÓA VĨNH VIỄN mã key "${key}" của [${owner}] khỏi Firebase?\n\nNgười này sẽ bị mất bản quyền ngay lập tức!`)) return;
+  const fbUrl = getFbUrl();
+  try {
+    await fetch(`${fbUrl}/licenses/${hash}.json`, { method: 'DELETE' });
+    toast(`🗑 Đã xóa mã key "${key}" thành công!`);
+    loadLicenses();
+  } catch (e) {
+    alert('Lỗi: ' + e.message);
+  }
+}
+
+function openEditModal(hash) {
+  const item = licensesCache.find(x => x.hash === hash);
+  if (!item) return;
+  $('editOldHash').value = hash;
+  $('editNewKey').value = item.key || '';
+  $('editNewOwner').value = item.owner || '';
+  $('editNewDuration').value = 'keep';
+  $('ovEdit').classList.add('on');
+}
+
+$('bCloseEdit').onclick = () => $('ovEdit').classList.remove('on');
+$('bCancelEdit').onclick = () => $('ovEdit').classList.remove('on');
+
+$('bSaveEdit').onclick = async () => {
+  const oldHash = $('editOldHash').value;
+  const oldItem = licensesCache.find(x => x.hash === oldHash);
+  if (!oldItem) return;
+
+  const newKey = $('editNewKey').value.trim();
+  const newOwner = $('editNewOwner').value.trim();
+  const dur = $('editNewDuration').value;
+
+  if (!newKey) { alert('Mã key không được để trống!'); return; }
+
+  const newHash = sha256(SALT + newKey);
+  let expiresAt = oldItem.expiresAt || 0;
+  let finalDur = oldItem.duration || 'forever';
+  if (dur !== 'keep') {
+    finalDur = dur;
+    expiresAt = calcExpires(dur);
+  }
+
+  const fbUrl = getFbUrl();
+  const updatedRecord = {
+    ...oldItem,
+    key: newKey,
+    hash: newHash,
+    owner: newOwner || oldItem.owner || 'Giáo viên Ms Nene',
+    duration: finalDur,
+    expiresAt: expiresAt,
+    updatedAt: Date.now()
+  };
+
+  const btn = $('bSaveEdit');
+  btn.disabled = true;
+  btn.textContent = '⏳ Đang lưu...';
+
+  try {
+    // 1. Lưu record mới tại newHash
+    await fetch(`${fbUrl}/licenses/${newHash}.json`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(updatedRecord)
+    });
+
+    // 2. Nếu đổi mã key (hash khác hash cũ) -> Xóa hash cũ để mã cũ vô hiệu ngay
+    if (newHash !== oldHash) {
+      await fetch(`${fbUrl}/licenses/${oldHash}.json`, { method: 'DELETE' });
+    }
+
+    toast(`🎉 Đã cập nhật key thành công (Mã mới: ${newKey})!`);
+    $('ovEdit').classList.remove('on');
+    loadLicenses();
+  } catch (e) {
+    alert('Lỗi: ' + e.message);
+  } finally {
+    btn.disabled = false;
+    btn.textContent = '💾 Lưu Thay Đổi';
+  }
+};
+
+$('bRefresh').onclick = loadLicenses;
+
+// Tự động tải danh sách khi mở trang
+loadLicenses();
+</script>
+</body>
+</html>

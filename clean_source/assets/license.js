@@ -1,14 +1,12 @@
 /* license.js — Hệ thống Bản quyền Đa Key Firebase — Ms Nene English (Cô Chí Nên)
    • 2 Game miễn phí: 🧗 Leo núi (climb) & 🍄 Nấm Mario (brick).
-   • Toàn bộ các trò chơi khác & Phòng thi được bảo vệ bằng mã hóa chuẩn mật mã (Cryptographic Hash).
-   • Quản lý từ xa (Remote License Control) qua Firebase: Thêm key, Xóa key, Khóa tạm thời, Cài đặt thời hạn.
-   • Xác thực định kỳ ngầm (Silent Re-verification) & Hỗ trợ sử dụng Offline an toàn. */
+   • Toàn bộ các trò chơi khác & Phòng thi được bảo vệ và quản lý từ xa qua Firebase Realtime Database.
+   • KHÔNG lưu cứng bất kỳ mật mã nào trong mã nguồn. Mọi mã khóa được điều khiển 100% từ xa qua trang admin.html.
+   • Hỗ trợ xác thực ngầm (Silent Re-verification) & Tự động khóa lại khi Quản trị viên xóa hoặc đổi key trên Firebase. */
 
 window.LIC = (function () {
   const FREE_MODES = ['climb', 'brick'];
   const STORAGE_KEY = 'msnene_game_unlock_token';
-  // Chuỗi băm bảo mật SHA-256 có Salt cho Master Key (Không lưu mật khẩu dạng bản rõ / plaintext)
-  const AUTH_HASH = '6fbaf86f2fe6ebfba509d908c8c439c723f037c6708169fad70f502dfb2ce0f2';
   const SALT = 'MsNeneEnglish_Salt_2026_';
 
   function getFirebaseUrl() {
@@ -80,15 +78,6 @@ window.LIC = (function () {
     try {
       const saved = localStorage.getItem(STORAGE_KEY);
       if (!saved) return null;
-      if (saved === AUTH_HASH) {
-        return {
-          hash: AUTH_HASH,
-          owner: 'Cô Chí Nên (Ms Nene)',
-          duration: 'forever',
-          expiresAt: 0,
-          isMaster: true
-        };
-      }
       const parsed = JSON.parse(saved);
       if (parsed && parsed.hash) return parsed;
       return null;
@@ -117,7 +106,7 @@ window.LIC = (function () {
     const hash = sha256(SALT + cleanKey);
     const fbUrl = getFirebaseUrl();
 
-    // 1. Kiểm tra trực tuyến trên máy chủ Firebase
+    // Đối chiếu trực tiếp với kho key trên Firebase
     try {
       const resp = await fetch(`${fbUrl}/licenses/${hash}.json`);
       if (resp.ok) {
@@ -134,7 +123,6 @@ window.LIC = (function () {
           // Lưu token vào LocalStorage
           const token = {
             hash: hash,
-            keyMasked: cleanKey.length > 4 ? cleanKey.slice(0, 2) + '***' + cleanKey.slice(-2) : '****',
             owner: data.owner || 'Giáo viên Ms Nene',
             duration: data.duration || 'forever',
             expiresAt: data.expiresAt || 0,
@@ -145,7 +133,7 @@ window.LIC = (function () {
             localStorage.setItem(STORAGE_KEY, JSON.stringify(token));
           } catch (e) {}
 
-          // Cập nhật số liệu sử dụng ngầm (Fire & Forget)
+          // Cập nhật số liệu sử dụng ngầm
           fetch(`${fbUrl}/licenses/${hash}/lastUsedAt.json`, {
             method: 'PUT',
             headers: { 'Content-Type': 'application/json' },
@@ -165,24 +153,7 @@ window.LIC = (function () {
       }
     } catch (e) {
       console.warn('Firebase license check network error:', e);
-    }
-
-    // 2. Fallback ngoại tuyến / Cứu hộ khẩn cấp cho Master Key
-    if (hash === AUTH_HASH) {
-      const token = {
-        hash: AUTH_HASH,
-        keyMasked: '****',
-        owner: 'Cô Chí Nên (Master Admin)',
-        duration: 'forever',
-        expiresAt: 0,
-        activatedAt: Date.now(),
-        lastVerified: Date.now(),
-        isMaster: true
-      };
-      try {
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(token));
-      } catch (e) {}
-      return { ok: true, msg: 'Kích hoạt thành công bản quyền Master vĩnh viễn!', token };
+      return { ok: false, msg: 'Lỗi kết nối máy chủ bản quyền! Vui lòng kiểm tra kết nối mạng.' };
     }
 
     return { ok: false, msg: 'Mã kích hoạt không tồn tại hoặc đã bị xóa khỏi hệ thống!' };
@@ -191,7 +162,7 @@ window.LIC = (function () {
   // Xác thực lại ngầm (Silent Re-verification)
   async function syncRemote(onRevoked) {
     const token = getLocalToken();
-    if (!token || token.isMaster || token.hash === AUTH_HASH) return;
+    if (!token || !token.hash) return;
 
     try {
       const fbUrl = getFirebaseUrl();
@@ -199,6 +170,7 @@ window.LIC = (function () {
       if (!resp.ok) return;
       const data = await resp.json();
 
+      // Nếu Quản trị viên đã XÓA key hoặc TẠM KHÓA hoặc key HẾT HẠN trên Firebase
       if (!data || data.status === 'disabled' || (data.expiresAt && data.expiresAt > 0 && data.expiresAt < Date.now())) {
         lock();
         if (typeof onRevoked === 'function') {
@@ -215,13 +187,8 @@ window.LIC = (function () {
         }
       }
     } catch (e) {
-      // Khi mất mạng tạm thời: giữ nguyên trạng thái nếu chưa hết hạn
+      // Khi mất mạng: Giữ nguyên quyền sử dụng nếu chưa hết hạn (Offline Grace Period)
     }
-  }
-
-  function verifyAdmin(key) {
-    const cleanKey = String(key || '').trim();
-    return cleanKey === '0000' || sha256(SALT + cleanKey) === AUTH_HASH;
   }
 
   function lock() {
@@ -261,73 +228,6 @@ window.LIC = (function () {
     };
   }
 
-  /* ══════════ ADMIN LICENSE MANAGEMENT API (FIREBASE CRUD) ══════════ */
-  async function adminListLicenses() {
-    const fbUrl = getFirebaseUrl();
-    const resp = await fetch(`${fbUrl}/licenses.json`);
-    if (!resp.ok) throw new Error('Không thể kết nối Firebase');
-    const data = await resp.json();
-    if (!data) return [];
-    const list = Object.keys(data).map(h => ({
-      hash: h,
-      ...data[h]
-    }));
-    list.sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
-    return list;
-  }
-
-  async function adminCreateLicense({ key, owner, duration }) {
-    const cleanKey = String(key || '').trim();
-    if (!cleanKey) throw new Error('Vui lòng nhập mã kích hoạt!');
-    const hash = sha256(SALT + cleanKey);
-    const now = Date.now();
-    let expiresAt = 0;
-    if (duration === '1m') expiresAt = now + 30 * 24 * 3600 * 1000;
-    else if (duration === '3m') expiresAt = now + 90 * 24 * 3600 * 1000;
-    else if (duration === '6m') expiresAt = now + 180 * 24 * 3600 * 1000;
-    else if (duration === '1y') expiresAt = now + 365 * 24 * 3600 * 1000;
-
-    const record = {
-      key: cleanKey,
-      hash: hash,
-      owner: String(owner || '').trim() || 'Giáo viên Ms Nene',
-      duration: duration || 'forever',
-      expiresAt: expiresAt,
-      status: 'active',
-      createdAt: now
-    };
-
-    const fbUrl = getFirebaseUrl();
-    const resp = await fetch(`${fbUrl}/licenses/${hash}.json`, {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(record)
-    });
-    if (!resp.ok) throw new Error('Lỗi khi lưu key lên máy chủ Firebase');
-    return record;
-  }
-
-  async function adminToggleLicense(hash, currentStatus) {
-    const newStatus = currentStatus === 'active' ? 'disabled' : 'active';
-    const fbUrl = getFirebaseUrl();
-    const resp = await fetch(`${fbUrl}/licenses/${hash}/status.json`, {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(newStatus)
-    });
-    if (!resp.ok) throw new Error('Lỗi khi cập nhật trạng thái key');
-    return newStatus;
-  }
-
-  async function adminDeleteLicense(hash) {
-    const fbUrl = getFirebaseUrl();
-    const resp = await fetch(`${fbUrl}/licenses/${hash}.json`, {
-      method: 'DELETE'
-    });
-    if (!resp.ok) throw new Error('Lỗi khi xóa key khỏi Firebase');
-    return true;
-  }
-
   const paid = () => isUnlocked();
 
   return {
@@ -336,14 +236,9 @@ window.LIC = (function () {
     isUnlocked,
     verify,
     syncRemote,
-    verifyAdmin,
     lock,
     allowed,
     current,
-    paid,
-    adminListLicenses,
-    adminCreateLicense,
-    adminToggleLicense,
-    adminDeleteLicense
+    paid
   };
 })();
