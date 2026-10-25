@@ -5,114 +5,422 @@
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Ms Nene English – Quản Trị Bản Quyền &amp; Cấp Key</title>
 <link rel="stylesheet" href="assets/fonts.css">
-<link rel="stylesheet" href="assets/game.css">
 <script src="assets/shield.js?v=2.2"></script>
 <script src="assets/config.js?v=2.2"></script>
 <style>
-:root{--p:#0284c7;--p-dark:#0369a1;--bg:#f8fafc;--card:#ffffff;--txt:#1e293b;--muted:#64748b;--border:#e2e8f0;--ok:#16a34a;--err:#dc2626}
-body{background:var(--bg);color:var(--txt);font-family:'Nunito',system-ui,-apple-system,sans-serif;margin:0;padding:20px;min-height:100vh}
-.admin-wrap{max-width:960px;margin:0 auto}
-.header{display:flex;justify-content:space-between;align-items:center;background:var(--card);padding:18px 24px;border-radius:18px;border:1px solid var(--border);box-shadow:0 4px 15px rgba(0,0,0,0.04);margin-bottom:20px}
-.brand{display:flex;align-items:center;gap:12px}
-.brand-icon{font-size:32px;background:#e0f2fe;width:52px;height:52px;display:flex;align-items:center;justify-content:center;border-radius:14px}
-.brand-title{font-size:20px;font-weight:900;color:var(--p-dark)}
-.brand-sub{font-size:12px;color:var(--muted);margin-top:2px}
-.card{background:var(--card);border:1px solid var(--border);border-radius:18px;padding:20px;box-shadow:0 4px 15px rgba(0,0,0,0.04);margin-bottom:20px}
-.stats-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:14px;margin-bottom:20px}
-.stat-box{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:16px;text-align:center;box-shadow:0 2px 8px rgba(0,0,0,0.03)}
-.stat-box.green{background:#f0fdf4;border-color:#bbf7d0}
-.stat-box.blue{background:#eff6ff;border-color:#bfdbfe}
-.stat-box.red{background:#fef2f2;border-color:#fecaca}
-.stat-label{font-size:12px;font-weight:800;letter-spacing:0.5px;margin-bottom:4px}
-.stat-box.green .stat-label{color:#15803d}
-.stat-box.blue .stat-label{color:#1d4ed8}
-.stat-box.red .stat-label{color:#b91c1c}
-.stat-val{font-size:28px;font-weight:900}
-.stat-box.green .stat-val{color:#16a34a}
-.stat-box.blue .stat-val{color:#2563eb}
-.stat-box.red .stat-val{color:#dc2626}
-.inp{width:100%;box-sizing:border-box;padding:10px 14px;border:1.5px solid var(--border);border-radius:12px;font-size:14px;font-family:inherit;outline:none;transition:all .2s}
-.inp:focus{border-color:var(--p);box-shadow:0 0 0 3px rgba(2,132,199,0.15)}
-.btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;padding:9px 18px;border-radius:12px;font-size:14px;font-weight:800;font-family:inherit;cursor:pointer;border:none;transition:all .15s;text-decoration:none}
-.btn:hover{transform:translateY(-1px);filter:brightness(1.05)}
-.btn:active{transform:translateY(0)}
-.btn:disabled{opacity:.6;cursor:not-allowed;transform:none}
-.btn.b{background:var(--p);color:#fff}
-.btn.g{background:var(--ok);color:#fff}
-.btn.r{background:var(--err);color:#fff}
-.btn.w{background:#fff;border:1.5px solid var(--border);color:var(--txt)}
-.btn.w:hover{background:#f1f5f9}
-.table-wrap{overflow-x:auto;border:1px solid var(--border);border-radius:14px;background:#fff}
-table{width:100%;border-collapse:collapse;font-size:13px;text-align:left}
-th{background:#f8fafc;padding:12px 14px;font-weight:800;color:#475569;border-bottom:1.5px solid var(--border)}
-td{padding:12px 14px;border-bottom:1px solid #f1f5f9;vertical-align:middle}
-tr:last-child td{border-bottom:none}
-.key-badge{background:#f1f5f9;padding:4px 10px;border-radius:8px;font-weight:900;font-family:monospace;font-size:15px;letter-spacing:1px;color:#0f172a;border:1px solid #cbd5e1;display:inline-block}
-.exp-badge{display:inline-block;padding:3px 10px;border-radius:8px;font-size:12px;font-weight:700}
-.exp-forever{background:#dcfce7;color:#15803d}
-.exp-active{background:#e0f2fe;color:#0369a1}
-.exp-warning{background:#fef3c7;color:#b45309}
-.exp-expired{background:#fee2e2;color:#b91c1c}
-.status-badge{font-weight:800;font-size:12px}
-.ov{position:fixed;inset:0;background:rgba(15,23,42,0.6);backdrop-filter:blur(3px);display:none;align-items:center;justify-content:center;z-index:9999;padding:16px}
-.ov.on{display:flex}
-.toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:#0f172a;color:#fff;padding:12px 24px;border-radius:30px;font-weight:700;font-size:14px;box-shadow:0 10px 25px rgba(0,0,0,0.3);z-index:10000;display:none}
+/* CSS Reset chuyên dụng cho trang Quản trị (Không xung đột với game.css) */
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+html, body {
+  background: #f1f5f9;
+  color: #1e293b;
+  font-family: 'Nunito', system-ui, -apple-system, sans-serif;
+  min-height: 100vh;
+  line-height: 1.5;
+}
+.admin-container {
+  max-width: 1140px;
+  margin: 0 auto;
+  padding: 24px 20px 48px;
+}
+
+/* HEADER */
+.admin-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 16px;
+  background: #ffffff;
+  padding: 20px 24px;
+  border-radius: 20px;
+  border: 1px solid #e2e8f0;
+  box-shadow: 0 4px 20px -2px rgba(15, 23, 42, 0.05);
+  margin-bottom: 24px;
+}
+.brand-box {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+.brand-logo {
+  font-size: 32px;
+  background: linear-gradient(135deg, #e0f2fe, #bae6fd);
+  width: 54px;
+  height: 54px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 16px;
+  box-shadow: 0 2px 8px rgba(2, 132, 199, 0.15);
+}
+.brand-title {
+  font-size: 22px;
+  font-weight: 900;
+  color: #0369a1;
+  letter-spacing: -0.3px;
+}
+.brand-desc {
+  font-size: 13px;
+  color: #64748b;
+  font-weight: 600;
+}
+.header-actions {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+
+/* THỐNG KÊ NHANH */
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 16px;
+  margin-bottom: 24px;
+}
+.stat-card {
+  background: #ffffff;
+  padding: 20px;
+  border-radius: 18px;
+  border: 1px solid #e2e8f0;
+  box-shadow: 0 4px 15px -2px rgba(15, 23, 42, 0.04);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  position: relative;
+  overflow: hidden;
+}
+.stat-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 4px;
+}
+.stat-card.active::before { background: #16a34a; }
+.stat-card.total::before { background: #0284c7; }
+.stat-card.inactive::before { background: #dc2626; }
+.stat-label {
+  font-size: 12px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+  margin-bottom: 6px;
+}
+.stat-card.active .stat-label { color: #16a34a; }
+.stat-card.total .stat-label { color: #0284c7; }
+.stat-card.inactive .stat-label { color: #dc2626; }
+.stat-val {
+  font-size: 32px;
+  font-weight: 900;
+  line-height: 1;
+}
+.stat-card.active .stat-val { color: #15803d; }
+.stat-card.total .stat-val { color: #0369a1; }
+.stat-card.inactive .stat-val { color: #b91c1c; }
+
+/* KHỐI NỘI DUNG (CARD) */
+.admin-card {
+  background: #ffffff;
+  border-radius: 20px;
+  border: 1px solid #e2e8f0;
+  box-shadow: 0 4px 20px -2px rgba(15, 23, 42, 0.05);
+  margin-bottom: 24px;
+  padding: 24px;
+}
+.card-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 18px;
+  padding-bottom: 14px;
+  border-bottom: 1px solid #f1f5f9;
+}
+.card-title {
+  font-size: 17px;
+  font-weight: 900;
+  color: #0f172a;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.card-sub {
+  font-size: 13px;
+  color: #64748b;
+  font-weight: 600;
+}
+
+/* FORM ĐIỀU KHIỂN */
+.form-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 16px;
+  align-items: flex-end;
+}
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.form-group label {
+  font-size: 13px;
+  font-weight: 800;
+  color: #334155;
+}
+.inp {
+  width: 100%;
+  padding: 10px 14px;
+  font-size: 14px;
+  font-family: inherit;
+  color: #0f172a;
+  background: #f8fafc;
+  border: 1.5px solid #cbd5e1;
+  border-radius: 12px;
+  outline: none;
+  transition: all .2s;
+}
+.inp:focus {
+  background: #ffffff;
+  border-color: #0284c7;
+  box-shadow: 0 0 0 3.5px rgba(2, 132, 199, 0.15);
+}
+
+/* NÚT BẤM */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 10px 18px;
+  font-size: 14px;
+  font-weight: 800;
+  font-family: inherit;
+  border-radius: 12px;
+  border: none;
+  cursor: pointer;
+  transition: all .15s;
+  text-decoration: none;
+  white-space: nowrap;
+}
+.btn:hover {
+  filter: brightness(1.06);
+  transform: translateY(-1px);
+}
+.btn:active {
+  transform: translateY(0);
+}
+.btn:disabled {
+  opacity: .55;
+  cursor: not-allowed;
+  transform: none;
+}
+.btn-primary { background: #0284c7; color: #ffffff; }
+.btn-success { background: #16a34a; color: #ffffff; }
+.btn-danger { background: #dc2626; color: #ffffff; }
+.btn-outline {
+  background: #ffffff;
+  color: #334155;
+  border: 1.5px solid #cbd5e1;
+}
+.btn-outline:hover { background: #f1f5f9; border-color: #94a3b8; }
+.btn-sm {
+  padding: 5px 10px;
+  font-size: 12px;
+  border-radius: 8px;
+}
+
+/* BẢNG DANH SÁCH KEY (HOÀN TOÀN CHỐNG CO CHỮ DỌC) */
+.table-responsive {
+  width: 100%;
+  overflow-x: auto;
+  border-radius: 14px;
+  border: 1px solid #e2e8f0;
+  background: #ffffff;
+}
+.key-table {
+  width: 100%;
+  border-collapse: collapse;
+  table-layout: auto;
+  text-align: left;
+}
+.key-table th {
+  background: #f8fafc;
+  color: #475569;
+  font-size: 12px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+  padding: 14px 16px;
+  border-bottom: 2px solid #e2e8f0;
+  white-space: nowrap;
+}
+.key-table td {
+  padding: 14px 16px;
+  border-bottom: 1px solid #f1f5f9;
+  vertical-align: middle;
+  font-size: 14px;
+  white-space: normal;
+  overflow-wrap: normal;
+  word-break: normal;
+}
+.key-table tr:last-child td {
+  border-bottom: none;
+}
+.key-table tr:hover {
+  background: #f8fafc;
+}
+
+/* CÁC HUY HIỆU (BADGES) */
+.key-pill {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 14px;
+  font-weight: 800;
+  letter-spacing: 0.8px;
+  background: #f1f5f9;
+  color: #0f172a;
+  padding: 4px 10px;
+  border-radius: 8px;
+  border: 1px solid #cbd5e1;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  white-space: nowrap;
+}
+.user-name {
+  font-weight: 800;
+  color: #0f172a;
+  min-width: 180px;
+}
+.user-note {
+  font-size: 12px;
+  color: #64748b;
+  font-weight: 600;
+  margin-top: 2px;
+}
+.badge-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 10px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 800;
+  white-space: nowrap;
+}
+.badge-forever { background: #dcfce7; color: #15803d; }
+.badge-active { background: #e0f2fe; color: #0369a1; }
+.badge-warning { background: #fef3c7; color: #b45309; }
+.badge-expired { background: #fee2e2; color: #b91c1c; }
+.badge-status-on { background: #dcfce7; color: #16a34a; }
+.badge-status-off { background: #fee2e2; color: #dc2626; }
+
+/* MODAL OVERLAY */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.65);
+  backdrop-filter: blur(4px);
+  display: none;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+  padding: 20px;
+}
+.modal-overlay.on { display: flex; }
+.modal-box {
+  background: #ffffff;
+  border-radius: 20px;
+  width: 100%;
+  max-width: 500px;
+  padding: 24px;
+  border-top: 6px solid #0284c7;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+  animation: modalPop .2s ease-out;
+}
+@keyframes modalPop {
+  from { opacity: 0; transform: scale(0.96); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+/* TOAST */
+.toast-msg {
+  position: fixed;
+  bottom: 24px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: #0f172a;
+  color: #ffffff;
+  padding: 12px 24px;
+  border-radius: 30px;
+  font-weight: 800;
+  font-size: 14px;
+  box-shadow: 0 10px 25px rgba(0,0,0,0.3);
+  z-index: 10000;
+  display: none;
+  border: 1px solid #334155;
+}
 </style>
 </head>
 <body>
 
-<div class="admin-wrap">
+<div class="admin-container">
  <!-- HEADER -->
- <div class="header">
-  <div class="brand">
-   <div class="brand-icon">🔐</div>
+ <header class="admin-header">
+  <div class="brand-box">
+   <div class="brand-logo">🔐</div>
    <div>
-    <div class="brand-title">Ms Nene English – Quản Trị Bản Quyền</div>
-    <div class="brand-sub">Hệ thống cấp khóa, đổi khóa và thu hồi bản quyền trực tiếp qua Firebase</div>
+    <h1 class="brand-title">Ms Nene English – Quản Trị Bản Quyền</h1>
+    <p class="brand-desc">Hệ thống cấp mã, đổi mã và quản lý thời hạn trực tiếp qua Firebase</p>
    </div>
   </div>
-  <div style="display:flex;gap:10px;align-items:center">
-   <a href="host.html" class="btn w" target="_blank" title="Mở trang Phòng Game của Cô">🎮 Trang Host Game</a>
-   <button type="button" class="btn w" id="bRefresh" title="Tải lại danh sách key từ Firebase">🔄 Làm mới</button>
+  <div class="header-actions">
+   <a href="host.html" class="btn btn-outline" target="_blank" title="Mở trang Phòng Game của Cô">🎮 Mở Trang Host</a>
+   <button type="button" class="btn btn-outline" id="bRefresh" title="Tải lại dữ liệu mới nhất từ Firebase">🔄 Làm mới</button>
   </div>
- </div>
+ </header>
 
- <!-- STATS -->
+ <!-- THỐNG KÊ NHANH -->
  <div class="stats-grid">
-  <div class="stat-box green">
-   <div class="stat-label">🟢 ĐANG HOẠT ĐỘNG</div>
+  <div class="stat-card active">
+   <div class="stat-label">🟢 Đang hoạt động</div>
    <div class="stat-val" id="statActive">0</div>
   </div>
-  <div class="stat-box blue">
-   <div class="stat-label">🔵 TỔNG SỐ KEY TRÊN FIREBASE</div>
+  <div class="stat-card total">
+   <div class="stat-label">🔵 Tổng số Key trên Firebase</div>
    <div class="stat-val" id="statTotal">0</div>
   </div>
-  <div class="stat-box red">
-   <div class="stat-label">🔴 ĐÃ KHÓA / HẾT HẠN</div>
+  <div class="stat-card inactive">
+   <div class="stat-label">🔴 Đã khóa / Hết hạn</div>
    <div class="stat-val" id="statInactive">0</div>
   </div>
  </div>
 
- <!-- FORM THÊM KEY MỚI -->
- <div class="card">
-  <div style="font-size:16px;font-weight:900;color:var(--txt);margin-bottom:14px;display:flex;align-items:center;gap:8px">
-   ➕ Cấp Mã Kích Hoạt Mới
+ <!-- FORM CẤP KEY MỚI -->
+ <section class="admin-card">
+  <div class="card-head">
+   <div class="card-title">➕ Cấp Mã Kích Hoạt Mới</div>
+   <div class="card-sub">Lưu trực tiếp lên Firebase trong 1 click</div>
   </div>
-  <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px;align-items:end">
-   <div>
-    <label style="font-size:12px;font-weight:700;color:var(--muted);display:block;margin-bottom:4px">Mã Key (tùy ý đặt hoặc bấm Tạo):</label>
+  <div class="form-grid">
+   <div class="form-group">
+    <label for="inpKey">Mã Key (tùy ý đặt hoặc bấm Tạo):</label>
     <div style="display:flex;gap:6px">
-     <input id="inpKey" class="inp" placeholder="Nhập mã (VD: 1010, NENE...)" style="font-weight:800;letter-spacing:1px">
-     <button type="button" class="btn w" id="bGenKey" title="Tự động sinh mã ngẫu nhiên" style="padding:8px 12px">🎲 Tạo</button>
+     <input id="inpKey" class="inp" placeholder="VD: 1010, NENE..." style="font-weight:800;letter-spacing:1px;font-family:monospace">
+     <button type="button" class="btn btn-outline" id="bGenKey" title="Tự động sinh mã ngẫu nhiên" style="padding:8px 14px">🎲 Tạo</button>
     </div>
    </div>
-   <div>
-    <label style="font-size:12px;font-weight:700;color:var(--muted);display:block;margin-bottom:4px">Tên giáo viên / Ghi chú:</label>
+   <div class="form-group">
+    <label for="inpOwner">Tên giáo viên / Ghi chú:</label>
     <input id="inpOwner" class="inp" placeholder="VD: Cô Mai - THCS Chu Văn An">
    </div>
-   <div>
-    <label style="font-size:12px;font-weight:700;color:var(--muted);display:block;margin-bottom:4px">Thời hạn sử dụng:</label>
-    <select id="inpDuration" class="inp">
+   <div class="form-group">
+    <label for="inpDuration">Thời hạn sử dụng:</label>
+    <select id="inpDuration" class="inp" style="padding:10px 12px">
      <option value="forever">Vĩnh viễn (Không giới hạn)</option>
      <option value="1m">1 Tháng (30 ngày)</option>
      <option value="3m">3 Tháng (90 ngày)</option>
@@ -120,75 +428,75 @@ tr:last-child td{border-bottom:none}
      <option value="1y">1 Năm học (365 ngày)</option>
     </select>
    </div>
-   <div>
-    <button type="button" class="btn g" id="bCreateKey" style="width:100%;padding:11px">
+   <div class="form-group">
+    <button type="button" class="btn btn-success" id="bCreateKey" style="width:100%;padding:11px">
      💾 Thêm &amp; Kích Hoạt Key
     </button>
    </div>
   </div>
- </div>
+ </section>
 
- <!-- DANH SÁCH KEY -->
- <div class="card" style="padding:0;overflow:hidden">
-  <div style="padding:16px 20px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center">
-   <div style="font-size:16px;font-weight:900;color:var(--txt)">📋 Danh Sách Tất Cả Mã Key Trên Firebase</div>
-   <div style="font-size:12px;color:var(--muted)">Đồng bộ tự động thời gian thực</div>
+ <!-- DANH SÁCH BẢNG KEY -->
+ <section class="admin-card" style="padding:0;overflow:hidden">
+  <div class="card-head" style="padding:20px 24px 16px;margin-bottom:0">
+   <div class="card-title">📋 Danh Sách Tất Cả Mã Key Trên Firebase</div>
+   <div class="card-sub">Đồng bộ tự động thời gian thực</div>
   </div>
-  <div class="table-wrap" style="border:none;border-radius:0">
-   <table>
+  <div class="table-responsive">
+   <table class="key-table">
     <thead>
      <tr>
-      <th style="width:160px">Mã Key</th>
-      <th>Người dùng / Ghi chú</th>
-      <th style="width:180px">Hạn sử dụng</th>
-      <th style="width:130px">Trạng thái</th>
-      <th style="width:260px;text-align:center">Thao tác</th>
+      <th style="min-width:160px">Mã Key</th>
+      <th style="min-width:240px">Người dùng / Ghi chú</th>
+      <th style="min-width:180px">Hạn sử dụng</th>
+      <th style="min-width:140px">Trạng thái</th>
+      <th style="min-width:280px;text-align:center">Thao tác</th>
      </tr>
     </thead>
     <tbody id="tbodyLicenses">
-     <tr><td colspan="5" style="text-align:center;padding:30px;color:var(--muted)">⏳ Đang tải dữ liệu từ máy chủ Firebase...</td></tr>
+     <tr><td colspan="5" style="text-align:center;padding:40px 20px;color:#64748b">⏳ Đang kết nối máy chủ Firebase...</td></tr>
     </tbody>
    </table>
   </div>
- </div>
+ </section>
 </div>
 
-<!-- MODAL SỬA MÃ KEY -->
-<div class="ov" id="ovEdit">
- <div class="card" style="max-width:480px;width:94%;border-top:6px solid var(--p);box-shadow:0 20px 45px rgba(0,0,0,0.3)">
-  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
-   <div style="font-size:18px;font-weight:900;color:var(--p-dark)">✏️ Chỉnh Sửa / Đổi Mã Key</div>
-   <button type="button" class="btn w" id="bCloseEdit" style="padding:4px 10px">✕</button>
+<!-- MODAL SỬA ĐỔI MÃ KEY -->
+<div class="modal-overlay" id="ovEdit">
+ <div class="modal-box">
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:18px">
+   <h3 style="font-size:18px;font-weight:900;color:#0369a1">✏️ Chỉnh Sửa / Đổi Mã Key</h3>
+   <button type="button" class="btn btn-outline btn-sm" id="bCloseEdit">✕</button>
   </div>
   <input type="hidden" id="editOldHash">
-  <div style="margin-bottom:14px">
-   <label style="font-size:12px;font-weight:700;color:var(--muted);display:block;margin-bottom:4px">Mã Key mới (Đổi từ mã cũ):</label>
-   <input id="editNewKey" class="inp" style="font-weight:800;font-size:16px;letter-spacing:1px">
-   <div style="font-size:11px;color:#d97706;margin-top:4px">⚠️ Khi đổi mã key, mã cũ sẽ bị xóa và vô hiệu hóa ngay lập tức.</div>
+  <div class="form-group" style="margin-bottom:14px">
+   <label for="editNewKey">Mã Key mới (Đổi từ mã cũ):</label>
+   <input id="editNewKey" class="inp" style="font-weight:800;font-size:16px;letter-spacing:1px;font-family:monospace">
+   <div style="font-size:12px;color:#d97706;font-weight:700;margin-top:4px">⚠️ Khi đổi mã, mã cũ sẽ bị xóa và vô hiệu hóa ngay lập tức.</div>
   </div>
-  <div style="margin-bottom:14px">
-   <label style="font-size:12px;font-weight:700;color:var(--muted);display:block;margin-bottom:4px">Người dùng / Ghi chú:</label>
+  <div class="form-group" style="margin-bottom:14px">
+   <label for="editNewOwner">Người dùng / Ghi chú:</label>
    <input id="editNewOwner" class="inp">
   </div>
-  <div style="margin-bottom:20px">
-   <label style="font-size:12px;font-weight:700;color:var(--muted);display:block;margin-bottom:4px">Thời hạn:</label>
+  <div class="form-group" style="margin-bottom:22px">
+   <label for="editNewDuration">Thời hạn sử dụng:</label>
    <select id="editNewDuration" class="inp">
+    <option value="keep">Giữ nguyên hạn sử dụng hiện tại</option>
     <option value="forever">Vĩnh viễn (Không giới hạn)</option>
     <option value="1m">1 Tháng (30 ngày từ hôm nay)</option>
     <option value="3m">3 Tháng (90 ngày từ hôm nay)</option>
     <option value="6m">1 Học kỳ (180 ngày từ hôm nay)</option>
     <option value="1y">1 Năm học (365 ngày từ hôm nay)</option>
-    <option value="keep">Giữ nguyên hạn sử dụng hiện tại</option>
    </select>
   </div>
   <div style="display:flex;gap:10px;justify-content:flex-end">
-   <button type="button" class="btn w" id="bCancelEdit">Hủy</button>
-   <button type="button" class="btn b" id="bSaveEdit">💾 Lưu Thay Đổi</button>
+   <button type="button" class="btn btn-outline" id="bCancelEdit">Hủy</button>
+   <button type="button" class="btn btn-primary" id="bSaveEdit">💾 Lưu Thay Đổi</button>
   </div>
  </div>
 </div>
 
-<div class="toast" id="toastBox"></div>
+<div class="toast-msg" id="toastBox"></div>
 
 <script>
 const SALT = 'MsNeneEnglish_Salt_2026_';
@@ -251,7 +559,7 @@ let licensesCache = [];
 
 async function loadLicenses() {
   const tbody = $('tbodyLicenses');
-  tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;padding:30px;color:var(--muted)">⏳ Đang đồng bộ danh sách key từ máy chủ Firebase...</td></tr>';
+  tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;padding:40px 20px;color:#64748b">⏳ Đang đồng bộ danh sách key từ máy chủ Firebase...</td></tr>';
   const fbUrl = getFbUrl();
   try {
     const resp = await fetch(`${fbUrl}/licenses.json`);
@@ -267,7 +575,7 @@ async function loadLicenses() {
     licensesCache = list;
     renderTable(list);
   } catch (e) {
-    tbody.innerHTML = `<tr><td colspan="5" style="text-align:center;padding:30px;color:var(--err)">❌ Lỗi kết nối Firebase: ${esc(e.message)}</td></tr>`;
+    tbody.innerHTML = `<tr><td colspan="5" style="text-align:center;padding:40px 20px;color:#dc2626">❌ Lỗi kết nối Firebase: ${esc(e.message)}</td></tr>`;
   }
 }
 
@@ -288,7 +596,7 @@ function renderTable(list) {
   $('statInactive').textContent = inact;
 
   if (list.length === 0) {
-    tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;padding:30px;color:var(--muted)">Kho bản quyền trống. Hãy tạo mã key đầu tiên ở trên!</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;padding:40px 20px;color:#64748b">Chưa có mã key nào trên Firebase. Hãy tạo mã đầu tiên ở trên!</td></tr>';
     return;
   }
 
@@ -300,45 +608,47 @@ function renderTable(list) {
 
     let expBadge = '';
     if (!item.expiresAt || item.expiresAt === 0) {
-      expBadge = '<span class="exp-badge exp-forever">Vĩnh viễn</span>';
+      expBadge = '<span class="badge-pill badge-forever">🌟 Vĩnh viễn</span>';
     } else if (isExp) {
       const dStr = new Date(item.expiresAt).toLocaleDateString('vi-VN');
-      expBadge = `<span class="exp-badge exp-expired">Đã hết hạn (${dStr})</span>`;
+      expBadge = `<span class="badge-pill badge-expired">⚠️ Hết hạn (${dStr})</span>`;
     } else {
       const dStr = new Date(item.expiresAt).toLocaleDateString('vi-VN');
       const daysLeft = Math.ceil((item.expiresAt - now) / (24 * 3600 * 1000));
-      const cls = daysLeft <= 7 ? 'exp-warning' : 'exp-active';
-      expBadge = `<span class="exp-badge ${cls}">Còn ${daysLeft} ngày (${dStr})</span>`;
+      const cls = daysLeft <= 7 ? 'badge-warning' : 'badge-active';
+      expBadge = `<span class="badge-pill ${cls}">⏳ Còn ${daysLeft} ngày (${dStr})</span>`;
     }
 
     const stHtml = isAct
-      ? '<span class="status-badge" style="color:var(--ok)">🟢 Hoạt động</span>'
-      : '<span class="status-badge" style="color:var(--err)">🔴 Đã khóa</span>';
+      ? '<span class="badge-pill badge-status-on">🟢 Hoạt động</span>'
+      : '<span class="badge-pill badge-status-off">🔴 Đã khóa</span>';
 
     html += `
       <tr style="background:${!isAct || isExp ? '#fffafa' : '#fff'}">
         <td>
-          <span class="key-badge">${esc(keyVal)}</span>
-          <button type="button" class="btn w" style="padding:2px 6px;font-size:11px;margin-left:4px" onclick="copyText('${esc(keyVal)}')" title="Sao chép mã key">📋</button>
+          <div style="display:flex;align-items:center;gap:6px">
+            <span class="key-pill">${esc(keyVal)}</span>
+            <button type="button" class="btn btn-outline btn-sm" onclick="copyText('${esc(keyVal)}')" title="Sao chép mã key" style="padding:3px 7px">📋</button>
+          </div>
         </td>
-        <td style="font-weight:700">
-          ${esc(item.owner || '—')}
-          ${item.note ? `<div style="font-size:11px;color:var(--muted)">${esc(item.note)}</div>` : ''}
+        <td>
+          <div class="user-name">${esc(item.owner || '—')}</div>
+          ${item.note ? `<div class="user-note">${esc(item.note)}</div>` : ''}
         </td>
         <td>${expBadge}</td>
         <td>${stHtml}</td>
         <td style="text-align:center">
-          <div style="display:flex;gap:6px;justify-content:center;flex-wrap:wrap">
-            <button type="button" class="btn b" style="padding:4px 8px;font-size:12px" onclick="sendZalo('${esc(keyVal)}', '${esc(item.owner || '')}', ${item.expiresAt || 0})" title="Sao chép tin nhắn Zalo kèm mã và hướng dẫn">
+          <div style="display:flex;gap:6px;justify-content:center;flex-wrap:nowrap">
+            <button type="button" class="btn btn-primary btn-sm" onclick="sendZalo('${esc(keyVal)}', '${esc(item.owner || '')}', ${item.expiresAt || 0})" title="Sao chép tin nhắn Zalo kèm mã và hướng dẫn">
               📲 Zalo
             </button>
-            <button type="button" class="btn w" style="padding:4px 8px;font-size:12px;color:var(--p-dark)" onclick="openEditModal('${item.hash}')" title="Đổi mã key hoặc sửa thông tin">
+            <button type="button" class="btn btn-outline btn-sm" onclick="openEditModal('${item.hash}')" title="Đổi mã key hoặc sửa thông tin">
               ✏️ Sửa
             </button>
-            <button type="button" class="btn w" style="padding:4px 8px;font-size:12px;color:${isAct ? '#d97706' : '#16a34a'}" onclick="toggleStatus('${item.hash}', '${item.status}')" title="${isAct ? 'Tạm khóa key này' : 'Mở lại key này'}">
+            <button type="button" class="btn btn-outline btn-sm" style="color:${isAct ? '#d97706' : '#16a34a'}" onclick="toggleStatus('${item.hash}', '${item.status}')" title="${isAct ? 'Tạm khóa key này' : 'Mở lại key này'}">
               ${isAct ? '⏸ Khóa' : '▶ Mở'}
             </button>
-            <button type="button" class="btn r" style="padding:4px 8px;font-size:12px" onclick="deleteKey('${item.hash}', '${esc(keyVal)}', '${esc(item.owner || '')}')" title="Xóa vĩnh viễn khỏi Firebase">
+            <button type="button" class="btn btn-danger btn-sm" onclick="deleteKey('${item.hash}', '${esc(keyVal)}', '${esc(item.owner || '')}')" title="Xóa vĩnh viễn khỏi Firebase">
               🗑 Xóa
             </button>
           </div>
@@ -351,7 +661,7 @@ function renderTable(list) {
 
 function copyText(txt) {
   navigator.clipboard.writeText(txt);
-  toast(`📋 Đã sao chép: ${txt}`);
+  toast(`📋 Đã sao chép mã: ${txt}`);
 }
 
 function sendZalo(key, owner, expiresAt) {
