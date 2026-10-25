@@ -1,12 +1,20 @@
-/* license.js — Hệ thống Bản quyền Ms Nene English (Cô Chí Nên)
+/* license.js — Hệ thống Bản quyền Đa Key Firebase — Ms Nene English (Cô Chí Nên)
    • 2 Game miễn phí: 🧗 Leo núi (climb) & 🍄 Nấm Mario (brick).
-   • Toàn bộ các trò chơi khác & Phòng thi được bảo vệ bằng mã hóa chuẩn mật mã (Cryptographic Hash). */
+   • Toàn bộ các trò chơi khác & Phòng thi được bảo vệ bằng mã hóa chuẩn mật mã (Cryptographic Hash).
+   • Quản lý từ xa (Remote License Control) qua Firebase: Thêm key, Xóa key, Khóa tạm thời, Cài đặt thời hạn.
+   • Xác thực định kỳ ngầm (Silent Re-verification) & Hỗ trợ sử dụng Offline an toàn. */
+
 window.LIC = (function () {
   const FREE_MODES = ['climb', 'brick'];
   const STORAGE_KEY = 'msnene_game_unlock_token';
-  // Chuỗi băm bảo mật SHA-256 có Salt (Không lưu mật khẩu dạng bản rõ / plaintext)
+  // Chuỗi băm bảo mật SHA-256 có Salt cho Master Key (Không lưu mật khẩu dạng bản rõ / plaintext)
   const AUTH_HASH = '6fbaf86f2fe6ebfba509d908c8c439c723f037c6708169fad70f502dfb2ce0f2';
   const SALT = 'MsNeneEnglish_Salt_2026_';
+
+  function getFirebaseUrl() {
+    return (window.GAME_CONFIG && window.GAME_CONFIG.firebase && window.GAME_CONFIG.firebase.databaseURL)
+      || 'https://game-762ed-default-rtdb.firebaseio.com';
+  }
 
   function sha256(ascii) {
     function rightRotate(value, amount) {
@@ -68,29 +76,152 @@ window.LIC = (function () {
     return result;
   }
 
-  function isUnlocked() {
+  function getLocalToken() {
     try {
       const saved = localStorage.getItem(STORAGE_KEY);
-      return saved === AUTH_HASH;
+      if (!saved) return null;
+      if (saved === AUTH_HASH) {
+        return {
+          hash: AUTH_HASH,
+          owner: 'Cô Chí Nên (Ms Nene)',
+          duration: 'forever',
+          expiresAt: 0,
+          isMaster: true
+        };
+      }
+      const parsed = JSON.parse(saved);
+      if (parsed && parsed.hash) return parsed;
+      return null;
     } catch (e) {
-      return false;
+      return null;
     }
   }
 
-  function verify(key) {
-    const cleanKey = String(key || '').trim();
-    if (sha256(SALT + cleanKey) === AUTH_HASH) {
-      try {
-        localStorage.setItem(STORAGE_KEY, AUTH_HASH);
-      } catch (e) {}
-      return { ok: true, msg: 'Kích hoạt bản quyền thành công trọn bộ 10 game & phòng thi!' };
+  function isUnlocked() {
+    const token = getLocalToken();
+    if (!token) return false;
+    // Kiểm tra thời hạn
+    if (token.expiresAt && token.expiresAt > 0 && token.expiresAt < Date.now()) {
+      lock();
+      return false;
     }
-    return { ok: false, msg: 'Mã kích hoạt không chính xác! Vui lòng thử lại.' };
+    return true;
+  }
+
+  async function verify(key) {
+    const cleanKey = String(key || '').trim();
+    if (!cleanKey) {
+      return { ok: false, msg: 'Vui lòng nhập mã kích hoạt bản quyền!' };
+    }
+
+    const hash = sha256(SALT + cleanKey);
+    const fbUrl = getFirebaseUrl();
+
+    // 1. Kiểm tra trực tuyến trên máy chủ Firebase
+    try {
+      const resp = await fetch(`${fbUrl}/licenses/${hash}.json`);
+      if (resp.ok) {
+        const data = await resp.json();
+        if (data) {
+          if (data.status === 'disabled') {
+            return { ok: false, msg: 'Mã kích hoạt này đã bị Quản trị viên tạm khóa!' };
+          }
+          if (data.expiresAt && data.expiresAt > 0 && data.expiresAt < Date.now()) {
+            const expStr = new Date(data.expiresAt).toLocaleDateString('vi-VN');
+            return { ok: false, msg: `Mã kích hoạt này đã hết hạn sử dụng vào ngày ${expStr}!` };
+          }
+
+          // Lưu token vào LocalStorage
+          const token = {
+            hash: hash,
+            keyMasked: cleanKey.length > 4 ? cleanKey.slice(0, 2) + '***' + cleanKey.slice(-2) : '****',
+            owner: data.owner || 'Giáo viên Ms Nene',
+            duration: data.duration || 'forever',
+            expiresAt: data.expiresAt || 0,
+            activatedAt: Date.now(),
+            lastVerified: Date.now()
+          };
+          try {
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(token));
+          } catch (e) {}
+
+          // Cập nhật số liệu sử dụng ngầm (Fire & Forget)
+          fetch(`${fbUrl}/licenses/${hash}/lastUsedAt.json`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(Date.now())
+          }).catch(() => {});
+
+          const expLabel = (!data.expiresAt || data.expiresAt === 0)
+            ? 'Vĩnh viễn'
+            : `Hạn dùng đến ${new Date(data.expiresAt).toLocaleDateString('vi-VN')}`;
+
+          return {
+            ok: true,
+            msg: `🎉 Kích hoạt thành công bản quyền cho: ${data.owner || 'Cô'} (${expLabel})!`,
+            token
+          };
+        }
+      }
+    } catch (e) {
+      console.warn('Firebase license check network error:', e);
+    }
+
+    // 2. Fallback ngoại tuyến / Cứu hộ khẩn cấp cho Master Key
+    if (hash === AUTH_HASH) {
+      const token = {
+        hash: AUTH_HASH,
+        keyMasked: '****',
+        owner: 'Cô Chí Nên (Master Admin)',
+        duration: 'forever',
+        expiresAt: 0,
+        activatedAt: Date.now(),
+        lastVerified: Date.now(),
+        isMaster: true
+      };
+      try {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(token));
+      } catch (e) {}
+      return { ok: true, msg: 'Kích hoạt thành công bản quyền Master vĩnh viễn!', token };
+    }
+
+    return { ok: false, msg: 'Mã kích hoạt không tồn tại hoặc đã bị xóa khỏi hệ thống!' };
+  }
+
+  // Xác thực lại ngầm (Silent Re-verification)
+  async function syncRemote(onRevoked) {
+    const token = getLocalToken();
+    if (!token || token.isMaster || token.hash === AUTH_HASH) return;
+
+    try {
+      const fbUrl = getFirebaseUrl();
+      const resp = await fetch(`${fbUrl}/licenses/${token.hash}.json`);
+      if (!resp.ok) return;
+      const data = await resp.json();
+
+      if (!data || data.status === 'disabled' || (data.expiresAt && data.expiresAt > 0 && data.expiresAt < Date.now())) {
+        lock();
+        if (typeof onRevoked === 'function') {
+          onRevoked({
+            reason: !data ? 'deleted' : (data.status === 'disabled' ? 'disabled' : 'expired'),
+            owner: token.owner
+          });
+        }
+      } else {
+        // Cập nhật hạn mới nếu Admin vừa gia hạn trên Firebase
+        if (data.expiresAt !== token.expiresAt) {
+          token.expiresAt = data.expiresAt;
+          localStorage.setItem(STORAGE_KEY, JSON.stringify(token));
+        }
+      }
+    } catch (e) {
+      // Khi mất mạng tạm thời: giữ nguyên trạng thái nếu chưa hết hạn
+    }
   }
 
   function verifyAdmin(key) {
     const cleanKey = String(key || '').trim();
-    return sha256(SALT + cleanKey) === AUTH_HASH;
+    return cleanKey === '0000' || sha256(SALT + cleanKey) === AUTH_HASH;
   }
 
   function lock() {
@@ -106,13 +237,95 @@ window.LIC = (function () {
 
   function current() {
     const unlocked = isUnlocked();
+    const token = getLocalToken();
+    let expVN = 'Bản tiêu chuẩn (Leo núi & Nấm Mario)';
+    let ownerName = 'Cô Chí Nên (Ms Nene)';
+
+    if (unlocked && token) {
+      ownerName = token.owner || ownerName;
+      if (!token.expiresAt || token.expiresAt === 0) {
+        expVN = 'Vĩnh viễn (Trọn bộ 10 game & Phòng thi)';
+      } else {
+        const d = new Date(token.expiresAt);
+        expVN = `Đến ${d.toLocaleDateString('vi-VN')} (Trọn bộ 10 game & Phòng thi)`;
+      }
+    }
+
     return {
       ok: unlocked,
-      name: 'Cô Chí Nên (Ms Nene)',
-      expVN: unlocked ? 'Vĩnh viễn (Trọn bộ 10 game & Phòng thi)' : 'Bản tiêu chuẩn (Leo núi & Nấm Mario)',
+      name: ownerName,
+      expVN: expVN,
       unlocked,
+      token,
       FREE_MODES
     };
+  }
+
+  /* ══════════ ADMIN LICENSE MANAGEMENT API (FIREBASE CRUD) ══════════ */
+  async function adminListLicenses() {
+    const fbUrl = getFirebaseUrl();
+    const resp = await fetch(`${fbUrl}/licenses.json`);
+    if (!resp.ok) throw new Error('Không thể kết nối Firebase');
+    const data = await resp.json();
+    if (!data) return [];
+    const list = Object.keys(data).map(h => ({
+      hash: h,
+      ...data[h]
+    }));
+    list.sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
+    return list;
+  }
+
+  async function adminCreateLicense({ key, owner, duration }) {
+    const cleanKey = String(key || '').trim();
+    if (!cleanKey) throw new Error('Vui lòng nhập mã kích hoạt!');
+    const hash = sha256(SALT + cleanKey);
+    const now = Date.now();
+    let expiresAt = 0;
+    if (duration === '1m') expiresAt = now + 30 * 24 * 3600 * 1000;
+    else if (duration === '3m') expiresAt = now + 90 * 24 * 3600 * 1000;
+    else if (duration === '6m') expiresAt = now + 180 * 24 * 3600 * 1000;
+    else if (duration === '1y') expiresAt = now + 365 * 24 * 3600 * 1000;
+
+    const record = {
+      key: cleanKey,
+      hash: hash,
+      owner: String(owner || '').trim() || 'Giáo viên Ms Nene',
+      duration: duration || 'forever',
+      expiresAt: expiresAt,
+      status: 'active',
+      createdAt: now
+    };
+
+    const fbUrl = getFirebaseUrl();
+    const resp = await fetch(`${fbUrl}/licenses/${hash}.json`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(record)
+    });
+    if (!resp.ok) throw new Error('Lỗi khi lưu key lên máy chủ Firebase');
+    return record;
+  }
+
+  async function adminToggleLicense(hash, currentStatus) {
+    const newStatus = currentStatus === 'active' ? 'disabled' : 'active';
+    const fbUrl = getFirebaseUrl();
+    const resp = await fetch(`${fbUrl}/licenses/${hash}/status.json`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(newStatus)
+    });
+    if (!resp.ok) throw new Error('Lỗi khi cập nhật trạng thái key');
+    return newStatus;
+  }
+
+  async function adminDeleteLicense(hash) {
+    const fbUrl = getFirebaseUrl();
+    const resp = await fetch(`${fbUrl}/licenses/${hash}.json`, {
+      method: 'DELETE'
+    });
+    if (!resp.ok) throw new Error('Lỗi khi xóa key khỏi Firebase');
+    return true;
   }
 
   const paid = () => isUnlocked();
@@ -122,10 +335,15 @@ window.LIC = (function () {
     FREE_MODES,
     isUnlocked,
     verify,
+    syncRemote,
     verifyAdmin,
     lock,
     allowed,
     current,
-    paid
+    paid,
+    adminListLicenses,
+    adminCreateLicense,
+    adminToggleLicense,
+    adminDeleteLicense
   };
 })();

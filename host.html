@@ -588,6 +588,112 @@ Hoặc dán theo mẫu:
  </div>
 </div>
 
+
+<!-- MODAL QUẢN LÝ BẢN QUYỀN FIREBASE (DÀNH CHO ADMIN CÔ CHÍ NÊN) -->
+<div class="ov" id="ovKeyManager">
+ <div class="card" style="max-width:880px;width:96%;max-height:90vh;overflow-y:auto;border-top:6px solid #0284c7;border-radius:18px;box-shadow:0 20px 45px rgba(0,0,0,0.3)">
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;border-bottom:1px solid #e2e8f0;padding-bottom:10px">
+   <div>
+    <div style="font-size:20px;font-weight:900;color:#0369a1;display:flex;align-items:center;gap:8px">
+     🔑 Quản lý Key Bản quyền Firebase
+    </div>
+    <div style="font-size:12px;color:#64748b;margin-top:2px">
+     Thêm, xóa, khóa tạm thời và cài đặt thời hạn các mã kích hoạt cho giáo viên
+    </div>
+   </div>
+   <button type="button" class="btn w" id="bCloseKeyManager" style="padding:4px 12px;font-weight:700">✕ Đóng</button>
+  </div>
+
+  <!-- BẢO MẬT ADMIN PIN (NẾU CHƯA XÁC THỰC) -->
+  <div id="kmPinSection" style="text-align:center;padding:24px 10px">
+   <div style="font-size:36px;margin-bottom:6px">🛡️</div>
+   <div style="font-size:16px;font-weight:800;color:#1e293b;margin-bottom:6px">Xác thực Quyền Quản trị viên</div>
+   <div style="font-size:13px;color:#64748b;margin-bottom:14px">Vui lòng nhập mã Admin của Cô Chí Nên để truy cập bảng quản lý Key:</div>
+   <div style="display:flex;gap:8px;justify-content:center;max-width:340px;margin:0 auto">
+    <input type="password" id="kmAdminPin" class="inp" placeholder="Mã Admin (mặc định 0000)" style="font-size:16px;text-align:center;font-weight:800;letter-spacing:2px">
+    <button type="button" class="btn b" id="bKmVerifyPin" style="padding:8px 16px;font-weight:800;background:#0284c7">Mở khóa</button>
+   </div>
+   <div id="kmPinErr" style="color:#dc2626;font-size:12px;font-weight:700;margin-top:6px;display:none">❌ Mã Admin không chính xác!</div>
+  </div>
+
+  <!-- NỘI DUNG QUẢN TRỊ (HIỂN THỊ KHI ĐÃ XÁC THỰC) -->
+  <div id="kmMainSection" style="display:none">
+   <!-- THỐNG KÊ NHANH -->
+   <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px;margin-bottom:16px">
+    <div style="background:#f0fdf4;border:1px solid #bbf7d0;border-radius:12px;padding:10px;text-align:center">
+     <div style="font-size:11px;font-weight:700;color:#16a34a">ĐANG HOẠT ĐỘNG</div>
+     <div id="kmStatActive" style="font-size:22px;font-weight:900;color:#15803d">0</div>
+    </div>
+    <div style="background:#eff6ff;border:1px solid #bfdbfe;border-radius:12px;padding:10px;text-align:center">
+     <div style="font-size:11px;font-weight:700;color:#2563eb">TỔNG SỐ KEY</div>
+     <div id="kmStatTotal" style="font-size:22px;font-weight:900;color:#1d4ed8">0</div>
+    </div>
+    <div style="background:#fef2f2;border:1px solid #fecaca;border-radius:12px;padding:10px;text-align:center">
+     <div style="font-size:11px;font-weight:700;color:#dc2626">ĐÃ KHÓA / HẾT HẠN</div>
+     <div id="kmStatInactive" style="font-size:22px;font-weight:900;color:#b91c1c">0</div>
+    </div>
+   </div>
+
+   <!-- FORM TẠO KEY MỚI -->
+   <div style="background:#f8fafc;border:1.5px solid #e2e8f0;border-radius:14px;padding:14px;margin-bottom:16px">
+    <div style="font-weight:800;color:#0f172a;font-size:14px;margin-bottom:10px;display:flex;align-items:center;gap:6px">
+     ➕ Thêm Mã Kích Hoạt Mới vào Firebase
+    </div>
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:10px;align-items:end">
+     <div>
+      <label style="font-size:12px;font-weight:700;color:#475569;display:block;margin-bottom:4px">Mã kích hoạt (Key):</label>
+      <div style="display:flex;gap:4px">
+       <input id="kmNewKey" class="inp" placeholder="VD: 0000 hoặc NENE-2026..." style="font-weight:800;font-size:13px;flex:1">
+       <button type="button" class="btn w" id="bKmGenKey" title="Tự động sinh mã ngẫu nhiên" style="padding:6px 10px;font-size:12px">🎲 Tạo</button>
+      </div>
+     </div>
+     <div>
+      <label style="font-size:12px;font-weight:700;color:#475569;display:block;margin-bottom:4px">Người dùng / Ghi chú:</label>
+      <input id="kmNewOwner" class="inp" placeholder="VD: Cô Mai - THCS Chu Văn An" style="font-size:13px">
+     </div>
+     <div>
+      <label style="font-size:12px;font-weight:700;color:#475569;display:block;margin-bottom:4px">Thời hạn sử dụng:</label>
+      <select id="kmNewDuration" class="inp" style="font-size:13px;padding:8px">
+       <option value="forever">Vĩnh viễn (Không giới hạn)</option>
+       <option value="1m">1 Tháng (30 ngày)</option>
+       <option value="3m">3 Tháng (90 ngày)</option>
+       <option value="6m">1 Học kỳ (180 ngày)</option>
+       <option value="1y">1 Năm học (365 ngày)</option>
+      </select>
+     </div>
+     <div>
+      <button type="button" class="btn g" id="bKmCreateKey" style="width:100%;padding:9px;font-weight:800;font-size:13px">
+       💾 Lưu &amp; Cấp Key
+      </button>
+     </div>
+    </div>
+   </div>
+
+   <!-- BẢNG DANH SÁCH KEY -->
+   <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+    <div style="font-weight:800;color:#334155;font-size:13px">📋 Danh sách Key trên máy chủ Firebase:</div>
+    <button type="button" class="btn w" id="bKmRefresh" style="padding:3px 10px;font-size:11px">🔄 Làm mới danh sách</button>
+   </div>
+   <div style="overflow-x:auto;max-height:340px;border:1px solid #e2e8f0;border-radius:12px">
+    <table style="width:100%;border-collapse:collapse;font-size:12px;text-align:left">
+     <thead>
+      <tr style="background:#f1f5f9;color:#475569;font-weight:800;border-bottom:1px solid #cbd5e1">
+       <th style="padding:8px 10px">Mã Key</th>
+       <th style="padding:8px 10px">Người dùng / Ghi chú</th>
+       <th style="padding:8px 10px">Hạn dùng</th>
+       <th style="padding:8px 10px">Trạng thái</th>
+       <th style="padding:8px 10px;text-align:center">Thao tác</th>
+      </tr>
+     </thead>
+     <tbody id="kmTbody">
+      <tr><td colspan="5" style="text-align:center;padding:20px;color:#94a3b8">⏳ Đang tải danh sách key từ Firebase...</td></tr>
+     </tbody>
+    </table>
+   </div>
+  </div>
+ </div>
+</div>
+
 <!-- MODAL CHIẾU LỜI GIẢI CHI TIẾT (REVIEW TOÀN BỘ CÂU HỎI & ĐÁP ÁN) -->
 <div class="ov" id="ovExp"><div class="card" style="max-width:820px;width:96%">
  <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px">
@@ -1634,29 +1740,40 @@ function promptUnlockModal(targetMode) {
   setTimeout(() => passInp && passInp.focus(), 100);
 }
 
-function doUnlockGamesSubmit() {
+async function doUnlockGamesSubmit() {
   const passInp = $('gameUnlockPass');
   const errDiv = $('gameUnlockErr');
+  const btn = $('bDoUnlockGames');
   const key = (passInp ? passInp.value : '').trim();
-  const res = window.LIC ? window.LIC.verify(key) : { ok: false };
-  if (res.ok) {
-    if (errDiv) errDiv.style.display = 'none';
-    $('ovUnlockGames').classList.remove('on');
-    toast('🎉 Kích hoạt bản quyền thành công trọn bộ 10 game & phòng thi!', 3000);
-    renderModesLockState();
-    if (pendingUnlockTargetMode) {
-      selectMode(pendingUnlockTargetMode);
-      pendingUnlockTargetMode = null;
+  if (!key) {
+    if (errDiv) { errDiv.style.display = 'block'; errDiv.textContent = '⚠️ Vui lòng nhập mã kích hoạt!'; }
+    if (passInp) passInp.focus();
+    return;
+  }
+  
+  if (btn) { btn.disabled = true; btn.textContent = '⏳ Đang kiểm tra Firebase...'; }
+  try {
+    const res = window.LIC ? await window.LIC.verify(key) : { ok: false, msg: 'Hệ thống bản quyền chưa tải xong' };
+    if (res.ok) {
+      if (errDiv) errDiv.style.display = 'none';
+      $('ovUnlockGames').classList.remove('on');
+      toast(res.msg || '🎉 Kích hoạt bản quyền Pro thành công!', 3500);
+      renderModesLockState();
+      if (pendingUnlockTargetMode) {
+        selectMode(pendingUnlockTargetMode);
+        pendingUnlockTargetMode = null;
+      }
+    } else {
+      if (errDiv) {
+        errDiv.style.display = 'block';
+        errDiv.textContent = '❌ ' + (res.msg || 'Mã kích hoạt không chính xác!');
+      }
+      if (passInp) { passInp.focus(); passInp.select(); }
     }
-  } else {
-    if (errDiv) {
-      errDiv.style.display = 'block';
-      errDiv.textContent = '❌ Mã kích hoạt không chính xác! Vui lòng thử lại.';
-    }
-    if (passInp) {
-      passInp.focus();
-      passInp.select();
-    }
+  } catch (e) {
+    if (errDiv) { errDiv.style.display = 'block'; errDiv.textContent = '❌ Lỗi kết nối: ' + e.message; }
+  } finally {
+    if (btn) { btn.disabled = false; btn.textContent = '✨ Kích hoạt ngay'; }
   }
 }
 
@@ -1666,6 +1783,8 @@ if ($('bCloseUnlockGames')) $('bCloseUnlockGames').onclick = () => $('ovUnlockGa
 
 function renderModesLockState() {
   const unlocked = window.LIC ? window.LIC.isUnlocked() : false;
+  const licInfo = window.LIC ? window.LIC.current() : null;
+
   document.querySelectorAll('#gModes .mode').forEach(b => {
     const m = b.dataset.m;
     const isFree = (m === 'climb' || m === 'brick');
@@ -1693,9 +1812,12 @@ function renderModesLockState() {
   if (licBar && licText) {
     if (unlocked) {
       if (licIcon) licIcon.textContent = '🌟';
+      const ownerLabel = esc(licInfo ? licInfo.name : 'Cô Chí Nên');
+      const expLabel = esc(licInfo ? licInfo.expVN : 'Vĩnh viễn');
       licText.innerHTML = `
-        <b>Phiên bản Pro:</b> Đã kích hoạt trọn bộ 10 game &amp; Phòng thi cho Cô Chí Nên.
-        <button type="button" class="btn w" id="bRelockGames" style="padding:1px 8px;font-size:11px;margin-left:8px;color:#dc2626;border-color:#fca5a5;background:#fef2f2" title="Khóa lại bản quyền">🔒 Khóa lại</button>
+        <b>Phiên bản Pro:</b> Đã kích hoạt cho <b>${ownerLabel}</b> (${expLabel}).
+        <button type="button" class="btn w" id="bRelockGames" style="padding:1px 8px;font-size:11px;margin-left:6px;color:#dc2626;border-color:#fca5a5;background:#fef2f2" title="Khóa lại bản quyền">🔒 Khóa lại</button>
+        <button type="button" class="btn b" id="bOpenKeyManager" style="padding:1px 10px;font-size:11px;margin-left:6px;background:#0284c7;color:#fff" title="Quản lý danh sách Key trên Firebase">🔑 Quản lý Key</button>
       `;
       if ($('bRelockGames')) {
         $('bRelockGames').onclick = (e) => {
@@ -1711,6 +1833,7 @@ function renderModesLockState() {
       licText.innerHTML = `
         <b>Bản tiêu chuẩn:</b> 🧗 Leo núi &amp; 🍄 Nấm Mario.
         <button type="button" class="btn b" id="bTriggerUnlockModal" style="padding:3px 12px;font-size:12px;margin-left:8px;background:linear-gradient(135deg,#7c3aed,#db2777);border:none;color:#fff;font-weight:800;cursor:pointer">🔑 Kích hoạt bản quyền Pro</button>
+        <button type="button" class="btn w" id="bOpenKeyManager" style="padding:3px 10px;font-size:11px;margin-left:6px;color:#0284c7;border-color:#bae6fd" title="Dành cho Quản trị viên: Quản lý danh sách Key">⚙️ Quản lý Key</button>
       `;
       if ($('bTriggerUnlockModal')) {
         $('bTriggerUnlockModal').onclick = (e) => {
@@ -1719,8 +1842,232 @@ function renderModesLockState() {
         };
       }
     }
+    if ($('bOpenKeyManager')) {
+      $('bOpenKeyManager').onclick = (e) => {
+        e.stopPropagation();
+        openKeyManagerModal();
+      };
+    }
   }
 }
+
+/* ══════════ BỘ ĐIỀU KHIỂN QUẢN LÝ KEY FIREBASE (KEY MANAGER CONTROLLER) ══════════ */
+let kmIsAuthenticated = false;
+
+function openKeyManagerModal() {
+  const ov = $('ovKeyManager');
+  if (!ov) return;
+  const pinSec = $('kmPinSection');
+  const mainSec = $('kmMainSection');
+  const pinErr = $('kmPinErr');
+  const pinInp = $('kmAdminPin');
+
+  if (pinErr) pinErr.style.display = 'none';
+
+  if (!kmIsAuthenticated) {
+    if (pinSec) pinSec.style.display = 'block';
+    if (mainSec) mainSec.style.display = 'none';
+    if (pinInp) { pinInp.value = ''; setTimeout(() => pinInp.focus(), 150); }
+  } else {
+    if (pinSec) pinSec.style.display = 'none';
+    if (mainSec) mainSec.style.display = 'block';
+    kmLoadLicenses();
+  }
+
+  ov.classList.add('on');
+}
+
+if ($('bCloseKeyManager')) $('bCloseKeyManager').onclick = () => $('ovKeyManager').classList.remove('on');
+
+function kmDoVerifyPin() {
+  const pinInp = $('kmAdminPin');
+  const pinErr = $('kmPinErr');
+  const pin = (pinInp ? pinInp.value : '').trim();
+  const valid = window.LIC ? window.LIC.verifyAdmin(pin) : (pin === '0000');
+
+  if (valid) {
+    kmIsAuthenticated = true;
+    if (pinErr) pinErr.style.display = 'none';
+    $('kmPinSection').style.display = 'none';
+    $('kmMainSection').style.display = 'block';
+    kmLoadLicenses();
+  } else {
+    if (pinErr) {
+      pinErr.style.display = 'block';
+      pinErr.textContent = '❌ Mã Admin không chính xác! Vui lòng thử lại.';
+    }
+    if (pinInp) { pinInp.focus(); pinInp.select(); }
+  }
+}
+
+if ($('bKmVerifyPin')) $('bKmVerifyPin').onclick = kmDoVerifyPin;
+if ($('kmAdminPin')) $('kmAdminPin').onkeydown = e => { if (e.key === 'Enter') kmDoVerifyPin(); };
+
+function kmGenRandomKey() {
+  const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+  let rand = '';
+  for (let i = 0; i < 4; i++) {
+    rand += chars.charAt(Math.floor(Math.random() * chars.length));
+  }
+  const key = 'NENE-' + rand;
+  if ($('kmNewKey')) $('kmNewKey').value = key;
+}
+if ($('bKmGenKey')) $('bKmGenKey').onclick = kmGenRandomKey;
+
+async function kmCreateKeySubmit() {
+  const keyInp = $('kmNewKey');
+  const ownerInp = $('kmNewOwner');
+  const durSel = $('kmNewDuration');
+  const btn = $('bKmCreateKey');
+
+  const key = (keyInp ? keyInp.value : '').trim();
+  const owner = (ownerInp ? ownerInp.value : '').trim();
+  const duration = durSel ? durSel.value : 'forever';
+
+  if (!key) {
+    alert('Vui lòng nhập hoặc bấm "🎲 Tạo" để sinh mã key!');
+    if (keyInp) keyInp.focus();
+    return;
+  }
+
+  if (btn) { btn.disabled = true; btn.textContent = '⏳ Đang lưu Firebase...'; }
+  try {
+    await window.LIC.adminCreateLicense({ key, owner, duration });
+    toast(`🎉 Đã tạo và lưu key "${key}" lên máy chủ Firebase thành công!`, 3000);
+    if (keyInp) keyInp.value = '';
+    if (ownerInp) ownerInp.value = '';
+    await kmLoadLicenses();
+  } catch (e) {
+    alert('❌ Lỗi khi tạo key: ' + e.message);
+  } finally {
+    if (btn) { btn.disabled = false; btn.textContent = '💾 Lưu & Cấp Key'; }
+  }
+}
+if ($('bKmCreateKey')) $('bKmCreateKey').onclick = kmCreateKeySubmit;
+
+async function kmLoadLicenses() {
+  const tbody = $('kmTbody');
+  if (!tbody) return;
+  tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;padding:20px;color:#94a3b8">⏳ Đang tải danh sách key từ máy chủ Firebase...</td></tr>';
+
+  try {
+    const list = await window.LIC.adminListLicenses();
+    const now = Date.now();
+    let activeCount = 0;
+    let inactiveCount = 0;
+
+    list.forEach(item => {
+      const isAct = item.status === 'active';
+      const isExp = item.expiresAt && item.expiresAt > 0 && item.expiresAt < now;
+      if (isAct && !isExp) activeCount++;
+      else inactiveCount++;
+    });
+
+    if ($('kmStatActive')) $('kmStatActive').textContent = activeCount;
+    if ($('kmStatTotal')) $('kmStatTotal').textContent = list.length;
+    if ($('kmStatInactive')) $('kmStatInactive').textContent = inactiveCount;
+
+    if (list.length === 0) {
+      tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;padding:20px;color:#64748b">Chưa có mã key nào trên Firebase. Hãy tạo mã đầu tiên ở trên!</td></tr>';
+      return;
+    }
+
+    let html = '';
+    list.forEach(item => {
+      const isAct = item.status === 'active';
+      const isExp = item.expiresAt && item.expiresAt > 0 && item.expiresAt < now;
+      const isMaster = item.key === '0000' || (item.owner && item.owner.includes('Master'));
+
+      let expBadge = '';
+      if (!item.expiresAt || item.expiresAt === 0) {
+        expBadge = '<span style="background:#dcfce7;color:#15803d;padding:2px 8px;border-radius:6px;font-weight:700">Vĩnh viễn</span>';
+      } else if (isExp) {
+        const dStr = new Date(item.expiresAt).toLocaleDateString('vi-VN');
+        expBadge = `<span style="background:#fee2e2;color:#b91c1c;padding:2px 8px;border-radius:6px;font-weight:700">Đã hết hạn (${dStr})</span>`;
+      } else {
+        const dStr = new Date(item.expiresAt).toLocaleDateString('vi-VN');
+        const daysLeft = Math.ceil((item.expiresAt - now) / (24 * 3600 * 1000));
+        const bg = daysLeft <= 7 ? '#fef3c7' : '#e0f2fe';
+        const color = daysLeft <= 7 ? '#b45309' : '#0369a1';
+        expBadge = `<span style="background:${bg};color:${color};padding:2px 8px;border-radius:6px;font-weight:700">Còn ${daysLeft} ngày (${dStr})</span>`;
+      }
+
+      let statusBadge = isAct
+        ? '<span style="color:#16a34a;font-weight:800">🟢 Hoạt động</span>'
+        : '<span style="color:#dc2626;font-weight:800">🔴 Tạm khóa</span>';
+
+      html += `
+        <tr style="border-bottom:1px solid #f1f5f9;background:${!isAct || isExp ? '#fffafa' : '#fff'}">
+          <td style="padding:10px;font-weight:900;font-size:14px;color:#0f172a;letter-spacing:1px">
+            <span style="background:#f1f5f9;padding:3px 8px;border-radius:6px;border:1px solid #cbd5e1">${esc(item.key || 'MÃ BÍ MẬT')}</span>
+            <button type="button" class="btn w" style="padding:1px 6px;font-size:10px;margin-left:4px" onclick="navigator.clipboard.writeText('${esc(item.key || '')}');toast('📋 Đã copy mã key: ${esc(item.key || '')}', 1500)" title="Sao chép mã key">📋</button>
+          </td>
+          <td style="padding:10px;font-weight:600;color:#334155">
+            ${esc(item.owner || '—')}
+            ${item.note ? `<div style="font-size:11px;color:#94a3b8">${esc(item.note)}</div>` : ''}
+          </td>
+          <td style="padding:10px">${expBadge}</td>
+          <td style="padding:10px">${statusBadge}</td>
+          <td style="padding:10px;text-align:center">
+            <div style="display:flex;gap:4px;justify-content:center;flex-wrap:wrap">
+              <button type="button" class="btn b" style="padding:3px 8px;font-size:11px" onclick="kmCopyZaloMessage('${esc(item.key || '')}', '${esc(item.owner || '')}', '${item.duration || 'forever'}', ${item.expiresAt || 0})" title="Sao chép tin nhắn Zalo kèm hướng dẫn kích hoạt">
+                📲 Gửi Zalo
+              </button>
+              ${!isMaster ? `
+                <button type="button" class="btn w" style="padding:3px 8px;font-size:11px;color:${isAct ? '#d97706' : '#16a34a'}" onclick="kmToggleStatus('${item.hash}', '${item.status}')" title="${isAct ? 'Tạm khóa key này' : 'Mở lại key này'}">
+                  ${isAct ? '⏸ Khóa' : '▶ Mở'}
+                </button>
+                <button type="button" class="btn r" style="padding:3px 8px;font-size:11px" onclick="kmDeleteKey('${item.hash}', '${esc(item.key || '')}', '${esc(item.owner || '')}')" title="Xóa vĩnh viễn khỏi Firebase">
+                  🗑 Xóa
+                </button>
+              ` : '<span style="font-size:11px;color:#64748b;padding:3px">Master</span>'}
+            </div>
+          </td>
+        </tr>
+      `;
+    });
+    tbody.innerHTML = html;
+  } catch (e) {
+    tbody.innerHTML = `<tr><td colspan="5" style="text-align:center;padding:20px;color:#dc2626">❌ Không thể tải danh sách key từ Firebase: ${esc(e.message)}</td></tr>`;
+  }
+}
+if ($('bKmRefresh')) $('bKmRefresh').onclick = kmLoadLicenses;
+
+async function kmToggleStatus(hash, currentStatus) {
+  try {
+    const newStatus = await window.LIC.adminToggleLicense(hash, currentStatus);
+    toast(newStatus === 'active' ? '🟢 Đã kích hoạt lại mã key!' : '⏸ Đã tạm khóa mã key!', 2000);
+    kmLoadLicenses();
+  } catch (e) {
+    alert('Lỗi: ' + e.message);
+  }
+}
+window.kmToggleStatus = kmToggleStatus;
+
+async function kmDeleteKey(hash, key, owner) {
+  if (!confirm(`Bạn có chắc chắn muốn XÓA VĨNH VIỄN mã key "${key}" của [${owner}] khỏi Firebase không?\n\nNgười này sẽ bị khóa bản quyền ngay lập tức!`)) {
+    return;
+  }
+  try {
+    await window.LIC.adminDeleteLicense(hash);
+    toast(`🗑 Đã xóa mã key "${key}" thành công!`, 2000);
+    kmLoadLicenses();
+  } catch (e) {
+    alert('Lỗi: ' + e.message);
+  }
+}
+window.kmDeleteKey = kmDeleteKey;
+
+function kmCopyZaloMessage(key, owner, duration, expiresAt) {
+  let expText = 'Vĩnh viễn';
+  if (expiresAt && expiresAt > 0) {
+    expText = `Đến ngày ${new Date(expiresAt).toLocaleDateString('vi-VN')}`;
+  }
+  const msg = `Kính gửi ${owner || 'Cô'},\nMs Nene English xin gửi mã kích hoạt Bản quyền Pro Trọn bộ 10 Game & Phòng thi:\n\n🔑 MÃ KÍCH HOẠT: ${key}\n⏰ Thời hạn: ${expText}\n\n👉 Hướng dẫn kích hoạt:\n1. Mở trang quản trị game.\n2. Bấm vào biểu tượng ổ khóa bất kỳ hoặc nút "Kích hoạt bản quyền Pro".\n3. Nhập mã ${key} và bấm Kích hoạt.\n\nChúc cô có những giờ dạy vui vẻ và hiệu quả!`;
+  navigator.clipboard.writeText(msg);
+  toast('📋 Đã sao chép tin nhắn mẫu kèm mã key gửi Zalo!', 2500);
+}
+window.kmCopyZaloMessage = kmCopyZaloMessage;
 
 $('gModes').onclick = e => {
   const b = e.target.closest('[data-m]'); if (!b) return;
@@ -2944,6 +3291,14 @@ async function checkResume() {
     renderModesLockState();
     if (window.LIC && !window.LIC.allowed(gMode)) selectMode('climb');
     else selectMode(gMode);
+    // Tự động đối chiếu bản quyền ngầm với Firebase
+    if (window.LIC && typeof window.LIC.syncRemote === 'function') {
+      window.LIC.syncRemote(info => {
+        renderModesLockState();
+        if (!window.LIC.allowed(gMode)) selectMode('climb');
+        toast('🔒 Bản quyền của bạn đã hết hạn hoặc đã được Quản trị viên thu hồi trên máy chủ Firebase.', 4000);
+      });
+    }
     checkResume();
     renderBank(true); // Tự động đồng bộ kho đề từ máy chủ ngay khi mở trang
   } catch (e) { $('netB').className = 'badge warn'; $('netB').textContent = '❌ ' + e.message }
