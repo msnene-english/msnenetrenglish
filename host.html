@@ -92,9 +92,9 @@ table{width:100%;border-collapse:collapse;font-weight:700}
 th,td{padding:8px 10px;text-align:left;border-bottom:2px solid #f0ebff;white-space:nowrap}
 th{color:#7a6aa8;font-size:13px}
 .tw{overflow-x:auto}
-.bank-item{display:flex;justify-content:space-between;align-items:center;background:#f6f3ff;border-radius:12px;padding:10px 14px;font-weight:800;margin-bottom:8px}
-.bank-item .binfo{cursor:pointer;flex:1}
-.bank-item .bacts{display:flex;gap:6px}
+.bank-item{display:flex;justify-content:space-between;align-items:center;background:#f6f3ff;border-radius:12px;padding:10px 14px;font-weight:800;margin-bottom:8px;gap:8px;flex-wrap:wrap}
+.bank-item .binfo{cursor:pointer;flex:1;min-width:180px}
+.bank-item .bacts{display:flex;gap:5px;flex-wrap:wrap;align-items:center;justify-content:flex-end}
 .review-box{background:#fff8f0;border:2px solid #ffcb80;border-radius:18px;padding:16px;margin:18px 0}
 .mistake-row{background:#fff;border-radius:12px;padding:10px 14px;margin-top:8px;display:flex;justify-content:space-between;align-items:center;font-weight:800}
 .mistake-row b{color:#c23a55}
@@ -318,7 +318,6 @@ Cách 3 — Dán câu luyện phát âm (tự động điền IPA & mẹo):
       <span style="font-size:11px;font-weight:800;background:#f3e8ff;color:#7e22ce;padding:2px 8px;border-radius:999px">✨ Dành cho tài khoản PRO</span>
      </div>
      <div id="commBankList" class="prev" style="max-height:280px"></div>
-    </div>
     </div>
 
     <div class="stat" id="qStat"></div>
