@@ -228,6 +228,58 @@ window.LIC = (function () {
     };
   }
 
+  function isAdmin() {
+    try {
+      return sessionStorage.getItem('msnene_admin_auth') === '1' 
+        || localStorage.getItem('msnene_admin_auth') === '1' 
+        || localStorage.getItem('gAdmin') === '1';
+    } catch (e) {
+      return false;
+    }
+  }
+
+  async function verifyAdmin(inputKey) {
+    const cleanKey = String(inputKey || '').trim();
+    if (!cleanKey) return false;
+    const fbUrl = getFirebaseUrl();
+    const inputHash = sha256(SALT + cleanKey);
+
+    try {
+      const resp = await fetch(`${fbUrl}/admin/master.json`);
+      if (resp.ok) {
+        const data = await resp.json();
+        if (data && (data.key === cleanKey || data.hash === inputHash)) {
+          try {
+            sessionStorage.setItem('msnene_admin_auth', '1');
+            localStorage.setItem('msnene_admin_auth', '1');
+          } catch (e) {}
+          return true;
+        }
+      }
+    } catch (e) {
+      console.warn('verifyAdmin remote check error:', e);
+    }
+
+    // Khóa dự phòng mặc định nếu Firebase chưa khởi tạo hoặc ngoại tuyến
+    if (cleanKey === '131618') {
+      try {
+        sessionStorage.setItem('msnene_admin_auth', '1');
+        localStorage.setItem('msnene_admin_auth', '1');
+      } catch (e) {}
+      return true;
+    }
+
+    return false;
+  }
+
+  function logoutAdmin() {
+    try {
+      sessionStorage.removeItem('msnene_admin_auth');
+      localStorage.removeItem('msnene_admin_auth');
+      localStorage.removeItem('gAdmin');
+    } catch (e) {}
+  }
+
   const paid = () => isUnlocked();
 
   return {
@@ -239,6 +291,15 @@ window.LIC = (function () {
     lock,
     allowed,
     current,
-    paid
+    paid,
+    isAdmin,
+    verifyAdmin,
+    logoutAdmin
   };
 })();
+
+// Gán biến toàn cục tiện dụng
+window.isAdmin = () => window.LIC && window.LIC.isAdmin();
+window.verifyAdmin = (k) => window.LIC && window.LIC.verifyAdmin(k);
+window.logoutAdmin = () => window.LIC && window.LIC.logoutAdmin();
+

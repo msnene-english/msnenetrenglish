@@ -113,6 +113,50 @@ th{color:#7a6aa8;font-size:13px}
 .ve-ans-btn{width:28px;height:28px;border-radius:50%;border:2px solid #cbd5e1;background:#f1f5f9;font-weight:900;font-size:12px;cursor:pointer;color:#475569;flex-shrink:0}
 .ve-ans-btn.on{background:#10b981;border-color:#059669;color:#fff}
 [hidden]{display:none!important}
+
+/* ═════ GIAO DIỆN THƯ MỤC & UNIT KIỂU QUIZLET ═════ */
+.ktool{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:10px}
+.ktool .inp{flex:1;min-width:160px}
+.kbtn{border:0;border-radius:12px;padding:8px 12px;font:800 13px Nunito,sans-serif;cursor:pointer;color:#fff;background:linear-gradient(90deg,#9B7BFF,#7E62E8);box-shadow:0 3px 0 #0002;transition:all .15s}
+.kbtn:hover{filter:brightness(1.05);transform:translateY(-1px)}
+.kbtn.g{background:linear-gradient(90deg,#3FBF86,#2DA36E)}
+.kbtn.b{background:linear-gradient(90deg,#5AB0FF,#2E9BF0)}
+.kbtn.o{background:linear-gradient(90deg,#FFB86B,#FF7A3D)}
+.kbtn.w{background:#fff;color:#5b4bb0;box-shadow:0 0 0 2px #e4dcff inset}
+.kbtn.r{background:#fff0f3;color:#c23a55;box-shadow:0 0 0 2px #ffd0da inset}
+.kac{display:flex;gap:6px;flex-wrap:wrap}
+.fbar{display:flex;gap:8px;flex-wrap:wrap;padding:2px 2px 8px;margin-bottom:8px}
+.fcard{flex:none;display:flex;align-items:center;gap:7px;border:2px solid #efe8ff;background:#fff;border-radius:16px;padding:8px 13px;font:800 14px Nunito,sans-serif;color:#2d2350;cursor:pointer;box-shadow:0 2px 0 #0000000d;transition:all .15s}
+.fcard:hover{transform:translateY(-1px);border-color:#c9b8ff}
+.fcard i{font-style:normal;font-size:20px}
+.fcard small{background:#f1ecff;color:#6a58b8;border-radius:999px;padding:1px 8px;font-weight:900}
+.fcard.on{border-color:#9B7BFF;background:#f4efff;box-shadow:0 3px 0 #9B7BFF44}
+.fcard.add{border-style:dashed;color:#7E62E8}
+.fhead{display:flex;align-items:center;gap:14px;background:linear-gradient(135deg,#f4efff,#e6f3ff);border-radius:20px;padding:12px 14px;margin-bottom:10px;flex-wrap:wrap}
+.fhead .fic{width:56px;height:56px;border-radius:16px;display:grid;place-items:center;font-size:28px;flex:none;box-shadow:0 4px 10px #0001}
+.fhead .fin{flex:1;min-width:150px}
+.fhead b{font:800 22px Nunito,sans-serif;color:#2d2350;display:block;line-height:1.2}
+.fhead small{color:#7a6aa8;font-weight:700;font-size:13px}
+.chips{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px;align-items:center}
+.chip{border:2px solid transparent;border-radius:999px;padding:7px 15px;font:800 14px Nunito,sans-serif;cursor:pointer;color:#3a2f6a;transition:all .15s}
+.chip small{opacity:.75;margin-left:5px;font-weight:900}
+.chip.on{background:#fff!important;border-color:#7E62E8;box-shadow:0 3px 0 #7E62E833}
+.chip.mv{cursor:grab;touch-action:none;user-select:none}
+.chip.drag{position:relative;z-index:5;cursor:grabbing;opacity:.9;box-shadow:0 10px 22px #2d235044!important}
+.chip.dropL{box-shadow:-5px 0 0 #7E62E8!important}
+.chip.dropR{box-shadow:5px 0 0 #7E62E8!important}
+.chip.add{background:#fff;border:2px dashed #c9b8ff;color:#7E62E8}
+.chip.mini{padding:5px 10px;font-size:12.5px;background:#fff;border:2px solid #efe8ff}
+.uhint{font-size:12px;font-weight:800;color:#9a8ac8;margin-left:auto}
+.ugrp{font:800 12.5px Nunito,sans-serif;color:#7a6aa8;padding:8px 4px 2px;letter-spacing:.3px;border-bottom:1.5px dashed #e8e2fa;margin-top:6px}
+.ktag{display:inline-block;border-radius:8px;padding:2px 8px;font-size:11.5px;font-weight:800;margin-right:6px}
+.fdl{max-height:240px;overflow:auto;display:grid;gap:6px;margin-top:8px;padding:4px}
+.fdl label{display:flex;align-items:center;gap:8px;padding:8px 10px;background:#f8f6ff;border-radius:10px;cursor:pointer;font-weight:700;font-size:13.5px}
+.fdl label:hover{background:#efe8ff}
+.fdl small{margin-left:auto;color:#7a6aa8;font-size:12px}
+.freeK{background:linear-gradient(135deg,#FFF1F8,#EEF4FF);border:2px dashed #FF7EB6;border-radius:14px;padding:10px 14px;font-weight:800;font-size:13.5px;color:#5b2a6e;margin-bottom:10px}
+.freeK b{color:#E0357A}
+
 </style>
 </head>
 <body>
@@ -152,7 +196,7 @@ th{color:#7a6aa8;font-size:13px}
     <div class="tabs">
      <button class="tab on" data-t="paste">📋 Dán câu hỏi</button>
      <button class="tab" data-t="mau">⭐ Bộ đề mẫu</button>
-     <button class="tab" data-t="bank">📚 Thư viện đề thi</button>
+     <button class="tab" data-t="bank">📚 Thư viện đề thi <span style="font-size:10px;background:#9333ea;color:#fff;padding:1px 6px;border-radius:999px;margin-left:4px">PRO</span></button>
     </div>
 
     <!-- TAB 1: DÁN TỪ WORD / EXCEL -->
@@ -236,26 +280,45 @@ Cách 3 — Dán câu luyện phát âm (tự động điền IPA & mẹo):
      <div id="mList" class="prev"></div>
     </div>
 
-    <!-- TAB 3: KHO ĐỀ CỦA CÔ (LƯU LOCAL + EXPORT/IMPORT FILE + CLOUD) -->
+    <!-- TAB 3: THƯ VIỆN ĐỀ THI & THƯ MỤC QUIZLET -->
     <div id="tBank" hidden>
-     <div style="display:flex;gap:8px;margin-bottom:10px;flex-wrap:wrap;align-items:center">
-      <input id="searchBank" class="inp" style="flex:1;min-width:160px;padding:7px 12px;font-size:13px" placeholder="🔍 Tìm kiếm đề thi...">
-      <button class="btn b" id="bRefreshBank" type="button" style="font-size:12px;padding:7px 11px">🔄 Làm mới thư viện</button>
-      <button class="btn g" id="bExportBank" style="font-size:12px;padding:7px 10px">⬇️ Xuất file</button>
-      <label class="btn w" style="font-size:12px;padding:7px 10px;cursor:pointer">
-       ⬆️ Nạp file
-       <input type="file" id="fImportBank" accept=".json" hidden>
-      </label>
-     </div>
-     <div style="display:flex;gap:6px;margin:8px 0">
-       <button class="btn g" id="bFiltAll" style="padding:4px 10px;font-size:12px">Tất cả đề</button>
-       <button class="btn w" id="bFiltGame" style="padding:4px 10px;font-size:12px">🎮 Chỉ Game</button>
-       <button class="btn w" id="bFiltTest" style="padding:4px 10px;font-size:12px">📝 Chỉ Bài Test</button>
+     <!-- THANH CÔNG CỤ ĐẦU TRANG & ADMIN BADGE -->
+     <div style="display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap;align-items:center;justify-content:space-between">
+      <div id="adminStatusBox" style="display:flex;align-items:center;gap:6px">
+       <!-- Tự động cập nhật qua JS: Admin mode badge hoặc Nút đăng nhập Admin -->
       </div>
-      <div style="font-weight:800;font-size:13px;color:#5b4bb0;margin:6px 0">🌐 THƯ VIỆN ĐỀ CHUNG (Mọi thầy cô đều dùng được)</div>
-     <div id="commBankList" class="prev" style="max-height:220px"></div>
-     <div style="font-weight:800;font-size:13px;color:#7a6aa8;margin:12px 0 6px">🔒 KHO ĐỀ RIÊNG CỦA MÁY NÀY</div>
-     <div id="bankList" class="prev" style="max-height:160px"></div>
+      <div style="display:flex;gap:6px;flex-wrap:wrap">
+       <button class="btn b" id="bRefreshBank" type="button" style="font-size:12px;padding:6px 10px" title="Đồng bộ lại thư viện từ máy chủ">🔄 Làm mới thư viện</button>
+       <button class="btn g" id="bExportBank" type="button" style="font-size:12px;padding:6px 10px" title="Tải file sao lưu toàn bộ kho về máy">⬇️ Xuất file</button>
+       <label class="btn w" style="font-size:12px;padding:6px 10px;cursor:pointer" title="Nạp file sao lưu từ máy tính">
+        ⬆️ Nạp file
+        <input type="file" id="fImportBank" accept=".json" hidden>
+       </label>
+      </div>
+     </div>
+
+     <!-- 📁 PHẦN 1: THƯ MỤC & UNIT KIỂU QUIZLET (KHO RIÊNG CỦA CÔ) -->
+     <div style="font-weight:800;font-size:13.5px;color:#5b4bb0;margin:6px 0 4px">📁 THƯ MỤC &amp; KHO ĐỀ CỦA CÔ</div>
+     <div class="fbar" id="kFold"></div>
+     <div id="kHead"></div>
+     <div class="ktool">
+      <input id="searchBank" class="inp" placeholder="🔍 Tìm bộ câu hỏi (tìm trong mọi thư mục)…">
+      <button class="kbtn" id="bNewKitFromBank" type="button" title="Soạn bộ câu hỏi mới">➕ Bộ mới</button>
+     </div>
+     <div style="display:flex;gap:6px;margin:6px 0 8px">
+      <button class="btn g" id="bFiltAll" type="button" style="padding:4px 10px;font-size:12px">Tất cả đề</button>
+      <button class="btn w" id="bFiltGame" type="button" style="padding:4px 10px;font-size:12px">🎮 Chỉ Game</button>
+      <button class="btn w" id="bFiltTest" type="button" style="padding:4px 10px;font-size:12px">📝 Chỉ Bài Test</button>
+     </div>
+     <div id="bankList" class="prev" style="max-height:260px;margin-bottom:16px"></div>
+
+     <!-- 🌐 PHẦN 2: THƯ VIỆN ĐỀ CHUNG CỘNG ĐỒNG (CHỈ PRO MỚI TRUY CẬP, CHỈ ADMIN MỚI XÓA) -->
+     <div style="display:flex;justify-content:space-between;align-items:center;margin:12px 0 6px">
+      <span style="font-weight:800;font-size:13.5px;color:#5b4bb0">🌐 THƯ VIỆN ĐỀ THI DÙNG CHUNG (Cộng đồng Ms Nene)</span>
+      <span style="font-size:11px;font-weight:800;background:#f3e8ff;color:#7e22ce;padding:2px 8px;border-radius:999px">✨ Dành cho tài khoản PRO</span>
+     </div>
+     <div id="commBankList" class="prev" style="max-height:280px"></div>
+    </div>
     </div>
 
     <div class="stat" id="qStat"></div>
@@ -604,6 +667,28 @@ Hoặc dán theo mẫu:
  <div class="row"><button class="btn g" type="button" onclick="$('ovExp').classList.remove('on')">Đóng lời giải</button></div>
 </div></div>
 
+<!-- MODAL XẾP BỘ VÀO THƯ MỤC / UNIT -->
+<div class="ov" id="ovFd">
+ <div class="card" style="max-width:620px">
+  <div class="big" id="fdT">📁 Xếp vào thư mục</div>
+  <div class="sub" id="fdSub"></div>
+  <div class="lab">📁 Thư mục</div>
+  <div class="chips" id="fdF"></div>
+  <div class="lab">🏷 Unit / chủ đề</div>
+  <div class="chips" id="fdU"></div>
+  <div id="fdPick" hidden>
+   <div class="lab">📚 Tick các bộ muốn thêm vào</div>
+   <input id="fdQ" class="inp" style="width:100%" placeholder="🔍 Tìm bộ câu hỏi…">
+   <div class="fdl" id="fdL"></div>
+  </div>
+  <div class="row">
+   <button class="btn g" id="fdOk" type="button">✅ Xong</button>
+   <button class="btn w" id="fdCancel" type="button">Đóng</button>
+  </div>
+ </div>
+</div>
+
+
 <!-- MODAL SỔ ĐIỂM BÀI TẬP VỀ NHÀ (HOMEWORK GRADEBOOK) -->
 <div class="ov" id="ovGradebook"><div class="card" style="max-width:920px;width:96%">
  <div class="big" style="font-size:24px">📊 Sổ Điểm Bài Tập Về Nhà &amp; Đề Tự Luyện</div>
@@ -694,6 +779,11 @@ const store = {
 
 /* ═════ ① QUẢN LÝ BỘ CÂU HỎI ═════ */
 document.querySelectorAll('.tab').forEach(b => b.onclick = () => {
+  const target = b.dataset.t;
+  if (target === 'bank' && !isProUser()) {
+    openUnlockModal('Thư viện đề thi');
+    toast('🔒 Thư viện đề thi chung chỉ dành cho tài khoản PRO. Vui lòng kích hoạt mã bản quyền!', 3500);
+  }
   document.querySelectorAll('.tab').forEach(x => x.classList.toggle('on', x === b));
   src = b.dataset.t;
   $('tPaste').hidden = src !== 'paste';
@@ -1215,139 +1305,540 @@ $('mList').onchange = e => {
   if (s) setQs(s.qs, s.title, []);
 };
 
-/* ═════ THƯ VIỆN ĐỀ THI (CHIA SẺ CỘNG ĐỒNG + KHO RIÊNG) ═════ */
-let cachedCommunity = [];
+/* ═════ 📁 THƯ MỤC & UNIT QUIZLET + THƯ VIỆN ĐỀ THI PRO ═════ */
+const KCOL = [
+  ['#FFE3F1', '🌸'],
+  ['#E3F0FF', '🌊'],
+  ['#E5FBEF', '🍃'],
+  ['#F1E8FF', '✨'],
+  ['#E0F7FF', '💎'],
+  ['#FFE9F7', '🎀'],
+  ['#FFF3D6', '⭐'],
+  ['#E8F5E9', '🍀']
+];
+const UCOL = ['#FFE3F1', '#E3F0FF', '#E5FBEF', '#F1E8FF', '#E0F7FF', '#FFE9F7', '#FFF3D6', '#E8F5E9'];
+const uCol = (fo, u) => UCOL[Math.max(0, ((fo && fo.units) || []).indexOf(u)) % UCOL.length];
+const natSort = (a, b) => String(a).localeCompare(String(b), 'vi', { numeric: true, sensitivity: 'base' });
+const kid = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
 
-function getBank() {
-  try { return JSON.parse((store.get('msnene_bank') || store.get('msnenet_bank')) || '[]'); } catch (e) { return []; }
+function isProUser() {
+  return (window.LIC && (window.LIC.paid() || window.LIC.isUnlocked())) || isAdmin();
 }
-function saveBank(list) {
-  store.set('msnene_bank', JSON.stringify(list));
+
+function isAdmin() {
+  try {
+    return (window.LIC && window.LIC.isAdmin && window.LIC.isAdmin()) 
+      || sessionStorage.getItem('msnene_admin_auth') === '1' 
+      || localStorage.getItem('msnene_admin_auth') === '1' 
+      || localStorage.getItem('gAdmin') === '1';
+  } catch (e) {
+    return false;
+  }
+}
+
+async function promptAdminLogin() {
+  const key = prompt('🔐 Nhập Khóa Tối Cao (Master Admin Key) để kích hoạt quyền Quản trị:');
+  if (key === null) return;
+  if (!key.trim()) return toast('⚠️ Chưa nhập khóa!', 2000);
+  toast('⏳ Đang xác thực với máy chủ...', 1500);
+  let ok = false;
+  if (window.LIC && window.LIC.verifyAdmin) {
+    ok = await window.LIC.verifyAdmin(key);
+  } else if (key === '131618') {
+    ok = true;
+    sessionStorage.setItem('msnene_admin_auth', '1');
+    localStorage.setItem('msnene_admin_auth', '1');
+  }
+  if (ok) {
+    toast('🎉 Đăng nhập Admin thành công! Bạn có quyền xóa đề trên Thư viện chung.', 3500);
+    renderBank();
+  } else {
+    toast('❌ Khóa Tối Cao không chính xác!', 2500);
+  }
+}
+
+function logoutAdminUI() {
+  if (window.LIC && window.LIC.logoutAdmin) window.LIC.logoutAdmin();
+  sessionStorage.removeItem('msnene_admin_auth');
+  localStorage.removeItem('msnene_admin_auth');
+  localStorage.removeItem('gAdmin');
+  toast('ℹ️ Đã thoát chế độ Quản trị viên.', 2000);
   renderBank();
 }
+
+function folds() {
+  try { return JSON.parse(localStorage.getItem('gFold') || '[]'); } catch (e) { return []; }
+}
+
+function saveFolds(F) {
+  try { localStorage.setItem('gFold', JSON.stringify(F)); } catch (e) { toast('⚠️ Bộ nhớ máy đầy, chưa lưu được thư mục', 3000); }
+}
+
+function getBank() {
+  try {
+    const raw = store.get('msnene_bank') || store.get('msnenet_bank') || localStorage.getItem('gKits');
+    const list = raw ? JSON.parse(raw) : [];
+    let changed = false;
+    list.forEach(k => {
+      if (!k.id) { k.id = kid(); changed = true; }
+      if (k.c === undefined) { k.c = Math.floor(Math.random() * KCOL.length); changed = true; }
+    });
+    if (changed) {
+      store.set('msnene_bank', JSON.stringify(list));
+      localStorage.setItem('gKits', JSON.stringify(list));
+    }
+    return list;
+  } catch (e) { return []; }
+}
+
+function saveBank(list) {
+  try {
+    store.set('msnene_bank', JSON.stringify(list));
+    localStorage.setItem('gKits', JSON.stringify(list));
+  } catch (e) {}
+  renderBank();
+}
+
+function kits() { return getBank(); }
+function saveKits(L) { saveBank(L); }
+
+let curF = '', curU = '';
+try { curF = localStorage.getItem('gFoldCur') || ''; } catch (e) {}
+const setCur = (f, u) => {
+  curF = f;
+  curU = u || '';
+  try { localStorage.setItem('gFoldCur', f); } catch (e) {}
+  renderBank();
+};
+
+function unitList(txt) {
+  const t = clean(txt || '');
+  if (!t) return [];
+  if (/^\d+$/.test(t)) {
+    const n = Math.min(30, +t);
+    return Array.from({ length: n }, (_, i) => 'Unit ' + (i + 1));
+  }
+  return t.split(/[,;\n]+/).map(x => clean(x)).filter(Boolean).map(x => /^\d+$/.test(x) ? 'Unit ' + x : x);
+}
+
+const unitOne = (fo) => {
+  const v = clean(prompt('🏷 Tên Unit mới (VD: Unit 7, Review 2 — gõ số 7 là thành "Unit 7"):', 'Unit ' + (((fo && fo.units) || []).length + 1)) || '');
+  return (/^\d+$/.test(v) ? ['Unit ' + v] : unitList(v)).filter(u => !((fo && fo.units) || []).includes(u));
+};
+
+function newFolder() {
+  if (!isProUser()) {
+    openUnlockModal('Thư mục & Kho đề');
+    return toast('🔒 Tạo thư mục là tính năng cao cấp dành riêng cho tài khoản PRO!', 3500);
+  }
+  const name = clean(prompt('📁 Tên thư mục mới (VD: English 8, Global Success 9, Destination B1):') || '');
+  if (!name) return;
+  const u = prompt('🏷 Tạo sẵn các Unit?\n• Gõ 1 số, VD 12 → Unit 1 … Unit 12\n• Hoặc gõ tên cách nhau dấu phẩy: GKI, Unit 1, Unit 2\n• Để trống nếu chưa cần', '12');
+  const F = folds();
+  const f = { id: kid(), name, units: unitList(u || ''), c: F.length % KCOL.length };
+  F.push(f);
+  saveFolds(F);
+  setCur(f.id, '');
+  toast('📁 Đã tạo thư mục "' + name + '" — bấm "➕ Thêm bộ vào đây" để xếp bộ câu hỏi vào', 3200);
+}
+
+let fdS = null;
+function openFd(ids) {
+  const F = folds();
+  if (!F.length && !ids) return newFolder();
+  const k0 = ids && kits().find(k => k.id === ids[0]);
+  fdS = {
+    ids,
+    f: ids ? (k0 && k0.fd && F.some(x => x.id === k0.fd) ? k0.fd : (curF && curF !== '-' ? curF : (F[0] || {}).id || '')) : (curF && curF !== '-' ? curF : (F[0] || {}).id || ''),
+    u: ids ? ((k0 && k0.un) || (curU !== '-' ? curU : '')) : (curU !== '-' ? curU : '')
+  };
+  $('fdT').textContent = ids ? '📁 Xếp bộ vào thư mục' : '➕ Thêm bộ vào thư mục';
+  $('fdSub').textContent = ids ? '📘 ' + (k0 ? k0.title : '') : 'Chọn Unit rồi tick các bộ câu hỏi cần thêm';
+  $('fdPick').hidden = !!ids;
+  if ($('fdQ')) $('fdQ').value = '';
+  paintFd();
+  $('ovFd').classList.add('on');
+}
+
+function paintFd() {
+  const F = folds(), fo = F.find(x => x.id === fdS.f);
+  $('fdF').innerHTML = (fdS.ids ? '<button class="chip mini' + (!fdS.f ? ' on' : '') + '" data-ff="">🗂 Không xếp</button>' : '') 
+    + F.map(x => '<button class="chip' + (x.id === fdS.f ? ' on' : '') + '" style="background:' + KCOL[x.c % KCOL.length][0] + '" data-ff="' + x.id + '">📁 ' + esc(x.name) + '</button>').join('') 
+    + '<button class="chip add" data-ff="+">➕ Thư mục mới</button>';
+    
+  $('fdU').innerHTML = !fo ? '<span class="hint">Chọn thư mục trước nhé</span>' 
+    : '<button class="chip mini' + (!fdS.u ? ' on' : '') + '" data-uu="">Chưa có unit</button>' 
+      + (fo.units || []).map(u => '<button class="chip' + (u === fdS.u ? ' on' : '') + '" style="background:' + uCol(fo, u) + '" data-uu="' + esc(u) + '">' + esc(u) + '</button>').join('') 
+      + '<button class="chip add" data-uu="+">➕ Unit</button>';
+      
+  if (!fdS.ids) {
+    const q = clean($('fdQ') ? $('fdQ').value : '').toLowerCase();
+    const L = kits().filter(k => !(k.fd === fdS.f && (k.un || '') === fdS.u) && (!q || (k.title || '').toLowerCase().includes(q)));
+    const name = id => (F.find(x => x.id === id) || {}).name;
+    $('fdL').innerHTML = L.length ? L.map(k => '<label><input type="checkbox" value="' + k.id + '">' + esc(k.title) + '<small>' + (name(k.fd) ? '📁 ' + esc(name(k.fd)) + (k.un ? ' · ' + esc(k.un) : '') : '🗂 chưa xếp') + '</small></label>').join('') : '<div class="hint" style="text-align:center;padding:12px">Không còn bộ nào để thêm.</div>';
+  }
+}
+
+if ($('fdQ')) $('fdQ').oninput = paintFd;
+$('fdF').onclick = e => {
+  const b = e.target.closest('[data-ff]');
+  if (!b) return;
+  const v = b.dataset.ff;
+  if (v === '+') {
+    const nm = clean(prompt('📁 Tên thư mục mới:') || '');
+    if (!nm) return;
+    const F = folds();
+    const f = { id: kid(), name: nm, units: unitList(prompt('🏷 Tạo sẵn bao nhiêu Unit? (VD 12 · để trống nếu chưa cần)', '12') || ''), c: F.length % KCOL.length };
+    F.push(f);
+    saveFolds(F);
+    fdS.f = f.id;
+  } else {
+    fdS.f = v;
+  }
+  fdS.u = '';
+  paintFd();
+};
+
+$('fdU').onclick = e => {
+  const b = e.target.closest('[data-uu]');
+  if (!b) return;
+  const v = b.dataset.uu;
+  if (v === '+') {
+    const F = folds(), fo = F.find(x => x.id === fdS.f);
+    if (!fo) return toast('Chọn thư mục trước nhé', 2000);
+    const add = unitOne(fo);
+    if (!add.length) return;
+    fo.units = fo.units || [];
+    fo.units.push(...add);
+    if (!fo.man) fo.units.sort(natSort);
+    saveFolds(F);
+    fdS.u = add[0];
+  } else {
+    fdS.u = v;
+  }
+  paintFd();
+};
+
+$('fdOk').onclick = () => {
+  const ids = fdS.ids || [...document.querySelectorAll('#fdL input:checked')].map(x => x.value);
+  if (!ids.length) return toast('☑️ Tick ít nhất 1 bộ nhé', 1800);
+  const L = kits();
+  let n = 0;
+  for (const k of L) {
+    if (ids.includes(k.id)) {
+      k.fd = fdS.f || '';
+      k.un = fdS.f ? fdS.u : '';
+      n++;
+    }
+  }
+  saveKits(L);
+  $('ovFd').classList.remove('on');
+  const fo = folds().find(x => x.id === fdS.f);
+  if (fo && !fdS.ids) setCur(fo.id, fdS.u); else renderBank();
+  toast(fo ? '📁 Đã xếp ' + n + ' bộ vào "' + fo.name + (fdS.u ? ' · ' + fdS.u : '') + '"' : '🗂 Đã bỏ khỏi thư mục', 2400);
+};
+
+if ($('fdCancel')) $('fdCancel').onclick = () => $('ovFd').classList.remove('on');
+
+// Kéo thả chip Unit để đổi thứ tự (chuột & cảm ứng)
+let uDrag = null, uMoved = false;
+$('kHead').addEventListener('pointerdown', e => {
+  const c = e.target.closest('.chip.mv');
+  if (!c || e.button > 0) return;
+  uDrag = { c, u: c.dataset.u, x: e.clientX, y: e.clientY, on: false, t: null, after: false, id: e.pointerId };
+});
+
+addEventListener('pointermove', e => {
+  const d = uDrag;
+  if (!d || e.pointerId !== d.id) return;
+  if (!d.on) {
+    if (Math.hypot(e.clientX - d.x, e.clientY - d.y) < 7) return;
+    d.on = true;
+    d.c.classList.add('drag');
+  }
+  e.preventDefault();
+  d.c.style.transform = 'translate(' + (e.clientX - d.x) + 'px,' + (e.clientY - d.y) + 'px)';
+  $('kHead').querySelectorAll('.dropL,.dropR').forEach(x => x.classList.remove('dropL', 'dropR'));
+  d.t = null;
+  for (const x of $('kHead').querySelectorAll('.chip.mv')) {
+    if (x === d.c) continue;
+    const b = x.getBoundingClientRect();
+    if (e.clientX >= b.left - 4 && e.clientX <= b.right + 4 && e.clientY >= b.top - 6 && e.clientY <= b.bottom + 6) {
+      d.t = x;
+      d.after = e.clientX > b.left + b.width / 2;
+      x.classList.add(d.after ? 'dropR' : 'dropL');
+      break;
+    }
+  }
+}, { passive: false });
+
+const uDrop = e => {
+  const d = uDrag;
+  if (!d || (e && e.pointerId !== d.id)) return;
+  uDrag = null;
+  if (!d.on) return;
+  uMoved = true;
+  setTimeout(() => uMoved = false, 50);
+  d.c.classList.remove('drag');
+  d.c.style.transform = '';
+  if (!d.t || !e || e.type === 'pointercancel') return renderBank();
+  const F = folds(), fo = F.find(x => x.id === curF);
+  if (!fo) return;
+  const L = (fo.units || []).filter(u => u !== d.u), at = L.indexOf(d.t.dataset.u);
+  if (at < 0) return renderBank();
+  L.splice(at + (d.after ? 1 : 0), 0, d.u);
+  fo.units = L;
+  fo.man = 1;
+  saveFolds(F);
+  renderBank();
+  toast('↔️ Đã đổi thứ tự: ' + L.join(' · '), 2200);
+};
+addEventListener('pointerup', uDrop);
+addEventListener('pointercancel', uDrop);
+
+$('kHead').onclick = e => {
+  if (uMoved) return;
+  const c = e.target.closest('[data-u]'), a = e.target.closest('[data-fa]'), F = folds(), fo = F.find(x => x.id === curF);
+  if (c) {
+    if (c.dataset.u !== '+') {
+      curU = c.dataset.u;
+      return renderBank();
+    }
+    if (!fo) return;
+    const add = unitOne(fo);
+    if (!add.length) return;
+    fo.units = fo.units || [];
+    fo.units.push(...add);
+    if (!fo.man) fo.units.sort(natSort);
+    saveFolds(F);
+    curU = add[0];
+    return renderBank();
+  }
+  if (!a || !fo) return;
+  const act = a.dataset.fa, L = kits();
+  if (act === 'pick') return openFd(null);
+  if (act === 'ren') {
+    const n = clean(prompt('🏷 Tên mới cho thư mục:', fo.name) || '');
+    if (!n) return;
+    fo.name = n;
+    saveFolds(F);
+    return renderBank();
+  }
+  if (act === 'del') {
+    if (!confirm('Xoá thư mục "' + fo.name + '"?\nCác bộ câu hỏi bên trong KHÔNG bị xoá — chỉ chuyển về "🗂 Chưa xếp".')) return;
+    for (const k of L) if (k.fd === fo.id) { k.fd = ''; k.un = ''; }
+    saveKits(L);
+    saveFolds(F.filter(x => x !== fo));
+    return setCur('', '');
+  }
+  if (act === 'uren') {
+    const n = clean(prompt('✏️ Tên mới cho "' + curU + '":', curU) || '');
+    if (!n || n === curU) return;
+    fo.units = fo.units || [];
+    if (fo.units.includes(n)) return toast('Đã có "' + n + '" rồi', 2000);
+    fo.units[fo.units.indexOf(curU)] = n;
+    if (!fo.man) fo.units.sort(natSort);
+    for (const k of L) if (k.fd === fo.id && k.un === curU) k.un = n;
+    saveKits(L);
+    saveFolds(F);
+    curU = n;
+    return renderBank();
+  }
+  if (act === 'udel') {
+    if (!confirm('Xoá "' + curU + '" khỏi thư mục?\nCác bộ trong unit này vẫn nằm trong thư mục "' + fo.name + '" (mục "Chưa có unit").')) return;
+    fo.units = (fo.units || []).filter(u => u !== curU);
+    for (const k of L) if (k.fd === fo.id && k.un === curU) k.un = '';
+    saveKits(L);
+    saveFolds(F);
+    curU = '';
+    return renderBank();
+  }
+};
+
+$('kFold').onclick = e => {
+  const b = e.target.closest('[data-f]');
+  if (!b) return;
+  if (b.dataset.f === '+') return newFolder();
+  setCur(b.dataset.f, '');
+};
 
 let bankFilter = 'all'; // 'all', 'game', 'test'
 let isFetchingBank = false;
 
-function getTestDurMinutes() {
-  const inpVal = $('testDurInp') ? +($('testDurInp').value) : NaN;
-  if (!isNaN(inpVal) && inpVal >= 0) return inpVal;
-  return +($('testDur')?.value || 45);
-}
-
-function setTestDurMinutes(m) {
-  m = Math.max(0, +m || 0);
-  if ($('testDurInp')) $('testDurInp').value = m;
-  if ($('testDur')) $('testDur').value = String(m);
-  if ($('testDurPresets')) {
-    [...$('testDurPresets').children].forEach(btn => {
-      const bDur = +btn.dataset.dur;
-      btn.className = 'btn ' + (bDur === m ? 'g' : 'w');
-    });
-  }
-}
-
-if ($('testDurPresets')) {
-  $('testDurPresets').onclick = e => {
-    const btn = e.target.closest('button');
-    if (!btn || btn.dataset.dur === undefined) return;
-    setTestDurMinutes(+btn.dataset.dur);
-  };
-}
-if ($('testDurInp')) {
-  $('testDurInp').oninput = () => {
-    const val = +$('testDurInp').value;
-    if ($('testDurPresets')) {
-      [...$('testDurPresets').children].forEach(btn => {
-        btn.className = 'btn ' + (+btn.dataset.dur === val ? 'g' : 'w');
-      });
-    }
-  };
-}
-
 async function renderBank(forceCloud) {
-  if (forceCloud || !window.communityQuizzesCache) {
-    if ($('commBankList')) {
-      $('commBankList').innerHTML = '<div class="hint" style="text-align:center;padding:16px">⏳ Đang đồng bộ Thư viện đề thi từ máy chủ…</div>';
-    }
-    isFetchingBank = true;
-    try {
-      window.communityQuizzesCache = await GC.getCommunityLibrary();
-    } catch(err) {
-      console.warn('Load community library error:', err);
-    } finally {
-      isFetchingBank = false;
+  // 1. Cập nhật trạng thái Admin
+  const adminBox = $('adminStatusBox');
+  if (adminBox) {
+    if (isAdmin()) {
+      adminBox.innerHTML = '<div style="display:inline-flex;align-items:center;gap:6px;background:#dcfce7;color:#166534;font-size:12px;font-weight:800;padding:4px 10px;border-radius:999px;border:1px solid #bbf7d0">🛡️ Quản trị viên (Admin Mode) <button type="button" class="btn w mini" style="padding:1px 6px;font-size:11px" onclick="logoutAdminUI()">Thoát</button></div>';
+    } else {
+      adminBox.innerHTML = '<button type="button" class="btn w mini" style="font-size:11px;padding:3px 9px;border-radius:999px;color:#7a6aa8" onclick="promptAdminLogin()">🔑 Đăng nhập Admin</button>';
     }
   }
 
-  const query = clean($('searchBank') ? $('searchBank').value : '').toLowerCase();
+  const L = kits(), F = folds(), qSearch = clean($('searchBank') ? $('searchBank').value : '').toLowerCase();
+  const has = id => F.some(x => x.id === id);
+  if (curF && curF !== '-' && !has(curF)) { curF = ''; curU = ''; }
+  const fo = F.find(x => x.id === curF);
+  const loose = L.filter(k => !has(k.fd)).length;
 
-  // 1. Render Thư viện chung
-  let commList = (window.communityQuizzesCache || []).slice();
-  if (bankFilter === 'game') commList = commList.filter(q => q.type !== 'test' && q.m !== 'test');
-  if (bankFilter === 'test') commList = commList.filter(q => q.type === 'test' || q.m === 'test');
-  if (query) {
-    commList = commList.filter(q => (q.title || '').toLowerCase().includes(query) || (q.author || '').toLowerCase().includes(query) || (q.id || '').toLowerCase().includes(query));
+  // Render thanh thư mục lớn (#kFold)
+  if ($('kFold')) {
+    $('kFold').innerHTML = (isProUser() ? '' : '<div class="freeK">🎁 Bản miễn phí: chỉ xem thử một số tính năng. Kích hoạt <b>PRO</b> để tạo THƯ MỤC &amp; lưu bộ đề KHÔNG GIỚI HẠN!</div>')
+      + (!L.length && !F.length ? '' : '<button class="fcard' + (!curF ? ' on' : '') + '" data-f=""><i>📚</i>Tất cả<small>' + L.length + '</small></button>' 
+      + F.map(x => '<button class="fcard' + (x.id === curF ? ' on' : '') + '" data-f="' + x.id + '"' + (x.id === curF ? '' : ' style="background:' + KCOL[x.c % KCOL.length][0] + '88"') + '><i>📁</i>' + esc(x.name) + '<small>' + L.filter(k => k.fd === x.id).length + '</small></button>').join('') 
+      + (F.length && loose ? '<button class="fcard' + (curF === '-' ? ' on' : '') + '" data-f="-"><i>🗂</i>Chưa xếp<small>' + loose + '</small></button>' : '') 
+      + '<button class="fcard add" data-f="+">' + (isProUser() ? '➕' : '🔒') + ' Thư mục mới</button>');
   }
 
-  if (!commList.length) {
-    $('commBankList').innerHTML = '<div class="hint" style="text-align:center;padding:16px">Không tìm thấy bộ đề nào phù hợp. Cô hãy bấm <b>"🔄 Làm mới thư viện"</b> hoặc tạo đề mới nhé!</div>';
-  } else {
-    $('commBankList').innerHTML = commList.map(item => {
-      const isTest = item.type === 'test' || item.m === 'test';
-      const badgeHtml = isTest 
-        ? '<span style="background:#8b5cf6;color:#fff;font-size:11px;font-weight:800;padding:2px 6px;border-radius:6px;margin-right:6px">📝 BÀI TEST</span>'
-        : '<span style="background:#0284c7;color:#fff;font-size:11px;font-weight:800;padding:2px 6px;border-radius:6px;margin-right:6px">🎮 GAME</span>';
+  // Render Banner Thư mục & Unit Chips (#kHead)
+  if ($('kHead')) {
+    if (fo && !qSearch) {
+      const inK = L.filter(k => k.fd === fo.id);
+      const cnt = u => inK.filter(k => (k.un || '') === u).length;
+      const noU = cnt('');
+      $('kHead').innerHTML = '<div class="fhead"><div class="fic" style="background:' + KCOL[fo.c % KCOL.length][0] + '">📁</div><div class="fin"><b>' + esc(fo.name) + '</b><small>' + inK.length + ' bộ câu hỏi · ' + (fo.units || []).length + ' unit</small></div><div class="kac"><button class="kbtn" data-fa="pick" type="button">➕ Thêm bộ vào đây</button><button class="kbtn w" data-fa="ren" type="button">🏷 Đổi tên</button><button class="kbtn r" data-fa="del" type="button">🗑 Xoá thư mục</button></div></div>'
+        + '<div class="chips"><button class="chip' + (!curU ? ' on' : '') + '" style="background:#efe8ff" data-u="">Tất cả<small>' + inK.length + '</small></button>' 
+        + (fo.units || []).map(u => '<button class="chip mv' + (u === curU ? ' on' : '') + '" title="Giữ chuột kéo sang trái / phải để đổi thứ tự" style="background:' + uCol(fo, u) + '" data-u="' + esc(u) + '">' + esc(u) + '<small>' + cnt(u) + '</small></button>').join('') 
+        + (noU ? '<button class="chip' + (curU === '-' ? ' on' : '') + '" style="background:#f3f3f7" data-u="-">Chưa có unit<small>' + noU + '</small></button>' : '') 
+        + '<button class="chip add" data-u="+">➕ Unit</button>'
+        + (curU && curU !== '-' ? '<button class="chip mini" data-fa="uren" type="button">✏️ Đổi tên unit</button><button class="chip mini" data-fa="udel" type="button">🗑 Xoá unit</button>' : '') 
+        + ((fo.units || []).length > 1 ? '<span class="uhint">↔️ giữ chuột kéo unit để đổi thứ tự</span>' : '') + '</div>';
+    } else {
+      $('kHead').innerHTML = '';
+    }
+  }
 
-      return `
-      <div class="bank-item" style="border-left:4px solid ${isTest ? '#8b5cf6' : '#5ab0ff'}">
-        <div class="binfo" onclick="loadQuizData('${item.id}')">
-          <span style="font-size:15px;color:#2d2350">${badgeHtml}📘 ${esc(item.title || item.id)}</span>
-          <span style="font-size:12px;color:#7a6aa8;display:block">
-            Mã: <code style="color:#5b4bb0;font-weight:800">${esc(item.id)}</code> · ${item.qs ? item.qs.length : 0} câu · Tác giả: <b>${esc(item.author || 'Ms Nene')}</b> · ${esc(item.date || '')}
-          </span>
+  // 2. Render Kho riêng / Thư mục hiện tại (#bankList)
+  if ($('bankList')) {
+    let localFiltered = L.slice();
+    if (fo && !qSearch) {
+      localFiltered = localFiltered.filter(k => k.fd === fo.id && (!curU || (curU === '-' ? !k.un : k.un === curU)));
+    } else if (curF === '-' && !qSearch) {
+      localFiltered = localFiltered.filter(k => !has(k.fd));
+    }
+    if (bankFilter === 'game') localFiltered = localFiltered.filter(q => q.type !== 'test' && q.m !== 'test');
+    if (bankFilter === 'test') localFiltered = localFiltered.filter(q => q.type === 'test' || q.m === 'test');
+    if (qSearch) {
+      localFiltered = localFiltered.filter(q => (q.title || '').toLowerCase().includes(qSearch) || (q.un || '').toLowerCase().includes(qSearch));
+    }
+
+    if (!localFiltered.length) {
+      $('bankList').innerHTML = '<div class="hint" style="text-align:center;padding:16px">Chưa có bộ đề nào trong mục này. Bấm <b>"➕ Bộ mới"</b> hoặc <b>"➕ Thêm bộ vào đây"</b> để tạo nhé!</div>';
+    } else {
+      let lastU = null;
+      $('bankList').innerHTML = localFiltered.map(item => {
+        const isTest = item.type === 'test' || item.m === 'test';
+        const hasSpk = (item.qs || []).some(q => q.type === 'speaking');
+        const badgeHtml = hasSpk
+          ? '<span style="background:linear-gradient(135deg,#db2777,#9333ea);color:#fff;font-size:11px;font-weight:800;padding:2px 6px;border-radius:6px;margin-right:6px">🗣 PHÁT ÂM</span>'
+          : isTest 
+            ? '<span style="background:#8b5cf6;color:#fff;font-size:11px;font-weight:800;padding:2px 6px;border-radius:6px;margin-right:6px">📝 BÀI TEST</span>'
+            : '<span style="background:#0284c7;color:#fff;font-size:11px;font-weight:800;padding:2px 6px;border-radius:6px;margin-right:6px">🎮 GAME</span>';
+
+        const foObj = F.find(y => y.id === item.fd);
+        const folderTag = foObj 
+          ? '<span class="ktag" style="background:' + KCOL[foObj.c % KCOL.length][0] + ';color:#4a3a8a">📁 ' + esc(foObj.name) + (item.un ? ' · ' + esc(item.un) : '') + '</span>'
+          : (item.un ? '<span class="ktag" style="background:#eef2ff;color:#4338ca">🏷 ' + esc(item.un) + '</span>' : '');
+
+        let grpHtml = '';
+        if (fo && !qSearch && !curU && (item.un || '') !== lastU) {
+          lastU = item.un || '';
+          grpHtml = '<div class="ugrp">' + (lastU ? '🏷 ' + esc(lastU) : '🗂 Chưa có unit') + '</div>';
+        }
+
+        return grpHtml + `
+        <div class="bank-item" style="border-left:4px solid ${isTest ? '#8b5cf6' : '#5ab0ff'}">
+          <div class="binfo" onclick="loadFromBankById('${item.id}')">
+            <span style="font-size:15px;font-weight:800;color:#2d2350">${badgeHtml}📘 ${esc(item.title)}</span>
+            <span style="font-size:12px;color:#7a6aa8;display:block;margin-top:2px">
+              ${folderTag}${(item.qs || []).length} câu · ${esc(item.date || '')}
+            </span>
+          </div>
+          <div class="bacts">
+            <button class="btn g" style="padding:4px 8px;font-size:12px" title="Dùng đề này mở phòng" onclick="loadFromBankById('${item.id}')">${isTest ? '📝 Mở thi' : '🎯 Mở phòng'}</button>
+            <button class="btn w" style="padding:4px 8px;font-size:12px" title="Giao bài tập về nhà" onclick="assignHwForKitById('${item.id}')">📋 Giao bài</button>
+            <button class="btn w" style="padding:4px 8px;font-size:12px" title="Nạp đề vào ô soạn thảo để sửa" onclick="editKitInEditor('${item.id}')">✏️ Sửa</button>
+            <button class="btn b" style="padding:4px 8px;font-size:12px" title="Xếp vào Thư mục / Unit" onclick="openFd(['${item.id}'])">📁 Xếp</button>
+            <button class="btn g" style="padding:4px 8px;font-size:12px" title="Chia sẻ lên Thư viện chung" onclick="shareLocalToCommunityById('${item.id}')">🌐 Chia sẻ</button>
+            <button class="btn r" style="padding:4px 8px;font-size:12px" title="Xóa bộ đề này khỏi máy" onclick="deleteFromBankById('${item.id}')">🗑️</button>
+          </div>
         </div>
-        <div class="bacts">
-          <button class="btn g" style="padding:5px 9px;font-size:12px" title="Dùng đề này mở phòng" onclick="loadQuizData('${item.id}')">${isTest ? '📝 Mở phòng thi' : '🎯 Mở phòng'}</button>
-          <button class="btn w" style="padding:5px 9px;font-size:12px" title="Giao bài" onclick="assignHwFor('${item.id}')">${isTest ? '📋 Giao bài test' : '📚 Giao bài'}</button>
-          <button class="btn r" style="padding:5px 8px;font-size:12px;background:#fef2f2;color:#dc2626;border:1px solid #fecaca" title="Xóa đề này khỏi thư viện (Dành cho Quản trị viên)" onclick="adminDeleteQuiz('${esc(item.id)}')">🗑️</button>
+        `;
+      }).join('');
+    }
+  }
+
+  // 3. Render Thư viện chung (#commBankList)
+  if ($('commBankList')) {
+    if (!isProUser()) {
+      $('commBankList').innerHTML = `
+        <div style="background:linear-gradient(135deg,#fff1f8,#eef4ff);border:2px dashed #9333ea;border-radius:16px;padding:22px;text-align:center">
+          <div style="font-size:38px;margin-bottom:8px">🔒</div>
+          <div style="font-size:16px;font-weight:900;color:#581c87;margin-bottom:6px">Thư viện đề thi chung chỉ dành cho tài khoản PRO</div>
+          <div style="font-size:13px;color:#6b5aa0;margin-bottom:14px;max-width:440px;margin-left:auto;margin-right:auto;line-height:1.5">
+            Vui lòng kích hoạt <b>Mã bản quyền PRO</b> để mở khóa toàn bộ kho đề thi cộng đồng (đề thi các khối lớp, bài tập phát âm, đề kiểm tra chuẩn) và lưu về máy không giới hạn!
+          </div>
+          <button class="btn" style="background:linear-gradient(135deg,#7c3aed,#db2777);color:#fff;font-size:13px;padding:9px 18px;font-weight:800;border:none;border-radius:12px;box-shadow:0 4px 12px rgba(124,58,237,0.3);cursor:pointer" onclick="openUnlockModal('Thư viện đề thi')">🔑 Kích hoạt bản quyền PRO ngay</button>
         </div>
-      </div>
       `;
-    }).join('');
-  }
+    } else {
+      if (forceCloud || !window.communityQuizzesCache) {
+        $('commBankList').innerHTML = '<div class="hint" style="text-align:center;padding:16px">⏳ Đang đồng bộ Thư viện đề thi từ máy chủ…</div>';
+        isFetchingBank = true;
+        try {
+          window.communityQuizzesCache = await GC.getCommunityLibrary();
+        } catch(err) {
+          console.warn('Load community library error:', err);
+        } finally {
+          isFetchingBank = false;
+        }
+      }
 
-  // 2. Render Kho riêng
-  const bank = getBank();
-  let localFiltered = bank;
-  if (bankFilter === 'game') localFiltered = localFiltered.filter(q => q.type !== 'test' && q.m !== 'test');
-  if (bankFilter === 'test') localFiltered = localFiltered.filter(q => q.type === 'test' || q.m === 'test');
-  if (query) {
-    localFiltered = localFiltered.filter(q => (q.title || '').toLowerCase().includes(query));
-  }
-  if (!localFiltered.length) {
-    $('bankList').innerHTML = '<div class="hint" style="text-align:center;padding:10px">Kho riêng trên máy này chưa có đề nào.</div>';
-  } else {
-    $('bankList').innerHTML = localFiltered.map((item, idx) => {
-      const isTest = item.type === 'test' || item.m === 'test';
-      const badgeHtml = isTest 
-        ? '<span style="background:#8b5cf6;color:#fff;font-size:11px;font-weight:800;padding:2px 6px;border-radius:6px;margin-right:6px">📝 TEST</span>'
-        : '<span style="background:#0284c7;color:#fff;font-size:11px;font-weight:800;padding:2px 6px;border-radius:6px;margin-right:6px">🎮 GAME</span>';
+      let commList = (window.communityQuizzesCache || []).slice();
+      if (bankFilter === 'game') commList = commList.filter(q => q.type !== 'test' && q.m !== 'test');
+      if (bankFilter === 'test') commList = commList.filter(q => q.type === 'test' || q.m === 'test');
+      if (qSearch) {
+        commList = commList.filter(q => (q.title || '').toLowerCase().includes(qSearch) || (q.author || '').toLowerCase().includes(qSearch) || (q.id || '').toLowerCase().includes(qSearch));
+      }
 
-      return `
-      <div class="bank-item">
-        <div class="binfo" onclick="loadFromBank(${idx})">
-          <span style="font-size:15px">${badgeHtml}🔒 ${esc(item.title)}</span>
-          <span style="font-size:12px;color:#7a6aa8;display:block">${item.qs.length} câu · ${item.date || ''}</span>
-        </div>
-        <div class="bacts">
-          <button class="btn" style="padding:4px 8px;font-size:12px" onclick="loadFromBank(${idx})">Chọn đề</button>
-          <button class="btn g" style="padding:4px 8px;font-size:12px" title="Chia sẻ lên Thư viện chung" onclick="shareLocalToCommunity(${idx})">🌐 Chia sẻ</button>
-          <button class="btn r" style="padding:4px 8px;font-size:12px" onclick="deleteFromBank(${idx})">✕</button>
-        </div>
-      </div>
-      `;
-    }).join('');
+      if (!commList.length) {
+        $('commBankList').innerHTML = '<div class="hint" style="text-align:center;padding:16px">Không tìm thấy bộ đề nào phù hợp. Bấm <b>"🔄 Làm mới thư viện"</b> hoặc tạo đề mới nhé!</div>';
+      } else {
+        const adminMode = isAdmin();
+        $('commBankList').innerHTML = commList.map(item => {
+          const isTest = item.type === 'test' || item.m === 'test';
+          const hasSpk = (item.qs || []).some(q => q.type === 'speaking');
+          const badgeHtml = hasSpk
+            ? '<span style="background:linear-gradient(135deg,#db2777,#9333ea);color:#fff;font-size:11px;font-weight:800;padding:2px 6px;border-radius:6px;margin-right:6px">🗣 PHÁT ÂM</span>'
+            : isTest 
+              ? '<span style="background:#8b5cf6;color:#fff;font-size:11px;font-weight:800;padding:2px 6px;border-radius:6px;margin-right:6px">📝 BÀI TEST</span>'
+              : '<span style="background:#0284c7;color:#fff;font-size:11px;font-weight:800;padding:2px 6px;border-radius:6px;margin-right:6px">🎮 GAME</span>';
+
+          // CHỈ ADMIN MỚI CÓ NÚT XÓA ĐỀ TRÊN THƯ VIỆN CHUNG
+          const deleteBtnHtml = adminMode
+            ? `<button class="btn r" style="padding:5px 8px;font-size:12px;background:#fef2f2;color:#dc2626;border:1px solid #fecaca" title="Xóa đề này khỏi Thư viện chung (Dành riêng cho Quản trị viên)" onclick="adminDeleteQuiz('${esc(item.id)}')">🗑️ Xóa</button>`
+            : '';
+
+          return `
+          <div class="bank-item" style="border-left:4px solid ${isTest ? '#8b5cf6' : '#5ab0ff'}">
+            <div class="binfo" onclick="loadQuizData('${item.id}')">
+              <span style="font-size:15px;color:#2d2350">${badgeHtml}📘 ${esc(item.title || item.id)}</span>
+              <span style="font-size:12px;color:#7a6aa8;display:block;margin-top:2px">
+                Mã: <code style="color:#5b4bb0;font-weight:800">${esc(item.id)}</code> · ${(item.qs || []).length} câu · Tác giả: <b>${esc(item.author || 'Ms Nene')}</b> · ${esc(item.date || '')}
+              </span>
+            </div>
+            <div class="bacts">
+              <button class="btn g" style="padding:5px 9px;font-size:12px" title="Dùng đề này mở phòng" onclick="loadQuizData('${item.id}')">${isTest ? '📝 Mở phòng thi' : '🎯 Mở phòng'}</button>
+              <button class="btn w" style="padding:5px 9px;font-size:12px" title="Giao bài tập về nhà" onclick="assignHwFor('${item.id}')">${isTest ? '📋 Giao bài test' : '📚 Giao bài'}</button>
+              <button class="btn b" style="padding:5px 9px;font-size:12px" title="Lưu bộ đề này về thư mục của tôi" onclick="saveCommunityToLocal('${item.id}')">⬇️ Lưu về kho</button>
+              ${deleteBtnHtml}
+            </div>
+          </div>
+          `;
+        }).join('');
+      }
+    }
   }
 }
 
@@ -1356,6 +1847,10 @@ if ($('bRefreshBank')) $('bRefreshBank').onclick = () => { toast('🔄 Đang đ�
 if ($('bFiltAll')) $('bFiltAll').onclick = () => { bankFilter = 'all'; updateFilterButtons(); renderBank(); };
 if ($('bFiltGame')) $('bFiltGame').onclick = () => { bankFilter = 'game'; updateFilterButtons(); renderBank(); };
 if ($('bFiltTest')) $('bFiltTest').onclick = () => { bankFilter = 'test'; updateFilterButtons(); renderBank(); };
+if ($('bNewKitFromBank')) $('bNewKitFromBank').onclick = () => {
+  const pasteTab = document.querySelector('.tab[data-t="paste"]');
+  if (pasteTab) pasteTab.click();
+};
 
 function updateFilterButtons() {
   if ($('bFiltAll')) $('bFiltAll').className = 'btn ' + (bankFilter === 'all' ? 'g' : 'w');
@@ -1363,7 +1858,7 @@ function updateFilterButtons() {
   if ($('bFiltTest')) $('bFiltTest').className = 'btn ' + (bankFilter === 'test' ? 'g' : 'w');
 }
 
-if ($('searchBank'))if ($('searchBank')) {
+if ($('searchBank')) {
   $('searchBank').oninput = () => renderBank();
 }
 
@@ -1379,7 +1874,6 @@ window.loadQuizData = async function(id) {
     toast('❌ Không tải được nội dung câu hỏi của mã đề ' + id, 3000);
   }
 };
-
 
 window.assignHwFor = async function(id) {
   const quiz = await GC.getQuizById(id);
@@ -1397,38 +1891,123 @@ window.copyShortLinkFor = function(id) {
   }).catch(() => prompt('Link bài tập:', u.href));
 };
 
-window.shareLocalToCommunity = async function(idx) {
-  const bank = getBank();
-  const item = bank[idx];
+window.saveCommunityToLocal = async function(id) {
+  toast('⏳ Đang tải đề để lưu về máy…', 1500);
+  const quiz = await GC.getQuizById(id);
+  if (!quiz || !quiz.qs || !quiz.qs.length) {
+    return toast('❌ Không tải được nội dung đề thi!', 2500);
+  }
+  const L = kits();
+  const fo = folds().find(x => x.id === curF);
+  const newKit = {
+    id: kid(),
+    title: quiz.title || id,
+    text: '',
+    qs: quiz.qs,
+    date: new Date().toLocaleDateString('vi-VN'),
+    created: Date.now(),
+    type: quiz.type || (quiz.m === 'test' ? 'test' : 'game'),
+    m: quiz.m || (quiz.type === 'test' ? 'test' : 'climb'),
+    c: Math.floor(Math.random() * KCOL.length),
+    fd: fo ? fo.id : '',
+    un: fo && curU && curU !== '-' ? curU : ''
+  };
+  L.unshift(newKit);
+  saveKits(L);
+  toast('💾 Đã lưu bộ đề "' + (quiz.title || id) + '" về kho của cô' + (fo ? ' (thư mục: ' + fo.name + ')' : '') + '!', 3500);
+  renderBank();
+};
+
+window.loadFromBankById = function(id) {
+  const k = kits().find(x => x.id === id);
+  if (k) {
+    const isTest = k.type === 'test' || k.m === 'test';
+    selectMode(isTest ? 'test' : (k.m || 'climb'));
+    setQs(k.qs, k.title, []);
+    toast('✅ Đã nạp đề: ' + k.title + ' (' + k.qs.length + ' câu)');
+  }
+};
+
+window.assignHwForKitById = function(id) {
+  const k = kits().find(x => x.id === id);
+  if (k) {
+    setQs(k.qs, k.title, []);
+    $('bSolo').click();
+  }
+};
+
+window.editKitInEditor = function(id) {
+  const k = kits().find(x => x.id === id);
+  if (k) {
+    if (k.text) {
+      $('pTxt').value = k.text;
+    }
+    setQs(k.qs, k.title, []);
+    const pasteTab = document.querySelector('.tab[data-t="paste"]');
+    if (pasteTab) pasteTab.click();
+    toast('✏️ Đã nạp bộ đề vào trình soạn thảo để cô sửa: ' + k.title, 2500);
+  }
+};
+
+window.deleteFromBankById = function(id) {
+  const k = kits().find(x => x.id === id);
+  if (!k) return;
+  if (confirm('Cô có chắc muốn xóa bộ đề "' + k.title + '" khỏi kho riêng?')) {
+    const L = kits().filter(x => x.id !== id);
+    saveKits(L);
+    toast('🗑 Đã xóa bộ đề khỏi kho riêng');
+  }
+};
+
+window.shareLocalToCommunityById = async function(id) {
+  const item = kits().find(x => x.id === id);
   if (!item) return;
   const author = prompt('Nhập tên giáo viên / nguồn đề chia sẻ:', 'Cô Chí Nên') || 'Cô Chí Nên';
+  toast('⏳ Đang chia sẻ lên Thư viện chung...', 1500);
   const saved = await GC.saveCommunityQuiz({
     title: item.title,
     author,
     qs: item.qs,
-    m: gMode,
+    m: item.m || gMode,
     lv: +$('gLv').value
   });
   toast('🎉 Đã chia sẻ đề "' + item.title + '" lên Thư viện chung với mã: ' + saved.id, 3500);
-  renderBank();
+  renderBank(true);
 };
 
+window.adminDeleteQuiz = async function(id) {
+  if (!id) return;
+  if (!isAdmin()) {
+    const key = prompt('🔐 Chỉ Quản trị viên mới có quyền xóa đề Thư viện chung. Nhập Khóa Tối Cao:');
+    if (!key) return;
+    const ok = window.LIC ? await window.LIC.verifyAdmin(key) : (key === '131618');
+    if (!ok) {
+      return toast('❌ Sai Khóa Tối Cao! Bạn không có quyền xóa đề thi.', 3000);
+    }
+    sessionStorage.setItem('msnene_admin_auth', '1');
+    localStorage.setItem('msnene_admin_auth', '1');
+  }
+  if (!confirm('Bạn có chắc chắn muốn xóa vĩnh viễn bộ đề [' + id + '] khỏi Thư viện chung không?')) return;
+  toast('⏳ Đang xóa bộ đề khỏi hệ thống...', 1800);
+  await GC.deleteCommunityQuiz(id);
+  toast('🗑️ Đã xóa bộ đề [' + id + '] thành công!', 2500);
+  renderBank(true);
+};
+
+// Fallback tương thích hàm cũ
 window.loadFromBank = function(idx) {
   const bank = getBank();
-  if (bank[idx]) {
-    setQs(bank[idx].qs, bank[idx].title, []);
-    toast('✅ Đã nạp đề từ kho riêng: ' + bank[idx].title);
-  }
+  if (bank[idx]) loadFromBankById(bank[idx].id);
+};
+window.deleteFromBank = function(idx) {
+  const bank = getBank();
+  if (bank[idx]) deleteFromBankById(bank[idx].id);
+};
+window.shareLocalToCommunity = function(idx) {
+  const bank = getBank();
+  if (bank[idx]) shareLocalToCommunityById(bank[idx].id);
 };
 
-window.deleteFromBank = function(idx) {
-  if (confirm('Cô có chắc muốn xóa bộ đề này khỏi kho riêng?')) {
-    const bank = getBank();
-    bank.splice(idx, 1);
-    saveBank(bank);
-    toast('🗑 Đã xóa bộ đề');
-  }
-};
 
 /* Nút lưu lên Thư viện chung */
 $('bSaveToBank').onclick = async () => {
@@ -1457,27 +2036,35 @@ if ($('bSaveLocal')) {
     const title = clean($('gTitle').value) || prompt('Nhập tên bộ đề lưu riêng:') || (isTest ? 'Bài kiểm tra tiếng Anh' : 'Bài ôn tập');
     const bank = getBank();
     const d = new Date();
+    const fo = folds().find(x => x.id === curF);
     bank.unshift({
+      id: kid(),
       title,
-      qs,
+      text: src === 'paste' ? ($('pTxt') ? $('pTxt').value : '') : '',
+      qs: qs.map(q => ({ q: q.q, o: q.o, a: q.a, e: q.e || '', s: q.s || '', type: q.type || 'mc', ansText: q.ansText || '', targetText: q.targetText || '', ipa: q.ipa || '', audio: q.audio || '', hint: q.hint || '' })),
       m: gMode,
       type: isTest ? 'test' : 'game',
       theme: $('testTheme')?.value || 'cambridge',
-      date: d.toLocaleDateString('vi-VN')
+      c: Math.floor(Math.random() * KCOL.length),
+      fd: fo ? fo.id : '',
+      un: fo && curU && curU !== '-' ? curU : '',
+      date: d.toLocaleDateString('vi-VN'),
+      created: Date.now()
     });
     saveBank(bank);
-    toast('🔒 Đã lưu đề vào kho riêng trên máy này!', 2500);
+    toast('💾 Đã lưu đề vào kho riêng' + (fo ? ' (thư mục: ' + fo.name + (curU && curU !== '-' ? ' · ' + curU : '') + ')' : '') + '!', 2800);
   };
 }
 
 $('bExportBank').onclick = async () => {
   const comm = await GC.getCommunityLibrary();
   const bank = getBank();
-  const all = { community: comm, local: bank };
+  const f = folds();
+  const all = { community: comm, local: bank, folders: f };
   const blob = new Blob([JSON.stringify(all, null, 2)], { type: 'application/json' });
   const a = document.createElement('a');
   a.href = URL.createObjectURL(blob);
-  a.download = 'Thu_Vien_De_MsNeneEnglish_' + new Date().toISOString().slice(0,10) + '.json';
+  a.download = 'Thu_Vien_De_MsNeneEnglish_' + new Date().toISOString().slice(0, 10) + '.json';
   a.click();
 };
 
@@ -1493,19 +2080,29 @@ $('fImportBank').onchange = e => {
         saveBank(bank);
         toast('🎉 Đã nạp thành công ' + data.length + ' bộ đề!');
       } else if (data && typeof data === 'object') {
+        if (data.folders && Array.isArray(data.folders)) {
+          const F = folds();
+          for (const x of data.folders) {
+            if (!x || !x.id) continue;
+            const o = F.find(y => y.id === x.id);
+            if (!o) { F.push(x); continue; }
+            for (const u of x.units || []) if (!o.units.includes(u)) o.units.push(u);
+          }
+          saveFolds(F);
+        }
         if (data.local && Array.isArray(data.local)) saveBank(getBank().concat(data.local));
         if (data.community && Array.isArray(data.community)) {
           for (const q of data.community) await GC.saveCommunityQuiz(q);
         }
         toast('🎉 Đã nạp dữ liệu thư viện thành công!');
-        renderBank();
+        renderBank(true);
       }
-    } catch (err) { toast('❌ Lỗi đọc file: ' + err.message); }
+    } catch (err) {
+      toast('❌ Lỗi file: Định dạng JSON không đúng!');
+    }
   };
   reader.readAsText(file);
 };
-/* ═════ GIAO BÀI TẬP VỀ NHÀ ═════ */
-const LVN = { 1: 'Dễ', 2: 'Vừa', 3: 'Khó' };
 let hwLink = '', hwShortLink = '', hwText = '';
 $('bSolo').onclick = () => {
   if (window.LIC && !window.LIC.allowed(gMode)) {
@@ -1624,6 +2221,8 @@ let gMode = 'climb';
 const MNAME = { climb: '🧗 Leo núi', brick: '🍄 Nấm Mario', tank: '🛡 Xe tăng', bomb: '💣 Bomberman', test: '📝 Phòng thi A2-B1', pac: '🟡 Pac-Man', race: '🏎 Đua xe', temple: '🏃 Temple Run P1', temple2: '🏃 Temple Run P2', bounce: '🔴 Bounce Tales', bounce2: '🐸 Bounce Tales P2' };
 
 let pendingUnlockTargetMode = null;
+function openUnlockModal(targetMode) { return promptUnlockModal(targetMode); }
+window.openUnlockModal = openUnlockModal;
 function promptUnlockModal(targetMode) {
   pendingUnlockTargetMode = targetMode || null;
   const ov = $('ovUnlockGames');
@@ -1654,7 +2253,12 @@ async function doUnlockGamesSubmit() {
       $('ovUnlockGames').classList.remove('on');
       toast(res.msg || '🎉 Kích hoạt bản quyền Pro thành công!', 3500);
       renderModesLockState();
-      if (pendingUnlockTargetMode) {
+      renderBank(true);
+      if (pendingUnlockTargetMode === 'Thư viện đề thi') {
+        const bankTab = document.querySelector('.tab[data-t="bank"]');
+        if (bankTab) bankTab.click();
+        pendingUnlockTargetMode = null;
+      } else if (pendingUnlockTargetMode) {
         selectMode(pendingUnlockTargetMode);
         pendingUnlockTargetMode = null;
       }
