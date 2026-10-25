@@ -879,6 +879,29 @@ async function saveCommunityQuiz(quiz) {
   return quiz;
 }
 
+async function updateCommunityQuizMeta(id, patch) {
+  if (!id) return false;
+  id = String(id).trim();
+  // 1. Lưu local cache
+  const list = getLocalCommunity();
+  const existing = list.find(q => q.id === id);
+  if (existing) Object.assign(existing, patch);
+  saveLocalCommunity(list);
+  if (typeof window !== 'undefined' && window.communityQuizzesCache) {
+    const cq = window.communityQuizzesCache.find(q => q.id === id);
+    if (cq) Object.assign(cq, patch);
+  }
+  // 2. Đồng bộ Firebase
+  const cfg = window.GAME_CONFIG || {};
+  if (cfg.firebase && cfg.firebase.databaseURL) {
+    try {
+      const url = cfg.firebase.databaseURL.replace(/\/$/, '') + '/community_quizzes/' + encodeURIComponent(id) + '.json';
+      await fetch(url, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(patch) });
+    } catch (e) { console.warn('Firebase patch error:', e); }
+  }
+  return true;
+}
+
 async function getCommunityLibrary() {
   // Bắt đầu với các bộ đề mẫu có sẵn
   const bundled = [];
@@ -2052,5 +2075,5 @@ Trả về STRICT JSON:
   };
 }
 
-return { $, shuffle, pick, clamp, esc, fmt, stamp, clean, rng, COLORS, BADGE, safe, normAns, checkTextAns, fromOld, prep, parseCSV, rowsToQs, parseText, parsePaste, sheetSets, sheetSet, sampleSet, packHw, unpackHw, tone, sfx, confetti, toast, rank, makeNet, music, saveCommunityQuiz, getCommunityLibrary, getQuizById, saveHwMeta, submitHwResult, getHwGradebook, showReportCard, getAiKey, diffPronunciation, speakText, evaluatePronunciationAI, enrichSpeakingQuestionsAI, generateSingleSpeakingAI, checkEnglishStandardizationLocal, checkEnglishStandardizationAI, COMMON_TYPOS, deleteCommunityQuiz, deleteHwSubmission , copy, copyText, sfxFiles, kvPut, kvGet, kvScan, live, liveWatch};
+return { $, shuffle, pick, clamp, esc, fmt, stamp, clean, rng, COLORS, BADGE, safe, normAns, checkTextAns, fromOld, prep, parseCSV, rowsToQs, parseText, parsePaste, sheetSets, sheetSet, sampleSet, packHw, unpackHw, tone, sfx, confetti, toast, rank, makeNet, music, saveCommunityQuiz, updateCommunityQuizMeta, getCommunityLibrary, getQuizById, saveHwMeta, submitHwResult, getHwGradebook, showReportCard, getAiKey, diffPronunciation, speakText, evaluatePronunciationAI, enrichSpeakingQuestionsAI, generateSingleSpeakingAI, checkEnglishStandardizationLocal, checkEnglishStandardizationAI, COMMON_TYPOS, deleteCommunityQuiz, deleteHwSubmission , copy, copyText, sfxFiles, kvPut, kvGet, kvScan, live, liveWatch};
 })();

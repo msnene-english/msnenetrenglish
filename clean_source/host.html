@@ -201,6 +201,17 @@ th{color:#7a6aa8;font-size:13px}
 
     <!-- TAB 1: DÁN TỪ WORD / EXCEL -->
     <div id="tPaste">
+     <!-- BANNER ĐANG SỬA ĐỀ THƯ VIỆN CHUNG -->
+     <div id="editingCommBanner" style="display:none;background:linear-gradient(135deg,#eef2ff,#ede9fe);border:2px solid #8b5cf6;border-radius:14px;padding:12px 16px;margin-bottom:12px;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px">
+      <div>
+       <div style="font-weight:900;color:#6d28d9;font-size:14px">🌐 ĐANG CHỈNH SỬA ĐỀ THƯ VIỆN CHUNG: <span id="editingCommTitle"></span></div>
+       <div style="font-size:12px;color:#7c3aed">Mã đề: <code id="editingCommId" style="font-weight:800"></code> · Mọi chỉnh sửa câu hỏi sẽ được lưu trực tiếp lên máy chủ cộng đồng!</div>
+      </div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap">
+       <button class="btn" id="bSaveEditCommunity" type="button" style="background:#7c3aed;color:#fff;font-weight:800;padding:7px 14px;font-size:13px">💾 Cập nhật lên Thư viện chung</button>
+       <button class="btn w" id="bCancelEditCommunity" type="button" style="font-size:12px;padding:7px 10px">✕ Hủy chỉnh sửa</button>
+      </div>
+     </div>
      <!-- TÍNH NĂNG NẠP ĐỀ ĐA NĂNG (GAME + TEST + ẢNH CHỤP MÀN HÌNH CTRL+V) -->
       <div style="background:#eef7ff;border:2px dashed #38bdf8;border-radius:16px;padding:12px 14px;margin-bottom:12px">
        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
@@ -316,6 +327,17 @@ Cách 3 — Dán câu luyện phát âm (tự động điền IPA & mẹo):
      <div style="display:flex;justify-content:space-between;align-items:center;margin:12px 0 6px">
       <span style="font-weight:800;font-size:13.5px;color:#5b4bb0">🌐 THƯ VIỆN ĐỀ THI DÙNG CHUNG (Cộng đồng Ms Nene)</span>
       <span style="font-size:11px;font-weight:800;background:#f3e8ff;color:#7e22ce;padding:2px 8px;border-radius:999px">✨ Dành cho tài khoản PRO</span>
+     </div>
+     <!-- BỘ LỌC KHỐI LỚP / CHỦ ĐỀ THƯ VIỆN CHUNG -->
+     <div style="display:flex;gap:5px;flex-wrap:wrap;margin:4px 0 10px" id="commTagFilters">
+      <button class="btn g mini" data-tag="" type="button" style="padding:3px 9px;font-size:12px">Tất cả lớp</button>
+      <button class="btn w mini" data-tag="Lớp 6" type="button" style="padding:3px 9px;font-size:12px">Lớp 6</button>
+      <button class="btn w mini" data-tag="Lớp 7" type="button" style="padding:3px 9px;font-size:12px">Lớp 7</button>
+      <button class="btn w mini" data-tag="Lớp 8" type="button" style="padding:3px 9px;font-size:12px">Lớp 8</button>
+      <button class="btn w mini" data-tag="Lớp 9" type="button" style="padding:3px 9px;font-size:12px">Lớp 9</button>
+      <button class="btn w mini" data-tag="Lớp 10-12" type="button" style="padding:3px 9px;font-size:12px">Lớp 10-12</button>
+      <button class="btn w mini" data-tag="IELTS" type="button" style="padding:3px 9px;font-size:12px">IELTS</button>
+      <button class="btn w mini" data-tag="Phát âm" type="button" style="padding:3px 9px;font-size:12px">🗣️ Phát âm</button>
      </div>
      <div id="commBankList" class="prev" style="max-height:280px"></div>
     </div>
@@ -735,6 +757,46 @@ Hoặc dán theo mẫu:
   <button class="btn w" type="button" onclick="$('ovGradebook').classList.remove('on')">Đóng sổ điểm</button>
  </div>
 </div></div>
+
+<!-- MODAL ĐIỀU CHỈNH THÔNG TIN ĐỀ THI THƯ VIỆN CHUNG -->
+<div class="ov" id="ovEditCommQuiz">
+ <div class="card" style="max-width:500px">
+  <div class="big" style="font-size:18px">✏️ Điều chỉnh đề Thư viện chung</div>
+  <div class="sub" id="editCommSub">Chỉnh sửa thông tin bộ đề trên máy chủ cộng đồng</div>
+  <input type="hidden" id="inpEditCommId">
+  <div class="lab" style="margin-top:8px">📘 Tiêu đề bộ đề</div>
+  <input id="inpEditCommTitle" class="inp" placeholder="Nhập tên đề thi...">
+  <div class="two" style="margin-top:8px">
+   <div>
+    <div class="lab">👤 Tác giả / Nguồn đề</div>
+    <input id="inpEditCommAuthor" class="inp" placeholder="Tên thầy cô...">
+   </div>
+   <div>
+    <div class="lab">🏷 Phân loại</div>
+    <select id="inpEditCommType" class="inp">
+     <option value="game">🎮 Game tương tác</option>
+     <option value="test">📝 Bài kiểm tra chuẩn</option>
+    </select>
+   </div>
+  </div>
+  <div class="lab" style="margin-top:8px">🎓 Khối lớp / Nhãn phân loại</div>
+  <div style="display:flex;gap:5px;flex-wrap:wrap;margin-bottom:6px" id="editCommGradePresets">
+   <button type="button" class="btn w mini" data-tag="Lớp 6" style="padding:3px 8px;font-size:11.5px">Lớp 6</button>
+   <button type="button" class="btn w mini" data-tag="Lớp 7" style="padding:3px 8px;font-size:11.5px">Lớp 7</button>
+   <button type="button" class="btn w mini" data-tag="Lớp 8" style="padding:3px 8px;font-size:11.5px">Lớp 8</button>
+   <button type="button" class="btn w mini" data-tag="Lớp 9" style="padding:3px 8px;font-size:11.5px">Lớp 9</button>
+   <button type="button" class="btn w mini" data-tag="Lớp 10-12" style="padding:3px 8px;font-size:11.5px">Lớp 10-12</button>
+   <button type="button" class="btn w mini" data-tag="IELTS" style="padding:3px 8px;font-size:11.5px">IELTS</button>
+   <button type="button" class="btn w mini" data-tag="Phát âm" style="padding:3px 8px;font-size:11.5px">🗣️ Phát âm</button>
+  </div>
+  <input id="inpEditCommTag" class="inp" placeholder="VD: Lớp 8, Unit 4, Ôn thi...">
+  <div class="row" style="margin-top:14px">
+   <button class="btn g" id="bSaveEditCommModal" type="button">💾 Lưu thay đổi</button>
+   <button class="btn w" type="button" id="bCloseEditCommModal">Đóng</button>
+  </div>
+ </div>
+</div>
+
 
 <!-- MODAL MỜI BẠN VÀO MUỘN -->
 <div class="ov" id="ovInv"><div class="card" style="max-width:560px;text-align:center">
@@ -1797,8 +1859,11 @@ async function renderBank(forceCloud) {
       let commList = (window.communityQuizzesCache || []).slice();
       if (bankFilter === 'game') commList = commList.filter(q => q.type !== 'test' && q.m !== 'test');
       if (bankFilter === 'test') commList = commList.filter(q => q.type === 'test' || q.m === 'test');
+      if (window.commFilterTag) {
+        commList = commList.filter(q => (q.tag || '').toLowerCase().includes(window.commFilterTag.toLowerCase()) || (q.title || '').toLowerCase().includes(window.commFilterTag.toLowerCase()));
+      }
       if (qSearch) {
-        commList = commList.filter(q => (q.title || '').toLowerCase().includes(qSearch) || (q.author || '').toLowerCase().includes(qSearch) || (q.id || '').toLowerCase().includes(qSearch));
+        commList = commList.filter(q => (q.title || '').toLowerCase().includes(qSearch) || (q.author || '').toLowerCase().includes(qSearch) || (q.id || '').toLowerCase().includes(qSearch) || (q.tag || '').toLowerCase().includes(qSearch));
       }
 
       if (!commList.length) {
@@ -1814,24 +1879,25 @@ async function renderBank(forceCloud) {
               ? '<span style="background:#8b5cf6;color:#fff;font-size:11px;font-weight:800;padding:2px 6px;border-radius:6px;margin-right:6px">📝 BÀI TEST</span>'
               : '<span style="background:#0284c7;color:#fff;font-size:11px;font-weight:800;padding:2px 6px;border-radius:6px;margin-right:6px">🎮 GAME</span>';
 
-          // CHỈ ADMIN MỚI CÓ NÚT XÓA ĐỀ TRÊN THƯ VIỆN CHUNG
-          const deleteBtnHtml = adminMode
-            ? `<button class="btn r" style="padding:5px 8px;font-size:12px;background:#fef2f2;color:#dc2626;border:1px solid #fecaca" title="Xóa đề này khỏi Thư viện chung (Dành riêng cho Quản trị viên)" onclick="adminDeleteQuiz('${esc(item.id)}')">🗑️ Xóa</button>`
+          const tagHtml = item.tag 
+            ? `<span style="background:#e0e7ff;color:#3730a3;font-size:11px;font-weight:800;padding:2px 7px;border-radius:6px;margin-right:5px">🏷️ ${esc(item.tag)}</span>` 
             : '';
 
           return `
           <div class="bank-item" style="border-left:4px solid ${isTest ? '#8b5cf6' : '#5ab0ff'}">
             <div class="binfo" onclick="loadQuizData('${item.id}')">
-              <span style="font-size:15px;color:#2d2350">${badgeHtml}📘 ${esc(item.title || item.id)}</span>
+              <span style="font-size:15px;color:#2d2350">${badgeHtml}${tagHtml}📘 ${esc(item.title || item.id)}</span>
               <span style="font-size:12px;color:#7a6aa8;display:block;margin-top:2px">
                 Mã: <code style="color:#5b4bb0;font-weight:800">${esc(item.id)}</code> · ${(item.qs || []).length} câu · Tác giả: <b>${esc(item.author || 'Ms Nene')}</b> · ${esc(item.date || '')}
               </span>
             </div>
             <div class="bacts">
-              <button class="btn g" style="padding:5px 9px;font-size:12px" title="Dùng đề này mở phòng" onclick="loadQuizData('${item.id}')">${isTest ? '📝 Mở phòng thi' : '🎯 Mở phòng'}</button>
-              <button class="btn w" style="padding:5px 9px;font-size:12px" title="Giao bài tập về nhà" onclick="assignHwFor('${item.id}')">${isTest ? '📋 Giao bài test' : '📚 Giao bài'}</button>
-              <button class="btn b" style="padding:5px 9px;font-size:12px" title="Lưu bộ đề này về thư mục của tôi" onclick="saveCommunityToLocal('${item.id}')">⬇️ Lưu về kho</button>
-              ${deleteBtnHtml}
+              <button class="btn g" style="padding:4px 8px;font-size:12px" title="Dùng đề này mở phòng chơi" onclick="loadQuizData('${item.id}')">${isTest ? '📝 Mở thi' : '🎯 Mở phòng'}</button>
+              <button class="btn w" style="padding:4px 8px;font-size:12px" title="Giao bài tập về nhà" onclick="assignHwFor('${item.id}')">📋 Giao bài</button>
+              <button class="btn b" style="padding:4px 8px;font-size:12px" title="Lưu bộ đề này về kho riêng của tôi" onclick="saveCommunityToLocal('${item.id}')">⬇️ Lưu về kho</button>
+              <button class="btn b" style="padding:4px 8px;font-size:12px;background:linear-gradient(90deg,#7c3aed,#9333ea);color:#fff" title="Chỉnh sửa nội dung câu hỏi bộ đề này trên Thư viện chung" onclick="editCommunityQuiz('${esc(item.id)}')">✏️ Sửa đề</button>
+              <button class="btn w" style="padding:4px 8px;font-size:12px" title="Đổi tên đề, tác giả, khối lớp" onclick="openEditCommModal('${esc(item.id)}')">🏷️ Đổi tên</button>
+              <button class="btn r" style="padding:4px 8px;font-size:12px;background:#fef2f2;color:#dc2626;border:1px solid #fecaca" title="Xóa đề này khỏi Thư viện chung (Admin)" onclick="adminDeleteQuiz('${esc(item.id)}')">🗑️</button>
             </div>
           </div>
           `;
@@ -1841,7 +1907,8 @@ async function renderBank(forceCloud) {
   }
 }
 
-// Bắt sự kiện bộ lọc đề
+// Bắt sự kiện bộ lọc đề & tag
+window.commFilterTag = '';
 if ($('bRefreshBank')) $('bRefreshBank').onclick = () => { toast('🔄 Đang đồng bộ lại thư viện từ máy chủ…', 1500); renderBank(true); };
 if ($('bFiltAll')) $('bFiltAll').onclick = () => { bankFilter = 'all'; updateFilterButtons(); renderBank(); };
 if ($('bFiltGame')) $('bFiltGame').onclick = () => { bankFilter = 'game'; updateFilterButtons(); renderBank(); };
@@ -1850,6 +1917,18 @@ if ($('bNewKitFromBank')) $('bNewKitFromBank').onclick = () => {
   const pasteTab = document.querySelector('.tab[data-t="paste"]');
   if (pasteTab) pasteTab.click();
 };
+
+if ($('commTagFilters')) {
+  $('commTagFilters').onclick = e => {
+    const b = e.target.closest('button[data-tag]');
+    if (!b) return;
+    window.commFilterTag = b.dataset.tag;
+    [...$('commTagFilters').children].forEach(btn => {
+      btn.className = 'btn ' + (btn === b ? 'g' : 'w') + ' mini';
+    });
+    renderBank();
+  };
+}
 
 function updateFilterButtons() {
   if ($('bFiltAll')) $('bFiltAll').className = 'btn ' + (bankFilter === 'all' ? 'g' : 'w');
@@ -1973,6 +2052,151 @@ window.shareLocalToCommunityById = async function(id) {
   toast('🎉 Đã chia sẻ đề "' + item.title + '" lên Thư viện chung với mã: ' + saved.id, 3500);
   renderBank(true);
 };
+
+/* ═════ 🛠️ TÍNH NĂNG ĐIỀU CHỈNH THƯ VIỆN ĐỀ THI CHUNG ═════ */
+window.editingCommunityQuizId = null;
+
+window.editCommunityQuiz = async function(id) {
+  if (!id) return;
+  if (!isAdmin()) {
+    const key = prompt('🔐 Chỉnh sửa đề Thư viện chung yêu cầu quyền Quản trị (Admin). Nhập Khóa Tối Cao:');
+    if (!key) return;
+    const ok = window.LIC ? await window.LIC.verifyAdmin(key) : (key === '131618');
+    if (!ok) return toast('❌ Sai Khóa Tối Cao! Bạn không có quyền sửa đề Thư viện chung.', 3000);
+    sessionStorage.setItem('msnene_admin_auth', '1');
+    localStorage.setItem('msnene_admin_auth', '1');
+  }
+
+  toast('⏳ Đang tải nội dung bộ đề [' + id + '] để chỉnh sửa…', 1500);
+  const quiz = await GC.getQuizById(id);
+  if (!quiz || !quiz.qs || !quiz.qs.length) {
+    return toast('❌ Không tải được nội dung bộ đề [' + id + ']', 3000);
+  }
+
+  window.editingCommunityQuizId = id;
+  const isTest = quiz.type === 'test' || quiz.m === 'test';
+  selectMode(isTest ? 'test' : (quiz.m || 'climb'));
+  setQs(quiz.qs, quiz.title || id, []);
+  if ($('pTxt')) $('pTxt').value = quiz.text || '';
+  if ($('gTitle')) $('gTitle').value = quiz.title || id;
+  if ($('editingCommTitle')) $('editingCommTitle').textContent = quiz.title || id;
+  if ($('editingCommId')) $('editingCommId').textContent = id;
+  if ($('editingCommBanner')) $('editingCommBanner').style.display = 'flex';
+
+  const pasteTab = document.querySelector('.tab[data-t="paste"]');
+  if (pasteTab) pasteTab.click();
+  toast('✏️ Đã mở chế độ Sửa đề Thư viện chung [' + id + ']! Cô sửa câu hỏi rồi bấm "💾 Cập nhật lên Thư viện chung" nhé.', 4000);
+};
+
+window.saveEditCommunity = async function() {
+  if (!window.editingCommunityQuizId) return;
+  if (!qs.length) return toast('⚠️ Bộ câu hỏi chưa có câu nào!', 2500);
+  const id = window.editingCommunityQuizId;
+  const isTest = gMode === 'test';
+  const title = clean($('gTitle') ? $('gTitle').value : '') || 'Bộ đề tiếng Anh';
+  const author = clean(prompt('Tên giáo viên / tác giả hiển thị trên đề:', clean($('gTeacher') ? $('gTeacher').value : '') || 'Cô Chí Nên') || 'Cô Chí Nên');
+
+  toast('⏳ Đang cập nhật bộ đề [' + id + '] lên máy chủ Thư viện chung…', 2000);
+  const updated = {
+    id: id,
+    title: title,
+    author: author,
+    qs: qs.map(q => ({
+      q: q.q,
+      o: q.o,
+      a: q.a,
+      e: q.e || '',
+      s: q.s || '',
+      type: q.type || 'mc',
+      ansText: q.ansText || '',
+      targetText: q.targetText || '',
+      ipa: q.ipa || '',
+      audio: q.audio || '',
+      hint: q.hint || ''
+    })),
+    text: $('pTxt') ? $('pTxt').value : '',
+    type: isTest ? 'test' : 'game',
+    m: gMode,
+    lv: +($('gLv') ? $('gLv').value : 2),
+    date: new Date().toLocaleDateString('vi-VN')
+  };
+
+  await GC.saveCommunityQuiz(updated);
+  toast('🎉 Đã cập nhật thành công bộ đề [' + id + '] trên Thư viện chung!', 4000);
+  window.editingCommunityQuizId = null;
+  if ($('editingCommBanner')) $('editingCommBanner').style.display = 'none';
+  const bankTab = document.querySelector('.tab[data-t="bank"]');
+  if (bankTab) bankTab.click();
+  renderBank(true);
+};
+
+window.cancelEditCommunity = function() {
+  window.editingCommunityQuizId = null;
+  if ($('editingCommBanner')) $('editingCommBanner').style.display = 'none';
+  toast('ℹ️ Đã thoát chế độ chỉnh sửa Thư viện chung.', 2000);
+};
+
+if ($('bSaveEditCommunity')) $('bSaveEditCommunity').onclick = window.saveEditCommunity;
+if ($('bCancelEditCommunity')) $('bCancelEditCommunity').onclick = window.cancelEditCommunity;
+
+window.openEditCommModal = async function(id) {
+  if (!id) return;
+  if (!isAdmin()) {
+    const key = prompt('🔐 Đổi thông tin đề Thư viện chung yêu cầu quyền Quản trị (Admin). Nhập Khóa Tối Cao:');
+    if (!key) return;
+    const ok = window.LIC ? await window.LIC.verifyAdmin(key) : (key === '131618');
+    if (!ok) return toast('❌ Sai Khóa Tối Cao! Bạn không có quyền đổi thông tin đề Thư viện chung.', 3000);
+    sessionStorage.setItem('msnene_admin_auth', '1');
+    localStorage.setItem('msnene_admin_auth', '1');
+  }
+
+  let quiz = (window.communityQuizzesCache || []).find(q => q.id === id);
+  if (!quiz) quiz = await GC.getQuizById(id);
+  if (!quiz) return toast('❌ Không tìm thấy thông tin bộ đề [' + id + ']', 2500);
+
+  if ($('inpEditCommId')) $('inpEditCommId').value = id;
+  if ($('inpEditCommTitle')) $('inpEditCommTitle').value = quiz.title || '';
+  if ($('inpEditCommAuthor')) $('inpEditCommAuthor').value = quiz.author || '';
+  if ($('inpEditCommType')) $('inpEditCommType').value = (quiz.type === 'test' || quiz.m === 'test') ? 'test' : 'game';
+  if ($('inpEditCommTag')) $('inpEditCommTag').value = quiz.tag || '';
+  if ($('editCommSub')) $('editCommSub').textContent = 'Mã đề: ' + id + ' · ' + ((quiz.qs || []).length) + ' câu hỏi · ' + (quiz.date || '');
+
+  if ($('ovEditCommQuiz')) $('ovEditCommQuiz').classList.add('on');
+};
+
+window.saveEditCommModal = async function() {
+  const id = $('inpEditCommId') ? $('inpEditCommId').value : '';
+  if (!id) return;
+  const title = clean($('inpEditCommTitle') ? $('inpEditCommTitle').value : '');
+  if (!title) return toast('⚠️ Vui lòng nhập tiêu đề cho bộ đề!', 2500);
+  const author = clean($('inpEditCommAuthor') ? $('inpEditCommAuthor').value : '') || 'Cô Chí Nên';
+  const type = $('inpEditCommType') ? $('inpEditCommType').value : 'game';
+  const tag = clean($('inpEditCommTag') ? $('inpEditCommTag').value : '');
+
+  toast('⏳ Đang lưu thay đổi thông tin lên máy chủ...', 1500);
+  const patch = {
+    title,
+    author,
+    type,
+    m: type === 'test' ? 'test' : 'climb',
+    tag
+  };
+  await GC.updateCommunityQuizMeta(id, patch);
+  toast('🎉 Đã cập nhật thông tin bộ đề [' + id + '] thành công!', 3000);
+  if ($('ovEditCommQuiz')) $('ovEditCommQuiz').classList.remove('on');
+  renderBank(true);
+};
+
+if ($('bSaveEditCommModal')) $('bSaveEditCommModal').onclick = window.saveEditCommModal;
+if ($('bCloseEditCommModal')) $('bCloseEditCommModal').onclick = () => $('ovEditCommQuiz') && $('ovEditCommQuiz').classList.remove('on');
+
+if ($('editCommGradePresets')) {
+  $('editCommGradePresets').onclick = e => {
+    const b = e.target.closest('button[data-tag]');
+    if (!b) return;
+    if ($('inpEditCommTag')) $('inpEditCommTag').value = b.dataset.tag;
+  };
+}
 
 window.adminDeleteQuiz = async function(id) {
   if (!id) return;
