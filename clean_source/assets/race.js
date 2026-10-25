@@ -56,7 +56,7 @@ function buildTrack(li) {
     segs[n].sprites.push({ k, offset: side * R(1.25, 2.6), w: PROP[k].w });
   }
   if (st.bg === 'city') for (let n = 15; n < segs.length; n += 12) { segs[n].sprites.push({ k: 'lamp', offset: -1.18, w: PROP.lamp.w }); segs[n].sprites.push({ k: 'lamp', offset: 1.18, w: PROP.lamp.w }) }
-  const words = ['GOOD LUCK!', 'ENGLISH!', 'CÔ MAI AN', 'FASTER!', 'YOU CAN!', 'WELL DONE!', 'KEEP GOING!'];
+  const words = ['GOOD LUCK!', 'ENGLISH!', 'MS NENE', 'CÔ CHÍ NÊN', 'FASTER!', 'YOU CAN!', 'WELL DONE!', 'KEEP GOING!'];
   for (let n = 60, i = 0; n < finishZ / SEG - 40; n += RI(90, 140), i++) segs[n].sprites.push({ k: 'board', text: words[(i + li) % words.length], offset: (i % 2 ? 1 : -1) * 1.35, w: 1.3 });
   // vết dầu + bình ⚡ trên đường
   for (let i = 0; i < Math.round(st.oil * LVC.traffic); i++) { const n = RI(80, Math.floor(finishZ / SEG) - 30); segs[n].sprites.push({ k: 'oil', offset: R(-.7, .7), w: .4, road: true }) }

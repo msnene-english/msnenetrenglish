@@ -1678,7 +1678,7 @@ function showRes(why) {
     (HW ? '<div class="wide">📚 Hạn nộp: ' + (HW.dl ? stamp(HW.dl) + (hwLate ? ' · ⚠️ <b>nộp trễ</b>' : ' · ✅ <b>đúng hạn</b>') : 'không đặt hạn') + '</div>' : '') +
     '<div class="wide">🔁 Lần nộp thứ ' + subN + ' trên máy này</div></div>' +
     '<div class="row" style="margin-bottom:6px"><button class="btn b" onclick="GC.showReportCard({name:nameV,title:setTitle,score:pct,ok:okN,tot:ans||QS.length,m:MODE,timeText:fmt(tEnd-t0)})">🏅 Xuất phiếu điểm gửi Phụ huynh</button></div>' +
-    (HW ? '<div class="row"><button class="btn g" onclick="copyResult()" style="font-size:17px;padding:12px 22px">📋 Copy kết quả gửi cô</button>' + (!HW.dl || Date.now() < HW.dl ? '<button class="btn w" onclick="location.reload()">🔄 Làm lại</button>' : '') + '</div><div class="sub">👉 Điểm của em đã tự động lưu vào Sổ điểm của cô · Bấm xuất phiếu điểm hoặc copy gửi Zalo nhé!</div>'
+    (HW ? '<div class="row"><button class="btn g" onclick="copyResult()" style="font-size:17px;padding:12px 22px">📋 Copy kết quả gửi cô</button>' + (!HW.dl || Date.now() < HW.dl ? '<button class="btn w" onclick="location.reload()">🔄 Làm lại</button>' : '') + '</div><div class="sub">👉 Điểm của em đã tự động lưu vào Sổ điểm của cô · Bấm xuất phiếu điểm hoặc copy gửi Zalo nhé!</div><div style="margin-top:6px;display:flex;gap:8px;justify-content:center;flex-wrap:wrap"><a href="https://zalo.me/84852639652" target="_blank" rel="noopener" class="btn" style="text-decoration:none;background:#0068ff;color:#fff;font-size:13px;padding:6px 14px;border-radius:12px;font-weight:800;display:inline-flex;align-items:center;gap:4px">💬 Nhắn Zalo Cô Chí Nên</a><button type="button" class="btn w" onclick="navigator.clipboard.writeText('0852639652').then(()=>toast('📋 Đã copy SĐT Zalo: 0852639652', 2000))" style="font-size:12px;padding:6px 12px;border-radius:12px">📋 Copy SĐT Zalo</button></div>'
       : SOLO ? '<div class="row">' + (won ? '' : '<button class="btn g" onclick="resume()">🏃 Chơi tiếp</button>') + '<button class="btn" onclick="location.reload()">🔄 Chơi lại</button></div>'
       : '<div class="sub">' + (won && why === 'win' ? '🎉 Chờ cả lớp về đích nhé — xem bảng xếp hạng trên màn hình của cô!' : '📺 Nhìn lên màn hình của cô để xem bảng vinh danh!') + '</div>' + (why === 'teacher' || why === 'time' ? '<div class="lockmsg">🔒 ' + (why === 'time' ? 'Hết giờ' : 'Cô đã kết thúc trò chơi') + ' — màn chơi đã khoá, em không chơi tiếp được nữa.</div>' : ''));
   $('ovRes').classList.add('on');
@@ -1689,7 +1689,7 @@ function resultText() {
     '\n✅ Đúng ' + okN + '/' + ans + ' câu (' + pct + '%) · 🧩 chinh phục ' + solved.size + '/' + QS.length + ' câu\n🏁 ' + prog + '\n🔥 Chuỗi đúng dài nhất: ' + best +
     '\n⏱ Thời gian: ' + fmt(tEnd - t0) + ' · ⏰ Nộp: ' + stamp(tEnd) + (HW && HW.dl ? (tEnd > HW.dl ? ' (⚠️ trễ hạn)' : ' (✅ đúng hạn)') : '') + '\n🔁 Lần làm thứ ' + subN;
 }
-function copyResult() { const t = resultText(); navigator.clipboard.writeText(t).then(() => toast('📋 Đã copy! Mở Zalo dán gửi cô nhé', 2800)).catch(() => prompt('Copy đoạn này gửi cô:', t)) }
+function copyResult() { const t = resultText(); navigator.clipboard.writeText(t).then(() => toast('📋 Đã copy kết quả! Mở Zalo dán gửi Cô Chí Nên (0852639652) nhé', 3000)).catch(() => prompt('Copy đoạn này gửi cô:', t)) }
 function resume() { $('ovRes').classList.remove('on'); over = false; t0 += Date.now() - tEnd; tEnd = 0; S.running = true }
 </script>
 

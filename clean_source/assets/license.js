@@ -117,7 +117,7 @@ window.LIC = (function () {
           }
           if (data.expiresAt && data.expiresAt > 0 && data.expiresAt < Date.now()) {
             const expStr = new Date(data.expiresAt).toLocaleDateString('vi-VN');
-            return { ok: false, msg: `Mã kích hoạt này đã hết hạn sử dụng vào ngày ${expStr}!` };
+            return { ok: false, msg: `Mã kích hoạt này đã hết hạn vào ngày ${expStr}! Vui lòng liên hệ Zalo Cô Chí Nên 0852639652 để gia hạn.` };
           }
 
           // Lưu token vào LocalStorage

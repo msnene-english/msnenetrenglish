@@ -1301,7 +1301,7 @@ function showReportCard(data) {
   ctx.fillStyle = '#64748b';
   ctx.font = '700 18px "Nunito", "Segoe UI", sans-serif';
   ctx.textAlign = 'left';
-  ctx.fillText('🌐 Hệ thống học & khảo thí trực tuyến Ms Nene English', 80, 675);
+  ctx.fillText('🌐 Ms Nene English · Hỗ trợ & Tư vấn Zalo: 0852639652', 80, 675);
   ctx.textAlign = 'right';
   ctx.fillStyle = '#5b21b6';
   ctx.font = '900 20px "Nunito", "Segoe UI", sans-serif';
@@ -2075,5 +2075,16 @@ Trả về STRICT JSON:
   };
 }
 
-return { $, shuffle, pick, clamp, esc, fmt, stamp, clean, rng, COLORS, BADGE, safe, normAns, checkTextAns, fromOld, prep, parseCSV, rowsToQs, parseText, parsePaste, sheetSets, sheetSet, sampleSet, packHw, unpackHw, tone, sfx, confetti, toast, rank, makeNet, music, saveCommunityQuiz, updateCommunityQuizMeta, getCommunityLibrary, getQuizById, saveHwMeta, submitHwResult, getHwGradebook, showReportCard, getAiKey, diffPronunciation, speakText, evaluatePronunciationAI, enrichSpeakingQuestionsAI, generateSingleSpeakingAI, checkEnglishStandardizationLocal, checkEnglishStandardizationAI, COMMON_TYPOS, deleteCommunityQuiz, deleteHwSubmission , copy, copyText, sfxFiles, kvPut, kvGet, kvScan, live, liveWatch};
+
+function copyPhone() {
+  const p = (typeof window !== 'undefined' && window.GAME_CONFIG && window.GAME_CONFIG.phone) || '0852639652';
+  if (typeof navigator !== 'undefined' && navigator.clipboard) {
+    navigator.clipboard.writeText(p).then(() => {
+      toast('📋 Đã copy số Zalo: ' + p + ' (Cô Chí Nên)', 2500);
+    }).catch(() => prompt('Số Zalo Cô Chí Nên:', p));
+  }
+}
+if (typeof window !== 'undefined') window.copyPhone = copyPhone;
+
+return { $, copyPhone, shuffle, pick, clamp, esc, fmt, stamp, clean, rng, COLORS, BADGE, safe, normAns, checkTextAns, fromOld, prep, parseCSV, rowsToQs, parseText, parsePaste, sheetSets, sheetSet, sampleSet, packHw, unpackHw, tone, sfx, confetti, toast, rank, makeNet, music, saveCommunityQuiz, updateCommunityQuizMeta, getCommunityLibrary, getQuizById, saveHwMeta, submitHwResult, getHwGradebook, showReportCard, getAiKey, diffPronunciation, speakText, evaluatePronunciationAI, enrichSpeakingQuestionsAI, generateSingleSpeakingAI, checkEnglishStandardizationLocal, checkEnglishStandardizationAI, COMMON_TYPOS, deleteCommunityQuiz, deleteHwSubmission , copy, copyText, sfxFiles, kvPut, kvGet, kvScan, live, liveWatch};
 })();

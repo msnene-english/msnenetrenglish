@@ -157,6 +157,25 @@ th{color:#7a6aa8;font-size:13px}
 .freeK{background:linear-gradient(135deg,#FFF1F8,#EEF4FF);border:2px dashed #FF7EB6;border-radius:14px;padding:10px 14px;font-weight:800;font-size:13.5px;color:#5b2a6e;margin-bottom:10px}
 .freeK b{color:#E0357A}
 
+
+/* PROMO BANNER & FOOTER BRANDING (MS NENE ENGLISH) */
+.promo{display:flex;align-items:center;gap:12px;flex-wrap:wrap;background:linear-gradient(90deg,#fff3c4,#ffe4f2);border:3px dashed #ffb627;border-radius:18px;padding:12px 16px;margin-bottom:14px;font-weight:700;font-size:14.5px;line-height:1.5;box-shadow:0 4px 15px rgba(255,182,39,0.15)}
+.promo .pi{font-size:32px;line-height:1}
+.promo .pt{flex:1;min-width:220px;color:#334155}
+.promo b{color:#c2410c}
+.promo .acts{display:flex;gap:8px;flex-wrap:wrap}
+.foot{text-align:center;margin:26px auto 0;width:min(800px,100%);background:linear-gradient(135deg,#fffffffa,#fff0f7fa 50%,#eef6fffa);border-radius:26px;padding:20px 18px 18px;box-shadow:0 10px 30px #5b4bb033,0 0 0 4px #ffffffaa;position:relative;overflow:hidden}
+.foot::before{content:'';position:absolute;left:0;right:0;top:0;height:7px;background:linear-gradient(90deg,#ff7eb6,#ffb86b,#ffe08a,#7ed9a6,#5ab0ff,#9b7bff)}
+.ft1{font:800 clamp(22px,3.4vw,32px)/1.2 'Baloo 2',Nunito,sans-serif;background:linear-gradient(90deg,#e8457a,#9b7bff,#2e9bf0,#e8457a);background-size:300% 100%;-webkit-background-clip:text;background-clip:text;color:transparent}
+.ft2{margin-top:8px;font-weight:800;font-size:clamp(14px,1.8vw,17px);color:#5b4bb0;line-height:1.5}
+.ft2 b{color:#e8457a}
+.ft3{margin-top:14px;display:flex;gap:10px;justify-content:center;flex-wrap:wrap}
+.ft3 a,.ft3 button{border:0;border-radius:999px;padding:9px 18px;font:800 14px Nunito,sans-serif;cursor:pointer;text-decoration:none;color:#fff;box-shadow:0 4px 0 #0002;transition:transform 0.15s ease}
+.ft3 a{background:linear-gradient(90deg,#2e9bf0,#5ab0ff)}
+.ft3 a:hover,.ft3 button:hover{transform:translateY(-2px)}
+.ft3 button{background:linear-gradient(90deg,#ff7eb6,#9b7bff)}
+.ft3 button+button{background:linear-gradient(90deg,#ffb627,#ff7a3d)}
+
 </style>
 </head>
 <body>
@@ -186,6 +205,16 @@ th{color:#7a6aa8;font-size:13px}
     <button type="button" class="btn b" id="bTriggerUnlockModal" style="padding:3px 12px;font-size:12px;margin-left:8px;background:linear-gradient(135deg,#7c3aed,#db2777);border:none;color:#fff;font-weight:800;cursor:pointer">🔑 Kích hoạt bản quyền Pro</button>
    </div>
   </div>
+
+   <!-- BANNER ĐÁNH DẤU THƯƠNG HIỆU & HỖ TRỢ ZALO CÔ CHÍ NÊN -->
+   <div class="promo">
+    <span class="pi">👩‍🏫</span>
+    <div class="pt">Thầy cô có nhu cầu tư vấn bài giảng, mở khóa trọn bộ hoặc cài đặt <b>Ms Nene English</b>, liên hệ <b>Zalo Cô Chí Nên: 0852639652</b> để được hỗ trợ trực tiếp.</div>
+    <div class="acts">
+     <a class="btn g" href="https://zalo.me/84852639652" target="_blank" rel="noopener" style="text-decoration:none;font-weight:800;background:#059669;color:#fff;padding:8px 16px;border-radius:12px;display:inline-flex;align-items:center;gap:4px">💬 Nhắn Zalo</a>
+     <button class="btn w" type="button" onclick="copyPhone()" style="font-weight:800;padding:8px 14px;border-radius:12px">📋 Copy số Zalo</button>
+    </div>
+   </div>
 
   <div id="resumeBox" class="panel" hidden style="margin-bottom:14px"></div>
 
@@ -539,7 +568,15 @@ Cách 3 — Dán câu luyện phát âm (tự động điền IPA & mẹo):
 </div>
 
 <div class="wrap" style="padding-top:0">
- <div class="foot">🎮 Ms Nene English · Cô Chí Nên · Zalo 0852639652</div>
+ <div class="foot">
+  <div class="ft1">🎮 Ms Nene English · Cô Chí Nên</div>
+  <div class="ft2">🌟 Hệ sinh thái Trò chơi &amp; Bài tập Tương tác tiếng Anh · Dành cho giáo viên &amp; học sinh</div>
+  <div class="ft3">
+   <a href="https://zalo.me/84852639652" target="_blank" rel="noopener">💬 Zalo Cô Chí Nên (0852639652)</a>
+   <button type="button" onclick="copyPhone()">📋 Copy số Zalo</button>
+   <button type="button" onclick="promptUnlockModal()">🔑 Kích hoạt bản quyền Pro</button>
+  </div>
+ </div>
 </div>
 <div id="toast"></div>
 
@@ -668,6 +705,11 @@ Hoặc dán theo mẫu:
    <button type="button" class="btn b" id="bDoUnlockGames" style="padding:10px 22px;font-size:15px;font-weight:800;background:linear-gradient(135deg,#7c3aed,#db2777);border:none;box-shadow:0 4px 12px rgba(124,58,237,0.35)">
     ✨ Kích hoạt ngay
    </button>
+  </div>
+  <div style="text-align:center;margin-top:14px;padding-top:12px;border-top:1px dashed #cbd5e1;font-size:13px;color:#64748b">
+   Chưa có mã? Liên hệ <b>Zalo Cô Chí Nên: 0852639652</b> · 
+   <a href="https://zalo.me/84852639652" target="_blank" rel="noopener" style="color:#7c3aed;font-weight:800;text-decoration:none">💬 Nhắn Zalo</a> · 
+   <button type="button" class="btn w mini" onclick="copyPhone()" style="padding:2px 8px;font-size:12px;margin-left:4px">📋 Copy số</button>
   </div>
  </div>
 </div>
@@ -809,7 +851,17 @@ Hoặc dán theo mẫu:
 </div></div>
 
 <!-- SCRIPTS HỆ THỐNG -->
-<script src="assets/shield.js?v=2.1"></script>
+<script src="assets/shield.js?v=2.1">
+window.copyPhone = function() {
+  const p = (window.GAME_CONFIG && window.GAME_CONFIG.phone) || '0852639652';
+  navigator.clipboard.writeText(p).then(() => {
+    toast('📋 Đã copy số Zalo: ' + p + ' (Cô Chí Nên)', 2500);
+  }).catch(() => {
+    prompt('Số Zalo Cô Chí Nên:', p);
+  });
+};
+
+</script>
 <script src="assets/qrcode.min.js"></script>
 <script src="assets/config.js?v=2.1"></script>
 <script src="assets/core.js?v=2.1"></script>
