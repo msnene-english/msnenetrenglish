@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html lang="vi">
 <head>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🎮</text></svg>">
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Ms Nene English – Quản Trị Bản Quyền</title>
@@ -1305,7 +1306,7 @@ function renderAdminTags() {
     return;
   }
   container.innerHTML = allCommTags.map(tag => `
-    <span class="tag-badge">
+    <span class="tag-badge" ondragover="adminDragOverTag(event)" ondragleave="adminDragLeaveTag(event)" ondrop="adminDropQuizOnTag(event, '${esc(tag)}')" title="Giữ chuột kéo dòng đề bên dưới thả vào đây để gán vào ${esc(tag)}">
       <span>🏷️ ${esc(tag)}</span>
       <span class="btn-del-tag" onclick="adminDeleteTag('${esc(tag)}')" title="Xóa thẻ ${esc(tag)} khỏi hệ thống">✕</span>
     </span>
@@ -1381,6 +1382,53 @@ function updateCommStats() {
   let totalQs = 0;
   allCommQuizzes.forEach(q => { totalQs += (q.qs || []).length; });
   $('statCommQs').textContent = totalQs;
+}
+
+
+function adminDragQuizStart(e, id) {
+  e.dataTransfer.setData('text/comm-quiz-id', id);
+  e.dataTransfer.effectAllowed = 'move';
+  if (e.currentTarget) e.currentTarget.style.opacity = '0.4';
+}
+function adminDragQuizEnd(e) {
+  if (e.currentTarget) e.currentTarget.style.opacity = '1';
+}
+function adminDragOverTag(e) {
+  e.preventDefault();
+  e.dataTransfer.dropEffect = 'move';
+  e.currentTarget.style.transform = 'scale(1.1)';
+  e.currentTarget.style.borderColor = '#7c3aed';
+  e.currentTarget.style.background = '#f5f3ff';
+}
+function adminDragLeaveTag(e) {
+  e.currentTarget.style.transform = '';
+  e.currentTarget.style.borderColor = '';
+  e.currentTarget.style.background = '';
+}
+async function adminDropQuizOnTag(e, targetTag) {
+  e.preventDefault();
+  e.currentTarget.style.transform = '';
+  e.currentTarget.style.borderColor = '';
+  e.currentTarget.style.background = '';
+  const id = e.dataTransfer.getData('text/comm-quiz-id');
+  if (!id || !targetTag) return;
+  toast(`⏳ Đang gán đề [${id}] vào ${targetTag}...`);
+  const fbUrl = getFbUrl();
+  try {
+    const res = await fetch(`${fbUrl}/community_quizzes/${encodeURIComponent(id)}.json`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ tag: targetTag })
+    });
+    if (res.ok) {
+      toast(`🎉 Đã gán đề [${id}] vào khối ${targetTag} thành công!`, 2500);
+      loadCommQuizzes();
+    } else {
+      alert('Lỗi cập nhật tag: ' + res.statusText);
+    }
+  } catch(err) {
+    alert('Lỗi kết nối Firebase: ' + err.message);
+  }
 }
 
 function adminFilterQuizzes() {
