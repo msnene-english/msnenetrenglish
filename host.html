@@ -323,11 +323,8 @@ Cách 3 — Dán câu luyện phát âm (tự động điền IPA & mẹo):
 
     <!-- TAB 3: THƯ VIỆN ĐỀ THI & THƯ MỤC QUIZLET -->
     <div id="tBank" hidden>
-     <!-- THANH CÔNG CỤ ĐẦU TRANG & ADMIN BADGE -->
-     <div style="display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap;align-items:center;justify-content:space-between">
-      <div id="adminStatusBox" style="display:flex;align-items:center;gap:6px">
-       <!-- Tự động cập nhật qua JS: Admin mode badge hoặc Nút đăng nhập Admin -->
-      </div>
+     <!-- THANH CÔNG CỤ ĐẦU TRANG -->
+     <div style="display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap;align-items:center;justify-content:flex-end">
       <div style="display:flex;gap:6px;flex-wrap:wrap">
        <button class="btn b" id="bRefreshBank" type="button" style="font-size:12px;padding:6px 10px" title="Đồng bộ lại thư viện từ máy chủ">🔄 Làm mới thư viện</button>
        <button class="btn g" id="bExportBank" type="button" style="font-size:12px;padding:6px 10px" title="Tải file sao lưu toàn bộ kho về máy">⬇️ Xuất file</button>
@@ -1775,14 +1772,10 @@ let isFetchingBank = false;
 
 async function renderBank(forceCloud) {
   if (window.renderCommTagFilters) window.renderCommTagFilters();
-  // 1. Cập nhật trạng thái Admin
+  // 1. Trạng thái Admin (chỉ hiển thị badge nếu đang đăng nhập admin, không hiển thị nút đăng nhập trên host)
   const adminBox = $('adminStatusBox');
   if (adminBox) {
-    if (isAdmin()) {
-      adminBox.innerHTML = '<div style="display:inline-flex;align-items:center;gap:6px;background:#dcfce7;color:#166534;font-size:12px;font-weight:800;padding:4px 10px;border-radius:999px;border:1px solid #bbf7d0">🛡️ Quản trị viên (Admin Mode) <button type="button" class="btn w mini" style="padding:1px 6px;font-size:11px" onclick="logoutAdminUI()">Thoát</button></div>';
-    } else {
-      adminBox.innerHTML = '<button type="button" class="btn w mini" style="font-size:11px;padding:3px 9px;border-radius:999px;color:#7a6aa8" onclick="promptAdminLogin()">🔑 Đăng nhập Admin</button>';
-    }
+    adminBox.innerHTML = '';
   }
 
   const L = kits(), F = folds(), qSearch = clean($('searchBank') ? $('searchBank').value : '').toLowerCase();
