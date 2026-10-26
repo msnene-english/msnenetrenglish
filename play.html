@@ -94,6 +94,21 @@ body{display:flex;flex-direction:column;overflow:hidden}
 .spk-score-badge.failed { background: #fee2e2; color: #b91c1c; border: 1.5px solid #fca5a5; }
 .spk-ai-note { background: #fff; border: 1.5px solid #e9d5ff; border-radius: 12px; padding: 12px 14px; text-align: left; font-size: 14px; line-height: 1.5; color: #374151; margin-top: 10px; }
 
+@keyframes shakeCard {
+  0%, 100% { transform: translateX(0); }
+  20%, 60% { transform: translateX(-8px); }
+  40%, 80% { transform: translateX(8px); }
+}
+.shake-anim { animation: shakeCard 0.4s ease-in-out; }
+@keyframes spinIcon { 100% { transform: rotate(360deg); } }
+.spin-icon { display: inline-block; animation: spinIcon 1s linear infinite; }
+#jCode.auto-filled {
+  border-color: #10b981 !important;
+  background: #f0fdf4 !important;
+  color: #065f46 !important;
+  box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.2) !important;
+}
+
 /* ═════ STYLES BÀI KIỂM TRA (TEST MODE - CHUẨN TƯƠNG PHẢN CAO & DỄ ĐỌC 100%) ═════ */
 #testApp {
   display: none;
@@ -447,6 +462,21 @@ body{display:flex;flex-direction:column;overflow:hidden}
 .spk-score-badge.failed { background: #fee2e2; color: #b91c1c; border: 1.5px solid #fca5a5; }
 .spk-ai-note { background: #fff; border: 1.5px solid #e9d5ff; border-radius: 12px; padding: 12px 14px; text-align: left; font-size: 14px; line-height: 1.5; color: #374151; margin-top: 10px; }
 
+@keyframes shakeCard {
+  0%, 100% { transform: translateX(0); }
+  20%, 60% { transform: translateX(-8px); }
+  40%, 80% { transform: translateX(8px); }
+}
+.shake-anim { animation: shakeCard 0.4s ease-in-out; }
+@keyframes spinIcon { 100% { transform: rotate(360deg); } }
+.spin-icon { display: inline-block; animation: spinIcon 1s linear infinite; }
+#jCode.auto-filled {
+  border-color: #10b981 !important;
+  background: #f0fdf4 !important;
+  color: #065f46 !important;
+  box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.2) !important;
+}
+
 </style>
 </head>
 <body>
@@ -512,7 +542,11 @@ body{display:flex;flex-direction:column;overflow:hidden}
  <script src="assets/temple.js"></script>
 <script>
 const { $, esc, fmt, stamp, clean, pick, shuffle, COLORS, BADGE, sfx, toast, confetti } = GC;
-const U = new URLSearchParams(location.search), HWP = U.get('hw'), QUIZ_ID = U.get('quiz') || U.get('id'); let SOLO = U.get('solo') || (HWP || QUIZ_ID ? 'hw' : null);   // solo = "mau:0" · hw = bài tập về nhà (đề nén trong link)
+const U = new URLSearchParams(location.search), HWP = U.get('hw');
+const rawIdParam = (U.get('id') || '').trim();
+// Neu param 'id' la dung 6 chu so -> do la MA PHONG, khong phai QUIZ_ID!
+const QUIZ_ID = U.get('quiz') || (rawIdParam && !/^\d{6}$/.test(rawIdParam) ? rawIdParam : null);
+let SOLO = U.get('solo') || (HWP || QUIZ_ID ? 'hw' : null);   // solo = "mau:0" · hw = bài tập về nhà (đề nén trong link)
 let HW = null;
 const GNAME = { climb: '🧗 Leo núi', brick: '🍄 Nấm Mario', tank: '🛡 Xe tăng', bomb: '💣 Bomberman', test: '📝 Bài kiểm tra', pac: '🟡 Pac-Man', race: '🏎 Đua xe', temple: '🏃 Temple Run P1', temple2: '🏃 Temple Run P2', bounce: '🔴 Bounce Tales', bounce2: '🐸 Bounce Tales P2' };
 const RULES = {
@@ -1290,23 +1324,123 @@ if (SOLO === 'hw') {
     });
   }
 }
-if (U.get('room')) {
-  const rm = U.get('room').replace(/\D/g, '').slice(0, 6);
-  $('jCode').value = rm;
-  GC.makeNet().then(n => { net = n; return n.once('rooms/' + rm + '/info'); }).then(inf => {
-    if (inf && inf.m) updateJoinUiForMode(inf.m);
-  }).catch(() => {});
+// Trich xuat ma phong da nguon thong minh (room, code, pin, r, id 6 so, hash #, session/local storage)
+function extractRoomCode() {
+  const p = new URLSearchParams(location.search);
+  const candidateKeys = ['room', 'code', 'pin', 'r'];
+  for (const [k, v] of p.entries()) {
+    const lk = k.toLowerCase().trim();
+    if (candidateKeys.includes(lk) && v) {
+      const c = v.replace(/\D/g, '').slice(0, 6);
+      if (c.length === 6) return c;
+    }
+    if (lk === 'id' && v) {
+      const cleanId = v.replace(/\D/g, '').slice(0, 6);
+      if (cleanId.length === 6) return cleanId;
+    }
+  }
+  const hashMatch = (location.hash || '').match(/\b\d{6}\b/);
+  if (hashMatch) return hashMatch[0];
+  try {
+    const saved = sessionStorage.getItem('msnene_room') || localStorage.getItem('msnene_room');
+    if (saved && /^\d{6}$/.test(saved)) return saved;
+  } catch(e) {}
+  return '';
 }
+
+// Tu dong nhan dien va dien san ma phong
+const initialRoomCode = extractRoomCode();
+if (initialRoomCode && !SOLO) {
+  $('jCode').value = initialRoomCode;
+  $('jCode').classList.add('auto-filled');
+  try {
+    sessionStorage.setItem('msnene_room', initialRoomCode);
+    localStorage.setItem('msnene_room', initialRoomCode);
+  } catch(e) {}
+  if ($('jSub')) {
+    $('jSub').innerHTML = '✨ Đã nhận mã phòng <b>' + initialRoomCode + '</b>! Em nhập tên rồi bấm <b>Vào chơi!</b>';
+  }
+  setTimeout(() => {
+    if ($('jName') && !$('jName').value) $('jName').focus();
+  }, 120);
+  peekRoom(initialRoomCode);
+}
+
+// Tu dong khoi phuc ten hoc sinh neu da tung luu
+try {
+  const savedName = localStorage.getItem('msnene_name') || sessionStorage.getItem('msnene_name');
+  if (savedName && $('jName') && !$('jName').value) {
+    $('jName').value = savedName;
+  }
+} catch(e) {}
+
 ['jCode', 'jName'].forEach(id => $(id).addEventListener('keydown', e => { if (e.key === 'Enter') $('jGo').click() }));
-function bad(el, msg) { el.classList.remove('err'); void el.offsetWidth; el.classList.add('err'); el.focus(); $('jErr').textContent = msg }
-$('jCode') && $('jCode').addEventListener('input', e => { const c = e.target.value.replace(/\D/g, ''); if (c.length === 6) peekRoom(c); });
+
+function bad(el, msg) {
+  if (!el) return;
+  el.classList.remove('err');
+  void el.offsetWidth;
+  el.classList.add('err');
+  try {
+    el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    el.focus({ preventScroll: true });
+  } catch(e) { el.focus(); }
+  if ($('jErr')) $('jErr').textContent = msg;
+  toast(msg, 3500);
+  const card = el.closest('.card') || $('ovJoin');
+  if (card) {
+    card.classList.remove('shake-anim');
+    void card.offsetWidth;
+    card.classList.add('shake-anim');
+  }
+  if (navigator.vibrate) {
+    try { navigator.vibrate([60, 40, 60]); } catch(e) {}
+  }
+}
+
+$('jCode') && $('jCode').addEventListener('input', e => {
+  const c = e.target.value.replace(/\D/g, '');
+  if (c.length === 6) {
+    e.target.classList.add('auto-filled');
+    try { sessionStorage.setItem('msnene_room', c); localStorage.setItem('msnene_room', c); } catch(err) {}
+    peekRoom(c);
+  } else {
+    e.target.classList.remove('auto-filled');
+  }
+});
+
 $('jGo').onclick = async () => {
   nameV = clean($('jName').value);
   if (nameV.length < 2) return bad($('jName'), '✏️ Em nhập họ tên nhé (ít nhất 2 chữ)');
+  try {
+    localStorage.setItem('msnene_name', nameV);
+    sessionStorage.setItem('msnene_name', nameV);
+  } catch(e) {}
+
+  if (!SOLO) {
+    const enteredCode = clean($('jCode').value).replace(/\D/g, '');
+    if (enteredCode.length !== 6) return bad($('jCode'), '🔢 Em nhập đủ mã phòng 6 chữ số nhé');
+    try {
+      localStorage.setItem('msnene_room', enteredCode);
+      sessionStorage.setItem('msnene_room', enteredCode);
+    } catch(e) {}
+  }
+
   GC.tone(1, .01);
-  $('jGo').disabled = true; $('jErr').textContent = '⏳ Đang tải…';
-  try { SOLO ? await joinSolo() : await joinRoom() }
-  catch (e) { $('jErr').textContent = '❌ ' + e.message; $('jGo').disabled = false }
+  const origBtnText = $('jGo').innerHTML;
+  $('jGo').disabled = true;
+  $('jGo').innerHTML = '<span class="spin-icon">⏳</span> Đang vào phòng...';
+  $('jErr').textContent = '⏳ Đang kết nối máy chủ phòng…';
+
+  try {
+    SOLO ? await joinSolo() : await joinRoom();
+    $('jGo').innerHTML = '✅ Đã vào phòng!';
+  } catch (e) {
+    $('jErr').textContent = '❌ ' + e.message;
+    toast('❌ ' + e.message, 4000);
+    $('jGo').innerHTML = origBtnText;
+    $('jGo').disabled = false;
+  }
 };
 async function joinSolo() {
   let set;
@@ -1327,41 +1461,87 @@ function myPid(c) {
 }
 async function joinRoom() {
   code = clean($('jCode').value).replace(/\D/g, '');
-  if (code.length !== 6) { $('jGo').disabled = false; return bad($('jCode'), '🔢 Mã phòng gồm 6 chữ số') }
-  net = net || await GC.makeNet();
-  info = await net.once('rooms/' + code + '/info');
+  if (code.length !== 6) {
+    $('jGo').disabled = false;
+    return bad($('jCode'), '🔢 Mã phòng gồm 6 chữ số');
+  }
+
+  const timeoutMs = 8000;
+  const timeoutPromise = (ms, msg) => new Promise((_, reject) => setTimeout(() => reject(new Error(msg)), ms));
+
+  net = net || await Promise.race([
+    GC.makeNet(),
+    timeoutPromise(timeoutMs, 'Hết thời gian kết nối máy chủ mạng (8s). Em kiểm tra lại Wifi/4G nhé!')
+  ]);
+
+  info = await Promise.race([
+    net.once('rooms/' + code + '/info'),
+    timeoutPromise(timeoutMs, 'Không phản hồi từ phòng ' + code + ' (8s). Em kiểm tra mã trên màn hình của cô nhé!')
+  ]);
+
   if (!info) throw new Error('Không thấy phòng ' + code + '. Em xem lại mã trên màn hình của cô nhé!' + (net.mode === 'local' ? ' (Chế độ thử: phải mở trên cùng máy với trang của cô.)' : ''));
   if (info.st === 'end') throw new Error('Phòng này đã kết thúc rồi.');
-  const raw = await net.once('rooms/' + code + '/qs');
+
+  const raw = await Promise.race([
+    net.once('rooms/' + code + '/qs'),
+    timeoutPromise(timeoutMs, 'Hết thời gian tải câu hỏi của phòng. Em bấm Vào chơi lại nhé!')
+  ]);
+
   QS = GC.prep(Array.isArray(raw) ? raw : Object.values(raw || {}), info.m === 'test' && info.testShuffle === false);
   if (!QS.length) throw new Error('Phòng chưa có câu hỏi.');
-  pid = myPid(code); path = 'rooms/' + code + '/players/' + pid; evp = 'rooms/' + code + '/ev';
-  joinT = net.now(); setTitle = info.t || ''; setGain(info.eq, info.em); LVL = info.lv || 2; MODE = ['brick', 'tank', 'bomb', 'test', 'pac', 'race', 'temple', 'temple2', 'bounce', 'bounce2'].includes(info.m) ? info.m : 'climb';
+
+  pid = myPid(code);
+  path = 'rooms/' + code + '/players/' + pid;
+  evp = 'rooms/' + code + '/ev';
+  joinT = net.now();
+  setTitle = info.t || '';
+  setGain(info.eq, info.em);
+  LVL = info.lv || 2;
+  MODE = ['brick', 'tank', 'bomb', 'test', 'pac', 'race', 'temple', 'temple2', 'bounce', 'bounce2'].includes(info.m) ? info.m : 'climb';
   updateJoinUiForMode(MODE);
-  const old = await net.once(path);
+
+  const old = await Promise.race([
+    net.once(path),
+    timeoutPromise(5000, 'Lỗi kết nối').catch(() => null)
+  ]);
+
   boot(info.seed);
   if (MODE === 'test') {
     await net.update(path, { n: nameV, c: myColor, j: (old && old.j) || joinT, on: 1, ans: (old && old.ans) || 0, ok: (old && old.ok) || 0, tot: QS.length, alt: (old && old.alt) || 0, score: (old && old.score) || 0, st: (old && old.st === 'submitted') ? 'submitted' : 'playing' });
     net.onDisconnect(path, { on: 0 });
-    joined = true; listen();
+    joined = true;
+    listen();
     $('ovJoin').classList.remove('on');
-    if (info.st === 'play') begin();
-    else {
+    $('jErr').textContent = '';
+    if (info.st === 'play') {
+      begin();
+    } else {
       $('wSub').textContent = '📝 ' + setTitle + ' · Phòng ' + code + (info.lic ? ' · 🏫 ' + info.lic : '');
       $('wTips').innerHTML = (TIPS[MODE] || TIPS.climb).map(t => '<li>' + t + '</li>').join('');
       $('ovWait').classList.add('on');
+      toast('🎉 Em đã vào phòng chờ thành công! Hãy đợi cô bấm Bắt đầu nhé.', 3500);
     }
     return;
   }
+
   if (old && old.n) {   // lỡ tải lại trang → giữ nguyên thành tích
     okN = old.ok || 0; ans = old.ans || 0; best = old.bs || 0; streak = old.st || 0; S.energy = old.en || 0; S.falls = old.fl || 0; S.stomps = old.sp || 0; tt = old.tt || 0;
     if (old.y != null) Climb.place(old.x, old.y, old);
   }
   await net.update(path, { n: nameV, c: myColor, j: old && old.j || joinT, on: 1, x: Math.round(Climb.pl.x), y: Math.round(Climb.pl.y), alt: Climb.alt(), ok: okN, ans });
   net.onDisconnect(path, { on: 0 });
-  joined = true; listen();
+  joined = true;
+  listen();
   $('ovJoin').classList.remove('on');
-  if (info.st === 'play') begin(); else { $('wSub').textContent = '📘 ' + setTitle + ' · Phòng ' + code + (info.lic ? ' · 🏫 ' + info.lic : ''); $('wTips').innerHTML = (TIPS[MODE] || TIPS.climb || []).map(t => '<li>' + t + '</li>').join(''); $('ovWait').classList.add('on') }
+  $('jErr').textContent = '';
+  if (info.st === 'play') {
+    begin();
+  } else {
+    $('wSub').textContent = '📘 ' + setTitle + ' · Phòng ' + code + (info.lic ? ' · 🏫 ' + info.lic : '');
+    $('wTips').innerHTML = (TIPS[MODE] || TIPS.climb || []).map(t => '<li>' + t + '</li>').join('');
+    $('ovWait').classList.add('on');
+    toast('🎉 Em đã vào phòng chờ thành công! Hãy đợi cô bấm Bắt đầu nhé.', 3500);
+  }
 }
 function boot(seed) {
   if (MODE === 'test') {

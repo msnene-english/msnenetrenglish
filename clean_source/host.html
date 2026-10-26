@@ -492,8 +492,9 @@ Cách 3 — Dán câu luyện phát âm (tự động điền IPA & mẹo):
     <div class="code" id="lCode"></div>
     <div id="qr"></div>
     <div class="url" id="lUrl"></div>
-    <div class="row" style="margin-top:8px">
+    <div class="row" style="margin-top:8px;gap:8px;flex-wrap:wrap">
      <button class="btn w" onclick="copyLink()">📋 Copy link gửi Zalo</button>
+     <button class="btn w" type="button" onclick="copyRoomCode()">🔢 Copy mã 6 số</button>
     </div>
    </div>
    <div>
@@ -840,7 +841,7 @@ Hoặc dán theo mẫu:
  <div class="code" id="iCode"></div>
  <div id="qr2" style="display:flex;justify-content:center;margin:10px 0"></div>
  <div class="url" id="iUrl"></div>
- <div class="row"><button class="btn" onclick="copyLink()">📋 Copy link gửi Zalo</button><button class="btn w" onclick="$('ovInv').classList.remove('on')">Đóng</button></div>
+ <div class="row" style="gap:8px;flex-wrap:wrap"><button class="btn" onclick="copyLink()">📋 Copy link gửi Zalo</button><button class="btn w" type="button" onclick="copyRoomCode()">🔢 Copy mã 6 số</button><button class="btn w" onclick="$('ovInv').classList.remove('on')">Đóng</button></div>
 </div></div>
 
 <!-- SCRIPTS HỆ THỐNG -->
@@ -2990,7 +2991,16 @@ function feedLine(e) {
 const paintMusic = () => { $('bMusic').textContent = GC.music.pref() ? '🎵 Nhạc: bật' : '🔇 Nhạc: tắt' };
 $('bMusic').onclick = () => { GC.music.toggle(); paintMusic() };
 
-function copyLink() { navigator.clipboard.writeText(joinUrl).then(() => toast('📋 Đã copy link phòng — dán vào Zalo/Messenger cho các em!', 2600)).catch(() => prompt('Copy link này:', joinUrl)) }
+function copyLink() {
+  if (!joinUrl) return;
+  navigator.clipboard.writeText(joinUrl).then(() => toast('📋 Đã copy link phòng — dán vào Zalo/Messenger cho các em!', 2800)).catch(() => prompt('Copy link này:', joinUrl));
+}
+window.copyRoomCode = function() {
+  if (!code) return toast('⚠️ Chưa có mã phòng', 2000);
+  navigator.clipboard.writeText(code).then(() => {
+    toast('🔢 Đã copy mã phòng: ' + code + ' (Dán vào Zalo/Messenger)', 2800);
+  }).catch(() => prompt('Mã phòng:', code));
+};
 $('bInvite').onclick = () => {
   $('iCode').textContent = code; $('iUrl').textContent = joinUrl; $('qr2').innerHTML = '';
   if (window.QRCode) new QRCode($('qr2'), { text: joinUrl, width: 260, height: 260, colorDark: '#2d2350', colorLight: '#ffffff' });

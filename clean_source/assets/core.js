@@ -607,7 +607,19 @@ function rank(players) {
    Mặc định: máy chủ MQTT công cộng miễn phí (không cần tài khoản). Trang của cô = "trọng tài":
    học sinh gửi lên kênh /u, trang cô gom lại phát xuống kênh /d, ảnh chụp phòng giữ sẵn ở /s, câu hỏi ở /q.
    ?local=1 = thử trên 1 máy (BroadcastChannel). Có firebase trong config.js thì dùng Firebase. */
-function loadScript(src) { return new Promise((ok, no) => { const s = document.createElement('script'); s.src = src; s.onload = ok; s.onerror = () => no(new Error('Không tải được ' + src)); document.head.appendChild(s) }) }
+function loadScript(src) {
+  return new Promise((ok, no) => {
+    const s = document.createElement('script');
+    let done = false;
+    const timer = setTimeout(() => {
+      if (!done) { done = true; no(new Error('Hết thời gian tải thư viện máy chủ: ' + src)); }
+    }, 8000);
+    s.src = src;
+    s.onload = () => { if (!done) { done = true; clearTimeout(timer); ok(); } };
+    s.onerror = () => { if (!done) { done = true; clearTimeout(timer); no(new Error('Không tải được ' + src)); } };
+    document.head.appendChild(s);
+  });
+}
 async function makeNet() {
   const cfg = CFG().firebase;
   if (cfg && cfg.databaseURL) return fireNet(cfg);
@@ -831,7 +843,20 @@ async function fireNet(cfg) {
     mode: 'firebase', now: () => Date.now() + off, host: async () => { },
     newCode: async () => { for (; ;) { const c = randCode(1 + Math.floor(Math.random() * 9)); if (!(await db.ref('rooms/' + c + '/info').once('value')).val()) return c } },
     set: (p, v) => db.ref(p).set(v), update: (p, v) => db.ref(p).update(v), push: (p, v) => db.ref(p).push(v), remove: p => db.ref(p).remove(),
-    once: p => db.ref(p).once('value').then(s => s.val()),
+    once: p => {
+      return new Promise((resolve, reject) => {
+        const timer = setTimeout(() => {
+          reject(new Error('Hết thời gian kết nối máy chủ phòng (Timeout 8s). Em kiểm tra lại Wifi/4G hoặc bấm Vào chơi lại nhé!'));
+        }, 8000);
+        db.ref(p).once('value').then(s => {
+          clearTimeout(timer);
+          resolve(s.val());
+        }).catch(err => {
+          clearTimeout(timer);
+          reject(err);
+        });
+      });
+    },
     on: (p, cb) => { const r = db.ref(p), h = s => cb(s.val()); r.on('value', h); return () => r.off('value', h) },
     onAdded: (p, cb) => { const r = db.ref(p), h = s => cb(s.key, s.val()); r.on('child_added', h); return () => r.off('child_added', h) },
     onDisconnect: (p, v) => db.ref(p).onDisconnect().update(v),
