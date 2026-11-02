@@ -39,7 +39,9 @@ body{display:flex;flex-direction:column;overflow:hidden}
 .tank #bR{left:118px;bottom:58px;width:62px;height:62px;font-size:26px}
 .tank #bJ{left:63px;right:auto;bottom:112px;width:62px;height:62px;font-size:26px;background:#ffffffcc;color:#6b4fc0;box-shadow:0 4px 0 #b9a6e8}
 .tank #bD{left:63px;right:auto;bottom:4px;width:62px;height:62px;font-size:26px;background:#ffffffcc;color:#6b4fc0;box-shadow:0 4px 0 #b9a6e8}
-.tank #bF{right:22px;bottom:34px;width:100px;height:100px;font-size:40px}
+.tank #bF,.adv #bF{display:block;right:22px;bottom:34px;width:100px;height:100px;font-size:40px}
+.adv #bF{background:#ffe3cf;color:#e45c10;box-shadow:0 4px 0 #f3b38a}
+.peng #stage{background:#dbeafe}
 .tank #stage{background:#0E1424}
 .bomb #stage{background:#1C2A1E}
   .pac #stage{background:#000}.race #stage{background:#1A1033}.race #bF,.race #bX{display:none!important}.temple #stage{background:#1A1033}.temple #bF,.temple #bX{display:none!important}.pac #bF,.pac #bX{display:none!important}
@@ -560,6 +562,9 @@ body{display:flex;flex-direction:column;overflow:hidden}
  <script src="assets/race.js"></script>
  <script src="assets/bounce.js"></script>
  <script src="assets/temple.js"></script>
+<script src="assets/brick2.js"></script>
+<script src="assets/adv.js"></script>
+<script src="assets/peng.js"></script>
 <script>
 const { $, esc, fmt, stamp, clean, pick, shuffle, COLORS, BADGE, sfx, toast, confetti } = GC;
 const U = new URLSearchParams(location.search), HWP = U.get('hw');
@@ -568,8 +573,31 @@ const rawIdParam = (U.get('id') || '').trim();
 const QUIZ_ID = U.get('quiz') || (rawIdParam && !/^\d{6}$/.test(rawIdParam) ? rawIdParam : null);
 let SOLO = U.get('solo') || (HWP || QUIZ_ID ? 'hw' : null);   // solo = "mau:0" · hw = bài tập về nhà (đề nén trong link)
 let HW = null;
-const GNAME = { climb: '🧗 Leo núi', brick: '🍄 Nấm Mario', tank: '🛡 Xe tăng', bomb: '💣 Bomberman', test: '📝 Bài kiểm tra', pac: '🟡 Pac-Man', race: '🏎 Đua xe', temple: '🏃 Temple Run P1', temple2: '🏃 Temple Run P2', bounce: '🔴 Bounce Tales', bounce2: '🐸 Bounce Tales P2' };
+const GNAME = { climb: '🧗 Leo núi', brick: '🍄 Nấm Mario', brick2: '🍄 Nấm Mario P2', tank: '🛡 Xe tăng', bomb: '💣 Bomberman', test: '📝 Bài kiểm tra', pac: '🟡 Pac-Man', race: '🏎 Đua xe', temple: '🏃 Temple Run P1', temple2: '🏃 Temple Run P2', bounce: '🔴 Bounce Tales', bounce2: '🐸 Bounce Tales P2', adv: '🏝 Đảo phiêu lưu P1', adv2: '🦖 Đảo phiêu lưu P2', peng: '🐧 Chim cánh cụt phiêu lưu' };
 const RULES = {
+  brick2: [
+    '🗺 7 màn: 🌻 Đồi hoa nắng → 🏜 Sa mạc kim tự tháp → 🍄 Rừng nấm khổng lồ → 🐠 Biển san hô (BƠI dưới nước) → ❄️ Vùng tuyết trắng → 🌋 Núi lửa nham thạch → 🏰 Lâu đài Vua Rùa!',
+    '🍄 Nấm đỏ: to lớn đội vỡ gạch · 🌸 Hoa lửa: bấm F (hoặc nút 🔥) bắn cầu lửa hạ quái',
+    '🌿 DÂY LEO LÊN MÂY: đụng hộp ? có dây leo mọc lên trời — leo lên hái cả trời xu!',
+    '🐢 MÀN 7 — ĐÁNH VUA RÙA: né búa & lửa nó ném, lách qua chặt cây cầu cho nó rơi xuống dung nham để giải cứu công chúa!'
+  ],
+  adv: [
+    '🍎 THANH NO trên cùng tụt dần — ăn trái cây để no lại (🥛 sữa: đầy thanh) · đói lả là mất mạng!',
+    '🥚 Đập trứng ra đồ: 🪓 RÌU ĐÁ (bấm F hoặc nút 🪓 ném) · 🛹 VÁN TRƯỢT (chạy siêu nhanh, nhảy xa)',
+    '🐌 Ốc sên, quạ, nhện, đá tảng — ném rìu hoặc nhảy qua · không có rìu thì né hết nhé',
+    '👹 VUA QUỶ canh cuối đường: ném rìu vào đầu nó nhiều phát để hạ nó cứu công chúa!'
+  ],
+  adv2: [
+    '🦖 CƯỠI KHỦNG LONG: đập trứng chấm màu ra khủng long · 🔵 xanh quất đuôi phá cả đá · 🔴 đỏ phun lửa, đi được trên dung nham · 🟣 tím bay lượn trên trời · 🟢 xanh ngọc bơi lặn dưới biển',
+    '🍎 Nhớ ăn trái cây liên tục để giữ thanh no · hết no là mất mạng!',
+    '🐈 VUA MÈO canh cuối đường: dùng đòn khủng long hoặc ném rìu hạ gục nó để qua màn!'
+  ],
+  peng: [
+    '⏱ Chạy tới trạm Nam Cực trước khi HẾT GIỜ (đồng hồ dừng lúc em trả lời câu hỏi) · hết giờ là mất 1 mạng · có 5 mạng',
+    '🐟 Cá nhảy lên từ lỗ băng: đớp lấy để được thưởng thêm ⚡ năng lượng',
+    '🕳 Hố băng, khe nứt nẹp tuyết, hải cẩu nhô lên: bấm ← → rẽ tránh hoặc bấm ▲ NHẢY qua',
+    '🚁 CỜ CHONG CHÓNG: ăn được sẽ bay lơ lửng trên không 15 giây — vèo qua mọi chướng ngại vật!'
+  ],
   test: [
     '📝 Đọc kỹ yêu cầu đề bài, đoạn văn (Reading) hoặc nghe kỹ audio trước khi chọn đáp án',
     '⏱ Phân bổ thời gian làm bài hợp lý theo đồng hồ đếm ngược trên màn hình',
@@ -639,6 +667,9 @@ const TIPS = {
   brick: ['🧱 4 màn: Đồng cỏ → Hang ngầm → Xứ mây → Lâu đài dung nham', '❓ Hộp ? ra: 🪙 xu (+3⚡) · 🍄 nấm xanh (+20⚡) · 🍄 nấm đỏ hoá TO · 🌸 hoa lửa (bắn được) · ⭐ sao bất tử', '⬆ Giữ nút nhảy càng lâu thì nhảy càng cao — đội được cả khối ? trên cao!', '⬇ Ống có mũi tên: đứng lên + bấm ↓ để chui xuống hầm bí mật đầy xu!', '🌸 Hoa ăn thịt chui ra từ ống · 🔥 thanh lửa xoay · 🌋 dung nham — né hết nhé', '🏁 Chạm cột cờ để qua màn · màn 4: 🐉 rồng phun lửa canh công chúa — bắn 🔥 (phím F) hoặc chạm rìu 🪓 để hạ nó!'],
   test: ['📝 Đọc kỹ yêu cầu đề bài, đoạn văn hoặc nghe kỹ audio trước khi chọn đáp án', '🔀 Có thể chuyển qua lại giữa các câu bằng thanh số câu phía trên', '📥 Làm xong nhớ bấm nút Nộp bài để gửi điểm cho cô nhé!']
 };
+const ADV_MSG = ['🏁 ROUND 1 CLEAR! Tiếp theo: Bãi biển 🏝 — coi chừng cá kiếm nhảy khỏi mặt nước!', '🏁 ROUND 2 CLEAR! Vào Hang động 🦇 — né dơi và nhện!', '🏁 ROUND 3 CLEAR! Rừng rậm 🌴 — ốc sên và đá tảng!', '🏁 ROUND 4 CLEAR! Núi băng ❄️ — đường trơn trượt!', '🏁 ROUND 5 CLEAR! Miệng núi lửa 🌋 — nham thạch nóng bỏng!', '👑 ROUND 6: ĐẤU VUA QUỶ! Ném rìu vào đầu nó cứu công chúa!'];
+const ADV_MSG2 = ['🏁 AREA II-1 CLEAR! Tiếp theo: Đảo hồ 🏖 — cưỡi rồng biển đi trên mặt nước!', '🏁 AREA II-2 CLEAR! Lặn xuống ĐÁY BIỂN 🐠 — bơi lách né cá mập & mực!', '🏁 AREA II-3 CLEAR! Đồng cỏ hoa 🌻 — cưỡi khủng long xanh quất đuôi!', '🏁 AREA II-4 CLEAR! Leo lên MÂY ☁️ — cưỡi dực long tím bay lượn trên trời!', '🏁 AREA II-5 CLEAR! Núi lửa 🌋 — cưỡi khủng long đỏ phun lửa!', '👑 AREA II-6: ĐẤU VUA MÈO! Mau hạ gục nó cứu công chúa!'];
+const PENG_MSG = ['🏁 Tới Trạm Úc! Tiếp theo: Trạm Pháp 🇫🇷 — bắt đầu có khe nứt, nhớ NHẢY!', '🏁 Tới Trạm Pháp! Trạm New Zealand 🇳🇿 — đường dốc quanh co!', '🏁 Tới Trạm New Zealand! Trạm Nam Cực 🇦🇶 — hải cẩu nhô lên!', '🏁 Tới Trạm Nam Cực! Trạm Mỹ 🇺🇸 — hố băng dày đặc!', '🏁 Tới Trạm Mỹ! Trạm Nhật Bản 🇯🇵 — bắt cá nhảy ăn thêm ⚡!', '🏁 Tới Trạm Nhật Bản! Trạm Anh 🇬🇧 — bão tuyết mù mịt!', '🏆 VỀ ĐÍCH TRẠM KHOA HỌC NAM CỰC! Phá đảo xuất sắc!'];
 const BOUNCE_MSG = ['🏁 Qua Màn 1! Tiếp theo: Vách hoa 🌸 — LEO DỌC lên cao, nhảy từng bậc cỏ!', '🏁 Qua Màn 2! Hang động 🦇 — có nấm lò xo và ván gỗ trôi!', '🏁 Qua Màn 3! Bờ biển 🏖 — hố nước làm bóng nổi lên, cứ nhảy lên bờ!', '🏁 Qua Màn 4! Vách băng ❄️ — LEO DỌC, coi chừng bụi gai trên bậc!', '🏁 Qua Màn 5! Màn cuối: leo Tháp lâu đài 🏰 — cổng đích ở trên đỉnh!', '🏆 PHÁ ĐẢO!'];
 const BOUNCE_MSG2 = ['🏁 Qua Màn 1! Tiếp theo: Đầm sen 🪷 — nhảy trên lá sen, né cá chép nhảy!', '🏁 Qua Màn 2! Màn 3: 🐠 ĐÁY BIỂN — bấm ↑ liên tục để bơi, né gai bạc!', '🏁 Qua Màn 3! Hang nấm phát sáng 🍄 — LEO DỌC, nhún lá nảy lên cao!', '🏁 Qua Màn 4! Hang san hô 🪸 — lặn sâu hơn, nhiều sứa lắm đấy!', '🏁 Qua Màn 5! Màn cuối: Đầm lầy 🐸 — trùm HYPNOTOAD đang chờ, nhảy lên đầu nó 3 lần!', '🏆 PHÁ ĐẢO P2!'];
 const TEMPLE_MSG = {
@@ -1703,6 +1734,8 @@ function begin() {
 }
 function onCP(n, kind) {
     if (kind === 'stage' && (MODE === 'bounce' || MODE === 'bounce2')) { const BM = MODE === 'bounce2' ? BOUNCE_MSG2 : BOUNCE_MSG; toast(BM[Math.min(n - 1, BM.length - 1)], 3200); confetti(50); if (net) net.push(evp, { ty: 'lv', fr: pid, nm: nameV, n, t: net.now() }); return }
+  if (kind === 'lv' && (MODE === 'adv' || MODE === 'adv2')) { const AM = MODE === 'adv2' ? ADV_MSG2 : ADV_MSG; toast(AM[Math.min(n - 1, AM.length - 1)], 3200); confetti(50); if (net) net.push(evp, { ty: 'lv', fr: pid, nm: nameV, n, t: net.now() }); return }
+  if (kind === 'stage' && MODE === 'peng') { toast(PENG_MSG[Math.min(n - 1, PENG_MSG.length - 1)], 3200); confetti(50); if (net) net.push(evp, { ty: 'lv', fr: pid, nm: nameV, n, t: net.now() }); return }
   if (kind === 'stage' && (MODE === 'temple' || MODE === 'temple2')) { const TM = TEMPLE_MSG[MODE]; toast(TM[Math.min(n - 1, TM.length - 1)], 3200); confetti(50); if (net) net.push(evp, { ty: 'lv', fr: pid, nm: nameV, n, t: net.now() }); return }
   if (kind === 'stage' && MODE === 'race') { toast(RACE_MSG[Math.min(n - 1, RACE_MSG.length - 1)], 3200); confetti(50); if (net) net.push(evp, { ty: 'lv', fr: pid, nm: nameV, n, t: net.now() }); return }
   if (kind === 'stage' && MODE === 'pac') { toast(PAC_MSG[Math.min(n - 1, PAC_MSG.length - 1)], 3200); confetti(50); if (net) net.push(evp, { ty: 'lv', fr: pid, nm: nameV, n, t: net.now() }); return }
@@ -1928,8 +1961,10 @@ function showRes(why) {
     '<div class="wide">👤 ' + esc(nameV) + (SOLO ? '' : ' · <span id="rRank">' + rankText() + '</span>') + '</div>' +
     '<div>⏱ Thời gian: ' + fmt(tEnd - t0) + '</div><div>⏰ Nộp: ' + stamp(tEnd) + '</div>' +
     '<div>✅ Đúng: ' + okN + '/' + ans + ' (' + pct + '%)</div><div>🧩 Câu đã chinh phục: ' + solved.size + '/' + QS.length + '</div>' +
-    (Climb.kind === 'bounce' ? '<div>🔴 Tiến độ: ' + (won ? 'Phá đảo 6/6 màn 🏆' : Climb.label()) + '</div><div>🥚 Trứng: ' + S.coins + ' · 💥 Mất mạng: ' + S.hits + '</div>' : Climb.kind === 'temple' ? '<div>🏃 Tiến độ: ' + (won ? 'Phá đảo ' + Climb.NL + '/' + Climb.NL + ' màn 👑' : Climb.label()) + '</div><div>🪙 Xu: ' + S.coins + ' · 💥 Vấp ngã: ' + S.hits + '</div>' : Climb.kind === 'race' ? '<div>🏎 Tiến độ: ' + (won ? 'Phá đảo 5/5 chặng 🏆' : Climb.label()) + '</div><div>💥 Tông xe: ' + S.hits + '</div>' : Climb.kind === 'pac' ? '<div>🟡 Tiến độ: ' + (won ? 'Phá đảo 5/5 màn 🏆' : Climb.label()) + '</div><div>👻 Ăn ma: ' + S.stomps + '</div>' : Climb.kind === 'bomb' ? '<div>💣 Tiến độ: ' + (won ? 'Phá đảo 8/8 màn 🏆' : Climb.label()) + '</div><div>👾 Hạ quái: ' + S.stomps + '</div>' : Climb.kind === 'tank' ? '<div>🎯 Tiến độ: ' + (won ? 'Phá đảo ' + Climb.NL + '/' + Climb.NL + ' stage 🏆' : Climb.label()) + '</div><div>💥 Hạ xe tăng: ' + S.stomps + '</div>' : Climb.kind === 'brick' ? '<div>🗺 Tiến độ: ' + (won ? 'Phá đảo ' + Climb.NL + '/' + Climb.NL + ' màn 👸' : Climb.label()) + '</div><div>🪙 Xu: ' + S.coins + '</div>' : '<div>⛰ Độ cao: ' + (won ? 'ĐỈNH (' + T + ' m)' : S.maxAlt + ' / ' + T + ' m') + '</div>') + '<div>🔥 Chuỗi dài nhất: ' + best + '</div>' +
-    (Climb.kind === 'race' || Climb.kind === 'temple' ? '' : Climb.kind === 'pac' ? '<div>⭐ Điểm: ' + Climb.extra().sc + '</div><div>😵 Bị ma bắt: ' + S.hits + '</div>' : Climb.kind === 'bomb' ? '<div>💣 Bom: ' + Climb.pl.bombs + ' · 🔥 Lửa: ' + Climb.pl.fire + '</div><div>😵 Bị trúng: ' + S.hits + '</div>' : Climb.kind === 'tank' ? '<div>⭐ Nâng cấp súng: ' + Climb.pl.up + '/3</div><div>🦅 Căn cứ bị phá: ' + S.falls + '</div>' : '<div>🍄 Giẫm bẹp: ' + S.stomps + '</div><div>😱 Số lần rơi: ' + S.falls + '</div>') +
+    (Climb.kind === 'adv' ? '<div>🏝 Tiến độ: ' + (won ? 'Phá đảo 6/6 màn 👸' : Climb.label()) + '</div><div>🍎 Trái cây: ' + S.coins + ' · 💥 Mất mạng: ' + S.hits + '</div>' :
+     Climb.kind === 'peng' ? '<div>🐧 Tiến độ: ' + (won ? 'Về đích 7/7 trạm 🏆' : Climb.label()) + '</div><div>🐟 Cá: ' + S.coins + ' · 💥 Vấp ngã: ' + S.hits + '</div>' :
+     Climb.kind === 'bounce' ? '<div>🔴 Tiến độ: ' + (won ? 'Phá đảo 6/6 màn 🏆' : Climb.label()) + '</div><div>🥚 Trứng: ' + S.coins + ' · 💥 Mất mạng: ' + S.hits + '</div>' : Climb.kind === 'temple' ? '<div>🏃 Tiến độ: ' + (won ? 'Phá đảo ' + Climb.NL + '/' + Climb.NL + ' màn 👑' : Climb.label()) + '</div><div>🪙 Xu: ' + S.coins + ' · 💥 Vấp ngã: ' + S.hits + '</div>' : Climb.kind === 'race' ? '<div>🏎 Tiến độ: ' + (won ? 'Phá đảo 5/5 chặng 🏆' : Climb.label()) + '</div><div>💥 Tông xe: ' + S.hits + '</div>' : Climb.kind === 'pac' ? '<div>🟡 Tiến độ: ' + (won ? 'Phá đảo 5/5 màn 🏆' : Climb.label()) + '</div><div>👻 Ăn ma: ' + S.stomps + '</div>' : Climb.kind === 'bomb' ? '<div>💣 Tiến độ: ' + (won ? 'Phá đảo 8/8 màn 🏆' : Climb.label()) + '</div><div>👾 Hạ quái: ' + S.stomps + '</div>' : Climb.kind === 'tank' ? '<div>🎯 Tiến độ: ' + (won ? 'Phá đảo ' + Climb.NL + '/' + Climb.NL + ' stage 🏆' : Climb.label()) + '</div><div>💥 Hạ xe tăng: ' + S.stomps + '</div>' : Climb.kind === 'brick' ? '<div>🗺 Tiến độ: ' + (won ? 'Phá đảo ' + Climb.NL + '/' + Climb.NL + ' màn 👸' : Climb.label()) + '</div><div>🪙 Xu: ' + S.coins + '</div>' : '<div>⛰ Độ cao: ' + (won ? 'ĐỈNH (' + T + ' m)' : S.maxAlt + ' / ' + T + ' m') + '</div>') + '<div>🔥 Chuỗi dài nhất: ' + best + '</div>' +
+    (Climb.kind === 'race' || Climb.kind === 'temple' || Climb.kind === 'adv' || Climb.kind === 'peng' ? '' : Climb.kind === 'pac' ? '<div>⭐ Điểm: ' + Climb.extra().sc + '</div><div>😵 Bị ma bắt: ' + S.hits + '</div>' : Climb.kind === 'bomb' ? '<div>💣 Bom: ' + Climb.pl.bombs + ' · 🔥 Lửa: ' + Climb.pl.fire + '</div><div>😵 Bị trúng: ' + S.hits + '</div>' : Climb.kind === 'tank' ? '<div>⭐ Nâng cấp súng: ' + Climb.pl.up + '/3</div><div>🦅 Căn cứ bị phá: ' + S.falls + '</div>' : '<div>🍄 Giẫm bẹp: ' + S.stomps + '</div><div>😱 Số lần rơi: ' + S.falls + '</div>') +
     (HW ? '<div class="wide">📚 Hạn nộp: ' + (HW.dl ? stamp(HW.dl) + (hwLate ? ' · ⚠️ <b>nộp trễ</b>' : ' · ✅ <b>đúng hạn</b>') : 'không đặt hạn') + '</div>' : '') +
     '<div class="wide">🔁 Lần nộp thứ ' + subN + ' trên máy này</div></div>' +
     '<div class="row" style="margin-bottom:6px"><button type="button" class="btn b" onclick="exportGameReport()">🏅 Xuất phiếu điểm gửi Phụ huynh</button></div>' +
