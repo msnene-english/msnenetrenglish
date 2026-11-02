@@ -553,9 +553,9 @@ body{display:flex;flex-direction:column;overflow:hidden}
 <div class="ov" id="ovRes"><div class="card" id="rCard"></div></div>
 
 <script src="assets/mqtt.min.js"></script>
-<script src="assets/shield.js?v=2.1"></script>
-<script src="assets/config.js?v=2.1"></script>
-<script src="assets/core.js?v=2.1"></script>
+<script src="assets/shield.js?v=2.3"></script>
+<script src="assets/config.js?v=2.3"></script>
+<script src="assets/core.js?v=2.3"></script>
 <script src="assets/mau.js"></script>
 <script src="assets/climb.js"></script>
 <script src="assets/brick.js"></script>
@@ -1321,7 +1321,8 @@ const paintCols = () => [...$('jCols').children].forEach(b => b.classList.toggle
 $('jCols').onclick = e => { const c = e.target.dataset.c; if (c) { myColor = c; paintCols(); sfx('pop') } };
 if (U.get('m')) updateJoinUiForMode(U.get('m'));
 /* khung vào phòng ghi đúng tên + luật của game cô đang chọn */
-const GKEY = m => ['brick', 'tank', 'bomb', 'test', 'pac', 'race', 'temple', 'temple2', 'bounce', 'bounce2'].includes(m) ? m : 'climb';
+const ALL_MODES = ['climb', 'brick', 'brick2', 'tank', 'bomb', 'pac', 'race', 'temple', 'temple2', 'bounce', 'bounce2', 'adv', 'adv2', 'peng', 'test'];
+const GKEY = m => ALL_MODES.includes(m) ? m : 'climb';
 function showGame(m, sub) {
   const k = GKEY(m), nm = GNAME[k] || '🎮 Game';
   if ($('jTitle')) $('jTitle').textContent = nm;
@@ -1511,7 +1512,7 @@ async function joinSolo() {
   else if (SOLO.startsWith('sheet:')) { const name = SOLO.slice(6), r = await GC.sheetSet(name); set = { title: name, qs: r.qs } }
   if (!set || !set.qs.length) throw new Error('Không tìm thấy bộ câu hỏi này. Em báo cô kiểm tra lại link nhé!');
   const P = HW || { eq: U.get('eq'), em: U.get('em'), lv: U.get('lv'), m: U.get('m') };
-  setGain(P.eq, P.em); LVL = +P.lv || 2; MODE = ['brick', 'brick2', 'tank', 'bomb', 'test', 'pac', 'race', 'temple', 'temple2', 'bounce', 'bounce2', 'adv', 'adv2', 'peng'].includes(P.m) ? P.m : 'climb';
+  setGain(P.eq, P.em); LVL = +P.lv || 2; MODE = GKEY(P.m);
   QS = GC.prep(set.qs, MODE === 'test' && P.testShuffle === false); setTitle = set.title;
   boot(20261019);
   begin();
@@ -1559,7 +1560,7 @@ async function joinRoom() {
   setTitle = info.t || '';
   setGain(info.eq, info.em);
   LVL = info.lv || 2;
-  MODE = ['brick', 'tank', 'bomb', 'test', 'pac', 'race', 'temple', 'temple2', 'bounce', 'bounce2'].includes(info.m) ? info.m : 'climb';
+  MODE = GKEY(info.m);
   updateJoinUiForMode(MODE);
 
   const old = await Promise.race([
@@ -1610,9 +1611,21 @@ function boot(seed) {
     document.title = '📝 Bài kiểm tra';
     return;
   }
-  if (MODE === 'brick') {   // game Nấm Mario: dùng engine brick.js thay cho leo núi
+  if (MODE === 'brick') {   // game Nấm Mario P1: dùng engine brick.js thay cho leo núi
     window.Climb = Brick; S = Brick.S; document.body.classList.add('brick');
     $('hName').textContent = '🍄 Nấm Mario'; $('keysT').innerHTML = '🎮 <kbd>←</kbd><kbd>→</kbd> chạy · giữ <kbd>↑</kbd> nhảy cao · <kbd>↓</kbd> chui ống · <kbd>F</kbd> bắn lửa · <kbd>E</kbd> trả lời'; document.title = 'Nấm Mario';
+  }
+  if (MODE === 'brick2') {   // game Nấm Mario P2: dùng engine brick2.js (7 thế giới)
+    window.Climb = Brick2; S = Brick2.S; document.body.classList.add('brick');
+    $('hName').textContent = GNAME.brick2; $('keysT').innerHTML = '🎮 <kbd>←</kbd><kbd>→</kbd> chạy · giữ <kbd>↑</kbd> nhảy cao · <kbd>↓</kbd> chui ống · <kbd>F</kbd> bắn lửa · <kbd>E</kbd> trả lời'; document.title = 'Nấm Mario P2';
+  }
+  if (MODE === 'adv' || MODE === 'adv2') {   // Đảo phiêu lưu P1 / P2: ← → chạy · ↑ nhảy · F / nút 🪓 ném rìu
+    Adv.setPart(MODE === 'adv2' ? 2 : 1); window.Climb = Adv; S = Adv.S; document.body.classList.add('adv'); $('bF').textContent = '🪓';
+    $('hName').textContent = GNAME[MODE]; $('keysT').innerHTML = '🎮 <kbd>←</kbd><kbd>→</kbd> chạy · <kbd>↑</kbd> / <kbd>Space</kbd> nhảy (giữ = cao) · <kbd>F</kbd> ném rìu' + (MODE === 'adv2' ? ' / đòn khủng long' : '') + ' · <kbd>E</kbd> trả lời'; document.title = MODE === 'adv2' ? 'Đảo phiêu lưu P2' : 'Đảo phiêu lưu P1';
+  }
+  if (MODE === 'peng') {   // Chim cánh cụt phiêu lưu: ← → rẽ · ▲ nhảy · ▼ chậm lại
+    window.Climb = Peng; S = Peng.S; document.body.classList.add('tank', 'race', 'peng'); $('bJ').textContent = '▲'; $('bD').textContent = '🐢';
+    $('hName').textContent = GNAME.peng; $('keysT').innerHTML = '🎮 <kbd>←</kbd><kbd>→</kbd> rẽ · <kbd>↑</kbd> / <kbd>Space</kbd> nhảy · <kbd>↓</kbd> chạy chậm · <kbd>E</kbd> trả lời'; document.title = 'Chim cánh cụt phiêu lưu';
   }
   if (MODE === 'tank') {   // game Xe Tăng 1990
     window.Climb = Tank; S = Tank.S; document.body.classList.add('tank'); $('bJ').textContent = '▲'; $('bD').textContent = '▼';
@@ -1724,7 +1737,7 @@ function begin() {
     return;
   }
   S.running = true; $('eBtn').hidden = false;
-  if (HW ? HW.mu !== false : (SOLO || !info || info.mu !== false)) GC.music.start(true, MODE === 'temple2' ? 'temple' : MODE === 'bounce2' ? 'bounce' : MODE);   // mỗi game một bản nhạc
+  if (HW ? HW.mu !== false : (SOLO || !info || info.mu !== false)) GC.music.start(true, (MODE === 'temple2') ? 'temple' : (MODE === 'brick2') ? 'brick' : (MODE === 'bounce2' || MODE === 'adv' || MODE === 'adv2') ? 'bounce' : (MODE === 'peng') ? 'race' : MODE);   // mỗi game một bản nhạc
   setTimeout(() => $('keys').classList.add('mini'), 25000);   // sau 25 giây thu gọn hướng dẫn phím   // cô quyết định bật/tắt nhạc, học sinh không có nút tắt
   toast('💪 Chào ' + nameV + ({
     brick: '! Trả lời đúng để nạp ⚡ rồi xông qua 5 màn cứu công chúa nào!',
@@ -1998,7 +2011,7 @@ function showRes(why) {
     '<div class="wide">🔁 Lần nộp thứ ' + subN + ' trên máy này</div></div>' +
     '<div class="row" style="margin-bottom:8px;gap:8px;justify-content:center;flex-wrap:wrap">' +
     '<button type="button" class="btn g" onclick="downloadGameReport()" style="font-size:16px;padding:12px 20px;font-weight:900;box-shadow:0 4px 14px rgba(16,185,129,0.35)">📥 Tải phiếu điểm (.png)</button>' +
-    '<button type="button" class="btn b" onclick="exportGameReport()" style="font-size:15px;padding:12px 18px">🏅 Xem phiếu báo điểm</button></div>' +
+    '<button type="button" class="btn b" onclick="exportGameReport()" style="font-size:15px;padding:12px 18px">🏅 Xuất phiếu điểm gửi Phụ huynh</button></div>' +
     (HW ? '<div class="row"><button class="btn g" onclick="copyResult()" style="font-size:17px;padding:12px 22px">📋 Copy kết quả gửi cô</button>' + (!HW.dl || Date.now() < HW.dl ? '<button class="btn w" onclick="location.reload()">🔄 Làm lại</button>' : '') + '</div><div class="sub">👉 Điểm của em đã tự động lưu vào Sổ điểm của cô · Bấm xuất phiếu điểm hoặc copy gửi Zalo nhé!</div><div style="margin-top:6px;display:flex;gap:8px;justify-content:center;flex-wrap:wrap"><a href="https://zalo.me/84852639652" target="_blank" rel="noopener" class="btn" style="text-decoration:none;background:#0068ff;color:#fff;font-size:13px;padding:6px 14px;border-radius:12px;font-weight:800;display:inline-flex;align-items:center;gap:4px">💬 Nhắn Zalo Cô Chí Nên</a><button type="button" class="btn w" onclick="GC.copyPhone()" style="font-size:12px;padding:6px 12px;border-radius:12px">📋 Copy SĐT Zalo</button></div>'
       : SOLO ? '<div class="row">' + (won ? '' : '<button class="btn g" onclick="resume()">🏃 Chơi tiếp</button>') + '<button class="btn" onclick="location.reload()">🔄 Chơi lại</button></div>'
       : '<div class="sub">' + (won && why === 'win' ? '🎉 Chờ cả lớp về đích nhé — xem bảng xếp hạng trên màn hình của cô!' : '📺 Nhìn lên màn hình của cô để xem bảng vinh danh!') + '</div>' + (why === 'teacher' || why === 'time' ? '<div class="lockmsg">🔒 ' + (why === 'time' ? 'Hết giờ' : 'Cô đã kết thúc trò chơi') + ' — màn chơi đã khoá, em không chơi tiếp được nữa.</div>' : ''));

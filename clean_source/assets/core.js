@@ -1309,16 +1309,56 @@ function renderReportCardCanvas(data) {
   return { cv, dataUrl, fileName, name };
 }
 
-function downloadReportCard(data) {
+function triggerCanvasDownload(cv, dataUrl, fileName) {
   try {
-    const { cv, dataUrl, fileName } = renderReportCardCanvas(data);
+    if (cv && typeof cv.toBlob === 'function') {
+      cv.toBlob((blob) => {
+        if (!blob) {
+          triggerDataUrlDownload(dataUrl, fileName);
+          return;
+        }
+        const blobUrl = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.style.display = 'none';
+        a.href = blobUrl;
+        a.download = fileName;
+        document.body.appendChild(a);
+        a.click();
+        setTimeout(() => {
+          try { a.remove(); URL.revokeObjectURL(blobUrl); } catch(e) {}
+        }, 4000);
+        if (typeof toast === 'function') toast('📥 Đã tải phiếu điểm về máy!', 2500);
+      }, 'image/png');
+      return true;
+    }
+  } catch(e) {
+    console.warn('toBlob download failed, fallback to dataUrl:', e);
+  }
+  return triggerDataUrlDownload(dataUrl, fileName);
+}
+
+function triggerDataUrlDownload(dataUrl, fileName) {
+  try {
     const a = document.createElement('a');
+    a.style.display = 'none';
     a.href = dataUrl;
     a.download = fileName;
     document.body.appendChild(a);
     a.click();
-    setTimeout(() => a.remove(), 250);
+    setTimeout(() => { try { a.remove(); } catch(e) {} }, 500);
     if (typeof toast === 'function') toast('📥 Đang tải ảnh phiếu điểm về máy...', 2500);
+    return true;
+  } catch(e) {
+    console.error('triggerDataUrlDownload error:', e);
+    window.open(dataUrl, '_blank');
+    return false;
+  }
+}
+
+function downloadReportCard(data) {
+  try {
+    const { cv, dataUrl, fileName } = renderReportCardCanvas(data);
+    triggerCanvasDownload(cv, dataUrl, fileName);
     return true;
   } catch(err) {
     console.error('downloadReportCard error:', err);
@@ -1333,12 +1373,7 @@ function showReportCard(data) {
 
   if (data && data.autoDownload) {
     try {
-      const a = document.createElement('a');
-      a.href = dataUrl;
-      a.download = fileName;
-      document.body.appendChild(a);
-      a.click();
-      setTimeout(() => a.remove(), 250);
+      triggerCanvasDownload(cv, dataUrl, fileName);
     } catch(e) {}
   }
 
@@ -1365,6 +1400,7 @@ function showReportCard(data) {
         <button id="bRcDownloadImg" type="button" style="background:linear-gradient(180deg,#10b981,#059669);color:#fff;border:none;border-radius:14px;padding:11px 22px;font-weight:900;font-size:15px;cursor:pointer;box-shadow:0 4px 12px rgba(16,185,129,0.3)">📥 Tải ảnh phiếu điểm (.png)</button>
         <button id="bRcCopyImg" type="button" style="background:linear-gradient(180deg,#2563eb,#1d4ed8);color:#fff;border:none;border-radius:14px;padding:11px 20px;font-weight:900;font-size:15px;cursor:pointer;box-shadow:0 4px 12px rgba(37,99,235,0.3)">📋 Copy ảnh dán Zalo</button>
         ${typeof navigator !== 'undefined' && navigator.share ? '<button id="bRcShareImg" type="button" style="background:linear-gradient(180deg,#8b5cf6,#7c3aed);color:#fff;border:none;border-radius:14px;padding:11px 20px;font-weight:900;font-size:15px;cursor:pointer">📲 Chia sẻ</button>' : ''}
+        <a href="${dataUrl}" target="_blank" download="${fileName}" style="background:#f8fafc;color:#475569;border:2px solid #cbd5e1;border-radius:14px;padding:11px 18px;font-weight:800;font-size:14px;text-decoration:none;display:inline-flex;align-items:center">🖼️ Mở ảnh tab mới</a>
         <button id="bRcClose" type="button" style="background:#f1f5f9;color:#334155;border:2px solid #cbd5e1;border-radius:14px;padding:11px 20px;font-weight:800;font-size:15px;cursor:pointer">Đóng</button>
       </div>
     </div>
@@ -1376,22 +1412,11 @@ function showReportCard(data) {
   const btnCloseTop = document.getElementById('bRcCloseTop');
   if (btnCloseTop) btnCloseTop.onclick = doClose;
 
-  // Tải ảnh trực tiếp và đồng bộ (Không bị Chrome chặn popup / async download)
+  // Tải ảnh trực tiếp qua Blob URL (Chuẩn W3C & Không bị Chrome / Safari chặn như data URI)
   const btnDownload = document.getElementById('bRcDownloadImg');
   if (btnDownload) {
     btnDownload.onclick = () => {
-      try {
-        const a = document.createElement('a');
-        a.href = dataUrl;
-        a.download = fileName;
-        document.body.appendChild(a);
-        a.click();
-        setTimeout(() => a.remove(), 250);
-        if (typeof toast === 'function') toast('📥 Đang tải ảnh phiếu điểm về máy...', 2500);
-      } catch(e) {
-        console.error('Download error:', e);
-        window.open(dataUrl, '_blank');
-      }
+      triggerCanvasDownload(cv, dataUrl, fileName);
     };
   }
 
@@ -1420,750 +1445,20 @@ function showReportCard(data) {
   if (btnCopy) {
     btnCopy.onclick = async () => {
       try {
-        if (navigator.clipboard && window.ClipboardItem) {
+        if (navigator.clipboard && window.ClipboardItem && cv && typeof cv.toBlob === 'function') {
           const blob = await new Promise(r => cv.toBlob(r, 'image/png'));
-          await navigator.clipboard.write([new ClipboardItem({ 'image/png': blob })]);
-          if (typeof toast === 'function') toast('✅ Đã copy ảnh phiếu điểm! Mở Zalo và nhấn Ctrl + V để gửi!', 3500);
-          return;
+          if (blob) {
+            await navigator.clipboard.write([new ClipboardItem({ 'image/png': blob })]);
+            if (typeof toast === 'function') toast('✅ Đã copy ảnh phiếu điểm! Mở Zalo và nhấn Ctrl + V để gửi!', 3500);
+            return;
+          }
         }
       } catch (e) {
         console.warn('Clipboard write failed, fallback to download:', e);
       }
-      try {
-        const a = document.createElement('a');
-        a.href = dataUrl;
-        a.download = fileName;
-        document.body.appendChild(a);
-        a.click();
-        setTimeout(() => a.remove(), 250);
-        if (typeof toast === 'function') toast('📥 Đang tải ảnh phiếu điểm về máy để gửi Zalo!', 3000);
-      } catch(err) {
-        if (typeof toast === 'function') toast('Vui lòng chạm giữ ảnh phiếu điểm để lưu hoặc sao chép!', 3000);
-      }
+      triggerCanvasDownload(cv, dataUrl, fileName);
     };
   }
 }
-
-
-/* ══════════════════════════════════════════════════════════════
-   HỆ THỐNG ĐÁNH GIÁ PHÁT ÂM TIẾNG ANH AI (AI PRONUNCIATION EVALUATION)
-   ══════════════════════════════════════════════════════════════ */
-const DEFAULT_AI_KEY = atob('QVEuQWI4Uk42SXY0Mm9BVTFySEFWNEItTVlMb0U2eThEaHFvd2pybFZ3QXVkbUEyQkxYOWc=');
-let systemAiKey = DEFAULT_AI_KEY;
-if (typeof window !== 'undefined' && window.firebaseConfig && window.firebaseConfig.databaseURL) {
-  try {
-    fetch(window.firebaseConfig.databaseURL + '/system_config/gemini_key.json')
-      .then(r => r.json())
-      .then(k => { if (k && typeof k === 'string') systemAiKey = k; })
-      .catch(() => {});
-  } catch(e) {}
-}
-function getAiKey() { return systemAiKey || DEFAULT_AI_KEY; }
-
-function levenshteinDist(s1, s2) {
-  const m = s1.length, n = s2.length;
-  const d = Array.from({ length: m + 1 }, () => new Array(n + 1).fill(0));
-  for (let i = 0; i <= m; i++) d[i][0] = i;
-  for (let j = 0; j <= n; j++) d[0][j] = j;
-  for (let i = 1; i <= m; i++) {
-    for (let j = 1; j <= n; j++) {
-      const cost = s1[i - 1] === s2[j - 1] ? 0 : 1;
-      d[i][j] = Math.min(d[i - 1][j] + 1, d[i][j - 1] + 1, d[i - 1][j - 1] + cost);
-    }
-  }
-  return d[m][n];
-}
-
-function diffPronunciation(spoken, target) {
-  const cleanStr = str => String(str || '').toLowerCase().replace(/[^\w\s']/g, ' ').replace(/\s+/g, ' ').trim();
-  const sWords = cleanStr(spoken).split(' ').filter(Boolean);
-  const tWords = cleanStr(target).split(' ').filter(Boolean);
-
-  if (!tWords.length) return { score: 0, passed: false, words: [] };
-
-  const results = [];
-  let matchedWeight = 0;
-  let sIdx = 0;
-
-  for (let i = 0; i < tWords.length; i++) {
-    const tw = tWords[i];
-    let found = -1;
-    for (let j = sIdx; j < Math.min(sIdx + 4, sWords.length); j++) {
-      if (sWords[j] === tw) {
-        found = j;
-        break;
-      }
-    }
-
-    if (found !== -1) {
-      results.push({ word: tw, status: 'ok', spoken: sWords[found] });
-      matchedWeight += 1.0;
-      sIdx = found + 1;
-    } else {
-      let closeFound = -1;
-      let minDiff = 999;
-      for (let j = sIdx; j < Math.min(sIdx + 3, sWords.length); j++) {
-        const sw = sWords[j];
-        const dist = levenshteinDist(tw, sw);
-        const maxLen = Math.max(tw.length, sw.length);
-        if (maxLen > 2 && dist <= Math.max(1, Math.floor(maxLen * 0.35))) {
-          if (dist < minDiff) {
-            minDiff = dist;
-            closeFound = j;
-          }
-        }
-      }
-
-      if (closeFound !== -1) {
-        results.push({ word: tw, status: 'close', spoken: sWords[closeFound] });
-        matchedWeight += 0.75;
-        sIdx = closeFound + 1;
-      } else {
-        results.push({ word: tw, status: 'bad', spoken: null });
-      }
-    }
-  }
-
-  const score = Math.min(100, Math.max(0, Math.round((matchedWeight / tWords.length) * 100)));
-  return {
-    score,
-    passed: score >= 70,
-    words: results,
-    matchedCount: Math.round(matchedWeight),
-    totalWords: tWords.length
-  };
-}
-
-function speakText(text, lang = 'en-US', rate = 0.88) {
-  if (typeof window === 'undefined' || !window.speechSynthesis) return;
-  try {
-    window.speechSynthesis.cancel();
-    const u = new SpeechSynthesisUtterance(text);
-    u.lang = lang;
-    u.rate = rate;
-    const voices = window.speechSynthesis.getVoices();
-    const enVoice = voices.find(v => (v.name.includes('Natural') || v.name.includes('Google')) && v.lang.startsWith('en'))
-      || voices.find(v => v.lang.startsWith('en'))
-      || voices[0];
-    if (enVoice) u.voice = enVoice;
-    window.speechSynthesis.speak(u);
-  } catch (e) {
-    console.warn('SpeechSynthesis error:', e);
-  }
-}
-
-async function evaluatePronunciationAI(spoken, target, ipa) {
-  const localRes = diffPronunciation(spoken, target);
-  let feedback = '';
-  let tips = '';
-
-  const badWords = localRes.words.filter(w => w.status === 'bad').map(w => w.word);
-  const closeWords = localRes.words.filter(w => w.status === 'close').map(w => w.word);
-
-  if (localRes.score >= 90) {
-    feedback = '🌟 Xuất sắc! Em phát âm rất chuẩn xác, trôi chảy và rõ ràng!';
-  } else if (localRes.score >= 70) {
-    feedback = `👍 Khá tốt! Em đã phát âm đúng ${localRes.matchedCount}/${localRes.totalWords} từ.` +
-      (badWords.length ? ` Hãy chú ý luyện thêm từ: "${badWords.slice(0, 2).join('", "')}".` : '');
-  } else {
-    feedback = `💪 Cần cố gắng hơn! Em phát âm được ${localRes.matchedCount}/${localRes.totalWords} từ.` +
-      (badWords.length ? ` Các từ chưa đạt: "${badWords.slice(0, 3).join('", "')}".` : '') + ' Hãy bấm "Nghe mẫu" để nghe lại nhé!';
-  }
-
-  const key = getAiKey();
-  if (key && typeof fetch !== 'undefined' && spoken && spoken.trim()) {
-    const prompt = `Bạn là giáo viên chuyên ngữ âm Tiếng Anh (English Phonetics Teacher).
-Nhiệm vụ: Nhận xét phát âm của học sinh dựa trên bản ghi âm chuyển chữ.
-Câu mẫu chuẩn: "${target}"
-${ipa ? `Phiên âm IPA: "${ipa}"` : ''}
-Lời học sinh phát âm thực tế: "${spoken}"
-
-Hãy phân tích ngắn gọn:
-1. Độ chuẩn xác (score: 0-100).
-2. Lời khuyên bằng tiếng Việt thật khích lệ, thân thiện (tối đa 2 câu), chỉ rõ từ nào bị đọc sót, đọc nhầm âm đuôi (/s/, /ed/, /t/) hoặc sai trọng âm.
-3. Mẹo phát âm ngắn gọn (tips) cho âm khó nhất trong câu này.
-
-Trả về strictly JSON:
-{
-  "score": <0-100>,
-  "passed": <true nếu score >= 70>,
-  "feedback": "<lời nhận xét tiếng Việt khích lệ>",
-  "tips": "<mẹo phát âm âm khó>"
-}`;
-
-    const models = ['gemini-3.5-flash', 'gemini-3.8-flash', 'gemini-flash-latest', 'gemini-flash-lite-latest'];
-    for (const m of models) {
-      try {
-        const ctrl = new AbortController();
-        const tid = setTimeout(() => ctrl.abort(), 4000);
-        const resp = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${m}:generateContent?key=${key}`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            contents: [{ parts: [{ text: prompt }] }],
-            generationConfig: { responseMimeType: 'application/json', temperature: 0.2 }
-          }),
-          signal: ctrl.signal
-        });
-        clearTimeout(tid);
-        if (resp.ok) {
-          const data = await resp.json();
-          const txt = data.candidates?.[0]?.content?.parts?.[0]?.text;
-          if (txt) {
-            const aiJson = JSON.parse(txt);
-            return {
-              score: typeof aiJson.score === 'number' ? aiJson.score : localRes.score,
-              passed: aiJson.score != null ? aiJson.score >= 70 : localRes.passed,
-              feedback: aiJson.feedback || feedback,
-              tips: aiJson.tips || tips,
-              words: localRes.words,
-              spoken,
-              target
-            };
-          }
-        }
-      } catch (err) {}
-    }
-  }
-
-  return {
-    score: localRes.score,
-    passed: localRes.passed,
-    feedback,
-    tips,
-    words: localRes.words,
-    spoken,
-    target
-  };
-}
-
-
-/* ══════════════════════════════════════════════════════════════════
-   CHUẨN HÓA CHÍNH TẢ & NGỮ PHÁP TIẾNG ANH CHO CÂU HỎI PHÁT ÂM (SPEAKING)
-   ══════════════════════════════════════════════════════════════════ */
-const COMMON_TYPOS = {
-  'hitory': 'history',
-  'histroy': 'history',
-  'hisotry': 'history',
-  'techer': 'teacher',
-  'teachr': 'teacher',
-  'stuent': 'student',
-  'studnet': 'student',
-  'gramar': 'grammar',
-  'grammer': 'grammar',
-  'libary': 'library',
-  'librery': 'library',
-  'unversity': 'university',
-  'univercity': 'university',
-  'untill': 'until',
-  'moring': 'morning',
-  'moning': 'morning',
-  'beautifull': 'beautiful',
-  'beutiful': 'beautiful',
-  'beatiful': 'beautiful',
-  'alot': 'a lot',
-  'enviroment': 'environment',
-  'environmet': 'environment',
-  'goverment': 'government',
-  'govertment': 'government',
-  'comunication': 'communication',
-  'communiction': 'communication',
-  'succefull': 'successful',
-  'succesful': 'successful',
-  'successfull': 'successful',
-  'tomorow': 'tomorrow',
-  'tommorrow': 'tomorrow',
-  'tomrw': 'tomorrow',
-  'yesterdy': 'yesterday',
-  'yestaday': 'yesterday',
-  'truely': 'truly',
-  'experiance': 'experience',
-  'expereince': 'experience',
-  'diferent': 'different',
-  'diffrent': 'different',
-  'freind': 'friend',
-  'freinds': 'friends',
-  'peaple': 'people',
-  'peple': 'people',
-  'becuase': 'because',
-  'becuse': 'because',
-  'bcs': 'because',
-  'langauge': 'language',
-  'famouse': 'famous',
-  'dangerouse': 'dangerous',
-  'intresting': 'interesting',
-  'interseting': 'interesting',
-  'imediately': 'immediately',
-  'necesary': 'necessary',
-  'neccessary': 'necessary',
-  'accomodation': 'accommodation',
-  'shedule': 'schedule',
-  'comforatble': 'comfortable',
-  'occured': 'occurred',
-  'recieve': 'receive',
-  'recieved': 'received',
-  'seperate': 'separate',
-  'definitly': 'definitely',
-  'definately': 'definitely',
-  'pronounciation': 'pronunciation',
-  'pronouce': 'pronounce',
-  'embarass': 'embarrass',
-  'beleive': 'believe',
-  'acheive': 'achieve',
-  'calender': 'calendar',
-  'collegue': 'colleague',
-  'disapear': 'disappear',
-  'disapoint': 'disappoint',
-  'dissappoint': 'disappoint',
-  'foriegn': 'foreign',
-  'guarentee': 'guarantee',
-  'happend': 'happened',
-  'heigth': 'height',
-  'independant': 'independent',
-  'knowlege': 'knowledge',
-  'noticable': 'noticeable',
-  'ocassion': 'occasion',
-  'occassion': 'occasion',
-  'paralell': 'parallel',
-  'prefered': 'preferred',
-  'priviledge': 'privilege',
-  'publically': 'publicly',
-  'realy': 'really',
-  'religous': 'religious',
-  'rember': 'remember',
-  'remeber': 'remember',
-  'sentance': 'sentence',
-  'suprise': 'surprise',
-  'thier': 'their',
-  'twelth': 'twelfth',
-  'unfortunatly': 'unfortunately',
-  'usefull': 'useful',
-  'vehical': 'vehicle',
-  'wierd': 'weird',
-  'writting': 'writing',
-  'writen': 'written',
-  'wether': 'whether',
-  'wich': 'which',
-  'appologize': 'apologize',
-  'bussiness': 'business',
-  'carreer': 'career',
-  'choclate': 'chocolate',
-  'colourfull': 'colourful',
-  'decission': 'decision',
-  'developement': 'development',
-  'diffcult': 'difficult',
-  'dificult': 'difficult',
-  'dosent': 'doesn\'t',
-  'dosen\'t': 'doesn\'t',
-  'elaphant': 'elephant',
-  'engish': 'English',
-  'englsih': 'English',
-  'excelent': 'excellent',
-  'exellent': 'excellent',
-  'excercise': 'exercise',
-  'famly': 'family',
-  'febrary': 'February',
-  'finaly': 'finally',
-  'fourty': 'forty',
-  'freindly': 'friendly',
-  'gardern': 'garden',
-  'girafe': 'giraffe',
-  'happyness': 'happiness',
-  'helfull': 'helpful',
-  'holliday': 'holiday',
-  'hoptial': 'hospital',
-  'invatation': 'invitation',
-  'judgement': 'judgment',
-  'knive': 'knife',
-  'learnning': 'learning',
-  'leson': 'lesson',
-  'listning': 'listening',
-  'litature': 'literature',
-  'machne': 'machine',
-  'marraige': 'marriage',
-  'medecine': 'medicine',
-  'monky': 'monkey',
-  'musuem': 'museum',
-  'natrual': 'natural',
-  'nieghbor': 'neighbor',
-  'oposite': 'opposite',
-  'passanger': 'passenger',
-  'peice': 'piece',
-  'plaese': 'please',
-  'pleas': 'please',
-  'populer': 'popular',
-  'possibe': 'possible',
-  'practce': 'practice',
-  'practise': 'practice',
-  'prepair': 'prepare',
-  'resturant': 'restaurant',
-  'sandwhich': 'sandwich',
-  'scence': 'scene',
-  'scinece': 'science',
-  'sholder': 'shoulder',
-  'similiar': 'similar',
-  'speach': 'speech',
-  'strenght': 'strength',
-  'strugle': 'struggle',
-  'succes': 'success',
-  'swiming': 'swimming',
-  'technolgy': 'technology',
-  'telivision': 'television',
-  'temprature': 'temperature',
-  'thursdy': 'Thursday',
-  'togather': 'together',
-  'trafic': 'traffic',
-  'tuesday': 'Tuesday',
-  'vaction': 'vacation',
-  'vegtables': 'vegetables',
-  'vegetabel': 'vegetable',
-  'villiage': 'village',
-  'vollyball': 'volleyball',
-  'wedensday': 'Wednesday',
-  'wensday': 'Wednesday',
-  'womam': 'woman',
-  'wonderfull': 'wonderful',
-  'yestaday': 'yesterday'
-};
-
-const COMMON_VOCAB = [
-  "history", "teacher", "student", "classroom", "school", "education", "beautiful", "environment",
-  "protection", "successful", "practice", "perfect", "speaking", "pronunciation", "vocabulary",
-  "grammar", "listening", "reading", "writing", "communication", "technology", "computer", "internet",
-  "science", "knowledge", "university", "library", "tomorrow", "yesterday", "morning", "afternoon",
-  "evening", "welcome", "question", "answer", "elephant", "giraffe", "monkey", "animal", "hospital",
-  "doctor", "medicine", "restaurant", "sandwich", "chocolate", "holiday", "vacation", "weather",
-  "different", "difficult", "important", "necessary", "experience", "wonderful", "dangerous",
-  "favorite", "family", "friend", "friendly", "children", "people", "language", "english", "exercise",
-  "homework", "remember", "understand", "believe", "achieve", "decision", "development", "situation",
-  "traditional", "culture", "celebration", "festival", "interesting", "amazing", "special", "simple",
-  "complex", "century", "future", "present", "country", "international", "delicious", "information",
-  "activity", "community", "pollution", "traffic", "government", "challenge", "opportunity", "president"
-];
-
-function levenshtein(s1, s2) {
-  if (s1.length < s2.length) return levenshtein(s2, s1);
-  if (s2.length === 0) return s1.length;
-  let prev = Array.from({ length: s2.length + 1 }, (_, i) => i);
-  for (let i = 0; i < s1.length; i++) {
-    let curr = [i + 1];
-    for (let j = 0; j < s2.length; j++) {
-      let ins = prev[j + 1] + 1;
-      let del = curr[j] + 1;
-      let sub = prev[j] + (s1[i] !== s2[j] ? 1 : 0);
-      curr.push(Math.min(ins, del, sub));
-    }
-    prev = curr;
-  }
-  return prev[s2.length];
-}
-
-/* Kiểm tra chính tả & chuẩn hóa tiếng Anh cục bộ (offline / tức thì) */
-function checkEnglishStandardizationLocal(text) {
-  const original = String(text || '').trim();
-  if (!original) return { original: '', suggested: '', isMisspelled: false, reason: '' };
-
-  const tokens = original.split(/\s+/);
-  const correctedTokens = [];
-  let isMisspelled = false;
-  const reasons = [];
-
-  tokens.forEach(tok => {
-    const m = tok.match(/^([^a-zA-Z0-9]*)([a-zA-Z0-9'-]+)([^a-zA-Z0-9]*)$/);
-    if (!m) {
-      correctedTokens.push(tok);
-      return;
-    }
-    const lead = m[1] || '';
-    const word = m[2];
-    const trail = m[3] || '';
-    const lower = word.toLowerCase();
-
-    // 1. Tra cứu trực tiếp từ bảng lỗi phổ biến
-    if (COMMON_TYPOS[lower]) {
-      let repl = COMMON_TYPOS[lower];
-      if (word[0] === word[0].toUpperCase() && word.length > 1) {
-        repl = repl.charAt(0).toUpperCase() + repl.slice(1);
-      }
-      correctedTokens.push(lead + repl + trail);
-      isMisspelled = true;
-      reasons.push(`'${word}' ➔ '${repl}'`);
-      return;
-    }
-
-    // 2. Tra cứu khoảng cách Levenshtein = 1 đối với từ dài >= 4 ký tự
-    if (lower.length >= 4 && !COMMON_VOCAB.includes(lower)) {
-      const match = COMMON_VOCAB.find(v => levenshtein(lower, v) === 1);
-      if (match) {
-        let repl = match;
-        if (word[0] === word[0].toUpperCase() && word.length > 1) {
-          repl = repl.charAt(0).toUpperCase() + repl.slice(1);
-        }
-        correctedTokens.push(lead + repl + trail);
-        isMisspelled = true;
-        reasons.push(`'${word}' ➔ '${repl}'`);
-        return;
-      }
-    }
-
-    correctedTokens.push(tok);
-  });
-
-  const suggested = correctedTokens.join(' ');
-  const reason = isMisspelled ? `Phát hiện từ có thể viết sai chính tả: ${reasons.join(', ')}` : '';
-
-  return {
-    original,
-    suggested,
-    isMisspelled,
-    reason
-  };
-}
-
-/* Thẩm định & chuẩn hóa danh sách từ/câu phát âm bằng AI (kết hợp offline + Gemini) */
-async function checkEnglishStandardizationAI(items) {
-  if (!Array.isArray(items) || !items.length) return [];
-
-  const list = items.map((it, idx) => {
-    const raw = typeof it === 'string' ? it : (it.targetText || it.ansText || it.q || '');
-    return { id: idx, original: String(raw || '').trim(), rawObj: it };
-  });
-
-  // 1. Quét cục bộ nhanh trước
-  const localResults = list.map(item => {
-    const local = checkEnglishStandardizationLocal(item.original);
-    return {
-      id: item.id,
-      original: item.original,
-      suggested: local.suggested,
-      isMisspelled: local.isMisspelled,
-      reason: local.reason,
-      rawObj: item.rawObj
-    };
-  });
-
-  // 2. Nếu có key AI, gửi Gemini để kiểm tra ngữ pháp sâu & ngữ cảnh
-  const key = getAiKey();
-  if (!key || typeof fetch === 'undefined') {
-    return localResults;
-  }
-
-  const promptItems = list.map(l => ({ id: l.id, text: l.original }));
-  const prompt = `Bạn là chuyên gia thẩm định và chuẩn hóa chính tả, ngữ pháp Tiếng Anh (English Proofreader & Standardizer).
-Giáo viên đang soạn danh sách từ/câu để học sinh luyện đọc và phát âm:
-${JSON.stringify(promptItems)}
-
-Nhiệm vụ:
-Kiểm tra xem từng từ/câu có bị gõ nhầm chính tả (typo), viết sai từ tiếng Anh hoặc ngữ pháp không chuẩn không (ví dụ: 'hitory' -> 'history', 'Good moring' -> 'Good morning', 'beautifull' -> 'beautiful', 'Practice make perfect' -> 'Practice makes perfect').
-
-Yêu cầu:
-1. Nếu có lỗi chính tả/ngữ pháp tiếng Anh:
-   - "isMisspelled": true
-   - "suggested": "<từ hoặc câu đã được sửa chuẩn xác nhất>"
-   - "reason": "<giải thích ngắn gọn 1 câu bằng tiếng Việt về lỗi sai và cách sửa>"
-2. Nếu từ/câu đã hoàn toàn chuẩn xác tiếng Anh:
-   - "isMisspelled": false
-   - "suggested": "<giữ nguyên bản gốc>"
-   - "reason": ""
-
-QUAN TRỌNG:
-- Trả về STRICT JSON mảng:
-[
-  { "id": 0, "original": "...", "suggested": "...", "isMisspelled": true, "reason": "..." }
-]`;
-
-  const models = ['gemini-3.5-flash', 'gemini-3.8-flash', 'gemini-flash-latest', 'gemini-flash-lite-latest'];
-  for (const m of models) {
-    try {
-      const ctrl = new AbortController();
-      const tid = setTimeout(() => ctrl.abort(), 6000);
-      const resp = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${m}:generateContent?key=${key}`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          contents: [{ parts: [{ text: prompt }] }],
-          generationConfig: { responseMimeType: 'application/json', temperature: 0.1 }
-        }),
-        signal: ctrl.signal
-      });
-      clearTimeout(tid);
-
-      if (resp.ok) {
-        const data = await resp.json();
-        const txt = data.candidates?.[0]?.content?.parts?.[0]?.text;
-        if (txt) {
-          const parsed = JSON.parse(txt);
-          if (Array.isArray(parsed)) {
-            parsed.forEach(pItem => {
-              const res = localResults[pItem.id];
-              if (res) {
-                if (pItem.isMisspelled && pItem.suggested && pItem.suggested.toLowerCase() !== res.original.toLowerCase()) {
-                  res.isMisspelled = true;
-                  res.suggested = pItem.suggested;
-                  res.reason = pItem.reason || res.reason || `Chuẩn hóa thành "${pItem.suggested}"`;
-                }
-              }
-            });
-            return localResults;
-          }
-        }
-      }
-    } catch (e) {
-      console.warn(`Model ${m} standardization check failed:`, e);
-    }
-  }
-
-  return localResults;
-}
-
-/* Tự động làm giàu danh sách câu phát âm bằng AI: điền phiên âm IPA, chỉ dẫn và mẹo phát âm */
-async function enrichSpeakingQuestionsAI(qList) {
-  if (!Array.isArray(qList) || !qList.length) return qList;
-
-  const needsEnrich = [];
-  qList.forEach((q, idx) => {
-    if (q.type === 'speaking' || q.targetText) {
-      const target = (q.targetText || q.ansText || q.q || '').trim();
-      if (target && (!q.ipa || !q.e)) {
-        needsEnrich.push({ idx, target });
-      }
-    }
-  });
-
-  if (!needsEnrich.length) return qList;
-
-  const key = getAiKey();
-  if (!key || typeof fetch === 'undefined') {
-    needsEnrich.forEach(({ idx }) => {
-      if (!qList[idx].q || qList[idx].q.startsWith('Câu hỏi') || qList[idx].q.includes('clearly:')) qList[idx].q = 'Listen to the audio or read aloud clearly:';
-      if (!qList[idx].e) qList[idx].e = 'Luyện đọc to, rõ ràng từng âm tiết và chú ý trọng âm của từ.';
-    });
-    return qList;
-  }
-
-  const promptItems = needsEnrich.map((item, i) => ({ id: i, text: item.target }));
-  const prompt = `Bạn là chuyên gia ngữ âm Tiếng Anh (English Phonetics Expert).
-Nhiệm vụ: Cung cấp phiên âm quốc tế IPA và mẹo phát âm thực tế cho danh sách từ/câu sau:
-${JSON.stringify(promptItems)}
-
-Với MỖI mục:
-1. "ipa": Phiên âm quốc tế IPA chuẩn xác (kèm dấu trọng âm chính ˈ và phụ ˌ, ví dụ: /ˈfəʊ.tə.ɡrɑːf/, /ɪnˌvaɪ.rənˈmen.tl/).
-2. "tips": Lời khuyên phát âm thực tế bằng tiếng Việt (1-2 câu ngắn gọn), chỉ rõ trọng âm rơi vào âm tiết mấy, các âm gió đuôi (/s/, /ed/, /l/, /t/) hoặc phụ âm nối cần chú ý.
-3. "prompt": Chỉ dẫn bài làm ngắn bằng tiếng Anh (ví dụ: "Read aloud the word clearly:" hoặc "Read aloud the sentence with natural intonation:").
-
-Trả về STRICT JSON mảng:
-[
-  { "id": 0, "ipa": "...", "tips": "...", "prompt": "..." }
-]`;
-
-  const models = ['gemini-3.5-flash', 'gemini-3.8-flash', 'gemini-flash-latest', 'gemini-flash-lite-latest'];
-  for (const m of models) {
-    try {
-      const ctrl = new AbortController();
-      const tid = setTimeout(() => ctrl.abort(), 12000);
-      const resp = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${m}:generateContent?key=${key}`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          contents: [{ parts: [{ text: prompt }] }],
-          generationConfig: { responseMimeType: 'application/json', temperature: 0.1 }
-        }),
-        signal: ctrl.signal
-      });
-      clearTimeout(tid);
-
-      if (resp.ok) {
-        const data = await resp.json();
-        const txt = data.candidates?.[0]?.content?.parts?.[0]?.text;
-        if (txt) {
-          const parsed = JSON.parse(txt);
-          if (Array.isArray(parsed)) {
-            parsed.forEach(resItem => {
-              const matched = needsEnrich[resItem.id];
-              if (matched && qList[matched.idx]) {
-                const targetQ = qList[matched.idx];
-                if (!targetQ.ipa && resItem.ipa) targetQ.ipa = resItem.ipa;
-                if (!targetQ.e && resItem.tips) targetQ.e = resItem.tips;
-                if ((!targetQ.q || targetQ.q.includes('clearly:')) && resItem.prompt) targetQ.q = resItem.prompt;
-              }
-            });
-            return qList;
-          }
-        }
-      }
-    } catch (err) {
-      console.warn(`Model ${m} enrich failed:`, err);
-    }
-  }
-
-  needsEnrich.forEach(({ idx }) => {
-    if (!qList[idx].q) qList[idx].q = 'Listen to the audio or read aloud clearly:';
-    if (!qList[idx].e) qList[idx].e = 'Luyện đọc to, rõ ràng từng âm tiết và chú ý trọng âm của từ.';
-  });
-  return qList;
-}
-
-/* Sinh IPA và mẹo phát âm cho 1 từ/câu riêng biệt trong trình sửa */
-async function generateSingleSpeakingAI(targetText) {
-  const cleanTarget = String(targetText || '').trim();
-  if (!cleanTarget) return { ipa: '', tips: '', prompt: 'Read aloud clearly:' };
-
-  const key = getAiKey();
-  if (!key || typeof fetch === 'undefined') {
-    return {
-      ipa: '',
-      tips: 'Luyện đọc to, rõ ràng từng âm tiết và chú ý trọng âm của từ.',
-      prompt: 'Read aloud clearly:'
-    };
-  }
-
-  const prompt = `Bạn là chuyên gia ngữ âm Tiếng Anh.
-Nhiệm vụ: Cung cấp phiên âm quốc tế IPA và mẹo phát âm tiếng Việt cho từ/câu: "${cleanTarget}"
-
-Trả về STRICT JSON:
-{
-  "ipa": "<phiên âm IPA chuẩn kèm trọng âm>",
-  "tips": "<lời khuyên phát âm 1-2 câu tiếng Việt (trọng âm, âm đuôi)>",
-  "prompt": "<chỉ dẫn bài làm tiếng Anh ngắn>"
-}`;
-
-  const models = ['gemini-3.5-flash', 'gemini-3.8-flash', 'gemini-flash-latest', 'gemini-flash-lite-latest'];
-  for (const m of models) {
-    try {
-      const ctrl = new AbortController();
-      const tid = setTimeout(() => ctrl.abort(), 4000);
-      const resp = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${m}:generateContent?key=${key}`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          contents: [{ parts: [{ text: prompt }] }],
-          generationConfig: { responseMimeType: 'application/json', temperature: 0.1 }
-        }),
-        signal: ctrl.signal
-      });
-      clearTimeout(tid);
-
-      if (resp.ok) {
-        const data = await resp.json();
-        const txt = data.candidates?.[0]?.content?.parts?.[0]?.text;
-        if (txt) {
-          const parsed = JSON.parse(txt);
-          return {
-            ipa: parsed.ipa || '',
-            tips: parsed.tips || 'Luyện đọc to, rõ ràng từng âm tiết và chú ý trọng âm của từ.',
-            prompt: parsed.prompt || 'Read aloud clearly:'
-          };
-        }
-      }
-    } catch (err) {}
-  }
-
-  return {
-    ipa: '',
-    tips: 'Luyện đọc to, rõ ràng từng âm tiết và chú ý trọng âm của từ.',
-    prompt: 'Read aloud clearly:'
-  };
-}
-
 return { $, shuffle, pick, clamp, esc, fmt, stamp, clean, rng, COLORS, BADGE, safe, normAns, checkTextAns, fromOld, prep, parseCSV, rowsToQs, parseText, parsePaste, sheetSets, sheetSet, sampleSet, packHw, unpackHw, tone, sfx, confetti, toast, rank, makeNet, music, saveCommunityQuiz, getCommunityLibrary, getQuizById, saveHwMeta, submitHwResult, getHwGradebook, showReportCard, downloadReportCard, getAiKey, diffPronunciation, speakText, evaluatePronunciationAI, enrichSpeakingQuestionsAI, generateSingleSpeakingAI, checkEnglishStandardizationLocal, checkEnglishStandardizationAI, COMMON_TYPOS, deleteCommunityQuiz, deleteHwSubmission , copy, copyText, sfxFiles, kvPut, kvGet, kvScan, live, liveWatch};
 })();

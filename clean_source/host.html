@@ -669,10 +669,10 @@ Hoặc dán theo mẫu:
 </div></div>
 
 <!-- SCRIPTS HỆ THỐNG -->
-<script src="assets/shield.js?v=2.1"></script>
+<script src="assets/shield.js?v=2.3"></script>
 <script src="assets/qrcode.min.js"></script>
-<script src="assets/config.js?v=2.1"></script>
-<script src="assets/core.js?v=2.1"></script>
+<script src="assets/config.js?v=2.3"></script>
+<script src="assets/core.js?v=2.3"></script>
 <script src="assets/mau.js"></script>
 <script src="assets/climb.js"></script>
 <script src="assets/brick.js"></script>
@@ -687,7 +687,7 @@ Hoặc dán theo mẫu:
 <script src="assets/peng.js"></script>
  <script src="assets/scene.js"></script>
 <script src="assets/hero.js"></script>
-<script src="assets/license.js?v=2.1"></script>
+<script src="assets/license.js?v=2.3"></script>
 
 <script>
 const { $, esc, fmt, stamp, clean, toast, confetti, sfx } = GC;
@@ -1319,7 +1319,7 @@ async function renderBank(forceCloud) {
         <div class="bacts">
           <button class="btn g" style="padding:5px 9px;font-size:12px" title="Dùng đề này mở phòng" onclick="loadQuizData('${item.id}')">${isTest ? '📝 Mở phòng thi' : '🎯 Mở phòng'}</button>
           <button class="btn w" style="padding:5px 9px;font-size:12px" title="Giao bài" onclick="assignHwFor('${item.id}')">${isTest ? '📋 Giao bài test' : '📚 Giao bài'}</button>
-          <button class="btn r" style="padding:5px 8px;font-size:12px;background:#fef2f2;color:#dc2626;border:1px solid #fecaca" title="Xóa đề này khỏi thư viện (Dành cho Quản trị viên)" onclick="adminDeleteQuiz('${esc(item.id)}')">🗑️</button>
+          
         </div>
       </div>
       `;
