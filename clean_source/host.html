@@ -3817,6 +3817,51 @@ function updateModeView() {
   if ($('bSolo')) $('bSolo').textContent = isTest ? '📋 Giao bài kiểm tra về nhà' : '📚 Giao bài về nhà';
 }
 
+// Hàm lấy thời gian làm bài kiểm tra (tính theo phút, 0 = không giới hạn)
+function getTestDurMinutes() {
+  const inp = $('testDurInp');
+  if (inp && inp.value !== '') {
+    const val = parseInt(inp.value, 10);
+    return isNaN(val) || val < 0 ? 0 : val;
+  }
+  const sel = $('testDur');
+  if (sel && sel.value !== '') {
+    const val = parseInt(sel.value, 10);
+    return isNaN(val) || val < 0 ? 0 : val;
+  }
+  return 45; // Mặc định 45 phút chuẩn thi
+}
+
+// Khởi tạo các nút chọn nhanh thời gian kiểm tra (5p, 10p, 15p, 20p, 30p, 45p, 60p, 90p, Tự do)
+function initTestDurationControls() {
+  const container = $('testDurPresets');
+  const inp = $('testDurInp');
+  const sel = $('testDur');
+  if (!container) return;
+
+  const buttons = container.querySelectorAll('button[data-dur]');
+  buttons.forEach(btn => {
+    btn.onclick = () => {
+      buttons.forEach(b => { b.className = 'btn w'; });
+      btn.className = 'btn g';
+      const dur = btn.dataset.dur;
+      if (inp) inp.value = dur;
+      if (sel) sel.value = dur;
+    };
+  });
+
+  if (inp) {
+    inp.oninput = () => {
+      const cur = inp.value.trim();
+      buttons.forEach(b => {
+        b.className = (b.dataset.dur === cur) ? 'btn g' : 'btn w';
+      });
+      if (sel) sel.value = cur;
+    };
+  }
+}
+initTestDurationControls();
+
 
 
 /* ═════ SỔ ĐIỂM BÀI TẬP VỀ NHÀ (GRADEBOOK CONTROLLER) ═════ */
