@@ -1152,7 +1152,7 @@ async function getHwGradebook() {
 }
 
 /* ═════ XUẤT PHIẾU ĐIỂM GỬI PHỤ HUYNH (PARENT REPORT CARD) ═════ */
-function showReportCard(data) {
+function renderReportCardCanvas(data) {
   data = data || {};
   const name = data.name || 'Học sinh';
   const title = data.title || 'Bài kiểm tra tiếng Anh';
@@ -1293,7 +1293,6 @@ function showReportCard(data) {
   ctx.fillText('“' + remark + '”', 108, 575);
 
   // Footer chữ ký
-  ctx.textAlign = 'between';
   ctx.fillStyle = '#64748b';
   ctx.font = '700 18px "Nunito", "Segoe UI", sans-serif';
   ctx.textAlign = 'left';
@@ -1304,71 +1303,119 @@ function showReportCard(data) {
   ctx.fillText('👩‍🏫 Giáo viên: ' + teacher, 1000, 675);
 
   const dataUrl = cv.toDataURL('image/png');
+  const safeName = (typeof clean === 'function' ? clean(name) : name).replace(/[^\w\s\u00C0-\u1EF9]/gi, '').trim().replace(/\s+/g, '-');
+  const fileName = 'Phieu-diem-' + (safeName || 'Hoc-sinh') + '-' + Date.now() + '.png';
 
-  // Hiển thị Modal xem trước & tải/copy ảnh
+  return { cv, dataUrl, fileName, name };
+}
+
+function downloadReportCard(data) {
+  try {
+    const { cv, dataUrl, fileName } = renderReportCardCanvas(data);
+    const a = document.createElement('a');
+    a.href = dataUrl;
+    a.download = fileName;
+    document.body.appendChild(a);
+    a.click();
+    setTimeout(() => a.remove(), 250);
+    if (typeof toast === 'function') toast('📥 Đang tải ảnh phiếu điểm về máy...', 2500);
+    return true;
+  } catch(err) {
+    console.error('downloadReportCard error:', err);
+    if (typeof toast === 'function') toast('⚠️ Đang mở xem trước phiếu điểm...', 2500);
+    showReportCard(data);
+    return false;
+  }
+}
+
+function showReportCard(data) {
+  const { cv, dataUrl, fileName, name } = renderReportCardCanvas(data);
+
+  if (data && data.autoDownload) {
+    try {
+      const a = document.createElement('a');
+      a.href = dataUrl;
+      a.download = fileName;
+      document.body.appendChild(a);
+      a.click();
+      setTimeout(() => a.remove(), 250);
+    } catch(e) {}
+  }
+
   let modal = document.getElementById('ovReportCard');
   if (!modal) {
     modal = document.createElement('div');
     modal.id = 'ovReportCard';
-    modal.style.cssText = 'position:fixed;inset:0;background:rgba(20,14,40,.72);z-index:9999;display:flex;align-items:center;justify-content:center;padding:16px;backdrop-filter:blur(4px);box-sizing:border-box';
+    modal.style.cssText = 'position:fixed;inset:0;background:rgba(20,14,40,.75);z-index:9999;display:flex;align-items:center;justify-content:center;padding:12px;backdrop-filter:blur(4px);box-sizing:border-box;overflow-y:auto';
     document.body.appendChild(modal);
   }
   modal.style.display = 'flex';
   modal.onclick = (e) => { if (e.target === modal) modal.style.display = 'none'; };
 
   modal.innerHTML = `
-    <div style="background:#fff;border-radius:24px;max-width:720px;width:100%;padding:20px;text-align:center;box-shadow:0 20px 60px rgba(0,0,0,.35);border:3px solid #ddd6fe;box-sizing:border-box">
-      <div style="font-weight:900;font-size:22px;color:#2d2350;margin-bottom:4px">🏅 Phiếu Báo Điểm Gửi Phụ Huynh</div>
-      <div style="font-size:13px;color:#64748b;font-weight:700;margin-bottom:12px">Bấm <b>Copy ảnh</b> rồi nhấn <b>Ctrl + V</b> trực tiếp vào khung chat Zalo để gửi ngay!</div>
-      <img src="${dataUrl}" alt="Phiếu điểm" style="width:100%;max-height:58vh;object-fit:contain;border-radius:14px;border:2px solid #e2e8f0;box-shadow:0 4px 14px rgba(0,0,0,.08);display:block;margin:0 auto">
-      <div style="font-size:12px;color:#854d0e;background:#fef9c3;padding:6px 12px;border-radius:10px;margin-top:8px;font-weight:700">📱 Trên điện thoại: Có thể chạm giữ vào ảnh 1-2 giây để <b>Lưu ảnh</b> hoặc <b>Chia sẻ</b> sang Zalo!</div>
-      <div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin-top:16px">
-        <button id="bRcCopyImg" type="button" style="background:linear-gradient(180deg,#2563eb,#1d4ed8);color:#fff;border:none;border-radius:14px;padding:11px 20px;font-weight:900;font-size:15px;cursor:pointer">📋 Copy ảnh dán Zalo</button>
-        <button id="bRcDownloadImg" type="button" style="background:linear-gradient(180deg,#10b981,#059669);color:#fff;border:none;border-radius:14px;padding:11px 20px;font-weight:900;font-size:15px;cursor:pointer">📥 Tải ảnh phiếu điểm (.png)</button>
+    <div style="background:#fff;border-radius:24px;max-width:740px;width:100%;max-height:92vh;overflow-y:auto;padding:18px;text-align:center;box-shadow:0 20px 60px rgba(0,0,0,.4);border:3px solid #ddd6fe;box-sizing:border-box;margin:auto">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+        <div style="font-weight:900;font-size:20px;color:#2d2350">🏅 Phiếu Báo Điểm Gửi Phụ Huynh</div>
+        <button id="bRcCloseTop" type="button" style="background:#f1f5f9;border:none;border-radius:50%;width:32px;height:32px;font-size:16px;cursor:pointer;font-weight:900;color:#64748b">✕</button>
+      </div>
+      <div style="font-size:13px;color:#64748b;font-weight:700;margin-bottom:10px">Bấm <b>Tải ảnh</b> hoặc <b>Copy ảnh</b> rồi nhấn <b>Ctrl + V</b> vào Zalo để gửi!</div>
+      <img src="${dataUrl}" alt="Phiếu điểm" style="width:100%;max-height:50vh;object-fit:contain;border-radius:14px;border:2px solid #e2e8f0;box-shadow:0 4px 14px rgba(0,0,0,.08);display:block;margin:0 auto">
+      <div style="font-size:12px;color:#854d0e;background:#fef9c3;padding:6px 12px;border-radius:10px;margin-top:10px;font-weight:700">📱 Điện thoại / Máy tính bảng: Có thể chạm giữ vào ảnh 1-2 giây để <b>Lưu ảnh</b> hoặc <b>Chia sẻ</b> sang Zalo!</div>
+      <div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin-top:14px">
+        <button id="bRcDownloadImg" type="button" style="background:linear-gradient(180deg,#10b981,#059669);color:#fff;border:none;border-radius:14px;padding:11px 22px;font-weight:900;font-size:15px;cursor:pointer;box-shadow:0 4px 12px rgba(16,185,129,0.3)">📥 Tải ảnh phiếu điểm (.png)</button>
+        <button id="bRcCopyImg" type="button" style="background:linear-gradient(180deg,#2563eb,#1d4ed8);color:#fff;border:none;border-radius:14px;padding:11px 20px;font-weight:900;font-size:15px;cursor:pointer;box-shadow:0 4px 12px rgba(37,99,235,0.3)">📋 Copy ảnh dán Zalo</button>
+        ${typeof navigator !== 'undefined' && navigator.share ? '<button id="bRcShareImg" type="button" style="background:linear-gradient(180deg,#8b5cf6,#7c3aed);color:#fff;border:none;border-radius:14px;padding:11px 20px;font-weight:900;font-size:15px;cursor:pointer">📲 Chia sẻ</button>' : ''}
         <button id="bRcClose" type="button" style="background:#f1f5f9;color:#334155;border:2px solid #cbd5e1;border-radius:14px;padding:11px 20px;font-weight:800;font-size:15px;cursor:pointer">Đóng</button>
       </div>
     </div>
   `;
 
+  const doClose = () => { modal.style.display = 'none'; };
   const btnClose = document.getElementById('bRcClose');
-  if (btnClose) btnClose.onclick = () => { modal.style.display = 'none'; };
+  if (btnClose) btnClose.onclick = doClose;
+  const btnCloseTop = document.getElementById('bRcCloseTop');
+  if (btnCloseTop) btnCloseTop.onclick = doClose;
 
-  const fileName = 'Phieu-diem-' + (typeof clean === 'function' ? clean(name) : name).replace(/\s+/g, '-') + '.png';
-
+  // Tải ảnh trực tiếp và đồng bộ (Không bị Chrome chặn popup / async download)
   const btnDownload = document.getElementById('bRcDownloadImg');
   if (btnDownload) {
     btnDownload.onclick = () => {
       try {
-        cv.toBlob(blob => {
-          if (!blob) {
-            const a = document.createElement('a');
-            a.href = dataUrl;
-            a.download = fileName;
-            document.body.appendChild(a);
-            a.click();
-            setTimeout(() => a.remove(), 100);
-            return;
-          }
-          const url = URL.createObjectURL(blob);
-          const a = document.createElement('a');
-          a.href = url;
-          a.download = fileName;
-          document.body.appendChild(a);
-          a.click();
-          setTimeout(() => { URL.revokeObjectURL(url); a.remove(); }, 2000);
-        }, 'image/png');
-      } catch(e) {
         const a = document.createElement('a');
         a.href = dataUrl;
         a.download = fileName;
         document.body.appendChild(a);
         a.click();
-        setTimeout(() => a.remove(), 100);
+        setTimeout(() => a.remove(), 250);
+        if (typeof toast === 'function') toast('📥 Đang tải ảnh phiếu điểm về máy...', 2500);
+      } catch(e) {
+        console.error('Download error:', e);
+        window.open(dataUrl, '_blank');
       }
-      if (typeof toast === 'function') toast('📥 Đang tải ảnh phiếu điểm về máy...', 2500);
     };
   }
 
+  // Chia sẻ ảnh qua Web Share API nếu trình duyệt hỗ trợ
+  const btnShare = document.getElementById('bRcShareImg');
+  if (btnShare && typeof navigator !== 'undefined' && navigator.share) {
+    btnShare.onclick = async () => {
+      try {
+        const blob = await new Promise(r => cv.toBlob(r, 'image/png'));
+        const file = new File([blob], fileName, { type: 'image/png' });
+        if (navigator.canShare && navigator.canShare({ files: [file] })) {
+          await navigator.share({
+            title: 'Phiếu báo kết quả học tập - ' + name,
+            files: [file]
+          });
+          return;
+        }
+      } catch(e) {
+        console.warn('Share failed:', e);
+      }
+    };
+  }
+
+  // Copy ảnh vào Clipboard
   const btnCopy = document.getElementById('bRcCopyImg');
   if (btnCopy) {
     btnCopy.onclick = async () => {
@@ -1388,8 +1435,8 @@ function showReportCard(data) {
         a.download = fileName;
         document.body.appendChild(a);
         a.click();
-        setTimeout(() => a.remove(), 100);
-        if (typeof toast === 'function') toast('📥 Trình duyệt tự động tải ảnh phiếu điểm để gửi Zalo!', 3000);
+        setTimeout(() => a.remove(), 250);
+        if (typeof toast === 'function') toast('📥 Đang tải ảnh phiếu điểm về máy để gửi Zalo!', 3000);
       } catch(err) {
         if (typeof toast === 'function') toast('Vui lòng chạm giữ ảnh phiếu điểm để lưu hoặc sao chép!', 3000);
       }
@@ -1397,7 +1444,7 @@ function showReportCard(data) {
   }
 }
 
-  
+
 /* ══════════════════════════════════════════════════════════════
    HỆ THỐNG ĐÁNH GIÁ PHÁT ÂM TIẾNG ANH AI (AI PRONUNCIATION EVALUATION)
    ══════════════════════════════════════════════════════════════ */
@@ -2118,5 +2165,5 @@ Trả về STRICT JSON:
   };
 }
 
-return { $, shuffle, pick, clamp, esc, fmt, stamp, clean, rng, COLORS, BADGE, safe, normAns, checkTextAns, fromOld, prep, parseCSV, rowsToQs, parseText, parsePaste, sheetSets, sheetSet, sampleSet, packHw, unpackHw, tone, sfx, confetti, toast, rank, makeNet, music, saveCommunityQuiz, getCommunityLibrary, getQuizById, saveHwMeta, submitHwResult, getHwGradebook, showReportCard, getAiKey, diffPronunciation, speakText, evaluatePronunciationAI, enrichSpeakingQuestionsAI, generateSingleSpeakingAI, checkEnglishStandardizationLocal, checkEnglishStandardizationAI, COMMON_TYPOS, deleteCommunityQuiz, deleteHwSubmission , copy, copyText, sfxFiles, kvPut, kvGet, kvScan, live, liveWatch};
+return { $, shuffle, pick, clamp, esc, fmt, stamp, clean, rng, COLORS, BADGE, safe, normAns, checkTextAns, fromOld, prep, parseCSV, rowsToQs, parseText, parsePaste, sheetSets, sheetSet, sampleSet, packHw, unpackHw, tone, sfx, confetti, toast, rank, makeNet, music, saveCommunityQuiz, getCommunityLibrary, getQuizById, saveHwMeta, submitHwResult, getHwGradebook, showReportCard, downloadReportCard, getAiKey, diffPronunciation, speakText, evaluatePronunciationAI, enrichSpeakingQuestionsAI, generateSingleSpeakingAI, checkEnglishStandardizationLocal, checkEnglishStandardizationAI, COMMON_TYPOS, deleteCommunityQuiz, deleteHwSubmission , copy, copyText, sfxFiles, kvPut, kvGet, kvScan, live, liveWatch};
 })();

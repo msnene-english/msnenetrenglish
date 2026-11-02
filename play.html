@@ -124,6 +124,7 @@ body{display:flex;flex-direction:column;overflow:hidden}
   background: var(--t-bg, #f8fafc);
   font-family: 'Nunito', sans-serif;
   overflow: hidden;
+  overflow-x: clip !important;
 }
 #ovTestResult { z-index: 500 !important; }
 #ovTestResult.on { display: flex !important; }
@@ -244,7 +245,7 @@ body{display:flex;flex-direction:column;overflow:hidden}
   width: 100%;
   margin: 0 auto;
   overflow-y: auto;
-  overflow-x: hidden !important;
+  overflow-x: clip !important;
   box-sizing: border-box;
 }
 @media (max-width: 820px) {
@@ -272,7 +273,7 @@ body{display:flex;flex-direction:column;overflow:hidden}
   max-width: 100% !important;
   width: 100%;
   box-sizing: border-box;
-  overflow-x: hidden;
+  overflow-x: clip !important;
 }
 .t-card {
   background: var(--t-card, #ffffff) !important;
@@ -284,6 +285,7 @@ body{display:flex;flex-direction:column;overflow:hidden}
   max-width: 100% !important;
   width: 100%;
   overflow-x: hidden;
+  word-break: break-word;
 }
 
 /* Văn bản câu hỏi & bài đọc - Đảm bảo độ tương phản cực cao */
@@ -345,6 +347,7 @@ body{display:flex;flex-direction:column;overflow:hidden}
   max-width: 100% !important;
   width: 100%;
   box-sizing: border-box;
+  position: relative;
 }
 .t-pills::-webkit-scrollbar { display: none; }
 .t-pill {
@@ -962,16 +965,20 @@ function renderTestQuestion() {
     const v = trAnswers[idx];
     const isAns = v !== undefined && String(v).trim() !== '';
     const isCur = idx === trIndex;
-    return `<button class="t-pill ${isAns ? 'answered' : ''} ${isCur ? 'current' : ''}" onclick="jumpTestQ(${idx})">${idx + 1}</button>`;
+    return `<button type="button" tabindex="-1" class="t-pill ${isAns ? 'answered' : ''} ${isCur ? 'current' : ''}" onclick="jumpTestQ(${idx})">${idx + 1}</button>`;
   }).join('');
   setTimeout(() => {
     if (pillsBox && pillsBox.children[trIndex]) {
       const pill = pillsBox.children[trIndex];
-      const scrollLeft = pill.offsetLeft - (pillsBox.clientWidth / 2) + (pill.clientWidth / 2);
+      const scrollLeft = pill.offsetLeft - (pillsBox.clientWidth / 2) + (pill.offsetWidth / 2);
       pillsBox.scrollTo({ left: Math.max(0, scrollLeft), behavior: 'smooth' });
     }
     const tBody = document.querySelector('.t-body');
     if (tBody && tBody.scrollLeft !== 0) tBody.scrollLeft = 0;
+    const testApp = document.getElementById('testApp');
+    if (testApp && testApp.scrollLeft !== 0) testApp.scrollLeft = 0;
+    if (document.body.scrollLeft !== 0) document.body.scrollLeft = 0;
+    if (document.documentElement.scrollLeft !== 0) document.documentElement.scrollLeft = 0;
   }, 30);
 
   // 2. Render Passage (nếu có)
@@ -1504,7 +1511,7 @@ async function joinSolo() {
   else if (SOLO.startsWith('sheet:')) { const name = SOLO.slice(6), r = await GC.sheetSet(name); set = { title: name, qs: r.qs } }
   if (!set || !set.qs.length) throw new Error('Không tìm thấy bộ câu hỏi này. Em báo cô kiểm tra lại link nhé!');
   const P = HW || { eq: U.get('eq'), em: U.get('em'), lv: U.get('lv'), m: U.get('m') };
-  setGain(P.eq, P.em); LVL = +P.lv || 2; MODE = ['brick', 'tank', 'bomb', 'test', 'pac', 'race', 'temple', 'temple2', 'bounce', 'bounce2'].includes(P.m) ? P.m : 'climb';
+  setGain(P.eq, P.em); LVL = +P.lv || 2; MODE = ['brick', 'brick2', 'tank', 'bomb', 'test', 'pac', 'race', 'temple', 'temple2', 'bounce', 'bounce2', 'adv', 'adv2', 'peng'].includes(P.m) ? P.m : 'climb';
   QS = GC.prep(set.qs, MODE === 'test' && P.testShuffle === false); setTitle = set.title;
   boot(20261019);
   begin();
@@ -1885,25 +1892,47 @@ function buy(k) {
 /* ═════ kết quả ═════ */
 function rankText() { const r = GC.rank(players), i = r.findIndex(([id]) => id === pid); return '🏅 Hạng: ' + (i + 1) + ' / ' + r.length }
 
+function getFallbackReportData() {
+  const p = ans ? Math.round(okN / ans * 100) : 0;
+  const durMs = Math.max(0, (tEnd || Date.now()) - (t0 || Date.now()));
+  return {
+    name: nameV || 'Học sinh',
+    title: setTitle || (HW && HW.t) || 'Game ôn tập',
+    score: p,
+    ok: okN,
+    tot: ans || (QS ? QS.length : 1),
+    m: MODE,
+    modeName: (GNAME && GNAME[MODE]) || '🎮 Game ôn tập',
+    timeText: typeof fmt === 'function' ? fmt(durMs) : 'Hoàn thành',
+    dateText: typeof stamp === 'function' ? stamp(tEnd || Date.now()) : '',
+    teacher: 'Cô Chí Nên (Ms Nene English)'
+  };
+}
+window.downloadGameReport = function() {
+  try {
+    const d = window.lastGameReportData || getFallbackReportData();
+    if (window.GC && typeof window.GC.downloadReportCard === 'function') {
+      window.GC.downloadReportCard(d);
+    } else if (window.GC && typeof window.GC.showReportCard === 'function') {
+      window.GC.showReportCard(Object.assign({}, d, { autoDownload: true }));
+    } else {
+      toast('Không tìm thấy tính năng tải phiếu điểm!', 2500);
+    }
+  } catch(e) {
+    console.error('downloadGameReport error:', e);
+    toast('Đã có lỗi khi tạo phiếu điểm. Vui lòng thử lại!', 2500);
+  }
+};
+window.downloadTestReport = function() {
+  if (window.lastTestReportData && window.GC && typeof window.GC.downloadReportCard === 'function') {
+    window.GC.downloadReportCard(window.lastTestReportData);
+  } else {
+    window.downloadGameReport();
+  }
+};
 window.exportGameReport = function() {
   try {
-    let d = window.lastGameReportData;
-    if (!d) {
-      const p = ans ? Math.round(okN / ans * 100) : 0;
-      const durMs = Math.max(0, (tEnd || Date.now()) - (t0 || Date.now()));
-      d = {
-        name: nameV || 'Học sinh',
-        title: setTitle || (HW && HW.t) || 'Game ôn tập',
-        score: p,
-        ok: okN,
-        tot: ans || (QS ? QS.length : 1),
-        m: MODE,
-        modeName: (GNAME && GNAME[MODE]) || '🎮 Game ôn tập',
-        timeText: typeof fmt === 'function' ? fmt(durMs) : 'Hoàn thành',
-        dateText: typeof stamp === 'function' ? stamp(tEnd || Date.now()) : '',
-        teacher: 'Cô Chí Nên (Ms Nene English)'
-      };
-    }
+    const d = window.lastGameReportData || getFallbackReportData();
     if (window.GC && typeof window.GC.showReportCard === 'function') {
       window.GC.showReportCard(d);
     } else {
@@ -1967,7 +1996,9 @@ function showRes(why) {
     (Climb.kind === 'race' || Climb.kind === 'temple' || Climb.kind === 'adv' || Climb.kind === 'peng' ? '' : Climb.kind === 'pac' ? '<div>⭐ Điểm: ' + Climb.extra().sc + '</div><div>😵 Bị ma bắt: ' + S.hits + '</div>' : Climb.kind === 'bomb' ? '<div>💣 Bom: ' + Climb.pl.bombs + ' · 🔥 Lửa: ' + Climb.pl.fire + '</div><div>😵 Bị trúng: ' + S.hits + '</div>' : Climb.kind === 'tank' ? '<div>⭐ Nâng cấp súng: ' + Climb.pl.up + '/3</div><div>🦅 Căn cứ bị phá: ' + S.falls + '</div>' : '<div>🍄 Giẫm bẹp: ' + S.stomps + '</div><div>😱 Số lần rơi: ' + S.falls + '</div>') +
     (HW ? '<div class="wide">📚 Hạn nộp: ' + (HW.dl ? stamp(HW.dl) + (hwLate ? ' · ⚠️ <b>nộp trễ</b>' : ' · ✅ <b>đúng hạn</b>') : 'không đặt hạn') + '</div>' : '') +
     '<div class="wide">🔁 Lần nộp thứ ' + subN + ' trên máy này</div></div>' +
-    '<div class="row" style="margin-bottom:6px"><button type="button" class="btn b" onclick="exportGameReport()">🏅 Xuất phiếu điểm gửi Phụ huynh</button></div>' +
+    '<div class="row" style="margin-bottom:8px;gap:8px;justify-content:center;flex-wrap:wrap">' +
+    '<button type="button" class="btn g" onclick="downloadGameReport()" style="font-size:16px;padding:12px 20px;font-weight:900;box-shadow:0 4px 14px rgba(16,185,129,0.35)">📥 Tải phiếu điểm (.png)</button>' +
+    '<button type="button" class="btn b" onclick="exportGameReport()" style="font-size:15px;padding:12px 18px">🏅 Xem phiếu báo điểm</button></div>' +
     (HW ? '<div class="row"><button class="btn g" onclick="copyResult()" style="font-size:17px;padding:12px 22px">📋 Copy kết quả gửi cô</button>' + (!HW.dl || Date.now() < HW.dl ? '<button class="btn w" onclick="location.reload()">🔄 Làm lại</button>' : '') + '</div><div class="sub">👉 Điểm của em đã tự động lưu vào Sổ điểm của cô · Bấm xuất phiếu điểm hoặc copy gửi Zalo nhé!</div><div style="margin-top:6px;display:flex;gap:8px;justify-content:center;flex-wrap:wrap"><a href="https://zalo.me/84852639652" target="_blank" rel="noopener" class="btn" style="text-decoration:none;background:#0068ff;color:#fff;font-size:13px;padding:6px 14px;border-radius:12px;font-weight:800;display:inline-flex;align-items:center;gap:4px">💬 Nhắn Zalo Cô Chí Nên</a><button type="button" class="btn w" onclick="GC.copyPhone()" style="font-size:12px;padding:6px 12px;border-radius:12px">📋 Copy SĐT Zalo</button></div>'
       : SOLO ? '<div class="row">' + (won ? '' : '<button class="btn g" onclick="resume()">🏃 Chơi tiếp</button>') + '<button class="btn" onclick="location.reload()">🔄 Chơi lại</button></div>'
       : '<div class="sub">' + (won && why === 'win' ? '🎉 Chờ cả lớp về đích nhé — xem bảng xếp hạng trên màn hình của cô!' : '📺 Nhìn lên màn hình của cô để xem bảng vinh danh!') + '</div>' + (why === 'teacher' || why === 'time' ? '<div class="lockmsg">🔒 ' + (why === 'time' ? 'Hết giờ' : 'Cô đã kết thúc trò chơi') + ' — màn chơi đã khoá, em không chơi tiếp được nữa.</div>' : ''));
@@ -2069,7 +2100,7 @@ function resume() { $('ovRes').classList.remove('on'); over = false; t0 += Date.
   <div id="trResReviewBox" style="text-align:left;max-height:40vh;overflow:auto;background:#fafafa;border:1px solid #e5e5e5;border-radius:14px;padding:14px;margin-bottom:16px"></div>
 
   <div class="row" style="gap:10px;justify-content:center;flex-wrap:wrap">
-   <button type="button" class="btn b" onclick="exportTestReport()">🏅 Xuất phiếu điểm gửi Phụ huynh</button>
+   <button type="button" class="btn g" onclick="downloadTestReport()" style="font-size:15px;padding:12px 20px;font-weight:900;box-shadow:0 4px 12px rgba(16,185,129,0.3)">📥 Tải phiếu điểm (.png)</button><button type="button" class="btn b" onclick="exportTestReport()">🏅 Xem phiếu báo điểm</button>
    <button class="btn g" onclick="$('ovTestResult').classList.remove('on')">Đóng kết quả</button>
   </div>
  </div>
