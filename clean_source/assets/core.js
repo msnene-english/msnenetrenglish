@@ -607,19 +607,7 @@ function rank(players) {
    Mặc định: máy chủ MQTT công cộng miễn phí (không cần tài khoản). Trang của cô = "trọng tài":
    học sinh gửi lên kênh /u, trang cô gom lại phát xuống kênh /d, ảnh chụp phòng giữ sẵn ở /s, câu hỏi ở /q.
    ?local=1 = thử trên 1 máy (BroadcastChannel). Có firebase trong config.js thì dùng Firebase. */
-function loadScript(src) {
-  return new Promise((ok, no) => {
-    const s = document.createElement('script');
-    let done = false;
-    const timer = setTimeout(() => {
-      if (!done) { done = true; no(new Error('Hết thời gian tải thư viện máy chủ: ' + src)); }
-    }, 8000);
-    s.src = src;
-    s.onload = () => { if (!done) { done = true; clearTimeout(timer); ok(); } };
-    s.onerror = () => { if (!done) { done = true; clearTimeout(timer); no(new Error('Không tải được ' + src)); } };
-    document.head.appendChild(s);
-  });
-}
+function loadScript(src) { return new Promise((ok, no) => { const s = document.createElement('script'); s.src = src; s.onload = ok; s.onerror = () => no(new Error('Không tải được ' + src)); document.head.appendChild(s) }) }
 async function makeNet() {
   const cfg = CFG().firebase;
   if (cfg && cfg.databaseURL) return fireNet(cfg);
@@ -843,20 +831,7 @@ async function fireNet(cfg) {
     mode: 'firebase', now: () => Date.now() + off, host: async () => { },
     newCode: async () => { for (; ;) { const c = randCode(1 + Math.floor(Math.random() * 9)); if (!(await db.ref('rooms/' + c + '/info').once('value')).val()) return c } },
     set: (p, v) => db.ref(p).set(v), update: (p, v) => db.ref(p).update(v), push: (p, v) => db.ref(p).push(v), remove: p => db.ref(p).remove(),
-    once: p => {
-      return new Promise((resolve, reject) => {
-        const timer = setTimeout(() => {
-          reject(new Error('Hết thời gian kết nối máy chủ phòng (Timeout 8s). Em kiểm tra lại Wifi/4G hoặc bấm Vào chơi lại nhé!'));
-        }, 8000);
-        db.ref(p).once('value').then(s => {
-          clearTimeout(timer);
-          resolve(s.val());
-        }).catch(err => {
-          clearTimeout(timer);
-          reject(err);
-        });
-      });
-    },
+    once: p => db.ref(p).once('value').then(s => s.val()),
     on: (p, cb) => { const r = db.ref(p), h = s => cb(s.val()); r.on('value', h); return () => r.off('value', h) },
     onAdded: (p, cb) => { const r = db.ref(p), h = s => cb(s.key, s.val()); r.on('child_added', h); return () => r.off('child_added', h) },
     onDisconnect: (p, v) => db.ref(p).onDisconnect().update(v),
@@ -902,133 +877,6 @@ async function saveCommunityQuiz(quiz) {
     } catch (e) { console.warn('Firebase sync warning:', e); }
   }
   return quiz;
-}
-
-async function updateCommunityQuizMeta(id, patch) {
-  if (!id) return false;
-  id = String(id).trim();
-  // 1. Lưu local cache
-  const list = getLocalCommunity();
-  const existing = list.find(q => q.id === id);
-  if (existing) Object.assign(existing, patch);
-  saveLocalCommunity(list);
-  if (typeof window !== 'undefined' && window.communityQuizzesCache) {
-    const cq = window.communityQuizzesCache.find(q => q.id === id);
-    if (cq) Object.assign(cq, patch);
-  }
-  // 2. Đồng bộ Firebase
-  const cfg = window.GAME_CONFIG || {};
-  if (cfg.firebase && cfg.firebase.databaseURL) {
-    try {
-      const url = cfg.firebase.databaseURL.replace(/\/$/, '') + '/community_quizzes/' + encodeURIComponent(id) + '.json';
-      await fetch(url, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(patch) });
-    } catch (e) { console.warn('Firebase patch error:', e); }
-  }
-  return true;
-}
-
-
-const DEFAULT_COMMUNITY_TAGS = ['Lớp 6', 'Lớp 7', 'Lớp 8', 'Lớp 9', 'Lớp 10-12', 'IELTS', 'Phát âm'];
-
-async function getCommunityTags() {
-  if (typeof window !== 'undefined' && window.communityTagsCache && Array.isArray(window.communityTagsCache)) {
-    return window.communityTagsCache;
-  }
-  const cfg = (typeof window !== 'undefined' && window.GAME_CONFIG) || {};
-  if (cfg.firebase && cfg.firebase.databaseURL) {
-    try {
-      const url = cfg.firebase.databaseURL.replace(/\/$/, '') + '/community_tags.json';
-      const res = await fetch(url);
-      if (res.ok) {
-        const val = await res.json();
-        if (Array.isArray(val) && val.length) {
-          if (typeof window !== 'undefined') window.communityTagsCache = val;
-          return val;
-        }
-      }
-    } catch (e) {
-      console.warn('Firebase tags fetch error:', e);
-    }
-  }
-  const list = DEFAULT_COMMUNITY_TAGS.slice();
-  if (typeof window !== 'undefined') window.communityTagsCache = list;
-  return list;
-}
-
-async function saveCommunityTags(tags) {
-  if (!Array.isArray(tags)) return false;
-  const cleaned = tags.map(t => String(t || '').trim()).filter(Boolean);
-  if (typeof window !== 'undefined') window.communityTagsCache = cleaned;
-  const cfg = (typeof window !== 'undefined' && window.GAME_CONFIG) || {};
-  if (cfg.firebase && cfg.firebase.databaseURL) {
-    try {
-      const url = cfg.firebase.databaseURL.replace(/\/$/, '') + '/community_tags.json';
-      await fetch(url, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(cleaned) });
-    } catch (e) {
-      console.warn('Firebase tags save error:', e);
-    }
-  }
-  return cleaned;
-}
-
-async function addCommunityTag(newTag) {
-  if (!newTag) return false;
-  newTag = String(newTag).trim();
-  const list = await getCommunityTags();
-  if (!list.some(t => t.toLowerCase() === newTag.toLowerCase())) {
-    list.push(newTag);
-    await saveCommunityTags(list);
-  }
-  return list;
-}
-
-async function removeCommunityTag(tagToRemove) {
-  if (!tagToRemove) return false;
-  tagToRemove = String(tagToRemove).trim().toLowerCase();
-  const list = await getCommunityTags();
-  const next = list.filter(t => t.toLowerCase() !== tagToRemove);
-  await saveCommunityTags(next);
-  return next;
-}
-
-function matchQuizTag(quiz, filterTag) {
-  if (!quiz) return false;
-  if (!filterTag) return true;
-  const fTag = String(filterTag).trim().toLowerCase();
-  const qTag = String(quiz.tag || '').trim().toLowerCase();
-  const qTitle = String(quiz.title || '').trim().toLowerCase();
-
-  // 1. Khớp trực tiếp tag
-  if (qTag && (qTag === fTag || qTag.includes(fTag))) return true;
-
-  // 2. Khớp trực tiếp trong tiêu đề
-  if (qTitle.includes(fTag)) return true;
-
-  // 3. Khớp thông minh các khối lớp: Lớp 6, Lớp 7, Lớp 8, Lớp 9...
-  const gradeMatch = fTag.match(/^(?:lớp|lop|grade|g)\s*(\d+)$/i);
-  if (gradeMatch) {
-    const num = gradeMatch[1];
-    const reg = new RegExp('\\b(?:english|eng|tiếng anh|anh|lớp|lop|grade|g)\\s*' + num + '\\b', 'i');
-    if (reg.test(qTitle) || reg.test(qTag)) return true;
-    if (new RegExp('\\b' + num + '\\b').test(qTitle)) return true;
-  }
-
-  // 4. Khớp Lớp 10-12
-  if (fTag.includes('10-12') || fTag.includes('thpt')) {
-    if (/\b(?:10|11|12|thpt)\b/i.test(qTitle)) return true;
-  }
-
-  // 5. Khớp Phát âm
-  if (fTag.includes('phát âm') || fTag.includes('speaking') || fTag.includes('spk')) {
-    if (/(?:phát âm|phat am|speaking|spk|pronunciation)/i.test(qTitle) || (quiz.qs || []).some(q => q.type === 'speaking')) return true;
-  }
-
-  // 6. Khớp IELTS
-  if (fTag.includes('ielts')) {
-    if (/ielts/i.test(qTitle)) return true;
-  }
-
-  return false;
 }
 
 async function getCommunityLibrary() {
@@ -1313,13 +1161,32 @@ function showReportCard(data) {
   const tot = data.tot ?? 1;
   const modeName = data.modeName || (data.m === 'test' ? '📝 Bài kiểm tra khảo thí' : '🎮 Game ôn tập');
   const timeText = data.timeText || 'Hoàn thành';
-  const dateText = data.dateText || stamp(Date.now());
+  const dateText = data.dateText || (typeof stamp === 'function' ? stamp(Date.now()) : new Date().toLocaleDateString('vi-VN'));
   const teacher = data.teacher || 'Cô Chí Nên (Ms Nene English)';
 
   const cv = document.createElement('canvas');
   cv.width = 1080;
   cv.height = 760;
   const ctx = cv.getContext('2d');
+
+  if (!ctx.roundRect) {
+    ctx.roundRect = function(x, y, w, h, r) {
+      if (typeof r === 'number') r = [r, r, r, r];
+      const [tl, tr, br, bl] = Array.isArray(r) ? r : [0,0,0,0];
+      this.beginPath();
+      this.moveTo(x + tl, y);
+      this.lineTo(x + w - tr, y);
+      this.quadraticCurveTo(x + w, y, x + w, y + tr);
+      this.lineTo(x + w, y + h - br);
+      this.quadraticCurveTo(x + w, y + h, x + w - br, y + h);
+      this.lineTo(x + bl, y + h);
+      this.quadraticCurveTo(x, y + h, x, y + h - bl);
+      this.lineTo(x, y + tl);
+      this.quadraticCurveTo(x, y, x + tl, y);
+      this.closePath();
+      return this;
+    };
+  }
 
   // 1. Nền Gradient sang trọng
   const bg = ctx.createLinearGradient(0, 0, 1080, 760);
@@ -1430,7 +1297,7 @@ function showReportCard(data) {
   ctx.fillStyle = '#64748b';
   ctx.font = '700 18px "Nunito", "Segoe UI", sans-serif';
   ctx.textAlign = 'left';
-  ctx.fillText('🌐 Ms Nene English · Hỗ trợ & Tư vấn Zalo: 0852639652', 80, 675);
+  ctx.fillText('🌐 Hệ thống học & khảo thí trực tuyến Ms Nene English', 80, 675);
   ctx.textAlign = 'right';
   ctx.fillStyle = '#5b21b6';
   ctx.font = '900 20px "Nunito", "Segoe UI", sans-serif';
@@ -1443,44 +1310,91 @@ function showReportCard(data) {
   if (!modal) {
     modal = document.createElement('div');
     modal.id = 'ovReportCard';
-    modal.style.cssText = 'position:fixed;inset:0;background:rgba(20,14,40,.72);z-index:9999;display:flex;align-items:center;justify-content:center;padding:16px;backdrop-filter:blur(4px)';
+    modal.style.cssText = 'position:fixed;inset:0;background:rgba(20,14,40,.72);z-index:9999;display:flex;align-items:center;justify-content:center;padding:16px;backdrop-filter:blur(4px);box-sizing:border-box';
     document.body.appendChild(modal);
   }
   modal.style.display = 'flex';
+  modal.onclick = (e) => { if (e.target === modal) modal.style.display = 'none'; };
+
   modal.innerHTML = `
-    <div style="background:#fff;border-radius:24px;max-width:720px;width:100%;padding:20px;text-align:center;box-shadow:0 20px 60px rgba(0,0,0,.35);border:3px solid #ddd6fe">
+    <div style="background:#fff;border-radius:24px;max-width:720px;width:100%;padding:20px;text-align:center;box-shadow:0 20px 60px rgba(0,0,0,.35);border:3px solid #ddd6fe;box-sizing:border-box">
       <div style="font-weight:900;font-size:22px;color:#2d2350;margin-bottom:4px">🏅 Phiếu Báo Điểm Gửi Phụ Huynh</div>
       <div style="font-size:13px;color:#64748b;font-weight:700;margin-bottom:12px">Bấm <b>Copy ảnh</b> rồi nhấn <b>Ctrl + V</b> trực tiếp vào khung chat Zalo để gửi ngay!</div>
-      <img src="${dataUrl}" style="width:100%;max-height:58vh;object-fit:contain;border-radius:14px;border:2px solid #e2e8f0;box-shadow:0 4px 14px rgba(0,0,0,.08)">
+      <img src="${dataUrl}" alt="Phiếu điểm" style="width:100%;max-height:58vh;object-fit:contain;border-radius:14px;border:2px solid #e2e8f0;box-shadow:0 4px 14px rgba(0,0,0,.08);display:block;margin:0 auto">
+      <div style="font-size:12px;color:#854d0e;background:#fef9c3;padding:6px 12px;border-radius:10px;margin-top:8px;font-weight:700">📱 Trên điện thoại: Có thể chạm giữ vào ảnh 1-2 giây để <b>Lưu ảnh</b> hoặc <b>Chia sẻ</b> sang Zalo!</div>
       <div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin-top:16px">
-        <button id="bRcCopyImg" style="background:linear-gradient(180deg,#2563eb,#1d4ed8);color:#fff;border:none;border-radius:14px;padding:11px 20px;font-weight:900;font-size:15px;cursor:pointer">📋 Copy ảnh dán Zalo</button>
-        <button id="bRcDownloadImg" style="background:linear-gradient(180deg,#10b981,#059669);color:#fff;border:none;border-radius:14px;padding:11px 20px;font-weight:900;font-size:15px;cursor:pointer">📥 Tải ảnh phiếu điểm (.png)</button>
-        <button id="bRcClose" style="background:#f1f5f9;color:#334155;border:2px solid #cbd5e1;border-radius:14px;padding:11px 20px;font-weight:800;font-size:15px;cursor:pointer">Đóng</button>
+        <button id="bRcCopyImg" type="button" style="background:linear-gradient(180deg,#2563eb,#1d4ed8);color:#fff;border:none;border-radius:14px;padding:11px 20px;font-weight:900;font-size:15px;cursor:pointer">📋 Copy ảnh dán Zalo</button>
+        <button id="bRcDownloadImg" type="button" style="background:linear-gradient(180deg,#10b981,#059669);color:#fff;border:none;border-radius:14px;padding:11px 20px;font-weight:900;font-size:15px;cursor:pointer">📥 Tải ảnh phiếu điểm (.png)</button>
+        <button id="bRcClose" type="button" style="background:#f1f5f9;color:#334155;border:2px solid #cbd5e1;border-radius:14px;padding:11px 20px;font-weight:800;font-size:15px;cursor:pointer">Đóng</button>
       </div>
     </div>
   `;
 
-  document.getElementById('bRcClose').onclick = () => { modal.style.display = 'none'; };
-  document.getElementById('bRcDownloadImg').onclick = () => {
-    const a = document.createElement('a');
-    a.href = dataUrl;
-    a.download = 'Phieu-diem-' + clean(name).replace(/\s+/g, '-') + '.png';
-    a.click();
-    toast('📥 Đã tải ảnh phiếu điểm về máy!', 2500);
-  };
-  document.getElementById('bRcCopyImg').onclick = async () => {
-    try {
-      const blob = await new Promise(r => cv.toBlob(r, 'image/png'));
-      await navigator.clipboard.write([new ClipboardItem({ 'image/png': blob })]);
-      toast('✅ Đã copy ảnh phiếu điểm! Hãy mở Zalo và nhấn Ctrl + V để gửi!', 3500);
-    } catch (e) {
-      const a = document.createElement('a');
-      a.href = dataUrl;
-      a.download = 'Phieu-diem-' + clean(name).replace(/\s+/g, '-') + '.png';
-      a.click();
-      toast('📥 Trình duyệt tự động tải ảnh phiếu điểm để gửi Zalo!', 3000);
-    }
-  };
+  const btnClose = document.getElementById('bRcClose');
+  if (btnClose) btnClose.onclick = () => { modal.style.display = 'none'; };
+
+  const fileName = 'Phieu-diem-' + (typeof clean === 'function' ? clean(name) : name).replace(/\s+/g, '-') + '.png';
+
+  const btnDownload = document.getElementById('bRcDownloadImg');
+  if (btnDownload) {
+    btnDownload.onclick = () => {
+      try {
+        cv.toBlob(blob => {
+          if (!blob) {
+            const a = document.createElement('a');
+            a.href = dataUrl;
+            a.download = fileName;
+            document.body.appendChild(a);
+            a.click();
+            setTimeout(() => a.remove(), 100);
+            return;
+          }
+          const url = URL.createObjectURL(blob);
+          const a = document.createElement('a');
+          a.href = url;
+          a.download = fileName;
+          document.body.appendChild(a);
+          a.click();
+          setTimeout(() => { URL.revokeObjectURL(url); a.remove(); }, 2000);
+        }, 'image/png');
+      } catch(e) {
+        const a = document.createElement('a');
+        a.href = dataUrl;
+        a.download = fileName;
+        document.body.appendChild(a);
+        a.click();
+        setTimeout(() => a.remove(), 100);
+      }
+      if (typeof toast === 'function') toast('📥 Đang tải ảnh phiếu điểm về máy...', 2500);
+    };
+  }
+
+  const btnCopy = document.getElementById('bRcCopyImg');
+  if (btnCopy) {
+    btnCopy.onclick = async () => {
+      try {
+        if (navigator.clipboard && window.ClipboardItem) {
+          const blob = await new Promise(r => cv.toBlob(r, 'image/png'));
+          await navigator.clipboard.write([new ClipboardItem({ 'image/png': blob })]);
+          if (typeof toast === 'function') toast('✅ Đã copy ảnh phiếu điểm! Mở Zalo và nhấn Ctrl + V để gửi!', 3500);
+          return;
+        }
+      } catch (e) {
+        console.warn('Clipboard write failed, fallback to download:', e);
+      }
+      try {
+        const a = document.createElement('a');
+        a.href = dataUrl;
+        a.download = fileName;
+        document.body.appendChild(a);
+        a.click();
+        setTimeout(() => a.remove(), 100);
+        if (typeof toast === 'function') toast('📥 Trình duyệt tự động tải ảnh phiếu điểm để gửi Zalo!', 3000);
+      } catch(err) {
+        if (typeof toast === 'function') toast('Vui lòng chạm giữ ảnh phiếu điểm để lưu hoặc sao chép!', 3000);
+      }
+    };
+  }
 }
 
   
@@ -2204,16 +2118,5 @@ Trả về STRICT JSON:
   };
 }
 
-
-function copyPhone() {
-  const p = (typeof window !== 'undefined' && window.GAME_CONFIG && window.GAME_CONFIG.phone) || '0852639652';
-  if (typeof navigator !== 'undefined' && navigator.clipboard) {
-    navigator.clipboard.writeText(p).then(() => {
-      toast('📋 Đã copy số Zalo: ' + p + ' (Cô Chí Nên)', 2500);
-    }).catch(() => prompt('Số Zalo Cô Chí Nên:', p));
-  }
-}
-if (typeof window !== 'undefined') window.copyPhone = copyPhone;
-
-return { $, copyPhone, getCommunityTags, saveCommunityTags, addCommunityTag, removeCommunityTag, matchQuizTag, shuffle, pick, clamp, esc, fmt, stamp, clean, rng, COLORS, BADGE, safe, normAns, checkTextAns, fromOld, prep, parseCSV, rowsToQs, parseText, parsePaste, sheetSets, sheetSet, sampleSet, packHw, unpackHw, tone, sfx, confetti, toast, rank, makeNet, music, saveCommunityQuiz, updateCommunityQuizMeta, getCommunityLibrary, getQuizById, saveHwMeta, submitHwResult, getHwGradebook, showReportCard, getAiKey, diffPronunciation, speakText, evaluatePronunciationAI, enrichSpeakingQuestionsAI, generateSingleSpeakingAI, checkEnglishStandardizationLocal, checkEnglishStandardizationAI, COMMON_TYPOS, deleteCommunityQuiz, deleteHwSubmission , copy, copyText, sfxFiles, kvPut, kvGet, kvScan, live, liveWatch};
+return { $, shuffle, pick, clamp, esc, fmt, stamp, clean, rng, COLORS, BADGE, safe, normAns, checkTextAns, fromOld, prep, parseCSV, rowsToQs, parseText, parsePaste, sheetSets, sheetSet, sampleSet, packHw, unpackHw, tone, sfx, confetti, toast, rank, makeNet, music, saveCommunityQuiz, getCommunityLibrary, getQuizById, saveHwMeta, submitHwResult, getHwGradebook, showReportCard, getAiKey, diffPronunciation, speakText, evaluatePronunciationAI, enrichSpeakingQuestionsAI, generateSingleSpeakingAI, checkEnglishStandardizationLocal, checkEnglishStandardizationAI, COMMON_TYPOS, deleteCommunityQuiz, deleteHwSubmission , copy, copyText, sfxFiles, kvPut, kvGet, kvScan, live, liveWatch};
 })();
