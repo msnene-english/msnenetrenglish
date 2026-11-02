@@ -553,9 +553,9 @@ body{display:flex;flex-direction:column;overflow:hidden}
 <div class="ov" id="ovRes"><div class="card" id="rCard"></div></div>
 
 <script src="assets/mqtt.min.js"></script>
-<script src="assets/shield.js?v=2.3"></script>
-<script src="assets/config.js?v=2.3"></script>
-<script src="assets/core.js?v=2.3"></script>
+<script src="assets/shield.js?v=2.4"></script>
+<script src="assets/config.js?v=2.4"></script>
+<script src="assets/core.js?v=2.4"></script>
 <script src="assets/mau.js"></script>
 <script src="assets/climb.js"></script>
 <script src="assets/brick.js"></script>
@@ -1709,6 +1709,13 @@ function sync() {
 function feed(t) { const f = $('feed'), d = document.createElement('div'); d.textContent = t; f.prepend(d); while (f.children.length > 4) f.lastChild.remove(); setTimeout(() => d.remove(), 6000) }
 function onEv(e) {
   const mine = e.to === pid, from = e.nm || 'Một bạn', now = net.now();
+  if (e.ty === 'review_room' && e.code) {
+    const nextCode = e.code;
+    const nextMode = e.m || 'race';
+    const nextTitle = e.title || 'Ván Mini-Game ôn lại câu sai';
+    showReviewRoomInvite(nextCode, nextMode, nextTitle);
+    return;
+  }
   if (e.ty === 'end') {
     if (!over) {
       if (MODE === 'test') { over = true; if (!trSubmitted) submitTestExam(true); }
@@ -1842,8 +1849,11 @@ function answer(i) {
   const q = QS[cur], ok = i === q.a, bs = $('qCard').querySelectorAll('.op');
   bs.forEach((b, k) => { b.disabled = true; b.classList.add(k === q.a ? 'ok' : k === i ? 'bad' : 'dim') });
   let h;
-  if (!ok && net && q && q.n) {
-    try { net.push(evp, { ty: 'wrong', q: q.n, fr: pid, nm: nameV, t: net.now() }); } catch(e){}
+  if (!ok && net && q) {
+    try {
+      const qNum = q.n || (cur != null ? cur + 1 : 1);
+      net.push(evp, { ty: 'wrong', q: qNum, fr: pid, nm: nameV, t: net.now() });
+    } catch(e){}
   }
   if (ok) {
     okN++; streak++; best = Math.max(best, streak); solved.add(q.n);
