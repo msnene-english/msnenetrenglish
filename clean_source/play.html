@@ -8,7 +8,7 @@
 <link rel="stylesheet" href="assets/fonts.css">
 <link rel="stylesheet" href="assets/game.css">
 <style>
-body{display:flex;flex-direction:column;overflow:hidden}
+html,body{display:flex;flex-direction:column;overflow-x:hidden !important;overflow-y:hidden;width:100%;max-width:100vw}
 #hud{height:62px;flex:0 0 62px;display:flex;align-items:center;gap:7px;padding:0 10px;background:linear-gradient(90deg,#ffe3f1,#e3efff 50%,#efe6ff);box-shadow:0 2px 12px #0004;z-index:5}
 .ttl{font:800 18px/1.05 'Baloo 2',Nunito,sans-serif;white-space:nowrap;max-width:240px;overflow:hidden;text-overflow:ellipsis}
 .ttl small{display:block;font:700 11px Nunito,sans-serif;opacity:.6;overflow:hidden;text-overflow:ellipsis}
@@ -569,6 +569,17 @@ body{display:flex;flex-direction:column;overflow:hidden}
 <script src="assets/adv.js"></script>
 <script src="assets/peng.js"></script>
 <script>
+// Bảo vệ chống đơ trang: Luôn bắt lỗi và mở khoá nút bấm nếu có lỗi bất ngờ
+window.addEventListener('error', function(e) {
+  console.warn('play.html error caught:', e);
+  const jGo = document.getElementById('jGo');
+  if (jGo) jGo.disabled = false;
+});
+window.addEventListener('unhandledrejection', function(e) {
+  console.warn('play.html unhandledrejection caught:', e);
+  const jGo = document.getElementById('jGo');
+  if (jGo) jGo.disabled = false;
+});
 const { $, esc, fmt, stamp, clean, pick, shuffle, COLORS, BADGE, sfx, toast, confetti } = GC;
 const U = new URLSearchParams(location.search), HWP = U.get('hw');
 const rawIdParam = (U.get('id') || '').trim();
@@ -968,10 +979,18 @@ function renderTestQuestion() {
     return `<button type="button" tabindex="-1" class="t-pill ${isAns ? 'answered' : ''} ${isCur ? 'current' : ''}" onclick="jumpTestQ(${idx})">${idx + 1}</button>`;
   }).join('');
   setTimeout(() => {
-    if (pillsBox && pillsBox.children[trIndex]) {
+    if (pillsBox && pillsBox.children && pillsBox.children[trIndex]) {
       const pill = pillsBox.children[trIndex];
-      const scrollLeft = pill.offsetLeft - (pillsBox.clientWidth / 2) + (pill.offsetWidth / 2);
-      pillsBox.scrollTo({ left: Math.max(0, scrollLeft), behavior: 'smooth' });
+      try {
+        const pillRect = pill.getBoundingClientRect();
+        const boxRect = pillsBox.getBoundingClientRect();
+        const currentScroll = pillsBox.scrollLeft;
+        const targetScroll = currentScroll + (pillRect.left - boxRect.left) - (boxRect.width / 2) + (pillRect.width / 2);
+        pillsBox.scrollTo({ left: Math.max(0, targetScroll), behavior: 'smooth' });
+      } catch(e) {
+        const scrollLeft = pill.offsetLeft - (pillsBox.clientWidth / 2) + (pill.offsetWidth / 2);
+        pillsBox.scrollTo({ left: Math.max(0, scrollLeft), behavior: 'smooth' });
+      }
     }
     const tBody = document.querySelector('.t-body');
     if (tBody && tBody.scrollLeft !== 0) tBody.scrollLeft = 0;
@@ -979,6 +998,7 @@ function renderTestQuestion() {
     if (testApp && testApp.scrollLeft !== 0) testApp.scrollLeft = 0;
     if (document.body.scrollLeft !== 0) document.body.scrollLeft = 0;
     if (document.documentElement.scrollLeft !== 0) document.documentElement.scrollLeft = 0;
+    if (window.scrollX !== 0) window.scrollTo({ left: 0 });
   }, 30);
 
   // 2. Render Passage (nếu có)
@@ -1355,15 +1375,21 @@ if (SOLO) {
 }
 if (SOLO === 'hw') {
   if (HWP) {
-    $('jSub').textContent = '📚 Đang mở bài tập…'; $('jGo').disabled = true;
+    if ($('jSub')) $('jSub').textContent = '📚 Đang mở bài tập…';
+    if ($('jGo')) $('jGo').disabled = true;
     GC.unpackHw(HWP).then(h => {
       HW = h; const late = h.dl && Date.now() > h.dl;
       updateJoinUiForMode(h.m || 'test');
-      $('jSub').innerHTML = (h.m === 'test' ? '📝 <b>Bài kiểm tra</b>: ' : '📚 <b>Bài tập về nhà</b>: ') + esc(h.t) + '<br>' + (GNAME[h.m] || '') + ' · ⏱ mỗi lượt ' + (h.dur ? h.dur + ' phút' : 'không giới hạn') + (h.dl ? '<br>⏰ Hạn nộp: <b>' + stamp(h.dl) + '</b>' : '') + (h.lic ? '<br>🏫 ' + esc(h.lic) : '');
-      if (late) $('jErr').textContent = '⏰ Đã hết hạn nộp bài (' + stamp(h.dl) + '). Em liên hệ cô nhé!'; else $('jGo').disabled = false;
-    }).catch(e => { $('jErr').textContent = '❌ Link bài tập bị lỗi hoặc bị cắt mất — em xin cô gửi lại link nhé' });
+      if ($('jSub')) $('jSub').innerHTML = (h.m === 'test' ? '📝 <b>Bài kiểm tra</b>: ' : '📚 <b>Bài tập về nhà</b>: ') + esc(h.t) + '<br>' + (GNAME[h.m] || '') + ' · ⏱ mỗi lượt ' + (h.dur ? h.dur + ' phút' : 'không giới hạn') + (h.dl ? '<br>⏰ Hạn nộp: <b>' + stamp(h.dl) + '</b>' : '') + (h.lic ? '<br>🏫 ' + esc(h.lic) : '');
+      if (late && $('jErr')) $('jErr').textContent = '⏰ Đã hết hạn nộp bài (' + stamp(h.dl) + '). Em liên hệ cô nhé!';
+      if ($('jGo')) $('jGo').disabled = false;
+    }).catch(e => {
+      if ($('jErr')) $('jErr').textContent = '❌ Link bài tập bị lỗi hoặc bị cắt mất — em xin cô gửi lại link nhé';
+      if ($('jGo')) $('jGo').disabled = false;
+    });
   } else if (QUIZ_ID) {
-    $('jSub').textContent = '⏳ Đang tải bài tập từ Thư viện chung…'; $('jGo').disabled = true;
+    if ($('jSub')) $('jSub').textContent = '⏳ Đang tải bài tập từ Thư viện chung…';
+    if ($('jGo')) $('jGo').disabled = true;
     GC.getQuizById(QUIZ_ID).then(q => {
       if (!q || !q.qs || !q.qs.length) throw new Error('Không tìm thấy mã đề ' + QUIZ_ID);
       HW = {
@@ -1380,10 +1406,12 @@ if (SOLO === 'hw') {
         qs: q.qs
       };
       const late = HW.dl && Date.now() > HW.dl;
-      $('jSub').innerHTML = '📚 <b>Bài tập về nhà</b>: ' + esc(HW.t) + '<br>' + (GNAME[HW.m] || '') + ' · ⏱ ' + (HW.dur ? HW.dur + ' phút' : 'không giới hạn') + '<br>🏷 Mã đề: <b>' + esc(q.id || QUIZ_ID) + '</b>' + (q.author ? ' · Tác giả: ' + esc(q.author) : '');
-      if (late) $('jErr').textContent = '⏰ Đã hết hạn nộp bài (' + stamp(HW.dl) + '). Em liên hệ cô nhé!'; else $('jGo').disabled = false;
+      if ($('jSub')) $('jSub').innerHTML = '📚 <b>Bài tập về nhà</b>: ' + esc(HW.t) + '<br>' + (GNAME[HW.m] || '') + ' · ⏱ ' + (HW.dur ? HW.dur + ' phút' : 'không giới hạn') + '<br>🏷 Mã đề: <b>' + esc(q.id || QUIZ_ID) + '</b>' + (q.author ? ' · Tác giả: ' + esc(q.author) : '');
+      if (late && $('jErr')) $('jErr').textContent = '⏰ Đã hết hạn nộp bài (' + stamp(HW.dl) + '). Em liên hệ cô nhé!';
+      if ($('jGo')) $('jGo').disabled = false;
     }).catch(e => {
-      $('jErr').textContent = '❌ ' + e.message + ' — Em kiểm tra lại mã đề nhé';
+      if ($('jErr')) $('jErr').textContent = '❌ ' + e.message + ' — Em kiểm tra lại mã đề nhé';
+      if ($('jGo')) $('jGo').disabled = false;
     });
   }
 }
@@ -1437,7 +1465,7 @@ try {
   }
 } catch(e) {}
 
-['jCode', 'jName'].forEach(id => $(id).addEventListener('keydown', e => { if (e.key === 'Enter') $('jGo').click() }));
+['jCode', 'jName'].forEach(id => { const el = $(id); if (el) el.addEventListener('keydown', e => { if (e.key === 'Enter') $('jGo') && $('jGo').click() }); });
 
 function bad(el, msg) {
   if (!el) return;
