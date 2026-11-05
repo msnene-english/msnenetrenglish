@@ -1419,6 +1419,10 @@ function showReportCard(data) {
         <a href="${dataUrl}" target="_blank" download="${fileName}" style="background:#f8fafc;color:#475569;border:2px solid #cbd5e1;border-radius:14px;padding:11px 18px;font-weight:800;font-size:14px;text-decoration:none;display:inline-flex;align-items:center">🖼️ Mở ảnh tab mới</a>
         <button id="bRcClose" type="button" style="background:#f1f5f9;color:#334155;border:2px solid #cbd5e1;border-radius:14px;padding:11px 20px;font-weight:800;font-size:15px;cursor:pointer">Đóng</button>
       </div>
+      <div style="margin-top:14px;padding-top:12px;border-top:1px dashed #cbd5e1;display:flex;gap:10px;justify-content:center;flex-wrap:wrap;align-items:center">
+        <a href="https://zalo.me/0852639652" target="_blank" rel="noopener" style="background:#0068ff;color:#fff;border:none;border-radius:12px;padding:9px 18px;font-weight:800;font-size:13px;text-decoration:none;display:inline-flex;align-items:center;gap:6px;box-shadow:0 3px 10px rgba(0,104,255,0.25)">💬 Nhắn Zalo Cô Chí Nên (0852639652)</a>
+        <button type="button" onclick="GC.copyPhone()" style="background:#f8fafc;color:#1e293b;border:1.5px solid #cbd5e1;border-radius:12px;padding:9px 16px;font-weight:800;font-size:13px;cursor:pointer">📋 Copy SĐT Zalo</button>
+      </div>
     </div>
   `;
 
@@ -2199,5 +2203,21 @@ QUAN TRỌNG:
 
 
 
-return { $, shuffle, pick, clamp, esc, fmt, stamp, clean, rng, COLORS, BADGE, safe, normAns, checkTextAns, fromOld, prep, parseCSV, rowsToQs, parseText, parsePaste, sheetSets, sheetSet, sampleSet, packHw, unpackHw, tone, sfx, confetti, toast, rank, makeNet, music, saveCommunityQuiz, getCommunityLibrary, getQuizById, saveHwMeta, submitHwResult, getHwGradebook, showReportCard, downloadReportCard, getAiKey, diffPronunciation, speakText, evaluatePronunciationAI, enrichSpeakingQuestionsAI, generateSingleSpeakingAI, checkEnglishStandardizationLocal, checkEnglishStandardizationAI, COMMON_TYPOS, deleteCommunityQuiz, deleteHwSubmission , copy, copyText, sfxFiles, kvPut, kvGet, kvScan, live, liveWatch};
+
+/* ═════ COPY SỐ ĐIỆN THOẠI / ZALO CÔ CHÍ NÊN ═════ */
+function copyPhone() {
+  const p = (typeof window !== 'undefined' && window.GAME_CONFIG && window.GAME_CONFIG.phone) || '0852639652';
+  const done = () => {
+    if (typeof toast === 'function') toast('📋 Đã copy số Zalo: ' + p + ' (Cô Chí Nên)', 2500);
+    else alert('📋 Đã copy số Zalo: ' + p + ' (Cô Chí Nên)');
+  };
+  if (typeof navigator !== 'undefined' && navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(p).then(done).catch(() => prompt('Số Zalo Cô Chí Nên:', p));
+  } else {
+    prompt('Số Zalo Cô Chí Nên:', p);
+  }
+}
+if (typeof window !== 'undefined') window.copyPhone = copyPhone;
+
+return { $, copyPhone, shuffle, pick, clamp, esc, fmt, stamp, clean, rng, COLORS, BADGE, safe, normAns, checkTextAns, fromOld, prep, parseCSV, rowsToQs, parseText, parsePaste, sheetSets, sheetSet, sampleSet, packHw, unpackHw, tone, sfx, confetti, toast, rank, makeNet, music, saveCommunityQuiz, getCommunityLibrary, getQuizById, saveHwMeta, submitHwResult, getHwGradebook, showReportCard, downloadReportCard, getAiKey, diffPronunciation, speakText, evaluatePronunciationAI, enrichSpeakingQuestionsAI, generateSingleSpeakingAI, checkEnglishStandardizationLocal, checkEnglishStandardizationAI, COMMON_TYPOS, deleteCommunityQuiz, deleteHwSubmission , copy, copyText, sfxFiles, kvPut, kvGet, kvScan, live, liveWatch};
 })();

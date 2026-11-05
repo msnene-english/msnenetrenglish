@@ -2050,9 +2050,18 @@ function showRes(why) {
     '<div class="row" style="margin-bottom:8px;gap:8px;justify-content:center;flex-wrap:wrap">' +
     '<button type="button" class="btn g" onclick="downloadGameReport()" style="font-size:16px;padding:12px 20px;font-weight:900;box-shadow:0 4px 14px rgba(16,185,129,0.35)">📥 Tải phiếu điểm (.png)</button>' +
     '<button type="button" class="btn b" onclick="exportGameReport()" style="font-size:15px;padding:12px 18px">🏅 Xuất phiếu điểm gửi Phụ huynh</button></div>' +
-    (HW ? '<div class="row"><button class="btn g" onclick="copyResult()" style="font-size:17px;padding:12px 22px">📋 Copy kết quả gửi cô</button>' + (!HW.dl || Date.now() < HW.dl ? '<button class="btn w" onclick="location.reload()">🔄 Làm lại</button>' : '') + '</div><div class="sub">👉 Điểm của em đã tự động lưu vào Sổ điểm của cô · Bấm xuất phiếu điểm hoặc copy gửi Zalo nhé!</div><div style="margin-top:6px;display:flex;gap:8px;justify-content:center;flex-wrap:wrap"><a href="https://zalo.me/84852639652" target="_blank" rel="noopener" class="btn" style="text-decoration:none;background:#0068ff;color:#fff;font-size:13px;padding:6px 14px;border-radius:12px;font-weight:800;display:inline-flex;align-items:center;gap:4px">💬 Nhắn Zalo Cô Chí Nên</a><button type="button" class="btn w" onclick="GC.copyPhone()" style="font-size:12px;padding:6px 12px;border-radius:12px">📋 Copy SĐT Zalo</button></div>'
-      : SOLO ? '<div class="row">' + (won ? '' : '<button class="btn g" onclick="resume()">🏃 Chơi tiếp</button>') + '<button class="btn" onclick="location.reload()">🔄 Chơi lại</button></div>'
-      : '<div class="sub">' + (won && why === 'win' ? '🎉 Chờ cả lớp về đích nhé — xem bảng xếp hạng trên màn hình của cô!' : '📺 Nhìn lên màn hình của cô để xem bảng vinh danh!') + '</div>' + (why === 'teacher' || why === 'time' ? '<div class="lockmsg">🔒 ' + (why === 'time' ? 'Hết giờ' : 'Cô đã kết thúc trò chơi') + ' — màn chơi đã khoá, em không chơi tiếp được nữa.</div>' : ''));
+    '<div class="row" style="margin-bottom:6px;gap:8px;justify-content:center;flex-wrap:wrap">' +
+    '<button class="btn g" onclick="copyResult()" style="font-size:15px;padding:10px 20px;font-weight:800">📋 Copy kết quả gửi cô</button>' +
+    (!HW || !HW.dl || Date.now() < HW.dl ? '<button class="btn w" onclick="location.reload()" style="font-size:14px;padding:10px 16px">🔄 Làm lại</button>' : '') +
+    (SOLO && won ? '' : SOLO ? '<button class="btn g" onclick="resume()" style="font-size:14px;padding:10px 16px">🏃 Chơi tiếp</button>' : '') +
+    '</div>' +
+    (HW ? '<div class="sub">👉 Điểm của em đã tự động lưu vào Sổ điểm của cô · Bấm xuất phiếu điểm hoặc copy gửi Zalo nhé!</div>'
+      : SOLO ? ''
+      : '<div class="sub">' + (won && why === 'win' ? '🎉 Chờ cả lớp về đích nhé — xem bảng xếp hạng trên màn hình của cô!' : '📺 Nhìn lên màn hình của cô để xem bảng vinh danh!') + '</div>' + (why === 'teacher' || why === 'time' ? '<div class="lockmsg">🔒 ' + (why === 'time' ? 'Hết giờ' : 'Cô đã kết thúc trò chơi') + ' — màn chơi đã khoá, em không chơi tiếp được nữa.</div>' : '')) +
+    '<div style="margin-top:10px;padding-top:10px;border-top:1px dashed #cbd5e1;display:flex;gap:8px;justify-content:center;flex-wrap:wrap;align-items:center">' +
+    '<a href="https://zalo.me/0852639652" target="_blank" rel="noopener" class="btn" style="text-decoration:none;background:#0068ff;color:#fff;font-size:13px;padding:8px 16px;border-radius:12px;font-weight:800;display:inline-flex;align-items:center;gap:5px;box-shadow:0 3px 10px rgba(0,104,255,0.25)">💬 Nhắn Zalo Cô Chí Nên</a>' +
+    '<button type="button" class="btn w" onclick="GC.copyPhone()" style="font-size:12px;padding:8px 14px;border-radius:12px;font-weight:800">📋 Copy SĐT Zalo (0852639652)</button>' +
+    '</div>';
   $('ovRes').classList.add('on');
 }
 function resultText() {
@@ -2153,6 +2162,10 @@ function resume() { $('ovRes').classList.remove('on'); over = false; t0 += Date.
   <div class="row" style="gap:10px;justify-content:center;flex-wrap:wrap">
    <button type="button" class="btn g" onclick="downloadTestReport()" style="font-size:15px;padding:12px 20px;font-weight:900;box-shadow:0 4px 12px rgba(16,185,129,0.3)">📥 Tải phiếu điểm (.png)</button><button type="button" class="btn b" onclick="exportTestReport()">🏅 Xem phiếu báo điểm</button>
    <button class="btn g" onclick="$('ovTestResult').classList.remove('on')">Đóng kết quả</button>
+  </div>
+  <div style="margin-top:12px;padding-top:10px;border-top:1px dashed #cbd5e1;display:flex;gap:8px;justify-content:center;flex-wrap:wrap;align-items:center">
+   <a href="https://zalo.me/0852639652" target="_blank" rel="noopener" class="btn" style="text-decoration:none;background:#0068ff;color:#fff;font-size:13px;padding:8px 16px;border-radius:12px;font-weight:800;display:inline-flex;align-items:center;gap:5px;box-shadow:0 3px 10px rgba(0,104,255,0.25)">💬 Nhắn Zalo Cô Chí Nên</a>
+   <button type="button" class="btn w" onclick="GC.copyPhone()" style="font-size:12px;padding:8px 14px;border-radius:12px;font-weight:800">📋 Copy SĐT Zalo (0852639652)</button>
   </div>
  </div>
 </div>
