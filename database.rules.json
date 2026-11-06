@@ -19,33 +19,40 @@
     },
     "community_quizzes": {
       ".read": true,
-      ".write": "auth != null && auth.uid === 'PASTE_ADMIN_UID'"
+      ".write": "auth != null && auth.uid === 'PASTE_ADMIN_UID'",
+      "$quizId": {
+        ".write": "auth != null && ((!data.exists() && newData.exists() && newData.child('ownerUid').val() === auth.uid) || (data.child('ownerUid').val() === auth.uid && (!newData.exists() || newData.child('ownerUid').val() === auth.uid)))"
+      }
     },
     "hw_meta": {
       ".read": true,
-      ".write": "auth != null && auth.uid === 'PASTE_ADMIN_UID'"
+      ".write": "auth != null && auth.uid === 'PASTE_ADMIN_UID'",
+      "$hwId": {
+        ".write": "auth != null && ((!data.exists() && newData.exists() && newData.child('ownerUid').val() === auth.uid) || (data.child('ownerUid').val() === auth.uid && (!newData.exists() || newData.child('ownerUid').val() === auth.uid)))"
+      }
     },
     "hw_subs": {
       ".read": "auth != null && auth.uid === 'PASTE_ADMIN_UID'",
       ".write": "auth != null && auth.uid === 'PASTE_ADMIN_UID'",
       "$hwId": {
+        ".read": "auth != null && root.child('hw_meta').child($hwId).child('ownerUid').val() === auth.uid",
         "$submissionId": {
-          ".write": "auth != null && !data.exists() && newData.exists() && newData.child('uid').val() === auth.uid && newData.child('hwId').val() === $hwId && newData.child('id').val() === $submissionId"
+          ".write": "auth != null && root.child('hw_meta').child($hwId).exists() && !data.exists() && newData.exists() && newData.child('uid').val() === auth.uid && newData.child('hwId').val() === $hwId && newData.child('id').val() === $submissionId"
         }
       }
     },
     "rooms": {
       "$roomCode": {
         ".read": "auth != null",
-        ".write": "auth != null && auth.uid === 'PASTE_ADMIN_UID'",
+        ".write": "auth != null && (auth.uid === 'PASTE_ADMIN_UID' || (!data.exists() && newData.exists() && newData.child('ownerUid').val() === auth.uid && newData.hasChildren(['info', 'qs'])) || (data.child('ownerUid').val() === auth.uid && (!newData.exists() || newData.child('ownerUid').val() === auth.uid)))",
         "players": {
           "$playerId": {
-            ".write": "auth != null && auth.uid === $playerId && newData.exists()"
+            ".write": "auth != null && root.child('rooms').child($roomCode).child('info').exists() && auth.uid === $playerId && newData.exists()"
           }
         },
         "ev": {
           "$eventId": {
-            ".write": "auth != null && !data.exists() && newData.exists() && newData.child('fr').val() === auth.uid"
+            ".write": "auth != null && root.child('rooms').child($roomCode).child('info').exists() && !data.exists() && newData.exists() && newData.child('fr').val() === auth.uid"
           }
         }
       }
