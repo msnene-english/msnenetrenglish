@@ -1,0 +1,54 @@
+{
+  "rules": {
+    ".read": false,
+    ".write": false,
+    "admin": {
+      ".read": "auth != null && auth.uid === 'PASTE_ADMIN_UID'",
+      ".write": "auth != null && auth.uid === 'PASTE_ADMIN_UID'"
+    },
+    "licenses": {
+      ".read": "auth != null && auth.uid === 'PASTE_ADMIN_UID'",
+      ".write": "auth != null && auth.uid === 'PASTE_ADMIN_UID'",
+      "$hash": {
+        ".read": true
+      }
+    },
+    "system_config": {
+      ".read": "auth != null && auth.uid === 'PASTE_ADMIN_UID'",
+      ".write": "auth != null && auth.uid === 'PASTE_ADMIN_UID'"
+    },
+    "community_quizzes": {
+      ".read": true,
+      ".write": "auth != null && auth.uid === 'PASTE_ADMIN_UID'"
+    },
+    "hw_meta": {
+      ".read": true,
+      ".write": "auth != null && auth.uid === 'PASTE_ADMIN_UID'"
+    },
+    "hw_subs": {
+      ".read": "auth != null && auth.uid === 'PASTE_ADMIN_UID'",
+      ".write": "auth != null && auth.uid === 'PASTE_ADMIN_UID'",
+      "$hwId": {
+        "$submissionId": {
+          ".write": "auth != null && !data.exists() && newData.exists() && newData.child('uid').val() === auth.uid && newData.child('hwId').val() === $hwId && newData.child('id').val() === $submissionId"
+        }
+      }
+    },
+    "rooms": {
+      "$roomCode": {
+        ".read": "auth != null",
+        ".write": "auth != null && auth.uid === 'PASTE_ADMIN_UID'",
+        "players": {
+          "$playerId": {
+            ".write": "auth != null && auth.uid === $playerId && newData.exists()"
+          }
+        },
+        "ev": {
+          "$eventId": {
+            ".write": "auth != null && !data.exists() && newData.exists() && newData.child('fr').val() === auth.uid"
+          }
+        }
+      }
+    }
+  }
+}
