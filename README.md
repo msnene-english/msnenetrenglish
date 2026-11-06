@@ -86,7 +86,7 @@ MsNeneEnglish/
 
 ## Thiết lập trước khi đưa bản sửa bảo mật lên trang
 
-1. Đăng ký một ứng dụng Web trong dự án Firebase `game-762ed`, lấy Web API key và điền vào `assets/config.js`.
+1. Đăng ký một ứng dụng Web trong dự án Firebase `game-762ed`, lấy cấu hình Web SDK (Web API key và App ID) rồi điền vào `assets/config.js`.
 2. Bật Firebase Authentication: Email/Password cho tài khoản admin và Anonymous cho host/học sinh. Tạo tài khoản admin, lấy UID của tài khoản rồi thay `PASTE_ADMIN_UID` trong `assets/config.js` và `database.rules.json`.
 3. Đưa mã web và Realtime Database Rules lên cùng đợt, sau đó kiểm tra mở phòng miễn phí, nhập mã Pro, giao bài, nộp bài, xem sổ điểm và quản lý đề trong admin.
 4. Phần gọi Gemini cần được chuyển sang Firebase AI Logic cùng App Check trước khi bật lại trên trang công khai. Phần chấm phát âm cơ bản trên máy vẫn có thể hoạt động khi không có Gemini.
