@@ -929,21 +929,14 @@ async function getCommunityLibrary() {
 async function deleteCommunityQuiz(id) {
   if (!id) return false;
   id = String(id).trim();
-  // 1. Local deletion
-  const list = getLocalCommunity().filter(q => q.id !== id);
-  saveLocalCommunity(list);
-  if (typeof window !== 'undefined' && window.communityQuizzesCache) {
-    window.communityQuizzesCache = window.communityQuizzesCache.filter(q => q.id !== id);
-  }
-  // 2. Cloud server deletion
   const cfg = window.GAME_CONFIG || {};
   if (cfg.firebase && cfg.firebase.databaseURL) {
-    try {
-      const url = cfg.firebase.databaseURL.replace(/\/$/, '') + '/community_quizzes/' + encodeURIComponent(id) + '.json';
-      await fetch(url, { method: 'DELETE' });
-    } catch (e) {
-      console.warn('Delete quiz from server warn:', e);
-    }
+    const url = cfg.firebase.databaseURL.replace(/\/$/, '') + '/community_quizzes/' + encodeURIComponent(id) + '.json';
+    await window.FBA.request(url, { method: 'DELETE' });
+  }
+  saveLocalCommunity(getLocalCommunity().filter(q => q.id !== id));
+  if (typeof window !== 'undefined' && window.communityQuizzesCache) {
+    window.communityQuizzesCache = window.communityQuizzesCache.filter(q => q.id !== id);
   }
   return true;
 }
@@ -951,35 +944,26 @@ async function deleteCommunityQuiz(id) {
 async function deleteHwSubmission(hwId, subId) {
   if (!hwId) return false;
   hwId = String(hwId).trim();
-  // 1. Local deletion
+  const cfg = window.GAME_CONFIG || {};
+  if (cfg.firebase && cfg.firebase.databaseURL) {
+    const base = cfg.firebase.databaseURL.replace(/\/$/, '');
+    if (subId) {
+      await window.FBA.request(base + '/hw_subs/' + encodeURIComponent(hwId) + '/' + encodeURIComponent(subId) + '.json', { method: 'DELETE' });
+    } else {
+      await window.FBA.request(base + '/hw_subs/' + encodeURIComponent(hwId) + '.json', { method: 'DELETE' });
+      await window.FBA.request(base + '/hw_meta/' + encodeURIComponent(hwId) + '.json', { method: 'DELETE' });
+    }
+  }
   const allSubs = getLocalHwSubs();
   if (allSubs[hwId]) {
-    if (subId) {
-      delete allSubs[hwId][subId];
-    } else {
-      delete allSubs[hwId];
-    }
+    if (subId) delete allSubs[hwId][subId];
+    else delete allSubs[hwId];
     saveLocalHwSubs(allSubs);
   }
   if (!subId) {
     const metas = getLocalHwMetas();
     delete metas[hwId];
     saveLocalHwMetas(metas);
-  }
-  // 2. Cloud server deletion
-  const cfg = window.GAME_CONFIG || {};
-  if (cfg.firebase && cfg.firebase.databaseURL) {
-    const base = cfg.firebase.databaseURL.replace(/\/$/, '');
-    try {
-      if (subId) {
-        await fetch(base + '/hw_subs/' + encodeURIComponent(hwId) + '/' + encodeURIComponent(subId) + '.json', { method: 'DELETE' });
-      } else {
-        await fetch(base + '/hw_subs/' + encodeURIComponent(hwId) + '.json', { method: 'DELETE' });
-        await fetch(base + '/hw_meta/' + encodeURIComponent(hwId) + '.json', { method: 'DELETE' });
-      }
-    } catch (e) {
-      console.warn('Delete submission from server warn:', e);
-    }
   }
   return true;
 }
@@ -1122,8 +1106,8 @@ async function getHwGradebook() {
     const base = cfg.firebase.databaseURL.replace(/\/$/, '');
     try {
       const [mRes, sRes] = await Promise.all([
-        fetch(base + '/hw_meta.json').then(r => r.json()).catch(() => null),
-        fetch(base + '/hw_subs.json').then(r => r.json()).catch(() => null)
+        window.FBA.request(base + '/hw_meta.json').then(r => r.json()).catch(() => null),
+        window.FBA.request(base + '/hw_subs.json').then(r => r.json()).catch(() => null)
       ]);
       if (mRes && typeof mRes === 'object') {
         for (const [k, v] of Object.entries(mRes)) {
@@ -1485,11 +1469,11 @@ function showReportCard(data) {
 /* ══════════════════════════════════════════════════════════════
    HỆ THỐNG ĐÁNH GIÁ PHÁT ÂM TIẾNG ANH AI (AI PRONUNCIATION EVALUATION)
    ══════════════════════════════════════════════════════════════ */
-const DEFAULT_AI_KEY = atob('QVEuQWI4Uk42SXY0Mm9BVTFySEFWNEItTVlMb0U2eThEaHFvd2pybFZ3QXVkbUEyQkxYOWc=');
+const DEFAULT_AI_KEY = '';
 let systemAiKey = DEFAULT_AI_KEY;
-if (typeof window !== 'undefined' && window.firebaseConfig && window.firebaseConfig.databaseURL) {
+if (typeof window !== 'undefined' && window.GAME_CONFIG && GAME_CONFIG.firebase && GAME_CONFIG.firebase.databaseURL) {
   try {
-    fetch(window.firebaseConfig.databaseURL + '/system_config/gemini_key.json')
+    fetch(window.GAME_CONFIG.firebase.databaseURL + '/system_config/gemini_key.json')
       .then(r => r.json())
       .then(k => { if (k && typeof k === 'string') systemAiKey = k; })
       .catch(() => {});
