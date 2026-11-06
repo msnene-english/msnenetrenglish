@@ -1414,6 +1414,9 @@ window.copyShortLinkFor = function(id) {
 };
 
 window.shareLocalToCommunity = async function(idx) {
+  try { if (!(await FBA.isAdmin())) return toast('🔐 Đăng nhập Admin để chia sẻ đề.', 3500); }
+  catch (e) { return toast('❌ ' + e.message, 3500); }
+  try {
   const bank = getBank();
   const item = bank[idx];
   if (!item) return;
@@ -1427,6 +1430,7 @@ window.shareLocalToCommunity = async function(idx) {
   });
   toast('🎉 Đã chia sẻ đề "' + item.title + '" lên Thư viện chung với mã: ' + saved.id, 3500);
   renderBank();
+  } catch (e) { toast('❌ Không thể chia sẻ đề: ' + e.message, 3500); }
 };
 
 window.loadFromBank = function(idx) {
@@ -1449,6 +1453,9 @@ window.deleteFromBank = function(idx) {
 /* Nút lưu lên Thư viện chung */
 $('bSaveToBank').onclick = async () => {
   if (!qs.length) return;
+  try { if (!(await FBA.isAdmin())) return toast('🔐 Đăng nhập Admin để chia sẻ đề.', 3500); }
+  catch (e) { return toast('❌ ' + e.message, 3500); }
+  try {
   const isTest = gMode === 'test';
   const title = clean($('gTitle').value) || prompt('Nhập tên bộ đề chia sẻ:') || (isTest ? 'Bài kiểm tra tiếng Anh' : 'Bài ôn tập');
   const author = prompt('Tên giáo viên / Nguồn đề:', 'Cô Chí Nên') || 'Cô Chí Nên';
@@ -1463,6 +1470,7 @@ $('bSaveToBank').onclick = async () => {
   });
   toast('🎉 Đã lưu & chia sẻ thành công lên Thư viện chung! Mã đề: ' + saved.id, 3500);
   renderBank();
+  } catch (e) { toast('❌ Không thể lưu đề: ' + e.message, 3500); }
 };
 
 /* Nút lưu riêng máy này */
@@ -1537,6 +1545,9 @@ $('bSolo').onclick = () => {
 $('hwNoDl').onchange = () => { $('hwDl').disabled = $('hwNoDl').checked };
 
 $('bHwMake').onclick = async () => {
+  try { if (!(await FBA.isAdmin())) return toast('🔐 Đăng nhập Admin trước khi giao bài.', 3500); }
+  catch (e) { return toast('❌ ' + e.message, 3500); }
+  try {
   const dl = $('hwNoDl').checked ? 0 : Date.parse($('hwDl').value);
   if (!$('hwNoDl').checked && (!dl || dl < Date.now())) return toast('⏰ Cô chọn hạn nộp ở tương lai nhé', 2400);
   const isTest = gMode === 'test';
@@ -1625,6 +1636,7 @@ $('bHwMake').onclick = async () => {
   $('hwMsg').textContent = hwText;
   $('hwOut').hidden = false;
   $('hwLen').textContent = hwShortLink ? '✅ Link ngắn (' + hwShortLink.length + ' ký tự) — Đã lưu vào Thư viện chung, gửi Zalo/Facebook thoải mái không bao giờ bị cắt link!' : '⚠️ Link tự thân (' + hwLink.length + ' ký tự).';
+  } catch (e) { toast('❌ Không thể giao bài: ' + e.message, 3500); }
 };
 
 $('bHwCopy').onclick = () => navigator.clipboard.writeText(hwText).then(() => toast('📋 Đã copy tin nhắn — dán vào nhóm Zalo lớp nhé!', 2800)).catch(() => prompt('Copy:', hwText));
@@ -1768,6 +1780,8 @@ $('gModes').onclick = e => {
 
 /* ═════ ② MỞ PHÒNG CHƠI CHUNG ═════ *//* ═════ ② MỞ PHÒNG CHƠI CHUNG ═════ */
 $('bOpen').onclick = async () => {
+  try { if (!(await FBA.isAdmin())) return toast('🔐 Đăng nhập Admin trước khi mở phòng.', 3500); }
+  catch (e) { return toast('❌ ' + e.message, 3500); }
   if (window.LIC && !window.LIC.allowed(gMode)) {
     promptUnlockModal(gMode);
     return;
