@@ -1,12 +1,12 @@
 # Ms Nene English – Trò Chơi Học Tập & Ôn Tập Trắc Nghiệm Tương Tác
 
-Hệ thống trò chơi học tập tương tác thời gian thực (Gamified Live Quiz) kết hợp trắc nghiệm ôn tập, luyện phát âm AI và **10 mini-game pixel art & retro 3D**, xây dựng riêng cho **Ms Nene English (Cô Chí Nên)**.
+Hệ thống trò chơi học tập tương tác thời gian thực (Gamified Live Quiz) kết hợp trắc nghiệm ôn tập, luyện phát âm và các mini-game pixel art & retro 3D, xây dựng riêng cho **Ms Nene English (Cô Chí Nên)**.
 
 ---
 
 ## 🌟 Tính Năng Nổi Bật
 
-1. **10 Chế Độ Game Hấp Dẫn (Mở khóa 100% vĩnh viễn)**:
+1. **Các chế độ Game và Kiểm tra**: Leo núi và Nấm Mario dùng miễn phí; các chế độ còn lại cần mã Pro được cấp tại trang admin:
    - 🧗 **Leo núi (Climb)**: Nhảy đảo bay, tránh quái, leo lên đỉnh lâu đài giải cứu công chúa.
    - 🍄 **Nấm Mario (Brick)**: Vượt 5 màn kinh điển, húc khối ?, bơi đáy biển, vượt dung nham đánh rồng.
    - 🛡 **Xe tăng (Tank)**: Điều khiển xe tăng phá gạch, tiêu diệt xe tăng địch & quái vật, bảo vệ căn cứ đại bàng.
@@ -36,9 +36,9 @@ Hệ thống trò chơi học tập tương tác thời gian thực (Gamified Li
    - Xem phổ điểm cả lớp, bảng xếp hạng chi tiết.
    - Phân tích tỷ lệ đúng/sai của từng câu hỏi để giáo viên nắm bắt phần kiến thức học sinh còn yếu.
 
-6. **Không tốn chi phí vận hành (Zero Server Cost)**:
+6. **Vận hành bằng web tĩnh và Firebase**:
    - Chạy hoàn toàn trên máy khách (Pure Client-side HTML5/Canvas/CSS/JS).
-   - Đồng bộ thời gian thực qua MQTT WebSocket công cộng hoặc máy chủ Google Firebase miễn phí.
+   - Đồng bộ thời gian thực qua MQTT WebSocket hoặc Firebase Realtime Database; hạn mức và chi phí phụ thuộc gói dịch vụ.
 
 ---
 
@@ -47,13 +47,16 @@ Hệ thống trò chơi học tập tương tác thời gian thực (Gamified Li
 ```
 MsNeneEnglish/
 ├── index.html        # Trang cổng điều hướng (Dành cho Giáo viên & Học sinh)
+├── admin.html        # Trang quản trị mã Pro và thư viện đề
 ├── host.html         # Bảng điều khiển của Giáo viên (Soạn đề, Thư viện, Máy chiếu)
 ├── play.html         # Giao diện thi đấu của Học sinh (Responsive Mobile & Tablet)
-├── snd/              # Thư mục âm thanh & nhạc nền dùng chung (16 files MP3)
+├── database.rules.json # Mẫu Rules cho Firebase Realtime Database
+├── snd/              # Thư mục âm thanh & nhạc nền dùng chung
 └── assets/
     ├── config.js     # Cấu hình thương hiệu & máy chủ
     ├── core.js       # Engine mạng MQTT/Máy chủ, Thư viện chung, Xử lý đề thi & Speaking AI
-    ├── license.js    # Kích hoạt bản quyền vĩnh viễn
+    ├── license.js    # Kiểm tra mã Pro
+    ├── firebase-admin-auth.js # Đăng nhập và xác thực quản trị
     ├── mau.js        # Ngân hàng đề thi mẫu có sẵn
     ├── climb.js      # Engine game Leo núi
     ├── brick.js      # Engine game Nấm Mario
@@ -78,3 +81,14 @@ MsNeneEnglish/
 - **Giáo viên**: Cô Chí Nên (Ms Nene English)
 - **Hotline / Zalo**: **0852639652**
 - **Zalo Chat**: [https://zalo.me/0852639652](https://zalo.me/0852639652)
+
+---
+
+## Thiết lập trước khi đưa bản sửa bảo mật lên trang
+
+1. Đăng ký một ứng dụng Web trong dự án Firebase `game-762ed`, lấy Web API key và điền vào `assets/config.js`.
+2. Bật Firebase Authentication: Email/Password cho tài khoản admin và Anonymous cho host/học sinh. Tạo tài khoản admin, lấy UID của tài khoản rồi thay `PASTE_ADMIN_UID` trong `assets/config.js` và `database.rules.json`.
+3. Đưa mã web và Realtime Database Rules lên cùng đợt, sau đó kiểm tra mở phòng miễn phí, nhập mã Pro, giao bài, nộp bài, xem sổ điểm và quản lý đề trong admin.
+4. Phần gọi Gemini cần được chuyển sang Firebase AI Logic cùng App Check trước khi bật lại trên trang công khai. Phần chấm phát âm cơ bản trên máy vẫn có thể hoạt động khi không có Gemini.
+
+Tạo phòng và giao bài không yêu cầu đăng nhập admin. Trình duyệt tự dùng Firebase Authentication ẩn danh để gắn quyền sở hữu dữ liệu; học sinh không phải nhập tài khoản. Trang admin dùng email và mật khẩu riêng.
