@@ -827,11 +827,36 @@ async function mqttNet() {
   };
 }
 
+async function ensureFirebaseAuth(anonymous) {
+  const cfg = CFG().firebase;
+  if (!cfg || !cfg.apiKey || cfg.apiKey === 'PASTE_FIREBASE_WEB_API_KEY') {
+    throw new Error('Chưa cấu hình Firebase Web API key.');
+  }
+  const version = '10.12.2';
+  if (!window.firebase || !firebase.initializeApp) {
+    await loadScript('https://www.gstatic.com/firebasejs/' + version + '/firebase-app-compat.js');
+  }
+  if (!firebase.auth) {
+    await loadScript('https://www.gstatic.com/firebasejs/' + version + '/firebase-auth-compat.js');
+  }
+  const app = firebase.apps.length ? firebase.app() : firebase.initializeApp(cfg);
+  const auth = firebase.auth(app);
+  await new Promise((resolve, reject) => {
+    const unsubscribe = auth.onAuthStateChanged(
+      () => { unsubscribe(); resolve(); },
+      reject
+    );
+  });
+  if (anonymous && !auth.currentUser) await auth.signInAnonymously();
+  return auth.currentUser;
+}
+
 async function fireNet(cfg) {
   const V = '10.12.2';
   await loadScript('https://www.gstatic.com/firebasejs/' + V + '/firebase-app-compat.js');
   await loadScript('https://www.gstatic.com/firebasejs/' + V + '/firebase-database-compat.js');
   const app = firebase.apps.length ? firebase.app() : firebase.initializeApp(cfg), db = firebase.database(app);
+  await ensureFirebaseAuth(/\/play\.html$/i.test(location.pathname));
   let off = 0; db.ref('.info/serverTimeOffset').on('value', s => off = s.val() || 0);
   return {
     mode: 'firebase', now: () => Date.now() + off, host: async () => { },
@@ -879,8 +904,8 @@ async function saveCommunityQuiz(quiz) {
   if (cfg.firebase && cfg.firebase.databaseURL) {
     try {
       const url = cfg.firebase.databaseURL.replace(/\/$/, '') + '/community_quizzes/' + quiz.id + '.json';
-      await fetch(url, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(quiz) });
-    } catch (e) { console.warn('Firebase sync warning:', e); }
+      await window.FBA.request(url, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(quiz) });
+    } catch (e) { console.warn('Firebase sync warning:', e); throw e; }
   }
   return quiz;
 }
@@ -1036,8 +1061,8 @@ async function saveHwMeta(meta) {
   if (cfg.firebase && cfg.firebase.databaseURL) {
     try {
       const url = cfg.firebase.databaseURL.replace(/\/$/, '') + '/hw_meta/' + encodeURIComponent(item.id) + '.json';
-      await fetch(url, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(item) });
-    } catch (e) { console.warn('saveHwMeta sync warn:', e); }
+      await window.FBA.request(url, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(item) });
+    } catch (e) { console.warn('saveHwMeta sync warn:', e); throw e; }
   }
   return item;
 }
@@ -1061,6 +1086,12 @@ async function submitHwResult(hwId, entry) {
     date: stamp(Date.now())
   };
 
+  // Gắn bài nộp với tài khoản ẩn danh của học sinh để Rules kiểm tra.
+  try {
+    const user = await ensureFirebaseAuth(true);
+    if (user) rec.uid = user.uid;
+  } catch (e) { console.warn('Firebase Authentication warning:', e); }
+
   // 1. Lưu local
   const allSubs = getLocalHwSubs();
   if (!allSubs[hwId]) allSubs[hwId] = {};
@@ -1078,16 +1109,16 @@ async function submitHwResult(hwId, entry) {
   if (cfg.firebase && cfg.firebase.databaseURL) {
     const base = cfg.firebase.databaseURL.replace(/\/$/, '');
     try {
-      await fetch(base + '/hw_subs/' + encodeURIComponent(hwId) + '/' + subId + '.json', {
+      if (!rec.uid) throw new Error('Chưa đăng nhập Firebase cho học sinh.');
+      const idToken = await firebase.auth().currentUser.getIdToken();
+      const url = base + '/hw_subs/' + encodeURIComponent(hwId) + '/' + subId + '.json?auth=' + encodeURIComponent(idToken);
+      const response = await fetch(url, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(rec)
       });
-      await fetch(base + '/hw_meta/' + encodeURIComponent(hwId) + '.json', {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ id: hwId, title: rec.title, m: rec.m, updatedAt: rec.at, date: rec.date })
-      });
+      if (!response.ok) throw new Error('Không lưu được bài nộp lên Firebase (' + response.status + ').');
+
     } catch (e) { console.warn('submitHwResult firebase warn:', e); }
   }
   return rec;
