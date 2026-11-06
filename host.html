@@ -675,8 +675,9 @@ Hoặc dán theo mẫu:
 <!-- SCRIPTS HỆ THỐNG -->
 <script src="assets/shield.js?v=2.4"></script>
 <script src="assets/qrcode.min.js"></script>
-<script src="assets/config.js?v=2.4"></script>
-<script src="assets/core.js?v=2.4"></script>
+<script src="assets/config.js?v=2.5"></script>
+<script src="assets/firebase-admin-auth.js?v=1"></script>
+<script src="assets/core.js?v=2.5"></script>
 <script src="assets/mau.js"></script>
 <script src="assets/climb.js"></script>
 <script src="assets/brick.js"></script>
@@ -2092,12 +2093,12 @@ $('bClose').onclick = async () => { await net.remove('rooms/' + code); showEnd.d
 
 
 /* ═════ TỰ ĐỘNG CÀO ĐỀ TỪ LINK BÀI TẬP GITHUB.IO & GEMINI AI ═════ */
-// Key Gemini mặc định của cô (Mã hóa an toàn) & Tự động đồng bộ từ máy chủ
-const DEFAULT_AI_KEY = atob('QVEuQWI4Uk42SXY0Mm9BVTFySEFWNEItTVlMb0U2eThEaHFvd2pybFZ3QXVkbUEyQkxYOWc=');
+// Khóa AI được đọc từ Firebase system_config; không lưu khóa trong mã công khai.
+const DEFAULT_AI_KEY = '';
 let systemAiKey = DEFAULT_AI_KEY;
 
-if (window.firebaseConfig && firebaseConfig.databaseURL) {
-  fetch(firebaseConfig.databaseURL + '/system_config/gemini_key.json')
+if (window.GAME_CONFIG && GAME_CONFIG.firebase && GAME_CONFIG.firebase.databaseURL) {
+  fetch(GAME_CONFIG.firebase.databaseURL + '/system_config/gemini_key.json')
     .then(r => r.json())
     .then(k => { if (k && typeof k === 'string') systemAiKey = k; })
     .catch(() => {});
@@ -2802,40 +2803,43 @@ window.openGbReportCard = function(idx) {
   });
 };
 
-if ($('bOpenGradebook')) $('bOpenGradebook').onclick = () => openHwGradebook();
+if ($('bOpenGradebook')) $('bOpenGradebook').onclick = async () => {
+  try {
+    if (!(await FBA.isAdmin())) return toast('🔐 Đăng nhập tài khoản quản trị tại trang Admin để xem sổ điểm.', 3500);
+    await openHwGradebook();
+  } catch (e) { toast('❌ ' + e.message, 3500); }
+};
 if ($('gbSelect')) $('gbSelect').onchange = () => renderGradebookTable();
 if ($('bGbRefresh')) $('bGbRefresh').onclick = () => openHwGradebook($('gbSelect').value);
 
 /* ═════ QUẢN TRỊ ADMIN XÓA BỘ ĐỀ & BẢN GHI ĐIỂM ═════ */
 window.adminDeleteQuiz = async function(id) {
   if (!id) return;
-  const key = prompt('🔐 Nhập mã quản trị (Admin Key) để xóa bộ đề [' + id + ']:');
-  if (key === null) return;
-  if (!window.LIC || !window.LIC.verifyAdmin(key)) {
-    toast('❌ Sai mã quản trị (Admin Key)!', 2500);
-    return;
-  }
+  try {
+    if (!(await FBA.isAdmin())) return toast('🔐 Đăng nhập tài khoản quản trị tại trang Admin trước khi xóa.', 3500);
+  } catch (e) { return toast('❌ ' + e.message, 3500); }
   if (!confirm('Cô có chắc chắn muốn xóa vĩnh viễn bộ đề [' + id + '] khỏi thư viện không?')) return;
   toast('⏳ Đang xóa bộ đề khỏi hệ thống...', 1800);
-  await GC.deleteCommunityQuiz(id);
-  toast('🗑️ Đã xóa bộ đề [' + id + '] thành công!', 2200);
-  renderBank(true);
+  try {
+    await GC.deleteCommunityQuiz(id);
+    toast('🗑️ Đã xóa bộ đề [' + id + '] thành công!', 2200);
+    renderBank(true);
+  } catch (e) { toast('❌ Không thể xóa đề: ' + e.message, 3500); }
 };
 
 window.adminDeleteSubmission = async function(idx) {
   const r = gbCurrentRows[idx];
   if (!r) return;
-  const key = prompt('🔐 Nhập mã quản trị (Admin Key) để xóa bản ghi điểm của học sinh: ' + r.n + ':');
-  if (key === null) return;
-  if (!window.LIC || !window.LIC.verifyAdmin(key)) {
-    toast('❌ Sai mã quản trị (Admin Key)!', 2500);
-    return;
-  }
+  try {
+    if (!(await FBA.isAdmin())) return toast('🔐 Đăng nhập tài khoản quản trị tại trang Admin trước khi xóa.', 3500);
+  } catch (e) { return toast('❌ ' + e.message, 3500); }
   if (!confirm('Cô có chắc chắn muốn xóa bản ghi điểm của ' + r.n + ' không?')) return;
   toast('⏳ Đang xóa bản ghi điểm...', 1800);
-  await GC.deleteHwSubmission(r.hwId, r.id);
-  toast('🗑️ Đã xóa bản ghi điểm của ' + r.n + ' thành công!', 2200);
-  openHwGradebook($('gbSelect').value);
+  try {
+    await GC.deleteHwSubmission(r.hwId, r.id);
+    toast('🗑️ Đã xóa bản ghi điểm của ' + r.n + ' thành công!', 2200);
+    openHwGradebook($('gbSelect').value);
+  } catch (e) { toast('❌ Không thể xóa điểm: ' + e.message, 3500); }
 };
 
 if ($('bGbDeleteHw')) {
@@ -2844,17 +2848,16 @@ if ($('bGbDeleteHw')) {
     if (!hid || hid === 'ALL') {
       return toast('⚠️ Cô hãy chọn 1 bài tập cụ thể trong danh sách thả xuống trước khi xóa nhé!', 2800);
     }
-    const key = prompt('🔐 Nhập mã quản trị (Admin Key) để xóa toàn bộ bài tập [' + hid + '] và tất cả điểm số:');
-    if (key === null) return;
-    if (!window.LIC || !window.LIC.verifyAdmin(key)) {
-      toast('❌ Sai mã quản trị (Admin Key)!', 2500);
-      return;
-    }
+    try {
+      if (!(await FBA.isAdmin())) return toast('🔐 Đăng nhập tài khoản quản trị tại trang Admin trước khi xóa.', 3500);
+    } catch (e) { return toast('❌ ' + e.message, 3500); }
     if (!confirm('⚠️ CẢNH BÁO: Thao tác này sẽ xóa vĩnh viễn bài tập [' + hid + '] và TOÀN BỘ điểm nộp của học sinh. Cô có chắc chắn muốn xóa không?')) return;
     toast('⏳ Đang xóa toàn bộ bài tập và dữ liệu nộp bài...', 2500);
-    await GC.deleteHwSubmission(hid);
-    toast('🗑️ Đã xóa bài tập [' + hid + '] thành công!', 2500);
-    openHwGradebook('ALL');
+    try {
+      await GC.deleteHwSubmission(hid);
+      toast('🗑️ Đã xóa bài tập [' + hid + '] thành công!', 2500);
+      openHwGradebook('ALL');
+    } catch (e) { toast('❌ Không thể xóa bài tập: ' + e.message, 3500); }
   };
 }
 
