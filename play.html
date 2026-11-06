@@ -554,8 +554,8 @@ html,body{display:flex;flex-direction:column;overflow-x:hidden !important;overfl
 
 <script src="assets/mqtt.min.js"></script>
 <script src="assets/shield.js?v=2.4"></script>
-<script src="assets/config.js?v=2.4"></script>
-<script src="assets/core.js?v=2.4"></script>
+<script src="assets/config.js?v=2.5"></script>
+<script src="assets/core.js?v=2.5"></script>
 <script src="assets/mau.js"></script>
 <script src="assets/climb.js"></script>
 <script src="assets/brick.js"></script>
@@ -1546,6 +1546,7 @@ async function joinSolo() {
   begin();
 }
 function myPid(c) {
+  if (net && net.mode === 'firebase' && window.firebase && firebase.auth && firebase.auth().currentUser) return firebase.auth().currentUser.uid;
   if (window.top !== window) return 'p' + Math.random().toString(36).slice(2, 10);   // trang nhúng (thử nghiệm): mỗi khung một bạn
   try { const k = 'gpid:' + c; let v = sessionStorage.getItem(k); if (!v) { v = 'p' + Math.random().toString(36).slice(2, 10); sessionStorage.setItem(k, v) } return v }
   catch (e) { return 'p' + Math.random().toString(36).slice(2, 10) }
