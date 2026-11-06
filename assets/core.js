@@ -894,7 +894,7 @@ function saveLocalCommunity(list) {
 
 async function saveCommunityQuiz(quiz) {
   if (!quiz.id) {
-    quiz.id = 'MN-' + (Math.floor(1000 + Math.random() * 9000));
+    quiz.id = 'MN-' + (globalThis.crypto?.randomUUID?.().slice(0, 8) || Math.random().toString(36).slice(2, 10)).toUpperCase();
   }
   quiz.title = (quiz.title || '').trim() || (quiz.type === 'test' || quiz.m === 'test' ? 'Bài kiểm tra tiếng Anh' : 'Bài ôn tập tiếng Anh');
   quiz.type = quiz.type || (quiz.m === 'test' ? 'test' : 'game');
