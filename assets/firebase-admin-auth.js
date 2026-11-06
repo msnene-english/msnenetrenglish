@@ -17,8 +17,9 @@
     initPromise = (async () => {
       const cfg = window.GAME_CONFIG && window.GAME_CONFIG.firebase;
       if (!cfg || !cfg.apiKey || cfg.apiKey === 'PASTE_FIREBASE_WEB_API_KEY' ||
+          !cfg.appId || cfg.appId === 'PASTE_FIREBASE_WEB_APP_ID' ||
           !cfg.adminUid || cfg.adminUid === 'PASTE_ADMIN_UID') {
-        throw new Error('Chưa cấu hình Firebase Web API key và UID quản trị.');
+        throw new Error('Chưa cấu hình Firebase Web app và UID quản trị.');
       }
       if (!window.firebase || !firebase.initializeApp) {
         await load('https://www.gstatic.com/firebasejs/' + VERSION + '/firebase-app-compat.js');
