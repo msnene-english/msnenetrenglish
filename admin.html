@@ -5,7 +5,8 @@
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Ms Nene English – Quản Trị Bản Quyền</title>
 <link rel="stylesheet" href="assets/fonts.css">
-<script src="assets/shield.js?v=2.2">
+<script src="assets/shield.js?v=2.2"></script>
+<script>
 /* ══════════ QUẢN LÝ ĐỀ THI FIREBASE DÀNH RIÊNG CHO ADMIN ══════════ */
 let adminAllQuizzes = [];
 async function loadAdminQuizzes() {
@@ -15,7 +16,7 @@ async function loadAdminQuizzes() {
 
   const fbUrl = getFbUrl();
   try {
-    const res = await fetch(`${fbUrl}/community_quizzes.json`);
+    const res = await FBA.request(`${fbUrl}/community_quizzes.json`);
     if (!res.ok) throw new Error('Không thể kết nối Firebase');
     const data = await res.json();
     if (!data) {
@@ -55,9 +56,9 @@ function renderAdminQuizzes(list) {
         <td><code style="color:#6d28d9;font-weight:800">${esc(item.id)}</code></td>
         <td style="font-weight:800;color:#1e293b">${esc(item.title || item.id)}</td>
         <td style="font-weight:700">${count} câu</td>
-        <td style="font-size:13px;color:#475569">${author} <small style="display:block;color:#94a3b8">${date}</small></td>
+        <td style="font-size:13px;color:#475569">${author} <small style="display:block;color:#94a3b8">${esc(date)}</small></td>
         <td style="text-align:center">
-          <button type="button" class="btn btn-outline btn-sm" style="color:#dc2626;border-color:#fca5a5" onclick="deleteAdminQuiz('${esc(item.id)}', '${esc(item.title)}')">
+          <button type="button" class="btn btn-outline btn-sm" style="color:#dc2626;border-color:#fca5a5" onclick="deleteAdminQuiz(${esc(JSON.stringify(item.id))}, ${esc(JSON.stringify(item.title || ''))})">
             🗑 Xóa đề
           </button>
         </td>
@@ -88,7 +89,7 @@ async function deleteAdminQuiz(id, title) {
   const fbUrl = getFbUrl();
   try {
     toast('⏳ Đang xóa đề khỏi Firebase...', 2000);
-    const res = await fetch(`${fbUrl}/community_quizzes/${encodeURIComponent(id)}.json`, {
+    const res = await FBA.request(`${fbUrl}/community_quizzes/${encodeURIComponent(id)}.json`, {
       method: 'DELETE'
     });
     if (!res.ok) throw new Error('Không thể xóa đề trên Firebase');
@@ -102,6 +103,7 @@ async function deleteAdminQuiz(id, title) {
 
 </script>
 <script src="assets/config.js?v=2.2"></script>
+<script src="assets/firebase-admin-auth.js?v=1"></script>
 <style>
 /* CSS Reset chuyên dụng cho trang Quản trị */
 *, *::before, *::after {
@@ -514,11 +516,12 @@ html, body {
 <div class="gate-wrapper" id="loginGate">
  <div class="gate-card">
   <div class="gate-icon">🛡️</div>
-  <h2 class="gate-title">Xác Thực Khóa Tối Cao</h2>
-  <p class="gate-desc">Khu vực quản trị giới hạn đặc biệt dành riêng cho Cô Chí Nên. Vui lòng nhập Khóa Tối Cao để truy cập:</p>
+  <h2 class="gate-title">Đăng nhập quản trị</h2>
+  <p class="gate-desc">Đăng nhập bằng tài khoản quản trị trong Firebase Authentication.</p>
   
   <div style="margin-bottom:16px">
-   <input type="password" id="inpMasterKey" class="inp" placeholder="Nhập Khóa Tối Cao..." style="font-size:18px;text-align:center;letter-spacing:4px;font-weight:900;padding:12px;border:2px solid #0284c7">
+   <input type="email" id="inpAdminEmail" class="inp" placeholder="Email quản trị Firebase" autocomplete="username" style="margin-bottom:10px">
+    <input type="password" id="inpMasterKey" class="inp" placeholder="Mật khẩu Firebase..." autocomplete="current-password" style="font-size:18px;text-align:center;letter-spacing:4px;font-weight:900;padding:12px;border:2px solid #0284c7">
    <div id="gateError" style="color:#dc2626;font-size:13px;font-weight:800;margin-top:8px;display:none">❌ Khóa Tối Cao không chính xác! Vui lòng thử lại.</div>
   </div>
 
@@ -778,137 +781,45 @@ function toast(msg, ms = 2500) {
 
 /* ══════════ XÁC THỰC KHÓA TỐI CAO ĐĂNG NHẬP ══════════ */
 async function verifyMasterLogin() {
-  const passInp = $('inpMasterKey');
-  const errDiv = $('gateError');
-  const btn = $('bLoginMaster');
-  const key = (passInp ? passInp.value : '').trim();
-
-  if (!key) {
-    if (errDiv) { errDiv.style.display = 'block'; errDiv.textContent = '⚠️ Vui lòng nhập Khóa Tối Cao!'; }
-    if (passInp) passInp.focus();
+  const email = $('inpAdminEmail').value.trim();
+  const password = $('inpMasterKey').value;
+  const error = $('gateError');
+  const button = $('bLoginMaster');
+  if (!email || !password) {
+    error.style.display = 'block';
+    error.textContent = 'Vui lòng nhập email và mật khẩu Firebase.';
     return;
   }
-
-  if (btn) { btn.disabled = true; btn.textContent = '⏳ Đang xác thực với Firebase...'; }
-  const fbUrl = getFbUrl();
-  const inputHash = sha256(SALT + key);
-
+  button.disabled = true;
   try {
-    const resp = await fetch(`${fbUrl}/admin/master.json`);
-    let isMatch = false;
-
-    if (resp.ok) {
-      const data = await resp.json();
-      if (data) {
-        // Hỗ trợ cả kiểm tra hash và kiểm tra key trực tiếp (để cô có thể sửa trực tiếp trên Firebase Console)
-        if (data.key === key || data.hash === inputHash) {
-          isMatch = true;
-        }
-      }
-    }
-
-    // Fallback khẩn cấp nếu Firebase vừa tạo chưa có dữ liệu
-    if (!isMatch && key === '131618') {
-      isMatch = true;
-    }
-
-    if (isMatch) {
-      if (errDiv) errDiv.style.display = 'none';
-      sessionStorage.setItem('msnene_admin_auth', '1');
-      $('loginGate').style.display = 'none';
-      $('adminApp').style.display = 'block';
-      toast('🔓 Đăng nhập Quản trị thành công!');
-      
-
-loadLicenses();
-loadAdminQuizzes();
-
-loadAdminQuizzes();
-
-    } else {
-      if (errDiv) {
-        errDiv.style.display = 'block';
-        errDiv.textContent = '❌ Khóa Tối Cao không chính xác! Vui lòng thử lại.';
-      }
-      if (passInp) { passInp.focus(); passInp.select(); }
-    }
+    await FBA.signIn(email, password);
+    error.style.display = 'none';
+    $('loginGate').style.display = 'none';
+    $('adminApp').style.display = 'block';
+    $('inpMasterKey').value = '';
+    loadLicenses();
+    loadAdminQuizzes();
   } catch (e) {
-    if (errDiv) {
-      errDiv.style.display = 'block';
-      errDiv.textContent = '❌ Lỗi kết nối Firebase: ' + e.message;
-    }
+    error.style.display = 'block';
+    error.textContent = 'Không thể đăng nhập: ' + e.message;
   } finally {
-    if (btn) { btn.disabled = false; btn.textContent = '🔓 Mở Khóa Quản Trị'; }
+    button.disabled = false;
   }
 }
 
 $('bLoginMaster').onclick = verifyMasterLogin;
 $('inpMasterKey').onkeydown = e => { if (e.key === 'Enter') verifyMasterLogin(); };
 
-$('bLogout').onclick = () => {
-  sessionStorage.removeItem('msnene_admin_auth');
+$('bLogout').onclick = async () => {
+  await FBA.signOut();
   $('adminApp').style.display = 'none';
   $('loginGate').style.display = 'flex';
   $('inpMasterKey').value = '';
   $('gateError').style.display = 'none';
-  toast('🔒 Đã đăng xuất khỏi trang Quản trị');
 };
 
-/* ══════════ ĐỔI KHÓA TỐI CAO LÊN FIREBASE ══════════ */
-$('bOpenChangeMaster').onclick = () => {
-  $('newMasterKey').value = '';
-  $('confirmMasterKey').value = '';
-  $('changeMasterErr').style.display = 'none';
-  $('ovChangeMaster').classList.add('on');
-  setTimeout(() => $('newMasterKey').focus(), 100);
-};
-
-$('bCloseChangeMaster').onclick = () => $('ovChangeMaster').classList.remove('on');
-$('bCancelChangeMaster').onclick = () => $('ovChangeMaster').classList.remove('on');
-
-$('bSaveMasterKey').onclick = async () => {
-  const k1 = $('newMasterKey').value.trim();
-  const k2 = $('confirmMasterKey').value.trim();
-  const errDiv = $('changeMasterErr');
-
-  if (!k1) {
-    errDiv.style.display = 'block'; errDiv.textContent = '⚠️ Khóa mới không được để trống!';
-    return;
-  }
-  if (k1 !== k2) {
-    errDiv.style.display = 'block'; errDiv.textContent = '⚠️ Xác nhận khóa không khớp!';
-    return;
-  }
-
-  const btn = $('bSaveMasterKey');
-  btn.disabled = true;
-  btn.textContent = '⏳ Đang lưu...';
-
-  const newHash = sha256(SALT + k1);
-  const fbUrl = getFbUrl();
-  const record = {
-    key: k1,
-    hash: newHash,
-    label: 'Khóa Tối Cao Admin (Cô Chí Nên)',
-    updatedAt: Date.now()
-  };
-
-  try {
-    const res = await fetch(`${fbUrl}/admin/master.json`, {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(record)
-    });
-    if (!res.ok) throw new Error('Không thể lưu lên Firebase');
-    toast(`🎉 Đã cập nhật Khóa Tối Cao mới thành công (${k1})!`, 3500);
-    $('ovChangeMaster').classList.remove('on');
-  } catch (e) {
-    alert('Lỗi: ' + e.message);
-  } finally {
-    btn.disabled = false;
-    btn.textContent = '💾 Lưu Lên Firebase';
-  }
-};
+/* Mã quản trị cũ không còn là cơ chế xác thực. */
+$('bOpenChangeMaster').style.display = 'none';
 
 /* ══════════ QUẢN LÝ DANH SÁCH KEY ══════════ */
 let licensesCache = [];
@@ -918,7 +829,7 @@ async function loadLicenses() {
   tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;padding:40px 20px;color:#64748b">⏳ Đang đồng bộ danh sách key từ máy chủ Firebase...</td></tr>';
   const fbUrl = getFbUrl();
   try {
-    const resp = await fetch(`${fbUrl}/licenses.json`);
+    const resp = await FBA.request(`${fbUrl}/licenses.json`);
     if (!resp.ok) throw new Error('Không thể kết nối Firebase');
     const data = await resp.json();
     if (!data) {
@@ -984,7 +895,7 @@ function renderTable(list) {
         <td>
           <div style="display:flex;align-items:center;gap:6px">
             <span class="key-pill">${esc(keyVal)}</span>
-            <button type="button" class="btn btn-outline btn-sm" onclick="copyText('${esc(keyVal)}')" title="Sao chép mã key" style="padding:3px 7px">📋</button>
+            <button type="button" class="btn btn-outline btn-sm" onclick="copyText(${esc(JSON.stringify(keyVal))})" title="Sao chép mã key" style="padding:3px 7px">📋</button>
           </div>
         </td>
         <td>
@@ -995,16 +906,16 @@ function renderTable(list) {
         <td>${stHtml}</td>
         <td style="text-align:center">
           <div style="display:flex;gap:6px;justify-content:center;flex-wrap:nowrap">
-            <button type="button" class="btn btn-primary btn-sm" onclick="sendZalo('${esc(keyVal)}', '${esc(item.owner || '')}', ${item.expiresAt || 0})" title="Sao chép tin nhắn Zalo kèm mã và hướng dẫn">
+            <button type="button" class="btn btn-primary btn-sm" onclick="sendZalo(${esc(JSON.stringify(keyVal))}, ${esc(JSON.stringify(item.owner || ''))}, ${Number(item.expiresAt) || 0})" title="Sao chép tin nhắn Zalo kèm mã và hướng dẫn">
               📲 Zalo
             </button>
-            <button type="button" class="btn btn-outline btn-sm" onclick="openEditModal('${item.hash}')" title="Đổi mã key hoặc sửa thông tin">
+            <button type="button" class="btn btn-outline btn-sm" onclick="openEditModal(${esc(JSON.stringify(item.hash))})" title="Đổi mã key hoặc sửa thông tin">
               ✏️ Sửa
             </button>
-            <button type="button" class="btn btn-outline btn-sm" style="color:${isAct ? '#d97706' : '#16a34a'}" onclick="toggleStatus('${item.hash}', '${item.status}')" title="${isAct ? 'Tạm khóa key này' : 'Mở lại key này'}">
+            <button type="button" class="btn btn-outline btn-sm" style="color:${isAct ? '#d97706' : '#16a34a'}" onclick="toggleStatus(${esc(JSON.stringify(item.hash))}, ${esc(JSON.stringify(item.status))})" title="${isAct ? 'Tạm khóa key này' : 'Mở lại key này'}">
               ${isAct ? '⏸ Khóa' : '▶ Mở'}
             </button>
-            <button type="button" class="btn btn-danger btn-sm" onclick="deleteKey('${item.hash}', '${esc(keyVal)}', '${esc(item.owner || '')}')" title="Xóa vĩnh viễn khỏi Firebase">
+            <button type="button" class="btn btn-danger btn-sm" onclick="deleteKey(${esc(JSON.stringify(item.hash))}, ${esc(JSON.stringify(keyVal))}, ${esc(JSON.stringify(item.owner || ''))})" title="Xóa vĩnh viễn khỏi Firebase">
               🗑 Xóa
             </button>
           </div>
@@ -1069,7 +980,7 @@ $('bCreateKey').onclick = async () => {
   btn.disabled = true;
   btn.textContent = '⏳ Đang lưu Firebase...';
   try {
-    const res = await fetch(`${fbUrl}/licenses/${hash}.json`, {
+    const res = await FBA.request(`${fbUrl}/licenses/${hash}.json`, {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(record)
@@ -1091,7 +1002,7 @@ async function toggleStatus(hash, curStatus) {
   const next = curStatus === 'active' ? 'disabled' : 'active';
   const fbUrl = getFbUrl();
   try {
-    await fetch(`${fbUrl}/licenses/${hash}/status.json`, {
+    await FBA.request(`${fbUrl}/licenses/${hash}/status.json`, {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(next)
@@ -1107,7 +1018,7 @@ async function deleteKey(hash, key, owner) {
   if (!confirm(`XÓA VĨNH VIỄN mã key "${key}" của [${owner}] khỏi Firebase?\n\nNgười này sẽ bị mất bản quyền ngay lập tức!`)) return;
   const fbUrl = getFbUrl();
   try {
-    await fetch(`${fbUrl}/licenses/${hash}.json`, { method: 'DELETE' });
+    await FBA.request(`${fbUrl}/licenses/${hash}.json`, { method: 'DELETE' });
     toast(`🗑 Đã xóa mã key "${key}" thành công!`);
     loadLicenses();
   } catch (e) {
@@ -1163,14 +1074,14 @@ $('bSaveEdit').onclick = async () => {
   btn.textContent = '⏳ Đang lưu...';
 
   try {
-    await fetch(`${fbUrl}/licenses/${newHash}.json`, {
+    await FBA.request(`${fbUrl}/licenses/${newHash}.json`, {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(updatedRecord)
     });
 
     if (newHash !== oldHash) {
-      await fetch(`${fbUrl}/licenses/${oldHash}.json`, { method: 'DELETE' });
+      await FBA.request(`${fbUrl}/licenses/${oldHash}.json`, { method: 'DELETE' });
     }
 
     toast(`🎉 Đã cập nhật key thành công (Mã mới: ${newKey})!`);
@@ -1186,14 +1097,20 @@ $('bSaveEdit').onclick = async () => {
 
 $('bRefresh').onclick = loadLicenses;
 
-// Tự động kiểm tra session đăng nhập
-if (sessionStorage.getItem('msnene_admin_auth') === '1') {
-  $('loginGate').style.display = 'none';
-  $('adminApp').style.display = 'block';
-  loadLicenses();
-} else {
-  setTimeout(() => $('inpMasterKey').focus(), 150);
-}
+// Firebase Authentication xác định trạng thái đăng nhập sau khi trang tải.
+FBA.isAdmin().then(isAdmin => {
+  if (isAdmin) {
+    $('loginGate').style.display = 'none';
+    $('adminApp').style.display = 'block';
+    loadLicenses();
+    loadAdminQuizzes();
+  } else {
+    $('inpAdminEmail').focus();
+  }
+}).catch(e => {
+  $('gateError').style.display = 'block';
+  $('gateError').textContent = e.message;
+});
 </script>
 </body>
 </html>
