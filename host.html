@@ -1414,8 +1414,6 @@ window.copyShortLinkFor = function(id) {
 };
 
 window.shareLocalToCommunity = async function(idx) {
-  try { if (!(await FBA.isAdmin())) return toast('🔐 Đăng nhập Admin để chia sẻ đề.', 3500); }
-  catch (e) { return toast('❌ ' + e.message, 3500); }
   try {
   const bank = getBank();
   const item = bank[idx];
@@ -1453,8 +1451,6 @@ window.deleteFromBank = function(idx) {
 /* Nút lưu lên Thư viện chung */
 $('bSaveToBank').onclick = async () => {
   if (!qs.length) return;
-  try { if (!(await FBA.isAdmin())) return toast('🔐 Đăng nhập Admin để chia sẻ đề.', 3500); }
-  catch (e) { return toast('❌ ' + e.message, 3500); }
   try {
   const isTest = gMode === 'test';
   const title = clean($('gTitle').value) || prompt('Nhập tên bộ đề chia sẻ:') || (isTest ? 'Bài kiểm tra tiếng Anh' : 'Bài ôn tập');
@@ -1545,8 +1541,6 @@ $('bSolo').onclick = () => {
 $('hwNoDl').onchange = () => { $('hwDl').disabled = $('hwNoDl').checked };
 
 $('bHwMake').onclick = async () => {
-  try { if (!(await FBA.isAdmin())) return toast('🔐 Đăng nhập Admin trước khi giao bài.', 3500); }
-  catch (e) { return toast('❌ ' + e.message, 3500); }
   try {
   const dl = $('hwNoDl').checked ? 0 : Date.parse($('hwDl').value);
   if (!$('hwNoDl').checked && (!dl || dl < Date.now())) return toast('⏰ Cô chọn hạn nộp ở tương lai nhé', 2400);
@@ -1780,8 +1774,6 @@ $('gModes').onclick = e => {
 
 /* ═════ ② MỞ PHÒNG CHƠI CHUNG ═════ *//* ═════ ② MỞ PHÒNG CHƠI CHUNG ═════ */
 $('bOpen').onclick = async () => {
-  try { if (!(await FBA.isAdmin())) return toast('🔐 Đăng nhập Admin trước khi mở phòng.', 3500); }
-  catch (e) { return toast('❌ ' + e.message, 3500); }
   if (window.LIC && !window.LIC.allowed(gMode)) {
     promptUnlockModal(gMode);
     return;
@@ -1822,7 +1814,7 @@ $('bOpen').onclick = async () => {
       audio: q.audio || '',
       img: q.img || ''
     }));
-    await net.set('rooms/' + code, { info, qs: clean_qs });
+    await net.set('rooms/' + code, { info, qs: clean_qs, ownerUid: net.mode === 'firebase' ? firebase.auth().currentUser.uid : null });
     store.set('gHost', JSON.stringify({ code, qs: clean_qs }));
     enterRoom();
   } catch (e) { toast('❌ ' + e.message, 4000) } finally { $('bOpen').disabled = !qs.length }
@@ -2819,7 +2811,6 @@ window.openGbReportCard = function(idx) {
 
 if ($('bOpenGradebook')) $('bOpenGradebook').onclick = async () => {
   try {
-    if (!(await FBA.isAdmin())) return toast('🔐 Đăng nhập tài khoản quản trị tại trang Admin để xem sổ điểm.', 3500);
     await openHwGradebook();
   } catch (e) { toast('❌ ' + e.message, 3500); }
 };
