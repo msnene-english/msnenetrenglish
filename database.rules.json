@@ -3,37 +3,37 @@
     ".read": false,
     ".write": false,
     "admin": {
-      ".read": "auth != null && auth.uid === 'PASTE_ADMIN_UID'",
-      ".write": "auth != null && auth.uid === 'PASTE_ADMIN_UID'"
+      ".read": "auth != null && auth.uid === '9eA5BZII0STtQwqox2XcBNEUfnE2'",
+      ".write": "auth != null && auth.uid === '9eA5BZII0STtQwqox2XcBNEUfnE2'"
     },
     "licenses": {
-      ".read": "auth != null && auth.uid === 'PASTE_ADMIN_UID'",
-      ".write": "auth != null && auth.uid === 'PASTE_ADMIN_UID'",
+      ".read": "auth != null && auth.uid === '9eA5BZII0STtQwqox2XcBNEUfnE2'",
+      ".write": "auth != null && auth.uid === '9eA5BZII0STtQwqox2XcBNEUfnE2'",
       "$hash": {
         ".read": true
       }
     },
     "system_config": {
-      ".read": "auth != null && auth.uid === 'PASTE_ADMIN_UID'",
-      ".write": "auth != null && auth.uid === 'PASTE_ADMIN_UID'"
+      ".read": "auth != null && auth.uid === '9eA5BZII0STtQwqox2XcBNEUfnE2'",
+      ".write": "auth != null && auth.uid === '9eA5BZII0STtQwqox2XcBNEUfnE2'"
     },
     "community_quizzes": {
       ".read": true,
-      ".write": "auth != null && auth.uid === 'PASTE_ADMIN_UID'",
+      ".write": "auth != null && auth.uid === '9eA5BZII0STtQwqox2XcBNEUfnE2'",
       "$quizId": {
         ".write": "auth != null && ((!data.exists() && newData.exists() && newData.child('ownerUid').val() === auth.uid) || (data.child('ownerUid').val() === auth.uid && (!newData.exists() || newData.child('ownerUid').val() === auth.uid)))"
       }
     },
     "hw_meta": {
       ".read": true,
-      ".write": "auth != null && auth.uid === 'PASTE_ADMIN_UID'",
+      ".write": "auth != null && auth.uid === '9eA5BZII0STtQwqox2XcBNEUfnE2'",
       "$hwId": {
         ".write": "auth != null && ((!data.exists() && newData.exists() && newData.child('ownerUid').val() === auth.uid) || (data.child('ownerUid').val() === auth.uid && (!newData.exists() || newData.child('ownerUid').val() === auth.uid)))"
       }
     },
     "hw_subs": {
-      ".read": "auth != null && auth.uid === 'PASTE_ADMIN_UID'",
-      ".write": "auth != null && auth.uid === 'PASTE_ADMIN_UID'",
+      ".read": "auth != null && auth.uid === '9eA5BZII0STtQwqox2XcBNEUfnE2'",
+      ".write": "auth != null && auth.uid === '9eA5BZII0STtQwqox2XcBNEUfnE2'",
       "$hwId": {
         ".read": "auth != null && root.child('hw_meta').child($hwId).child('ownerUid').val() === auth.uid",
         "$submissionId": {
@@ -44,7 +44,7 @@
     "rooms": {
       "$roomCode": {
         ".read": "auth != null",
-        ".write": "auth != null && (auth.uid === 'PASTE_ADMIN_UID' || (!data.exists() && newData.exists() && newData.child('ownerUid').val() === auth.uid && newData.hasChildren(['info', 'qs'])) || (data.child('ownerUid').val() === auth.uid && (!newData.exists() || newData.child('ownerUid').val() === auth.uid)))",
+        ".write": "auth != null && (auth.uid === '9eA5BZII0STtQwqox2XcBNEUfnE2' || (!data.exists() && newData.exists() && newData.child('ownerUid').val() === auth.uid && newData.hasChildren(['info', 'qs'])) || (data.child('ownerUid').val() === auth.uid && (!newData.exists() || newData.child('ownerUid').val() === auth.uid)))",
         "players": {
           "$playerId": {
             ".write": "auth != null && root.child('rooms').child($roomCode).child('info').exists() && auth.uid === $playerId && newData.exists()"
