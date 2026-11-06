@@ -48,6 +48,10 @@
     }
     return result.user;
   }
+  async function sendPasswordResetEmail(email) {
+    const auth = await init();
+    await auth.sendPasswordResetEmail(email);
+  }
   async function adminUser() {
     const auth = await init();
     const user = auth.currentUser;
@@ -68,5 +72,5 @@
     const auth = await init();
     await auth.signOut();
   }
-  window.FBA = { init, signIn, isAdmin, request, signOut };
+  window.FBA = { init, signIn, sendPasswordResetEmail, isAdmin, request, signOut };
 })();
