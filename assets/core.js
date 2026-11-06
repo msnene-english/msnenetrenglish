@@ -1100,7 +1100,7 @@ async function submitHwResult(hwId, entry) {
   };
 
   // Gắn bài nộp với tài khoản ẩn danh của học sinh để Rules kiểm tra.
-  try {
+  if (entry.cloud !== false) try {
     const user = await ensureFirebaseAuth(true);
     if (user) rec.uid = user.uid;
   } catch (e) { console.warn('Firebase Authentication warning:', e); }
@@ -1119,7 +1119,7 @@ async function submitHwResult(hwId, entry) {
 
   // 2. Đồng bộ Firebase
   const cfg = window.GAME_CONFIG || {};
-  if (cfg.firebase && cfg.firebase.databaseURL) {
+  if (entry.cloud !== false && cfg.firebase && cfg.firebase.databaseURL) {
     const base = cfg.firebase.databaseURL.replace(/\/$/, '');
     try {
       if (!rec.uid) throw new Error('Chưa đăng nhập Firebase cho học sinh.');
@@ -1132,7 +1132,12 @@ async function submitHwResult(hwId, entry) {
       });
       if (!response.ok) throw new Error('Không lưu được bài nộp lên Firebase (' + response.status + ').');
 
-    } catch (e) { console.warn('submitHwResult firebase warn:', e); }
+    } catch (e) {
+      console.warn('submitHwResult firebase warn:', e);
+      rec.syncError = e.message || 'Không gửi được bài nộp.';
+    }
+  } else if (entry.cloud !== false) {
+    rec.syncError = 'Chưa cấu hình Firebase.';
   }
   return rec;
 }
