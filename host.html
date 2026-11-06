@@ -1541,6 +1541,10 @@ $('bSolo').onclick = () => {
 $('hwNoDl').onchange = () => { $('hwDl').disabled = $('hwNoDl').checked };
 
 $('bHwMake').onclick = async () => {
+  if (window.LIC && !window.LIC.allowed(gMode)) {
+    promptUnlockModal(gMode);
+    return;
+  }
   try {
   const dl = $('hwNoDl').checked ? 0 : Date.parse($('hwDl').value);
   if (!$('hwNoDl').checked && (!dl || dl < Date.now())) return toast('⏰ Cô chọn hạn nộp ở tương lai nhé', 2400);
