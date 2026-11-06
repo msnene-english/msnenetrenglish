@@ -851,12 +851,22 @@ async function ensureFirebaseAuth(anonymous) {
   return auth.currentUser;
 }
 
+async function authenticatedFirebaseRequest(url, options) {
+  const user = await ensureFirebaseAuth(true);
+  if (!user) throw new Error('Chưa có tài khoản Firebase cho phiên này.');
+  const target = new URL(url);
+  target.searchParams.set('auth', await user.getIdToken());
+  const response = await fetch(target.toString(), options);
+  if (!response.ok) throw new Error('Firebase từ chối thao tác (' + response.status + ').');
+  return response;
+}
+
 async function fireNet(cfg) {
   const V = '10.12.2';
   await loadScript('https://www.gstatic.com/firebasejs/' + V + '/firebase-app-compat.js');
   await loadScript('https://www.gstatic.com/firebasejs/' + V + '/firebase-database-compat.js');
   const app = firebase.apps.length ? firebase.app() : firebase.initializeApp(cfg), db = firebase.database(app);
-  await ensureFirebaseAuth(/\/play\.html$/i.test(location.pathname));
+  await ensureFirebaseAuth(/\/(?:host|play)\.html$/i.test(location.pathname));
   let off = 0; db.ref('.info/serverTimeOffset').on('value', s => off = s.val() || 0);
   return {
     mode: 'firebase', now: () => Date.now() + off, host: async () => { },
@@ -892,6 +902,9 @@ async function saveCommunityQuiz(quiz) {
   quiz.date = quiz.date || new Date().toLocaleDateString('vi-VN');
   quiz.author = (quiz.author || '').trim() || (window.GAME_CONFIG && window.GAME_CONFIG.teacher) || 'Cô Chí Nên';
 
+  const cfg = window.GAME_CONFIG || {};
+  if (cfg.firebase && cfg.firebase.databaseURL) quiz.ownerUid = (await ensureFirebaseAuth(true)).uid;
+
   // 1. Lưu local cache
   const list = getLocalCommunity();
   const existingIdx = list.findIndex(q => q.id === quiz.id);
@@ -900,11 +913,10 @@ async function saveCommunityQuiz(quiz) {
   saveLocalCommunity(list);
 
   // 2. Đồng bộ Firebase nếu có cấu hình
-  const cfg = window.GAME_CONFIG || {};
   if (cfg.firebase && cfg.firebase.databaseURL) {
     try {
       const url = cfg.firebase.databaseURL.replace(/\/$/, '') + '/community_quizzes/' + quiz.id + '.json';
-      await window.FBA.request(url, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(quiz) });
+      await authenticatedFirebaseRequest(url, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(quiz) });
     } catch (e) { console.warn('Firebase sync warning:', e); throw e; }
   }
   return quiz;
@@ -1053,15 +1065,16 @@ async function saveHwMeta(meta) {
     createdAt: meta.createdAt || Date.now(),
     date: stamp(meta.createdAt || Date.now())
   };
+  const cfg = window.GAME_CONFIG || {};
+  if (cfg.firebase && cfg.firebase.databaseURL) item.ownerUid = (await ensureFirebaseAuth(true)).uid;
   const metas = getLocalHwMetas();
   metas[item.id] = Object.assign(metas[item.id] || {}, item);
   saveLocalHwMetas(metas);
 
-  const cfg = window.GAME_CONFIG || {};
   if (cfg.firebase && cfg.firebase.databaseURL) {
     try {
       const url = cfg.firebase.databaseURL.replace(/\/$/, '') + '/hw_meta/' + encodeURIComponent(item.id) + '.json';
-      await window.FBA.request(url, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(item) });
+      await authenticatedFirebaseRequest(url, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(item) });
     } catch (e) { console.warn('saveHwMeta sync warn:', e); throw e; }
   }
   return item;
@@ -1136,21 +1149,32 @@ async function getHwGradebook() {
   if (cfg.firebase && cfg.firebase.databaseURL) {
     const base = cfg.firebase.databaseURL.replace(/\/$/, '');
     try {
-      const [mRes, sRes] = await Promise.all([
-        window.FBA.request(base + '/hw_meta.json').then(r => r.json()).catch(() => null),
-        window.FBA.request(base + '/hw_subs.json').then(r => r.json()).catch(() => null)
-      ]);
+      const user = await ensureFirebaseAuth(true);
+      const admin = user.uid === cfg.firebase.adminUid;
+      const mRes = await authenticatedFirebaseRequest(base + '/hw_meta.json').then(r => r.json());
       if (mRes && typeof mRes === 'object') {
         for (const [k, v] of Object.entries(mRes)) {
-          if (v && typeof v === 'object') metas[k] = Object.assign(metas[k] || {}, v);
+          if (v && typeof v === 'object' && (admin || v.ownerUid === user.uid)) {
+            metas[k] = Object.assign(metas[k] || {}, v);
+          }
         }
       }
-      if (sRes && typeof sRes === 'object') {
-        for (const [hid, map] of Object.entries(sRes)) {
-          if (map && typeof map === 'object') {
-            if (!subsByHw[hid]) subsByHw[hid] = {};
-            Object.assign(subsByHw[hid], map);
-          }
+      let entries;
+      if (admin) {
+        const allSubs = await authenticatedFirebaseRequest(base + '/hw_subs.json').then(r => r.json());
+        entries = Object.entries(allSubs || {});
+      } else {
+        entries = await Promise.all(Object.keys(metas).map(async hid => {
+          try {
+            const result = await authenticatedFirebaseRequest(base + '/hw_subs/' + encodeURIComponent(hid) + '.json');
+            return [hid, await result.json()];
+          } catch (error) { console.warn('Không đọc được bài nộp', hid, error); return [hid, null]; }
+        }));
+      }
+      for (const [hid, map] of entries) {
+        if (map && typeof map === 'object') {
+          if (!subsByHw[hid]) subsByHw[hid] = {};
+          Object.assign(subsByHw[hid], map);
         }
       }
     } catch (e) { console.warn('getHwGradebook warn:', e); }
