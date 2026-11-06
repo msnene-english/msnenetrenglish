@@ -829,8 +829,8 @@ async function mqttNet() {
 
 async function ensureFirebaseAuth(anonymous) {
   const cfg = CFG().firebase;
-  if (!cfg || !cfg.apiKey || cfg.apiKey === 'PASTE_FIREBASE_WEB_API_KEY') {
-    throw new Error('Chưa cấu hình Firebase Web API key.');
+  if (!cfg || !cfg.apiKey || cfg.apiKey === 'PASTE_FIREBASE_WEB_API_KEY' || !cfg.appId || cfg.appId === 'PASTE_FIREBASE_WEB_APP_ID') {
+    throw new Error('Chưa cấu hình Firebase Web app.');
   }
   const version = '10.12.2';
   if (!window.firebase || !firebase.initializeApp) {
