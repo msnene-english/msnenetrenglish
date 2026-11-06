@@ -2245,6 +2245,7 @@ function parseQuestionsUniversal(html) {
 // Hàm gọi AI Gemini đọc hiểu & trích xuất câu hỏi tự động (hỗ trợ nhiều ảnh chụp màn hình & văn bản)
 async function callGeminiAiExtract(contentOrImages, isTestMode) {
   const key = systemAiKey || DEFAULT_AI_KEY;
+  if (!key) throw new Error('Chức năng đọc đề bằng AI chưa được cấu hình. Cô có thể dán văn bản câu hỏi để tạo đề.');
   const isImageList = Array.isArray(contentOrImages) && contentOrImages.length > 0;
   const isSingleImage = typeof contentOrImages === 'string' && contentOrImages.startsWith('data:image/');
 
