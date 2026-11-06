@@ -11,6 +11,8 @@ window.GAME_CONFIG = {
   
   // Cấu hình Firebase Realtime Database chính thức của Cô Chí Nên
   firebase: {
-    databaseURL: "https://game-762ed-default-rtdb.firebaseio.com"
+    databaseURL: "https://game-762ed-default-rtdb.firebaseio.com",
+    apiKey: "PASTE_FIREBASE_WEB_API_KEY",
+    adminUid: "PASTE_ADMIN_UID"
   }
 };
