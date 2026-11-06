@@ -123,7 +123,7 @@ th{color:#7a6aa8;font-size:13px}
   <h1>🎮 Phòng game Cô Chí Nên</h1>
   <button class="btn b" id="bOpenGradebook" type="button" style="padding:8px 14px;font-size:14px">📊 Sổ điểm BTVN</button>
   <span class="badge" id="netB">⏳ Đang kết nối…</span>
-  <span class="badge ok" id="licTag">✅ Bản quyền: Cô Chí Nên · Mở trọn bộ 10 Game & Phòng thi</span>
+  <span class="badge warn" id="licTag">🔒 Miễn phí: Leo núi &amp; Nấm Mario</span>
  </div>
 
  <!-- 1. CÀI ĐẶT -->
@@ -289,7 +289,7 @@ Cách 3 — Dán câu luyện phát âm (tự động điền IPA & mẹo):
     <div class="lab">Tên bộ đề (hiện cho học sinh)</div>
     <input id="gTitle" class="inp" maxlength="60" placeholder="VD: English 7 · Unit 5 hoặc Đề kiểm tra học kỳ">
 
-    <div class="lab">Kiểu game &amp; Kiểm tra (Đã mở full)</div>
+    <div class="lab">Kiểu game &amp; Kiểm tra (2 chế độ miễn phí · các chế độ khác cần Pro)</div>
     <div class="modes" id="gModes">
      <button class="mode on" data-m="climb"><b>🧗</b><span>Leo núi<small>Leo đỉnh · cứu công chúa</small></span></button>
      <button class="mode" data-m="brick"><b>🍄</b><span>Nấm Mario<small>5 màn · biển sâu · rồng</small></span></button>
@@ -1314,18 +1314,19 @@ async function renderBank(forceCloud) {
       const badgeHtml = isTest 
         ? '<span style="background:#8b5cf6;color:#fff;font-size:11px;font-weight:800;padding:2px 6px;border-radius:6px;margin-right:6px">📝 BÀI TEST</span>'
         : '<span style="background:#0284c7;color:#fff;font-size:11px;font-weight:800;padding:2px 6px;border-radius:6px;margin-right:6px">🎮 GAME</span>';
+      const idArg = esc(JSON.stringify(String(item.id || '')));
 
       return `
       <div class="bank-item" style="border-left:4px solid ${isTest ? '#8b5cf6' : '#5ab0ff'}">
-        <div class="binfo" onclick="loadQuizData('${item.id}')">
+        <div class="binfo" onclick="loadQuizData(${idArg})">
           <span style="font-size:15px;color:#2d2350">${badgeHtml}📘 ${esc(item.title || item.id)}</span>
           <span style="font-size:12px;color:#7a6aa8;display:block">
             Mã: <code style="color:#5b4bb0;font-weight:800">${esc(item.id)}</code> · ${item.qs ? item.qs.length : 0} câu · Tác giả: <b>${esc(item.author || 'Ms Nene')}</b> · ${esc(item.date || '')}
           </span>
         </div>
         <div class="bacts">
-          <button class="btn g" style="padding:5px 9px;font-size:12px" title="Dùng đề này mở phòng" onclick="loadQuizData('${item.id}')">${isTest ? '📝 Mở phòng thi' : '🎯 Mở phòng'}</button>
-          <button class="btn w" style="padding:5px 9px;font-size:12px" title="Giao bài" onclick="assignHwFor('${item.id}')">${isTest ? '📋 Giao bài test' : '📚 Giao bài'}</button>
+          <button class="btn g" style="padding:5px 9px;font-size:12px" title="Dùng đề này mở phòng" onclick="loadQuizData(${idArg})">${isTest ? '📝 Mở phòng thi' : '🎯 Mở phòng'}</button>
+          <button class="btn w" style="padding:5px 9px;font-size:12px" title="Giao bài" onclick="assignHwFor(${idArg})">${isTest ? '📋 Giao bài test' : '📚 Giao bài'}</button>
           
         </div>
       </div>
@@ -1354,7 +1355,7 @@ async function renderBank(forceCloud) {
       <div class="bank-item">
         <div class="binfo" onclick="loadFromBank(${idx})">
           <span style="font-size:15px">${badgeHtml}🔒 ${esc(item.title)}</span>
-          <span style="font-size:12px;color:#7a6aa8;display:block">${item.qs.length} câu · ${item.date || ''}</span>
+          <span style="font-size:12px;color:#7a6aa8;display:block">${item.qs.length} câu · ${esc(item.date || '')}</span>
         </div>
         <div class="bacts">
           <button class="btn" style="padding:4px 8px;font-size:12px" onclick="loadFromBank(${idx})">Chọn đề</button>
@@ -1582,7 +1583,7 @@ $('bHwMake').onclick = async () => {
     }))
   };
 
-  let hwId = 'HW-' + Math.floor(100000 + Math.random() * 900000);
+  let hwId = 'HW-' + (globalThis.crypto?.randomUUID?.().slice(0, 8) || Math.random().toString(36).slice(2, 10)).toUpperCase();
   payload.id = hwId;
 
   // XỬ LÝ QUYẾT ĐỊNH CỦA GIÁO VIÊN: LƯU VÀO THƯ VIỆN CHUNG & TẠO LINK RÚT GỌN
@@ -1706,6 +1707,13 @@ if ($('bCloseUnlockGames')) $('bCloseUnlockGames').onclick = () => $('ovUnlockGa
 function renderModesLockState() {
   const unlocked = window.LIC ? window.LIC.isUnlocked() : false;
   const licInfo = window.LIC ? window.LIC.current() : null;
+  const licenseBadge = $('licTag');
+  if (licenseBadge) {
+    licenseBadge.className = unlocked ? 'badge ok' : 'badge warn';
+    licenseBadge.textContent = unlocked
+      ? '🌟 Pro: ' + (licInfo?.name || 'Đã kích hoạt')
+      : '🔒 Miễn phí: Leo núi & Nấm Mario';
+  }
 
   document.querySelectorAll('#gModes .mode').forEach(b => {
     const m = b.dataset.m;
