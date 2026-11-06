@@ -585,7 +585,15 @@ const U = new URLSearchParams(location.search), HWP = U.get('hw');
 const rawIdParam = (U.get('id') || '').trim();
 // Neu param 'id' la dung 6 chu so -> do la MA PHONG, khong phai QUIZ_ID!
 const QUIZ_ID = U.get('quiz') || (rawIdParam && !/^\d{6}$/.test(rawIdParam) ? rawIdParam : null);
-let SOLO = U.get('solo') || (HWP || QUIZ_ID ? 'hw' : null);   // solo = "mau:0" · hw = bài tập về nhà (đề nén trong link)
+let SOLO = U.get('solo') || (HWP || QUIZ_ID ? 'hw' : null);
+function reportHomeworkSync(promise) {
+  if (SOLO !== 'hw') return;
+  Promise.resolve(promise).then(rec => {
+    if (rec?.syncError) toast('⚠️ Chưa gửi được điểm lên máy chủ. Hãy chụp kết quả và gửi cô.', 6000);
+    else toast('✅ Đã gửi kết quả cho cô.', 3000);
+  }).catch(() => toast('⚠️ Chưa gửi được điểm. Hãy chụp kết quả và gửi cô.', 6000));
+}
+   // solo = "mau:0" · hw = bài tập về nhà (đề nén trong link)
 let HW = null;
 const GNAME = { climb: '🧗 Leo núi', brick: '🍄 Nấm Mario', brick2: '🍄 Nấm Mario P2', tank: '🛡 Xe tăng', bomb: '💣 Bomberman', test: '📝 Bài kiểm tra', pac: '🟡 Pac-Man', race: '🏎 Đua xe', temple: '🏃 Temple Run P1', temple2: '🏃 Temple Run P2', bounce: '🔴 Bounce Tales', bounce2: '🐸 Bounce Tales P2', adv: '🏝 Đảo phiêu lưu P1', adv2: '🦖 Đảo phiêu lưu P2', peng: '🐧 Chim cánh cụt phiêu lưu' };
 const RULES = {
@@ -1223,7 +1231,7 @@ function submitTestExam(auto) {
   // Gửi tự động về Sổ điểm Bài tập về nhà của cô nếu làm qua link BTVN / Tự luyện
   if (SOLO) {
     const hwId = QUIZ_ID || (HW && HW.id) || (HWP ? 'HW-' + HWP.slice(-10) : ('SOLO-' + SOLO));
-    GC.submitHwResult(hwId, {
+    reportHomeworkSync(GC.submitHwResult(hwId, {
       title: setTitle || (HW && HW.t) || 'Bài kiểm tra tiếng Anh',
       n: nameV,
       score,
@@ -1231,8 +1239,9 @@ function submitTestExam(auto) {
       ans: ansCount,
       tot: QS.length,
       m: 'test',
+      cloud: SOLO === 'hw',
       durText: elapsedTxt
-    });
+    }));
   }
 
   window.lastTestReportData = {
@@ -2026,7 +2035,7 @@ function showRes(why) {
   };
   if (SOLO) {
     const hwId = QUIZ_ID || (HW && HW.id) || (HWP ? 'HW-' + HWP.slice(-10) : ('SOLO-' + SOLO));
-    GC.submitHwResult(hwId, {
+    reportHomeworkSync(GC.submitHwResult(hwId, {
       title: setTitle || (HW && HW.t) || 'Bài tập ôn tập',
       n: nameV,
       score: pct,
@@ -2034,8 +2043,9 @@ function showRes(why) {
       ans: ans,
       tot: ans || QS.length,
       m: MODE,
+      cloud: SOLO === 'hw',
       durText: fmt(tEnd - t0)
-    });
+    }));
   }
   const head = won ? (Climb.winTitle || '👸 Giải cứu công chúa thành công!') : why === 'time' ? (HW ? '⏰ Hết thời gian làm bài!' : '⏰ Hết giờ rồi!') : why === 'teacher' ? '🏁 Cô đã kết thúc trò chơi' : '🏁 Kết quả leo núi';
   $('rCard').innerHTML = '<div class="big">' + head + '</div><div class="sub">' + esc(setTitle) + '</div><div class="res">' +
