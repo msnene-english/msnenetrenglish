@@ -16,6 +16,6 @@ window.GAME_CONFIG = {
     authDomain: "game-762ed.firebaseapp.com",
     projectId: "game-762ed",
     appId: "1:201737691060:web:6b9ffca2635d31c2595ce1",
-    adminUid: "PASTE_ADMIN_UID"
+    adminUid: "9eA5BZII0STtQwqox2XcBNEUfnE2"
   }
 };
