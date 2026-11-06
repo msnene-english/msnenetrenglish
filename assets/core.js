@@ -827,11 +827,46 @@ async function mqttNet() {
   };
 }
 
+async function ensureFirebaseAuth(anonymous) {
+  const cfg = CFG().firebase;
+  if (!cfg || !cfg.apiKey || cfg.apiKey === 'PASTE_FIREBASE_WEB_API_KEY' || !cfg.appId || cfg.appId === 'PASTE_FIREBASE_WEB_APP_ID') {
+    throw new Error('Chưa cấu hình Firebase Web app.');
+  }
+  const version = '10.12.2';
+  if (!window.firebase || !firebase.initializeApp) {
+    await loadScript('https://www.gstatic.com/firebasejs/' + version + '/firebase-app-compat.js');
+  }
+  if (!firebase.auth) {
+    await loadScript('https://www.gstatic.com/firebasejs/' + version + '/firebase-auth-compat.js');
+  }
+  const app = firebase.apps.length ? firebase.app() : firebase.initializeApp(cfg);
+  const auth = firebase.auth(app);
+  await new Promise((resolve, reject) => {
+    const unsubscribe = auth.onAuthStateChanged(
+      () => { unsubscribe(); resolve(); },
+      reject
+    );
+  });
+  if (anonymous && !auth.currentUser) await auth.signInAnonymously();
+  return auth.currentUser;
+}
+
+async function authenticatedFirebaseRequest(url, options) {
+  const user = await ensureFirebaseAuth(true);
+  if (!user) throw new Error('Chưa có tài khoản Firebase cho phiên này.');
+  const target = new URL(url);
+  target.searchParams.set('auth', await user.getIdToken());
+  const response = await fetch(target.toString(), options);
+  if (!response.ok) throw new Error('Firebase từ chối thao tác (' + response.status + ').');
+  return response;
+}
+
 async function fireNet(cfg) {
   const V = '10.12.2';
   await loadScript('https://www.gstatic.com/firebasejs/' + V + '/firebase-app-compat.js');
   await loadScript('https://www.gstatic.com/firebasejs/' + V + '/firebase-database-compat.js');
   const app = firebase.apps.length ? firebase.app() : firebase.initializeApp(cfg), db = firebase.database(app);
+  await ensureFirebaseAuth(/\/(?:host|play)\.html$/i.test(location.pathname));
   let off = 0; db.ref('.info/serverTimeOffset').on('value', s => off = s.val() || 0);
   return {
     mode: 'firebase', now: () => Date.now() + off, host: async () => { },
@@ -859,13 +894,16 @@ function saveLocalCommunity(list) {
 
 async function saveCommunityQuiz(quiz) {
   if (!quiz.id) {
-    quiz.id = 'MN-' + (Math.floor(1000 + Math.random() * 9000));
+    quiz.id = 'MN-' + (globalThis.crypto?.randomUUID?.().slice(0, 8) || Math.random().toString(36).slice(2, 10)).toUpperCase();
   }
   quiz.title = (quiz.title || '').trim() || (quiz.type === 'test' || quiz.m === 'test' ? 'Bài kiểm tra tiếng Anh' : 'Bài ôn tập tiếng Anh');
   quiz.type = quiz.type || (quiz.m === 'test' ? 'test' : 'game');
   quiz.m = quiz.m || (quiz.type === 'test' ? 'test' : 'climb');
   quiz.date = quiz.date || new Date().toLocaleDateString('vi-VN');
   quiz.author = (quiz.author || '').trim() || (window.GAME_CONFIG && window.GAME_CONFIG.teacher) || 'Cô Chí Nên';
+
+  const cfg = window.GAME_CONFIG || {};
+  if (cfg.firebase && cfg.firebase.databaseURL) quiz.ownerUid = (await ensureFirebaseAuth(true)).uid;
 
   // 1. Lưu local cache
   const list = getLocalCommunity();
@@ -875,12 +913,11 @@ async function saveCommunityQuiz(quiz) {
   saveLocalCommunity(list);
 
   // 2. Đồng bộ Firebase nếu có cấu hình
-  const cfg = window.GAME_CONFIG || {};
   if (cfg.firebase && cfg.firebase.databaseURL) {
     try {
       const url = cfg.firebase.databaseURL.replace(/\/$/, '') + '/community_quizzes/' + quiz.id + '.json';
-      await fetch(url, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(quiz) });
-    } catch (e) { console.warn('Firebase sync warning:', e); }
+      await authenticatedFirebaseRequest(url, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(quiz) });
+    } catch (e) { console.warn('Firebase sync warning:', e); throw e; }
   }
   return quiz;
 }
@@ -929,21 +966,14 @@ async function getCommunityLibrary() {
 async function deleteCommunityQuiz(id) {
   if (!id) return false;
   id = String(id).trim();
-  // 1. Local deletion
-  const list = getLocalCommunity().filter(q => q.id !== id);
-  saveLocalCommunity(list);
-  if (typeof window !== 'undefined' && window.communityQuizzesCache) {
-    window.communityQuizzesCache = window.communityQuizzesCache.filter(q => q.id !== id);
-  }
-  // 2. Cloud server deletion
   const cfg = window.GAME_CONFIG || {};
   if (cfg.firebase && cfg.firebase.databaseURL) {
-    try {
-      const url = cfg.firebase.databaseURL.replace(/\/$/, '') + '/community_quizzes/' + encodeURIComponent(id) + '.json';
-      await fetch(url, { method: 'DELETE' });
-    } catch (e) {
-      console.warn('Delete quiz from server warn:', e);
-    }
+    const url = cfg.firebase.databaseURL.replace(/\/$/, '') + '/community_quizzes/' + encodeURIComponent(id) + '.json';
+    await window.FBA.request(url, { method: 'DELETE' });
+  }
+  saveLocalCommunity(getLocalCommunity().filter(q => q.id !== id));
+  if (typeof window !== 'undefined' && window.communityQuizzesCache) {
+    window.communityQuizzesCache = window.communityQuizzesCache.filter(q => q.id !== id);
   }
   return true;
 }
@@ -951,35 +981,26 @@ async function deleteCommunityQuiz(id) {
 async function deleteHwSubmission(hwId, subId) {
   if (!hwId) return false;
   hwId = String(hwId).trim();
-  // 1. Local deletion
+  const cfg = window.GAME_CONFIG || {};
+  if (cfg.firebase && cfg.firebase.databaseURL) {
+    const base = cfg.firebase.databaseURL.replace(/\/$/, '');
+    if (subId) {
+      await window.FBA.request(base + '/hw_subs/' + encodeURIComponent(hwId) + '/' + encodeURIComponent(subId) + '.json', { method: 'DELETE' });
+    } else {
+      await window.FBA.request(base + '/hw_subs/' + encodeURIComponent(hwId) + '.json', { method: 'DELETE' });
+      await window.FBA.request(base + '/hw_meta/' + encodeURIComponent(hwId) + '.json', { method: 'DELETE' });
+    }
+  }
   const allSubs = getLocalHwSubs();
   if (allSubs[hwId]) {
-    if (subId) {
-      delete allSubs[hwId][subId];
-    } else {
-      delete allSubs[hwId];
-    }
+    if (subId) delete allSubs[hwId][subId];
+    else delete allSubs[hwId];
     saveLocalHwSubs(allSubs);
   }
   if (!subId) {
     const metas = getLocalHwMetas();
     delete metas[hwId];
     saveLocalHwMetas(metas);
-  }
-  // 2. Cloud server deletion
-  const cfg = window.GAME_CONFIG || {};
-  if (cfg.firebase && cfg.firebase.databaseURL) {
-    const base = cfg.firebase.databaseURL.replace(/\/$/, '');
-    try {
-      if (subId) {
-        await fetch(base + '/hw_subs/' + encodeURIComponent(hwId) + '/' + encodeURIComponent(subId) + '.json', { method: 'DELETE' });
-      } else {
-        await fetch(base + '/hw_subs/' + encodeURIComponent(hwId) + '.json', { method: 'DELETE' });
-        await fetch(base + '/hw_meta/' + encodeURIComponent(hwId) + '.json', { method: 'DELETE' });
-      }
-    } catch (e) {
-      console.warn('Delete submission from server warn:', e);
-    }
   }
   return true;
 }
@@ -1044,16 +1065,17 @@ async function saveHwMeta(meta) {
     createdAt: meta.createdAt || Date.now(),
     date: stamp(meta.createdAt || Date.now())
   };
+  const cfg = window.GAME_CONFIG || {};
+  if (cfg.firebase && cfg.firebase.databaseURL) item.ownerUid = (await ensureFirebaseAuth(true)).uid;
   const metas = getLocalHwMetas();
   metas[item.id] = Object.assign(metas[item.id] || {}, item);
   saveLocalHwMetas(metas);
 
-  const cfg = window.GAME_CONFIG || {};
   if (cfg.firebase && cfg.firebase.databaseURL) {
     try {
       const url = cfg.firebase.databaseURL.replace(/\/$/, '') + '/hw_meta/' + encodeURIComponent(item.id) + '.json';
-      await fetch(url, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(item) });
-    } catch (e) { console.warn('saveHwMeta sync warn:', e); }
+      await authenticatedFirebaseRequest(url, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(item) });
+    } catch (e) { console.warn('saveHwMeta sync warn:', e); throw e; }
   }
   return item;
 }
@@ -1077,6 +1099,12 @@ async function submitHwResult(hwId, entry) {
     date: stamp(Date.now())
   };
 
+  // Gắn bài nộp với tài khoản ẩn danh của học sinh để Rules kiểm tra.
+  if (entry.cloud !== false) try {
+    const user = await ensureFirebaseAuth(true);
+    if (user) rec.uid = user.uid;
+  } catch (e) { console.warn('Firebase Authentication warning:', e); }
+
   // 1. Lưu local
   const allSubs = getLocalHwSubs();
   if (!allSubs[hwId]) allSubs[hwId] = {};
@@ -1091,20 +1119,25 @@ async function submitHwResult(hwId, entry) {
 
   // 2. Đồng bộ Firebase
   const cfg = window.GAME_CONFIG || {};
-  if (cfg.firebase && cfg.firebase.databaseURL) {
+  if (entry.cloud !== false && cfg.firebase && cfg.firebase.databaseURL) {
     const base = cfg.firebase.databaseURL.replace(/\/$/, '');
     try {
-      await fetch(base + '/hw_subs/' + encodeURIComponent(hwId) + '/' + subId + '.json', {
+      if (!rec.uid) throw new Error('Chưa đăng nhập Firebase cho học sinh.');
+      const idToken = await firebase.auth().currentUser.getIdToken();
+      const url = base + '/hw_subs/' + encodeURIComponent(hwId) + '/' + subId + '.json?auth=' + encodeURIComponent(idToken);
+      const response = await fetch(url, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(rec)
       });
-      await fetch(base + '/hw_meta/' + encodeURIComponent(hwId) + '.json', {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ id: hwId, title: rec.title, m: rec.m, updatedAt: rec.at, date: rec.date })
-      });
-    } catch (e) { console.warn('submitHwResult firebase warn:', e); }
+      if (!response.ok) throw new Error('Không lưu được bài nộp lên Firebase (' + response.status + ').');
+
+    } catch (e) {
+      console.warn('submitHwResult firebase warn:', e);
+      rec.syncError = e.message || 'Không gửi được bài nộp.';
+    }
+  } else if (entry.cloud !== false) {
+    rec.syncError = 'Chưa cấu hình Firebase.';
   }
   return rec;
 }
@@ -1121,21 +1154,32 @@ async function getHwGradebook() {
   if (cfg.firebase && cfg.firebase.databaseURL) {
     const base = cfg.firebase.databaseURL.replace(/\/$/, '');
     try {
-      const [mRes, sRes] = await Promise.all([
-        fetch(base + '/hw_meta.json').then(r => r.json()).catch(() => null),
-        fetch(base + '/hw_subs.json').then(r => r.json()).catch(() => null)
-      ]);
+      const user = await ensureFirebaseAuth(true);
+      const admin = user.uid === cfg.firebase.adminUid;
+      const mRes = await authenticatedFirebaseRequest(base + '/hw_meta.json').then(r => r.json());
       if (mRes && typeof mRes === 'object') {
         for (const [k, v] of Object.entries(mRes)) {
-          if (v && typeof v === 'object') metas[k] = Object.assign(metas[k] || {}, v);
+          if (v && typeof v === 'object' && (admin || v.ownerUid === user.uid)) {
+            metas[k] = Object.assign(metas[k] || {}, v);
+          }
         }
       }
-      if (sRes && typeof sRes === 'object') {
-        for (const [hid, map] of Object.entries(sRes)) {
-          if (map && typeof map === 'object') {
-            if (!subsByHw[hid]) subsByHw[hid] = {};
-            Object.assign(subsByHw[hid], map);
-          }
+      let entries;
+      if (admin) {
+        const allSubs = await authenticatedFirebaseRequest(base + '/hw_subs.json').then(r => r.json());
+        entries = Object.entries(allSubs || {});
+      } else {
+        entries = await Promise.all(Object.keys(metas).map(async hid => {
+          try {
+            const result = await authenticatedFirebaseRequest(base + '/hw_subs/' + encodeURIComponent(hid) + '.json');
+            return [hid, await result.json()];
+          } catch (error) { console.warn('Không đọc được bài nộp', hid, error); return [hid, null]; }
+        }));
+      }
+      for (const [hid, map] of entries) {
+        if (map && typeof map === 'object') {
+          if (!subsByHw[hid]) subsByHw[hid] = {};
+          Object.assign(subsByHw[hid], map);
         }
       }
     } catch (e) { console.warn('getHwGradebook warn:', e); }
@@ -1485,11 +1529,11 @@ function showReportCard(data) {
 /* ══════════════════════════════════════════════════════════════
    HỆ THỐNG ĐÁNH GIÁ PHÁT ÂM TIẾNG ANH AI (AI PRONUNCIATION EVALUATION)
    ══════════════════════════════════════════════════════════════ */
-const DEFAULT_AI_KEY = atob('QVEuQWI4Uk42SXY0Mm9BVTFySEFWNEItTVlMb0U2eThEaHFvd2pybFZ3QXVkbUEyQkxYOWc=');
+const DEFAULT_AI_KEY = '';
 let systemAiKey = DEFAULT_AI_KEY;
-if (typeof window !== 'undefined' && window.firebaseConfig && window.firebaseConfig.databaseURL) {
+if (typeof window !== 'undefined' && window.GAME_CONFIG && GAME_CONFIG.firebase && GAME_CONFIG.firebase.databaseURL) {
   try {
-    fetch(window.firebaseConfig.databaseURL + '/system_config/gemini_key.json')
+    fetch(window.GAME_CONFIG.firebase.databaseURL + '/system_config/gemini_key.json')
       .then(r => r.json())
       .then(k => { if (k && typeof k === 'string') systemAiKey = k; })
       .catch(() => {});

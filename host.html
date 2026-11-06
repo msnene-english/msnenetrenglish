@@ -123,7 +123,7 @@ th{color:#7a6aa8;font-size:13px}
   <h1>🎮 Phòng game Cô Chí Nên</h1>
   <button class="btn b" id="bOpenGradebook" type="button" style="padding:8px 14px;font-size:14px">📊 Sổ điểm BTVN</button>
   <span class="badge" id="netB">⏳ Đang kết nối…</span>
-  <span class="badge ok" id="licTag">✅ Bản quyền: Cô Chí Nên · Mở trọn bộ 10 Game & Phòng thi</span>
+  <span class="badge warn" id="licTag">🔒 Miễn phí: Leo núi &amp; Nấm Mario</span>
  </div>
 
  <!-- 1. CÀI ĐẶT -->
@@ -289,7 +289,7 @@ Cách 3 — Dán câu luyện phát âm (tự động điền IPA & mẹo):
     <div class="lab">Tên bộ đề (hiện cho học sinh)</div>
     <input id="gTitle" class="inp" maxlength="60" placeholder="VD: English 7 · Unit 5 hoặc Đề kiểm tra học kỳ">
 
-    <div class="lab">Kiểu game &amp; Kiểm tra (Đã mở full)</div>
+    <div class="lab">Kiểu game &amp; Kiểm tra (2 chế độ miễn phí · các chế độ khác cần Pro)</div>
     <div class="modes" id="gModes">
      <button class="mode on" data-m="climb"><b>🧗</b><span>Leo núi<small>Leo đỉnh · cứu công chúa</small></span></button>
      <button class="mode" data-m="brick"><b>🍄</b><span>Nấm Mario<small>5 màn · biển sâu · rồng</small></span></button>
@@ -675,8 +675,9 @@ Hoặc dán theo mẫu:
 <!-- SCRIPTS HỆ THỐNG -->
 <script src="assets/shield.js?v=2.4"></script>
 <script src="assets/qrcode.min.js"></script>
-<script src="assets/config.js?v=2.4"></script>
-<script src="assets/core.js?v=2.4"></script>
+<script src="assets/config.js?v=2.5"></script>
+<script src="assets/firebase-admin-auth.js?v=1"></script>
+<script src="assets/core.js?v=2.5"></script>
 <script src="assets/mau.js"></script>
 <script src="assets/climb.js"></script>
 <script src="assets/brick.js"></script>
@@ -1313,18 +1314,19 @@ async function renderBank(forceCloud) {
       const badgeHtml = isTest 
         ? '<span style="background:#8b5cf6;color:#fff;font-size:11px;font-weight:800;padding:2px 6px;border-radius:6px;margin-right:6px">📝 BÀI TEST</span>'
         : '<span style="background:#0284c7;color:#fff;font-size:11px;font-weight:800;padding:2px 6px;border-radius:6px;margin-right:6px">🎮 GAME</span>';
+      const idArg = esc(JSON.stringify(String(item.id || '')));
 
       return `
       <div class="bank-item" style="border-left:4px solid ${isTest ? '#8b5cf6' : '#5ab0ff'}">
-        <div class="binfo" onclick="loadQuizData('${item.id}')">
+        <div class="binfo" onclick="loadQuizData(${idArg})">
           <span style="font-size:15px;color:#2d2350">${badgeHtml}📘 ${esc(item.title || item.id)}</span>
           <span style="font-size:12px;color:#7a6aa8;display:block">
             Mã: <code style="color:#5b4bb0;font-weight:800">${esc(item.id)}</code> · ${item.qs ? item.qs.length : 0} câu · Tác giả: <b>${esc(item.author || 'Ms Nene')}</b> · ${esc(item.date || '')}
           </span>
         </div>
         <div class="bacts">
-          <button class="btn g" style="padding:5px 9px;font-size:12px" title="Dùng đề này mở phòng" onclick="loadQuizData('${item.id}')">${isTest ? '📝 Mở phòng thi' : '🎯 Mở phòng'}</button>
-          <button class="btn w" style="padding:5px 9px;font-size:12px" title="Giao bài" onclick="assignHwFor('${item.id}')">${isTest ? '📋 Giao bài test' : '📚 Giao bài'}</button>
+          <button class="btn g" style="padding:5px 9px;font-size:12px" title="Dùng đề này mở phòng" onclick="loadQuizData(${idArg})">${isTest ? '📝 Mở phòng thi' : '🎯 Mở phòng'}</button>
+          <button class="btn w" style="padding:5px 9px;font-size:12px" title="Giao bài" onclick="assignHwFor(${idArg})">${isTest ? '📋 Giao bài test' : '📚 Giao bài'}</button>
           
         </div>
       </div>
@@ -1353,7 +1355,7 @@ async function renderBank(forceCloud) {
       <div class="bank-item">
         <div class="binfo" onclick="loadFromBank(${idx})">
           <span style="font-size:15px">${badgeHtml}🔒 ${esc(item.title)}</span>
-          <span style="font-size:12px;color:#7a6aa8;display:block">${item.qs.length} câu · ${item.date || ''}</span>
+          <span style="font-size:12px;color:#7a6aa8;display:block">${item.qs.length} câu · ${esc(item.date || '')}</span>
         </div>
         <div class="bacts">
           <button class="btn" style="padding:4px 8px;font-size:12px" onclick="loadFromBank(${idx})">Chọn đề</button>
@@ -1413,6 +1415,7 @@ window.copyShortLinkFor = function(id) {
 };
 
 window.shareLocalToCommunity = async function(idx) {
+  try {
   const bank = getBank();
   const item = bank[idx];
   if (!item) return;
@@ -1426,6 +1429,7 @@ window.shareLocalToCommunity = async function(idx) {
   });
   toast('🎉 Đã chia sẻ đề "' + item.title + '" lên Thư viện chung với mã: ' + saved.id, 3500);
   renderBank();
+  } catch (e) { toast('❌ Không thể chia sẻ đề: ' + e.message, 3500); }
 };
 
 window.loadFromBank = function(idx) {
@@ -1448,6 +1452,7 @@ window.deleteFromBank = function(idx) {
 /* Nút lưu lên Thư viện chung */
 $('bSaveToBank').onclick = async () => {
   if (!qs.length) return;
+  try {
   const isTest = gMode === 'test';
   const title = clean($('gTitle').value) || prompt('Nhập tên bộ đề chia sẻ:') || (isTest ? 'Bài kiểm tra tiếng Anh' : 'Bài ôn tập');
   const author = prompt('Tên giáo viên / Nguồn đề:', 'Cô Chí Nên') || 'Cô Chí Nên';
@@ -1462,6 +1467,7 @@ $('bSaveToBank').onclick = async () => {
   });
   toast('🎉 Đã lưu & chia sẻ thành công lên Thư viện chung! Mã đề: ' + saved.id, 3500);
   renderBank();
+  } catch (e) { toast('❌ Không thể lưu đề: ' + e.message, 3500); }
 };
 
 /* Nút lưu riêng máy này */
@@ -1536,6 +1542,11 @@ $('bSolo').onclick = () => {
 $('hwNoDl').onchange = () => { $('hwDl').disabled = $('hwNoDl').checked };
 
 $('bHwMake').onclick = async () => {
+  if (window.LIC && !window.LIC.allowed(gMode)) {
+    promptUnlockModal(gMode);
+    return;
+  }
+  try {
   const dl = $('hwNoDl').checked ? 0 : Date.parse($('hwDl').value);
   if (!$('hwNoDl').checked && (!dl || dl < Date.now())) return toast('⏰ Cô chọn hạn nộp ở tương lai nhé', 2400);
   const isTest = gMode === 'test';
@@ -1572,7 +1583,7 @@ $('bHwMake').onclick = async () => {
     }))
   };
 
-  let hwId = 'HW-' + Math.floor(100000 + Math.random() * 900000);
+  let hwId = 'HW-' + (globalThis.crypto?.randomUUID?.().slice(0, 8) || Math.random().toString(36).slice(2, 10)).toUpperCase();
   payload.id = hwId;
 
   // XỬ LÝ QUYẾT ĐỊNH CỦA GIÁO VIÊN: LƯU VÀO THƯ VIỆN CHUNG & TẠO LINK RÚT GỌN
@@ -1624,6 +1635,7 @@ $('bHwMake').onclick = async () => {
   $('hwMsg').textContent = hwText;
   $('hwOut').hidden = false;
   $('hwLen').textContent = hwShortLink ? '✅ Link ngắn (' + hwShortLink.length + ' ký tự) — Đã lưu vào Thư viện chung, gửi Zalo/Facebook thoải mái không bao giờ bị cắt link!' : '⚠️ Link tự thân (' + hwLink.length + ' ký tự).';
+  } catch (e) { toast('❌ Không thể giao bài: ' + e.message, 3500); }
 };
 
 $('bHwCopy').onclick = () => navigator.clipboard.writeText(hwText).then(() => toast('📋 Đã copy tin nhắn — dán vào nhóm Zalo lớp nhé!', 2800)).catch(() => prompt('Copy:', hwText));
@@ -1695,6 +1707,13 @@ if ($('bCloseUnlockGames')) $('bCloseUnlockGames').onclick = () => $('ovUnlockGa
 function renderModesLockState() {
   const unlocked = window.LIC ? window.LIC.isUnlocked() : false;
   const licInfo = window.LIC ? window.LIC.current() : null;
+  const licenseBadge = $('licTag');
+  if (licenseBadge) {
+    licenseBadge.className = unlocked ? 'badge ok' : 'badge warn';
+    licenseBadge.textContent = unlocked
+      ? '🌟 Pro: ' + (licInfo?.name || 'Đã kích hoạt')
+      : '🔒 Miễn phí: Leo núi & Nấm Mario';
+  }
 
   document.querySelectorAll('#gModes .mode').forEach(b => {
     const m = b.dataset.m;
@@ -1807,7 +1826,7 @@ $('bOpen').onclick = async () => {
       audio: q.audio || '',
       img: q.img || ''
     }));
-    await net.set('rooms/' + code, { info, qs: clean_qs });
+    await net.set('rooms/' + code, { info, qs: clean_qs, ownerUid: net.mode === 'firebase' ? firebase.auth().currentUser.uid : null });
     store.set('gHost', JSON.stringify({ code, qs: clean_qs }));
     enterRoom();
   } catch (e) { toast('❌ ' + e.message, 4000) } finally { $('bOpen').disabled = !qs.length }
@@ -2092,12 +2111,12 @@ $('bClose').onclick = async () => { await net.remove('rooms/' + code); showEnd.d
 
 
 /* ═════ TỰ ĐỘNG CÀO ĐỀ TỪ LINK BÀI TẬP GITHUB.IO & GEMINI AI ═════ */
-// Key Gemini mặc định của cô (Mã hóa an toàn) & Tự động đồng bộ từ máy chủ
-const DEFAULT_AI_KEY = atob('QVEuQWI4Uk42SXY0Mm9BVTFySEFWNEItTVlMb0U2eThEaHFvd2pybFZ3QXVkbUEyQkxYOWc=');
+// Khóa AI được đọc từ Firebase system_config; không lưu khóa trong mã công khai.
+const DEFAULT_AI_KEY = '';
 let systemAiKey = DEFAULT_AI_KEY;
 
-if (window.firebaseConfig && firebaseConfig.databaseURL) {
-  fetch(firebaseConfig.databaseURL + '/system_config/gemini_key.json')
+if (window.GAME_CONFIG && GAME_CONFIG.firebase && GAME_CONFIG.firebase.databaseURL) {
+  fetch(GAME_CONFIG.firebase.databaseURL + '/system_config/gemini_key.json')
     .then(r => r.json())
     .then(k => { if (k && typeof k === 'string') systemAiKey = k; })
     .catch(() => {});
@@ -2226,6 +2245,7 @@ function parseQuestionsUniversal(html) {
 // Hàm gọi AI Gemini đọc hiểu & trích xuất câu hỏi tự động (hỗ trợ nhiều ảnh chụp màn hình & văn bản)
 async function callGeminiAiExtract(contentOrImages, isTestMode) {
   const key = systemAiKey || DEFAULT_AI_KEY;
+  if (!key) throw new Error('Chức năng đọc đề bằng AI chưa được cấu hình. Cô có thể dán văn bản câu hỏi để tạo đề.');
   const isImageList = Array.isArray(contentOrImages) && contentOrImages.length > 0;
   const isSingleImage = typeof contentOrImages === 'string' && contentOrImages.startsWith('data:image/');
 
@@ -2802,40 +2822,42 @@ window.openGbReportCard = function(idx) {
   });
 };
 
-if ($('bOpenGradebook')) $('bOpenGradebook').onclick = () => openHwGradebook();
+if ($('bOpenGradebook')) $('bOpenGradebook').onclick = async () => {
+  try {
+    await openHwGradebook();
+  } catch (e) { toast('❌ ' + e.message, 3500); }
+};
 if ($('gbSelect')) $('gbSelect').onchange = () => renderGradebookTable();
 if ($('bGbRefresh')) $('bGbRefresh').onclick = () => openHwGradebook($('gbSelect').value);
 
 /* ═════ QUẢN TRỊ ADMIN XÓA BỘ ĐỀ & BẢN GHI ĐIỂM ═════ */
 window.adminDeleteQuiz = async function(id) {
   if (!id) return;
-  const key = prompt('🔐 Nhập mã quản trị (Admin Key) để xóa bộ đề [' + id + ']:');
-  if (key === null) return;
-  if (!window.LIC || !window.LIC.verifyAdmin(key)) {
-    toast('❌ Sai mã quản trị (Admin Key)!', 2500);
-    return;
-  }
+  try {
+    if (!(await FBA.isAdmin())) return toast('🔐 Đăng nhập tài khoản quản trị tại trang Admin trước khi xóa.', 3500);
+  } catch (e) { return toast('❌ ' + e.message, 3500); }
   if (!confirm('Cô có chắc chắn muốn xóa vĩnh viễn bộ đề [' + id + '] khỏi thư viện không?')) return;
   toast('⏳ Đang xóa bộ đề khỏi hệ thống...', 1800);
-  await GC.deleteCommunityQuiz(id);
-  toast('🗑️ Đã xóa bộ đề [' + id + '] thành công!', 2200);
-  renderBank(true);
+  try {
+    await GC.deleteCommunityQuiz(id);
+    toast('🗑️ Đã xóa bộ đề [' + id + '] thành công!', 2200);
+    renderBank(true);
+  } catch (e) { toast('❌ Không thể xóa đề: ' + e.message, 3500); }
 };
 
 window.adminDeleteSubmission = async function(idx) {
   const r = gbCurrentRows[idx];
   if (!r) return;
-  const key = prompt('🔐 Nhập mã quản trị (Admin Key) để xóa bản ghi điểm của học sinh: ' + r.n + ':');
-  if (key === null) return;
-  if (!window.LIC || !window.LIC.verifyAdmin(key)) {
-    toast('❌ Sai mã quản trị (Admin Key)!', 2500);
-    return;
-  }
+  try {
+    if (!(await FBA.isAdmin())) return toast('🔐 Đăng nhập tài khoản quản trị tại trang Admin trước khi xóa.', 3500);
+  } catch (e) { return toast('❌ ' + e.message, 3500); }
   if (!confirm('Cô có chắc chắn muốn xóa bản ghi điểm của ' + r.n + ' không?')) return;
   toast('⏳ Đang xóa bản ghi điểm...', 1800);
-  await GC.deleteHwSubmission(r.hwId, r.id);
-  toast('🗑️ Đã xóa bản ghi điểm của ' + r.n + ' thành công!', 2200);
-  openHwGradebook($('gbSelect').value);
+  try {
+    await GC.deleteHwSubmission(r.hwId, r.id);
+    toast('🗑️ Đã xóa bản ghi điểm của ' + r.n + ' thành công!', 2200);
+    openHwGradebook($('gbSelect').value);
+  } catch (e) { toast('❌ Không thể xóa điểm: ' + e.message, 3500); }
 };
 
 if ($('bGbDeleteHw')) {
@@ -2844,17 +2866,16 @@ if ($('bGbDeleteHw')) {
     if (!hid || hid === 'ALL') {
       return toast('⚠️ Cô hãy chọn 1 bài tập cụ thể trong danh sách thả xuống trước khi xóa nhé!', 2800);
     }
-    const key = prompt('🔐 Nhập mã quản trị (Admin Key) để xóa toàn bộ bài tập [' + hid + '] và tất cả điểm số:');
-    if (key === null) return;
-    if (!window.LIC || !window.LIC.verifyAdmin(key)) {
-      toast('❌ Sai mã quản trị (Admin Key)!', 2500);
-      return;
-    }
+    try {
+      if (!(await FBA.isAdmin())) return toast('🔐 Đăng nhập tài khoản quản trị tại trang Admin trước khi xóa.', 3500);
+    } catch (e) { return toast('❌ ' + e.message, 3500); }
     if (!confirm('⚠️ CẢNH BÁO: Thao tác này sẽ xóa vĩnh viễn bài tập [' + hid + '] và TOÀN BỘ điểm nộp của học sinh. Cô có chắc chắn muốn xóa không?')) return;
     toast('⏳ Đang xóa toàn bộ bài tập và dữ liệu nộp bài...', 2500);
-    await GC.deleteHwSubmission(hid);
-    toast('🗑️ Đã xóa bài tập [' + hid + '] thành công!', 2500);
-    openHwGradebook('ALL');
+    try {
+      await GC.deleteHwSubmission(hid);
+      toast('🗑️ Đã xóa bài tập [' + hid + '] thành công!', 2500);
+      openHwGradebook('ALL');
+    } catch (e) { toast('❌ Không thể xóa bài tập: ' + e.message, 3500); }
   };
 }
 
