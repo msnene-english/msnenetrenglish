@@ -13,6 +13,9 @@ window.GAME_CONFIG = {
   firebase: {
     databaseURL: "https://game-762ed-default-rtdb.firebaseio.com",
     apiKey: "PASTE_FIREBASE_WEB_API_KEY",
+    authDomain: "game-762ed.firebaseapp.com",
+    projectId: "game-762ed",
+    appId: "PASTE_FIREBASE_WEB_APP_ID",
     adminUid: "PASTE_ADMIN_UID"
   }
 };
