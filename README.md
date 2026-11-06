@@ -91,4 +91,4 @@ MsNeneEnglish/
 3. Đưa mã web và Realtime Database Rules lên cùng đợt, sau đó kiểm tra mở phòng miễn phí, nhập mã Pro, giao bài, nộp bài, xem sổ điểm và quản lý đề trong admin.
 4. Phần gọi Gemini cần được chuyển sang Firebase AI Logic cùng App Check trước khi bật lại trên trang công khai. Phần chấm phát âm cơ bản trên máy vẫn có thể hoạt động khi không có Gemini.
 
-Tạo phòng và giao bài không yêu cầu đăng nhập admin. Trình duyệt tự dùng Firebase Authentication ẩn danh để gắn quyền sở hữu dữ liệu; học sinh không phải nhập tài khoản. Trang admin dùng email và mật khẩu riêng.
+Tạo phòng và giao bài không yêu cầu đăng nhập admin. Trình duyệt tự dùng Firebase Authentication ẩn danh để gắn quyền sở hữu dữ liệu; học sinh không phải nhập tài khoản. Trang admin dùng email và mật khẩu riêng. Nếu quên mật khẩu, nhập email admin ở màn hình đăng nhập và bấm **Quên mật khẩu?** để Firebase gửi thư đặt lại; có thể gửi thư từ Firebase Console → Authentication → Users.
