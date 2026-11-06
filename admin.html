@@ -528,6 +528,8 @@ html, body {
   <button type="button" class="btn btn-primary" id="bLoginMaster" style="width:100%;padding:13px;font-size:15px">
    🔓 Đăng nhập
   </button>
+  <button type="button" class="btn btn-outline" id="bForgotPassword" style="width:100%;margin-top:10px">Quên mật khẩu?</button>
+  <p id="resetPasswordStatus" role="status" aria-live="polite" style="display:none;margin-top:10px;font-size:13px;font-weight:700"></p>
  </div>
 </div>
 
@@ -808,6 +810,33 @@ async function verifyMasterLogin() {
 }
 
 $('bLoginMaster').onclick = verifyMasterLogin;
+$('bForgotPassword').onclick = async () => {
+  const emailInput = $('inpAdminEmail');
+  const status = $('resetPasswordStatus');
+  const button = $('bForgotPassword');
+  const email = emailInput.value.trim();
+  status.style.display = 'block';
+  if (!email || !emailInput.checkValidity()) {
+    status.style.color = '#dc2626';
+    status.textContent = 'Hãy nhập địa chỉ email admin hợp lệ ở ô phía trên.';
+    emailInput.focus();
+    return;
+  }
+  button.disabled = true;
+  status.style.color = '#475569';
+  status.textContent = 'Đang gửi thư đặt lại mật khẩu...';
+  try {
+    await FBA.sendPasswordResetEmail(email);
+    status.style.color = '#15803d';
+    status.textContent = 'Nếu đây là email admin, hãy kiểm tra hộp thư và thư rác để đặt mật khẩu mới.';
+  } catch (error) {
+    console.error('Không gửi được thư đặt lại mật khẩu:', error);
+    status.style.color = '#dc2626';
+    status.textContent = 'Chưa gửi được thư. Vui lòng thử lại hoặc gửi thư đặt lại từ Firebase Console.';
+  } finally {
+    button.disabled = false;
+  }
+};
 $('inpMasterKey').onkeydown = e => { if (e.key === 'Enter') verifyMasterLogin(); };
 
 $('bLogout').onclick = async () => {
