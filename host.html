@@ -2323,7 +2323,7 @@ Trả về strictly JSON danh sách:
     aiInput = aiInput.replace(/\s+/g, ' ').trim().slice(0, 32000);
   }
   try {
-    const aiImport = await import('./assets/ai-import.js?v=20261107-7');
+    const aiImport = await import('./assets/ai-import.js?v=20261107-8');
     const result = await aiImport.generateQuiz(promptText, aiInput, { isTestMode });
     result.questions.skipped = result.skipped;
     result.questions.inferredCount = result.inferredCount;
@@ -2602,11 +2602,11 @@ async function processLoadQuiz(isTestMode) {
 
     // 1. PDF hoặc ảnh được AI đọc trực tiếp.
     if (selectedPdf) {
-      status.textContent = '🧠 AI đang đọc PDF ' + selectedPdf.name + '…';
+      status.textContent = '🧠 AI đang đọc PDF ' + selectedPdf.name + ' (có thể mất vài phút)…';
       extractedQs = await callGeminiAiExtract(selectedPdf, isTestMode);
       docTitle = selectedPdf.name.replace(/\.pdf$/i, '');
     } else if (pastedImages.length > 0) {
-      status.innerHTML = '🧠 <b>AI Gemini đang đọc chữ và câu hỏi từ ' + pastedImages.length + ' ảnh chụp màn hình…</b>';
+      status.innerHTML = '🧠 <b>AI Gemini đang đọc chữ và câu hỏi từ ' + pastedImages.length + ' ảnh chụp màn hình; có thể mất vài phút…</b>';
       extractedQs = await callGeminiAiExtract(pastedImages, isTestMode);
       docTitle = (isTestMode ? 'Bài kiểm tra' : 'Game') + ' (Từ ' + pastedImages.length + ' ảnh chụp)';
     }
@@ -2638,8 +2638,14 @@ async function processLoadQuiz(isTestMode) {
     }
     // 3. Trường hợp dán văn bản
     else if (pasteTxt) {
-      status.innerHTML = '🧠 <b>AI Gemini đang phân tích văn bản bài tập…</b>';
-      extractedQs = await callGeminiAiExtract(pasteTxt, isTestMode);
+      const parsed = GC.parsePaste(pasteTxt);
+      if (!isTestMode && parsed.qs.length && !parsed.errs.length) {
+        extractedQs = parsed.qs;
+        status.textContent = '✅ Đã đọc câu hỏi và đáp án từ văn bản.';
+      } else {
+        status.innerHTML = '🧠 <b>AI đang phân tích văn bản; có thể mất vài phút…</b>';
+        extractedQs = await callGeminiAiExtract(pasteTxt, isTestMode);
+      }
     }
 
     if (!extractedQs || !extractedQs.length) {
