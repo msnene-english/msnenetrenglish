@@ -68,16 +68,112 @@ async function filePart(file) {
   return dataUrlPart(dataUrl.replace(/^data:[^;]*/, 'data:application/pdf'));
 }
 
-export async function generateQuiz(prompt, input) {
+function normalizeText(value) {
+  return typeof value === 'string' ? value.trim() : '';
+}
+
+export function normalizeQuiz(payload) {
+  const source = Array.isArray(payload) ? payload : payload && payload.questions;
+  if (!Array.isArray(source)) throw new Error('AI trả về dữ liệu câu hỏi sai định dạng.');
+  const questions = [];
+  const skipped = [];
+  const seen = new Set();
+  let inferredCount = 0;
+  source.forEach((item, index) => {
+    const label = 'Câu ' + (index + 1);
+    if (!item || typeof item !== 'object') {
+      skipped.push(label + ': không có dữ liệu.');
+      return;
+    }
+    const q = normalizeText(item.q);
+    if (!q || /^(?:question|câu)\s*\d+[.\s:]*$/i.test(q)) {
+      skipped.push(label + ': thiếu nội dung câu hỏi.');
+      return;
+    }
+    const type = item.type === 'speaking' ? 'speaking' : item.type === 'text' ? 'text' : 'mc';
+    const result = { ...item, q, type };
+    result.e = normalizeText(item.e);
+    result.s = normalizeText(item.s);
+    result.passage = normalizeText(item.passage);
+    result.ipa = normalizeText(item.ipa);
+    result.audio = '';
+    result.img = '';
+    let needsReview = false;
+    if (type === 'speaking') {
+      result.targetText = normalizeText(item.targetText || item.ansText);
+      if (!result.targetText) {
+        skipped.push(label + ': thiếu nội dung cần đọc.');
+        return;
+      }
+      result.o = [];
+      result.a = 0;
+    } else {
+      const sourceTag = normalizeText(item.answerSource).toLowerCase();
+      if (sourceTag === 'unknown' || sourceTag === 'uncertain') {
+        skipped.push(label + ': AI chưa xác định được đáp án.');
+        return;
+      }
+      if (type === 'text') {
+        result.ansText = normalizeText(item.ansText);
+        if (!result.ansText) {
+          skipped.push(label + ': thiếu đáp án tự luận.');
+          return;
+        }
+        result.o = [];
+        result.a = 0;
+      } else {
+        const options = Array.isArray(item.o) ? item.o.map(normalizeText) : [];
+        const numericAnswer = typeof item.a === 'string' && /^\d+$/.test(item.a.trim())
+          ? Number(item.a.trim()) : item.a;
+        const answerLetter = normalizeText(item.answerLetter).toUpperCase();
+        const letterAnswer = /^[A-F]$/.test(answerLetter)
+          ? answerLetter.charCodeAt(0) - 65 : null;
+        if (options.length < 2 || options.length > 6 || options.some(value => !value) ||
+            new Set(options.map(value => value.toLocaleLowerCase())).size !== options.length) {
+          skipped.push(label + ': phương án thiếu, trùng hoặc sai định dạng.');
+          return;
+        }
+        if (letterAnswer !== null && Number.isInteger(numericAnswer) &&
+            letterAnswer !== numericAnswer) {
+          skipped.push(label + ': chữ cái và vị trí đáp án AI đưa ra không khớp.');
+          return;
+        }
+        const answer = letterAnswer !== null ? letterAnswer : numericAnswer;
+        if (!Number.isInteger(answer) || answer < 0 || answer >= options.length) {
+          skipped.push(label + ': thiếu hoặc sai vị trí đáp án đúng.');
+          return;
+        }
+        result.o = options;
+        result.a = answer;
+      }
+      needsReview = sourceTag !== 'provided';
+    }
+    const signature = (q + '|' + (result.o || []).join('|') + '|' +
+      normalizeText(result.passage)).toLocaleLowerCase().replace(/\s+/g, ' ');
+    if (seen.has(signature)) {
+      skipped.push(label + ': trùng với câu trước.');
+      return;
+    }
+    seen.add(signature);
+    if (needsReview) {
+      inferredCount++;
+      if (!result.e.startsWith('⚠️ Đáp án do AI suy luận')) {
+        result.e = '⚠️ Đáp án do AI suy luận, cô cần kiểm tra. ' + result.e;
+      }
+    }
+    questions.push(result);
+  });
+  return { questions, skipped, inferredCount };
+}
+
+async function generatePart(aiModel, prompt, input, imageStart) {
   const parts = [{ text: prompt }];
-  if (input instanceof File) {
+  if (typeof File !== 'undefined' && input instanceof File) {
     parts.push(await filePart(input));
   } else if (Array.isArray(input)) {
-    if (input.length > 12) throw new Error('Tối đa 12 ảnh mỗi lần đọc đề.');
-    const totalLength = input.reduce((sum, value) => sum + value.length, 0);
-    if (totalLength > MAX_FILE_BYTES * 4 / 3 + input.length * 40) {
-      throw new Error('Tổng dung lượng ảnh quá lớn. Hãy chọn tối đa 15 MB ảnh.');
-    }
+    parts[0].text += '\n\nChỉ đọc câu hỏi trong ảnh số ' + imageStart +
+      ' đến ' + (imageStart + input.length - 1) +
+      '. Giữ đúng thứ tự, không thêm câu từ ảnh khác.';
     input.forEach(value => parts.push(dataUrlPart(value)));
   } else if (typeof input === 'string' && input.startsWith('data:')) {
     parts.push(dataUrlPart(input));
@@ -86,15 +182,48 @@ export async function generateQuiz(prompt, input) {
   } else {
     throw new Error('Không có nội dung đề bài để AI đọc.');
   }
-  const result = await (await model()).generateContent(parts);
+  const result = await aiModel.generateContent(parts);
   const response = await result.response;
   const raw = response.text();
   if (!raw) throw new Error('AI không trả về câu hỏi.');
-  let questions;
-  try { questions = JSON.parse(raw); }
-  catch { throw new Error('AI trả về dữ liệu chưa đúng định dạng. Hãy thử lại.'); }
-  if (!Array.isArray(questions) || !questions.length) {
-    throw new Error('AI không tìm thấy câu hỏi trong đề.');
+  let parsed;
+  try { parsed = JSON.parse(raw); }
+  catch { throw new Error('AI trả về JSON chưa đầy đủ. Hãy thử ít trang hơn hoặc chia PDF.'); }
+  return normalizeQuiz(parsed);
+}
+
+export async function generateQuiz(prompt, input, options = {}) {
+  if (Array.isArray(input)) {
+    if (!input.length) throw new Error('Chưa chọn ảnh để AI đọc.');
+    if (input.length > 12) throw new Error('Tối đa 12 ảnh mỗi lần đọc đề.');
+    const totalLength = input.reduce((sum, value) => sum + value.length, 0);
+    if (totalLength > MAX_FILE_BYTES * 4 / 3 + input.length * 40) {
+      throw new Error('Tổng dung lượng ảnh quá lớn. Hãy chọn tối đa 15 MB ảnh.');
+    }
   }
-  return questions;
+  const aiModel = await model();
+  const batches = Array.isArray(input)
+    ? Array.from({ length: Math.ceil(input.length / 3) }, (_, i) => input.slice(i * 3, i * 3 + 3))
+    : [input];
+  const all = [];
+  const skipped = [];
+  let inferredCount = 0;
+  for (let i = 0; i < batches.length; i++) {
+    const result = await generatePart(aiModel, prompt, batches[i], i * 3 + 1);
+    all.push(...result.questions);
+    skipped.push(...result.skipped.map(message => 'Nhóm ' + (i + 1) + ' – ' + message));
+    inferredCount += result.inferredCount;
+  }
+  const unique = normalizeQuiz(all);
+  skipped.push(...unique.skipped);
+  let questions = unique.questions;
+  if (!options.isTestMode && questions.length > 25) {
+    const count = questions.length;
+    questions = Array.from({ length: 25 }, (_, index) => questions[Math.floor(index * count / 25)]);
+    skipped.push('Game chọn 25 câu trải đều từ đề; dùng chế độ Test nếu cần toàn bộ ' + count + ' câu.');
+  }
+  if (!questions.length) {
+    throw new Error('AI chưa tạo được câu hỏi có đáp án hợp lệ. ' + (skipped[0] || ''));
+  }
+  return { questions, skipped, inferredCount };
 }

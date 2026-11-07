@@ -2112,7 +2112,7 @@ $('bClose').onclick = async () => { await net.remove('rooms/' + code); showEnd.d
 
 
 /* ═════ TỰ ĐỘNG CÀO ĐỀ TỪ LINK BÀI TẬP GITHUB.IO & GEMINI AI ═════ */
-// Khóa AI được đọc từ Firebase system_config; không lưu khóa trong mã công khai.
+// AI chạy qua Firebase AI Logic và App Check; mã web không chứa khóa Gemini riêng.
 
 // Hàm trích xuất Universal Parser (hỗ trợ Q, SECS, quizData, DOM)
 function parseQuestionsUniversal(html) {
@@ -2140,11 +2140,10 @@ function parseQuestionsUniversal(html) {
             if (Array.isArray(qList) && qList.length) {
               qList.forEach(item => {
                 const opts = (item.opts || []).map(o => (typeof o === 'string' ? o : (o.h || o.text || '')));
-                let correctIdx = 0;
-                if (item.opts && Array.isArray(item.opts)) {
-                  const found = item.opts.findIndex(o => typeof o === 'object' && (o.c === true || o.correct === true));
-                  if (found > -1) correctIdx = found;
-                }
+                const correctIdx = Array.isArray(item.opts)
+                  ? item.opts.findIndex(o => o && typeof o === 'object' && (o.c === true || o.correct === true))
+                  : -1;
+                if (correctIdx < 0 || opts.length < 2 || opts.some(o => !String(o).trim())) return;
                 extractedQs.push({
                   q: (item.sec ? '<b>[' + item.sec + ']</b><br>' : '') + (item.q || 'Chọn đáp án đúng:'),
                   o: opts,
@@ -2176,27 +2175,15 @@ function parseQuestionsUniversal(html) {
             secs.forEach(sec => {
               if (sec.type === 'mcq' && sec.items) {
                 sec.items.forEach(it => {
+                  if (!Array.isArray(it.opts) || it.opts.length < 2 ||
+                      !Number.isInteger(it.correct) || it.correct < 0 || it.correct >= it.opts.length) return;
                   extractedQs.push({
                     q: (sec.title ? '<b>' + sec.title + '</b><br>' : '') + (it.text || 'Chọn đáp án đúng:'),
                     o: it.opts || [],
-                    a: it.correct != null ? it.correct : 0,
+                    a: it.correct,
                     e: it.explain || '',
                     s: sec.short || sec.title || ''
                   });
-                });
-              } else if (sec.type === 'fill' && sec.items) {
-                sec.items.forEach(it => {
-                  const correctWord = it.ans && it.ans[0] ? it.ans[0][0] : '';
-                  if (correctWord) {
-                    const qPart = it.parts ? it.parts.filter(p => p.trim() && !p.startsWith('<input')).join(' ') : (it.text || sec.title);
-                    extractedQs.push({
-                      q: (sec.title ? '<b>' + sec.title + '</b><br>' : '') + qPart,
-                      o: [correctWord, 'Teacher', 'Student', 'School'],
-                      a: 0,
-                      e: it.explain || '',
-                      s: sec.short || ''
-                    });
-                  }
                 });
               }
             });
@@ -2294,13 +2281,13 @@ CÁC NGUYÊN TẮC CỐT LÕI BẮT BUỘC CHO TEST MODE:
 3. TUYỆT ĐỐI KHÔNG ép bài thi về dạng điền từ ngô nghê với các đáp án tự bịa như 'Teacher', 'Student', 'School'. Phải dùng phương án và nội dung thực tế của đề thi.
 
 4. ĐÁP ÁN 'a':
-   Phải là số nguyên 0, 1, 2, 3 tương ứng với vị trí đúng trong mảng 'o' (0 cho A, 1 cho B, 2 cho C, 3 cho D). Phải suy luận học thuật chính xác 100%.
+   Phải là số nguyên 0, 1, 2, 3 tương ứng với vị trí đúng trong mảng 'o'; thêm 'answerLetter' là A, B, C hoặc D tương ứng. Nếu đề có đáp án, chép đúng và đặt 'answerSource':'provided'. Nếu đề không có đáp án, chỉ tự giải khi có căn cứ rõ ràng, đặt 'answerSource':'inferred' và giải thích trong 'e'. Nếu không chắc, đặt 'answerSource':'unknown', 'a':null; không đoán bừa.
 
-5. 'passage': Bài đọc đầy đủ (nếu bài đọc chung cho nhiều câu hỏi, giữ nguyên toàn bộ bài đọc ở trường 'passage' này; nếu không có bài đọc thì để rỗng "")
+5. 'passage': Bài đọc đầy đủ (nếu bài đọc chung cho nhiều câu hỏi, giữ nguyên toàn bộ bài đọc ở trường 'passage' này; nếu không có bài đọc thì để rỗng ""). Giữ đúng thứ tự và số lượng câu trong tài liệu; không tạo câu hoặc phương án không có trong đề.
 
 Trả về strictly JSON danh sách:
 [
-  { "q": "...", "passage": "...", "o": ["...", "...", "...", "..."], "a": 0, "e": "...", "s": "..." }
+  { "q": "...", "passage": "...", "o": ["...", "...", "...", "..."], "a": 0, "answerLetter": "A", "answerSource": "provided", "e": "...", "s": "..." }
 ]`;
   } else {
     // Game mode: Áp dụng Giải pháp C - Context Focus (trích đoạn ngắn gọn cho game phản xạ nhanh)
@@ -2312,13 +2299,14 @@ QUY TẮC ĐẶC BIỆT:
 3. ÁP DỤNG GIẢI PHÁP C (Context Focus): Với bài đọc dài hoặc bài nối Matching, hãy trích đoạn ngữ cảnh trọng tâm (2-3 câu ngắn gọn chứa manh mối then chốt) ghép thẳng vào câu hỏi 'q' để học sinh dễ đọc nhanh trên điện thoại mà không bị tràn màn hình.
 4. 'q': Câu hỏi ngắn gọn (kèm ngữ cảnh ngắn nếu cần; giữ lại <u>, <b> nếu là câu phát âm/trọng âm).
 5. 'o': Mảng 4 phương án lựa chọn ["A", "B", "C", "D"].
-6. 'a': Chỉ số (0, 1, 2, 3) của đáp án đúng.
+6. 'a': Chỉ số (0, 1, 2, 3) của đáp án đúng; thêm 'answerLetter' A, B, C hoặc D tương ứng. Nếu đề có đáp án, đặt 'answerSource':'provided'. Nếu tự giải có căn cứ, đặt 'answerSource':'inferred' và giải thích trong 'e'. Nếu không chắc, đặt 'answerSource':'unknown', 'a':null; không đoán bừa.
 7. 'e': Lời giải thích ngắn gọn, phiên âm IPA hoặc từ khóa đối chiếu.
 8. 's': Dạng bài (Pronunciation, Stress, Grammar, Vocabulary, Reading).
+9. Giữ đúng nội dung và thứ tự câu trong tài liệu; không tự bịa câu hoặc phương án. Không lặp câu.
 
 Trả về strictly JSON danh sách:
 [
-  { "q": "...", "o": ["...", "...", "...", "..."], "a": 0, "e": "...", "s": "..." }
+  { "q": "...", "o": ["...", "...", "...", "..."], "a": 0, "answerLetter": "A", "answerSource": "inferred", "e": "...", "s": "..." }
 ]`;
   }
 
@@ -2333,8 +2321,11 @@ Trả về strictly JSON danh sách:
     aiInput = aiInput.replace(/\s+/g, ' ').trim().slice(0, 32000);
   }
   try {
-    const aiImport = await import('./assets/ai-import.js?v=20261107-3');
-    return await aiImport.generateQuiz(promptText, aiInput);
+    const aiImport = await import('./assets/ai-import.js?v=20261107-5');
+    const result = await aiImport.generateQuiz(promptText, aiInput, { isTestMode });
+    result.questions.skipped = result.skipped;
+    result.questions.inferredCount = result.inferredCount;
+    return result.questions;
   } catch (error) {
     throw new Error('Không đọc được đề bằng AI: ' + error.message);
   }
@@ -2619,12 +2610,15 @@ async function processLoadQuiz(isTestMode) {
     }
     // 2. Trường hợp có Link web
     else if (url) {
-      const res = await fetch(url);
+      const sourceUrl = new URL(url, location.href);
+      if (!['http:', 'https:'].includes(sourceUrl.protocol)) throw new Error('Link đề phải bắt đầu bằng http hoặc https.');
+      const res = await fetch(sourceUrl.href);
       if (!res.ok) throw new Error('Không mở được link (Mã lỗi ' + res.status + ')');
       const html = await res.text();
+      if (html.length > 2_000_000) throw new Error('Trang đề quá lớn (tối đa 2 MB).');
 
-      // Nếu tạo game và web có sẵn cấu trúc chuẩn: đọc siêu tốc
-      if (!isTestMode) {
+      // Chỉ chạy mã trích xuất từ trang cùng miền do chủ web kiểm soát.
+      if (!isTestMode && sourceUrl.origin === location.origin) {
         const parsed = parseQuestionsUniversal(html);
         if (parsed.questions && parsed.questions.length > 0) {
           extractedQs = parsed.questions;
@@ -2659,8 +2653,11 @@ async function processLoadQuiz(isTestMode) {
 
     window.currentQuizType = isTestMode ? 'test' : 'game';
 
-    setQs(extractedQs, docTitle, []);
-    status.innerHTML = '🎉 <b>Thành công!</b> Đã nạp <b>' + extractedQs.length + ' câu hỏi</b> (' + (isTestMode ? '📝 Dạng Bài Test' : '🎮 Dạng Game') + ').';
+    setQs(extractedQs, docTitle, extractedQs.skipped || []);
+    status.innerHTML = '🎉 <b>Đã nạp ' + extractedQs.length + ' câu hỏi</b>' +
+      (extractedQs.skipped?.length ? ' · ⚠️ ' + extractedQs.skipped.length + ' câu cần xem lại/đã bỏ qua' : '') +
+      (extractedQs.inferredCount ? ' · ⚠️ ' + extractedQs.inferredCount + ' đáp án AI tự suy luận' : '') +
+      ' (' + (isTestMode ? '📝 Dạng Bài Test' : '🎮 Dạng Game') + ').';
     toast('🎉 Nạp thành công ' + extractedQs.length + ' câu hỏi!', 3500);
   } catch (err) {
     status.textContent = '❌ ' + err.message;
