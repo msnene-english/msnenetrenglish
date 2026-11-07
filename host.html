@@ -2323,7 +2323,7 @@ Trả về strictly JSON danh sách:
     aiInput = aiInput.replace(/\s+/g, ' ').trim().slice(0, 32000);
   }
   try {
-    const aiImport = await import('./assets/ai-import.js?v=20261107-8');
+    const aiImport = await import('./assets/ai-import.js?v=20261108-9');
     const result = await aiImport.generateQuiz(promptText, aiInput, { isTestMode });
     result.questions.skipped = result.skipped;
     result.questions.inferredCount = result.inferredCount;
