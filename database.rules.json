@@ -56,6 +56,23 @@
           }
         }
       }
+    },
+    "license_usage": {
+      ".read": "auth != null && auth.uid === '9eA5BZII0STtQwqox2XcBNEUfnE2'",
+      "$hash": {
+        "$uid": {
+          ".read": "auth != null && auth.uid === $uid",
+          ".write": "auth != null && auth.uid === $uid && newData.exists() && root.child('licenses').child($hash).child('status').val() === 'active'",
+          ".validate": "newData.hasChildren(['firstSeen', 'lastSeen', 'browser', 'platform']) && newData.child('firstSeen').isNumber() && newData.child('lastSeen').isNumber() && newData.child('browser').isString() && newData.child('platform').isString() && newData.child('browser').val().length <= 30 && newData.child('platform').val().length <= 30 && newData.child('lastSeen').val() >= now - 60000 && newData.child('lastSeen').val() <= now + 60000 && newData.child('firstSeen').val() <= newData.child('lastSeen').val() && ((!data.exists() && newData.child('firstSeen').val() >= now - 60000) || (data.exists() && newData.child('firstSeen').val() === data.child('firstSeen').val() && newData.child('lastSeen').val() >= data.child('lastSeen').val()))",
+          "firstSeen": {},
+          "lastSeen": {},
+          "browser": {},
+          "platform": {},
+          "$other": {
+            ".validate": "false"
+          }
+        }
+      }
     }
   }
 }

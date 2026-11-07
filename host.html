@@ -694,6 +694,7 @@ Hoặc dán theo mẫu:
  <script src="assets/scene.js"></script>
 <script src="assets/hero.js"></script>
 <script src="assets/license.js?v=2.4"></script>
+<script src="assets/license-usage.js?v=20261107-1"></script>
 
 <script>
 const { $, esc, fmt, stamp, clean, toast, confetti, sfx } = GC;
@@ -1679,6 +1680,7 @@ async function doUnlockGamesSubmit() {
   try {
     const res = window.LIC ? await window.LIC.verify(key) : { ok: false, msg: 'Hệ thống bản quyền chưa tải xong' };
     if (res.ok) {
+      window.LicenseUsage?.record(res.token, true).catch(error => console.warn('License usage:', error));
       if (errDiv) errDiv.style.display = 'none';
       $('ovUnlockGames').classList.remove('on');
       toast(res.msg || '🎉 Kích hoạt bản quyền Pro thành công!', 3500);
