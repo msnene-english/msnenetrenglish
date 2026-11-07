@@ -8,18 +8,23 @@ Hệ thống trò chơi học tập tương tác thời gian thực (Gamified Li
 
 1. **Các chế độ Game và Kiểm tra**: Leo núi và Nấm Mario dùng miễn phí; các chế độ còn lại cần mã Pro được cấp tại trang admin:
    - 🧗 **Leo núi (Climb)**: Nhảy đảo bay, tránh quái, leo lên đỉnh lâu đài giải cứu công chúa.
-   - 🍄 **Nấm Mario (Brick)**: Vượt 5 màn kinh điển, húc khối ?, bơi đáy biển, vượt dung nham đánh rồng.
+   - 🍄 **Nấm Mario P1 & P2**: Vượt các màn kinh điển, húc khối ?, bơi đáy biển và đánh trùm.
    - 🛡 **Xe tăng (Tank)**: Điều khiển xe tăng phá gạch, tiêu diệt xe tăng địch & quái vật, bảo vệ căn cứ đại bàng.
    - 💣 **Bomberman (Bomb)**: Đặt bom cổ điển 8 màn, phá đá nhặt vật phẩm tăng sức mạnh.
    - 🟡 **Pac-Man (Pac)**: 5 mê cung kinh điển, né ma hồng tàng hình, nhện giăng tơ, đớp viên năng lượng săn ma (+5⚡).
    - 🏎 **Đua xe (Race)**: Đua xe retro 3D 5 chặng, ôm cua drift tránh vết dầu đen, nhặt bình xăng tăng tốc.
    - 🏃 **Temple Run P1 & P2**: Chạy 3 làn vượt 5 màn kỳ thú (màn xe goòng hầm mỏ, đền băng, hang dung nham, tượng vàng).
    - 🔴 **Bounce Tales P1 & P2**: Lăn bóng đỏ kinh điển 6 màn x 2 phần (bật nấm lò xo, bập bênh lá sen, lặn biển và đánh boss ếch Hypnotoad).
+   - 🏝 **Đảo phiêu lưu P1 & P2**: Hai phần phiêu lưu với các màn và trùm riêng.
+   - 🐧 **Chim cánh cụt**: Vượt các chặng Nam Cực.
    - 📝 **Phòng thi A2-B1 Cambridge (Test Mode)**: Chế độ khảo thí nghiêm túc, đếm ngược, chuyển câu hỏi linh hoạt, phân tích câu sai.
 
-2. **Chấm & Đánh Giá Phát Âm AI (Speaking AI)**:
+2. **AI nhập đề từ ảnh và PDF (Pro), luyện phát âm**:
+   - Giáo viên Pro có thể chọn nhiều ảnh hoặc một PDF (tối đa 15 MB), rồi bấm **Nạp đề tạo Game/Test**. Cần rà lại câu hỏi và đáp án do AI tạo trước khi giao.
+   - AI dùng Firebase AI Logic và App Check; cần bật dịch vụ và điền khóa site reCAPTCHA Enterprise trong `assets/config.js`. Phần giới hạn Pro trên trang web hiện là kiểm tra ở giao diện, chưa phải giới hạn lượt gọi AI tại máy chủ.
+
    - Hỗ trợ câu hỏi phát âm: Giáo viên chỉ cần nhập từ/câu mẫu theo cú pháp `1. SPK: Good morning teacher`.
-   - AI tự động nhận diện phiên âm IPA, tạo mẹo phát âm chi tiết.
+   - Các tính năng phát âm dùng AI chỉ hoạt động khi Firebase AI Logic và App Check được cấu hình; phần chấm cơ bản trên máy vẫn có thể dùng.
    - Học sinh bấm micro đọc câu, AI chấm điểm độ chính xác (0-100), chỉ rõ âm tiết đọc chuẩn/lệch màu sắc trực quan.
 
 3. **Thư viện đề thi chung (Shared Community Quiz Library)**:
@@ -89,6 +94,7 @@ MsNeneEnglish/
 1. Ứng dụng Web trong dự án Firebase `game-762ed` đã được đăng ký; cấu hình Web SDK đã có trong `assets/config.js`.
 2. Bật Firebase Authentication: Email/Password cho tài khoản admin và Anonymous cho host/học sinh. UID admin đã được cấu hình trong `assets/config.js` và `database.rules.json`.
 3. Đưa mã web và Realtime Database Rules lên cùng đợt, sau đó kiểm tra mở phòng miễn phí, nhập mã Pro, giao bài, nộp bài, xem sổ điểm và quản lý đề trong admin.
-4. Phần gọi Gemini cần được chuyển sang Firebase AI Logic cùng App Check trước khi bật lại trên trang công khai. Phần chấm phát âm cơ bản trên máy vẫn có thể hoạt động khi không có Gemini.
+4. Với AI nhập đề, bật **AI Services → AI Logic** trong Firebase cho dự án `game-762ed`, chọn **Gemini Developer API**. Bật **Security → App Check** cho ứng dụng Web bằng **reCAPTCHA Enterprise**, thêm miền `msnene-english.github.io`, rồi điền site key công khai vào `firebase.appCheckSiteKey` trong `assets/config.js`. Mã web đã dùng Firebase AI Logic cho ảnh/PDF, nhưng không thể gọi AI trước khi hoàn tất các bước trên.
+5. Nếu cần chặn tuyệt đối người không có Pro gọi AI bằng cách sửa mã phía trình duyệt, cần thêm một máy chủ/Cloud Function kiểm tra bản quyền trước mỗi lần gọi. App Check xác minh ứng dụng, không tự xác minh mã Pro.
 
 Tạo phòng và giao bài không yêu cầu đăng nhập admin. Trình duyệt tự dùng Firebase Authentication ẩn danh để gắn quyền sở hữu dữ liệu; học sinh không phải nhập tài khoản. Trang admin dùng email và mật khẩu riêng. Nếu quên mật khẩu, nhập email admin ở màn hình đăng nhập và bấm **Quên mật khẩu?** để Firebase gửi thư đặt lại; có thể gửi thư từ Firebase Console → Authentication → Users.

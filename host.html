@@ -162,17 +162,18 @@ th{color:#7a6aa8;font-size:13px}
      <!-- TÍNH NĂNG NẠP ĐỀ ĐA NĂNG (GAME + TEST + ẢNH CHỤP MÀN HÌNH CTRL+V) -->
       <div style="background:#eef7ff;border:2px dashed #38bdf8;border-radius:16px;padding:12px 14px;margin-bottom:12px">
        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
-        <span style="font-weight:800;color:#0284c7;font-size:14px">🤖 Nạp đề từ link bài tập, ảnh chụp (Ctrl+V) hoặc file:</span>
+        <span style="font-weight:800;color:#0284c7;font-size:14px">🤖 Nạp đề từ link, văn bản, ảnh hoặc PDF:</span>
         <div style="display:flex;gap:6px">
          <button class="btn w" id="bPickImg" style="padding:3px 8px;font-size:12px" title="Chọn ảnh chụp đề từ máy tính">📷 Chọn ảnh</button>
-         <button class="btn w" id="bPickDoc" style="padding:3px 8px;font-size:12px" title="Nạp file văn bản / Word / Text">📄 Nạp file</button>
+         <button class="btn w" id="bPickDoc" style="padding:3px 8px;font-size:12px" title="Nạp file TXT, HTML, JSON hoặc PDF">📄 Nạp file / PDF</button>
          <input type="file" id="inpFileImg" accept="image/*" multiple hidden>
-         <input type="file" id="inpFileDoc" accept=".txt,.html,.md,.json" hidden>
+         <input type="file" id="inpFileDoc" accept=".txt,.html,.md,.json,.pdf,application/pdf" hidden>
         </div>
        </div>
 
        <!-- Ô dán link & 2 nút: Tạo Game vs Tạo Test -->
-       <div style="display:flex;gap:8px;flex-wrap:wrap">
+       <div style="font-size:12px;color:#6d28d9;margin:4px 0 8px">✨ AI đọc ảnh và PDF dành cho tài khoản Pro · PDF tối đa 15 MB · Kiểm tra lại đáp án trước khi giao.</div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap">
         <input id="inpWebLink" class="inp" style="flex:1;min-width:220px;padding:9px 12px;font-size:14px" placeholder="Dán link bài tập (test 1 p1.html, voca p2.html, matching p1.html...)">
         <button class="btn" id="bLoadGame" style="font-size:13px;padding:9px 14px;font-weight:800;background:#0284c7;color:#fff" title="AI trích đoạn trọng tâm (Context Focus) tối ưu cho Game đối kháng nhanh">🎮 Nạp đề tạo Game</button>
         <button class="btn g" id="bLoadTest" style="font-size:13px;padding:9px 14px;font-weight:800" title="Nạp đề thi đầy đủ mọi dạng bài (phát âm, trọng âm, ngữ pháp, bài đọc, từ vựng) cho bài kiểm tra chuẩn">📝 Nạp đề tạo Test</button>
@@ -675,7 +676,7 @@ Hoặc dán theo mẫu:
 <!-- SCRIPTS HỆ THỐNG -->
 <script src="assets/shield.js?v=2.4"></script>
 <script src="assets/qrcode.min.js"></script>
-<script src="assets/config.js?v=20261107-2"></script>
+<script src="assets/config.js?v=20261107-3"></script>
 <script src="assets/firebase-admin-auth.js?v=20261107-1"></script>
 <script src="assets/core.js?v=20261107-1"></script>
 <script src="assets/mau.js"></script>
@@ -1218,7 +1219,7 @@ $('pTxt').oninput = () => {
   }, 350);
 };
 
-$('bClearPaste').onclick = () => { $('pTxt').value = ''; setQs([], '', []); };
+$('bClearPaste').onclick = () => { $('pTxt').value = ''; selectedPdf = null; clearAllPastedImages(); setQs([], '', []); };
 
 /* Render danh sách đề mẫu (Đề người trước tạo) */
 $('mList').innerHTML = (window.SAMPLE_SETS || []).map((s, i) =>
@@ -2112,15 +2113,6 @@ $('bClose').onclick = async () => { await net.remove('rooms/' + code); showEnd.d
 
 /* ═════ TỰ ĐỘNG CÀO ĐỀ TỪ LINK BÀI TẬP GITHUB.IO & GEMINI AI ═════ */
 // Khóa AI được đọc từ Firebase system_config; không lưu khóa trong mã công khai.
-const DEFAULT_AI_KEY = '';
-let systemAiKey = DEFAULT_AI_KEY;
-
-if (window.GAME_CONFIG && GAME_CONFIG.firebase && GAME_CONFIG.firebase.databaseURL) {
-  fetch(GAME_CONFIG.firebase.databaseURL + '/system_config/gemini_key.json')
-    .then(r => r.json())
-    .then(k => { if (k && typeof k === 'string') systemAiKey = k; })
-    .catch(() => {});
-}
 
 // Hàm trích xuất Universal Parser (hỗ trợ Q, SECS, quizData, DOM)
 function parseQuestionsUniversal(html) {
@@ -2244,10 +2236,10 @@ function parseQuestionsUniversal(html) {
 
 // Hàm gọi AI Gemini đọc hiểu & trích xuất câu hỏi tự động (hỗ trợ nhiều ảnh chụp màn hình & văn bản)
 async function callGeminiAiExtract(contentOrImages, isTestMode) {
-  const key = systemAiKey || DEFAULT_AI_KEY;
-  if (!key) throw new Error('Chức năng đọc đề bằng AI chưa được cấu hình. Cô có thể dán văn bản câu hỏi để tạo đề.');
-  const isImageList = Array.isArray(contentOrImages) && contentOrImages.length > 0;
-  const isSingleImage = typeof contentOrImages === 'string' && contentOrImages.startsWith('data:image/');
+  if (!window.LIC || !window.LIC.isUnlocked()) {
+    promptUnlockModal();
+    throw new Error('Đọc đề bằng AI chỉ dành cho tài khoản Pro.');
+  }
 
   let promptText = '';
   if (isTestMode) {
@@ -2330,81 +2322,29 @@ Trả về strictly JSON danh sách:
 ]`;
   }
 
-  let requestBody = {};
-  if (isImageList || isSingleImage) {
-    const imgArray = isImageList ? contentOrImages : [contentOrImages];
-    const parts = [{ text: promptText }];
-    imgArray.forEach(imgData => {
-      const commaIdx = imgData.indexOf(',');
-      const mimeType = imgData.substring(5, imgData.indexOf(';'));
-      const b64Data = imgData.substring(commaIdx + 1);
-      parts.push({ inlineData: { mimeType, data: b64Data } });
-    });
-    requestBody = {
-      contents: [{ parts }],
-      generationConfig: {
-        responseMimeType: 'application/json',
-        temperature: 0.1
-      }
-    };
-  } else {
-    let cleanText = contentOrImages;
-    if (cleanText.includes('<html') || cleanText.includes('<body') || cleanText.includes('</div>')) {
+  let aiInput = contentOrImages;
+  if (typeof aiInput === 'string' && !aiInput.startsWith('data:')) {
+    if (aiInput.includes('<html') || aiInput.includes('<body') || aiInput.includes('</div>')) {
       const d = document.createElement('div');
-      d.innerHTML = cleanText;
+      d.innerHTML = aiInput;
       d.querySelectorAll('script, style, svg, iframe, noscript, nav, header, footer').forEach(e => e.remove());
-      cleanText = d.innerText;
+      aiInput = d.innerText;
     }
-    cleanText = cleanText.replace(/\s+/g, ' ').trim().substring(0, 32000);
-
-    requestBody = {
-      contents: [{
-        parts: [
-          { text: promptText + '\n\nNội dung đề bài:\n---\n' + cleanText + '\n---' }
-        ]
-      }],
-      generationConfig: {
-        responseMimeType: 'application/json',
-        temperature: 0.1
-      }
-    };
+    aiInput = aiInput.replace(/\s+/g, ' ').trim().slice(0, 32000);
   }
-
-  const models = ['gemini-flash-latest', 'gemini-pro-latest', 'gemini-3.8-flash', 'gemini-3.5-flash', 'gemini-flash-lite-latest'];
-  let lastError = null;
-
-  for (const m of models) {
-    try {
-      const url = `https://generativelanguage.googleapis.com/v1beta/models/${m}:generateContent?key=${key}`;
-      const resp = await fetch(url, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(requestBody)
-      });
-
-      if (!resp.ok) {
-        const errObj = await resp.json().catch(() => ({}));
-        throw new Error(errObj.error?.message || resp.statusText);
-      }
-
-      const data = await resp.json();
-      const textOut = data.candidates?.[0]?.content?.parts?.[0]?.text;
-      if (!textOut) throw new Error('AI không trả về nội dung.');
-
-      const parsed = JSON.parse(textOut);
-      if (Array.isArray(parsed) && parsed.length) {
-        return parsed;
-      }
-    } catch (err) {
-      lastError = err;
-    }
+  try {
+    const aiImport = await import('./assets/ai-import.js?v=20261107-3');
+    return await aiImport.generateQuiz(promptText, aiInput);
+  } catch (error) {
+    throw new Error('Không đọc được đề bằng AI: ' + error.message);
   }
-
-  throw new Error('Lỗi khi gọi AI: ' + (lastError ? lastError.message : 'Không nhận diện được phản hồi.'));
 }
 
 // Mảng lưu nhiều ảnh chụp màn hình từ Ctrl + V hoặc chọn file
 let pastedImages = [];
+let selectedPdf = null;
+$('inpWebLink').addEventListener('input', () => { selectedPdf = null; });
+$('pTxt').addEventListener('input', () => { selectedPdf = null; });
 
 function handleImageBlob(blob, filename) {
   if (!blob) return false;
@@ -2418,6 +2358,7 @@ function handleImageBlob(blob, filename) {
 }
 
 function addPastedImage(dataUrl) {
+  selectedPdf = null;
   pastedImages.push(dataUrl);
   renderPastedImages();
 }
@@ -2623,13 +2564,28 @@ if ($('inpFileDoc')) {
   $('inpFileDoc').onchange = e => {
     const file = e.target.files[0];
     if (file) {
-      const reader = new FileReader();
-      reader.onload = evt => {
-        $('pTxt').value = evt.target.result;
-        toast('📄 Đã nạp nội dung file: ' + file.name, 2500);
-        $('linkFetchStatus').innerHTML = '📄 Đã nạp nội dung từ <b>' + esc(file.name) + '</b>. Bấm tạo Game hoặc Test để tiếp tục.';
-      };
-      reader.readAsText(file);
+      if (file.type === 'application/pdf' || /\.pdf$/i.test(file.name)) {
+        if (file.size > 15 * 1024 * 1024) {
+          toast('PDF quá lớn. Hãy chọn tệp dưới 15 MB.', 3500);
+          e.target.value = '';
+          return;
+        }
+        selectedPdf = file;
+        clearAllPastedImages();
+        $('pTxt').value = '';
+        $('linkFetchStatus').textContent = '📄 Đã chọn PDF: ' + file.name + '. Bấm Nạp đề tạo Game hoặc Test để AI đọc (cần Pro).';
+        toast('📄 Đã chọn PDF: ' + file.name, 2500);
+      } else {
+        selectedPdf = null;
+        const reader = new FileReader();
+        reader.onload = evt => {
+          $('pTxt').value = evt.target.result;
+          toast('📄 Đã nạp nội dung file: ' + file.name, 2500);
+          $('linkFetchStatus').innerHTML = '📄 Đã nạp nội dung từ <b>' + esc(file.name) + '</b>. Bấm tạo Game hoặc Test để tiếp tục.';
+        };
+        reader.readAsText(file);
+      }
+      e.target.value = '';
     }
   };
 }
@@ -2639,7 +2595,7 @@ async function processLoadQuiz(isTestMode) {
   const pasteTxt = clean($('pTxt')?.value || '');
   const status = $('linkFetchStatus');
 
-  if (!pastedImages.length && !url && !pasteTxt) {
+  if (!selectedPdf && !pastedImages.length && !url && !pasteTxt) {
     return toast('Cô dán link bài tập, dán ảnh chụp (Ctrl+V) hoặc dán văn bản trước nhé!', 2500);
   }
 
@@ -2651,8 +2607,12 @@ async function processLoadQuiz(isTestMode) {
     let extractedQs = [];
     let docTitle = isTestMode ? 'Bài kiểm tra tiếng Anh' : 'Game ôn tập tiếng Anh';
 
-    // 1. Trường hợp có ảnh chụp màn hình (Ctrl + V hoặc chọn file ảnh)
-    if (pastedImages.length > 0) {
+    // 1. PDF hoặc ảnh được AI đọc trực tiếp.
+    if (selectedPdf) {
+      status.textContent = '🧠 AI đang đọc PDF ' + selectedPdf.name + '…';
+      extractedQs = await callGeminiAiExtract(selectedPdf, isTestMode);
+      docTitle = selectedPdf.name.replace(/\.pdf$/i, '');
+    } else if (pastedImages.length > 0) {
       status.innerHTML = '🧠 <b>AI Gemini đang đọc chữ và câu hỏi từ ' + pastedImages.length + ' ảnh chụp màn hình…</b>';
       extractedQs = await callGeminiAiExtract(pastedImages, isTestMode);
       docTitle = (isTestMode ? 'Bài kiểm tra' : 'Game') + ' (Từ ' + pastedImages.length + ' ảnh chụp)';
@@ -2703,7 +2663,7 @@ async function processLoadQuiz(isTestMode) {
     status.innerHTML = '🎉 <b>Thành công!</b> Đã nạp <b>' + extractedQs.length + ' câu hỏi</b> (' + (isTestMode ? '📝 Dạng Bài Test' : '🎮 Dạng Game') + ').';
     toast('🎉 Nạp thành công ' + extractedQs.length + ' câu hỏi!', 3500);
   } catch (err) {
-    status.innerHTML = '❌ ' + err.message;
+    status.textContent = '❌ ' + err.message;
     toast('❌ ' + err.message, 3500);
   } finally {
     if ($('bLoadGame')) $('bLoadGame').disabled = false;
