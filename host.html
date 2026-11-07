@@ -678,7 +678,7 @@ Hoặc dán theo mẫu:
 <script src="assets/qrcode.min.js"></script>
 <script src="assets/config.js?v=20261107-4"></script>
 <script src="assets/firebase-admin-auth.js?v=20261107-1"></script>
-<script src="assets/core.js?v=20261107-1"></script>
+<script src="assets/core.js?v=20261107-7"></script>
 <script src="assets/mau.js"></script>
 <script src="assets/climb.js"></script>
 <script src="assets/brick.js"></script>
@@ -693,7 +693,7 @@ Hoặc dán theo mẫu:
 <script src="assets/peng.js"></script>
  <script src="assets/scene.js"></script>
 <script src="assets/hero.js"></script>
-<script src="assets/license.js?v=2.4"></script>
+<script src="assets/license.js?v=2.5"></script>
 <script src="assets/license-usage.js?v=20261107-1"></script>
 
 <script>
@@ -2323,7 +2323,7 @@ Trả về strictly JSON danh sách:
     aiInput = aiInput.replace(/\s+/g, ' ').trim().slice(0, 32000);
   }
   try {
-    const aiImport = await import('./assets/ai-import.js?v=20261107-6');
+    const aiImport = await import('./assets/ai-import.js?v=20261107-7');
     const result = await aiImport.generateQuiz(promptText, aiInput, { isTestMode });
     result.questions.skipped = result.skipped;
     result.questions.inferredCount = result.inferredCount;

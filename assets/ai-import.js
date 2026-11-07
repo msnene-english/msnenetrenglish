@@ -3,6 +3,7 @@ const SDK = '13.2.0';
 const BASE = 'https://www.gstatic.com/firebasejs/' + SDK + '/';
 const MAX_FILE_BYTES = 15 * 1024 * 1024;
 let modelPromise;
+let appCheckInstance;
 
 function withTimeout(promise, milliseconds, message) {
   let timer;
@@ -24,7 +25,7 @@ async function model() {
     if (!cfg.appCheckSiteKey || cfg.appCheckSiteKey === 'PASTE_RECAPTCHA_ENTERPRISE_SITE_KEY') {
       throw new Error('Chưa cấu hình Firebase App Check cho tính năng AI.');
     }
-    const [{ initializeApp, getApps }, { initializeAppCheck, ReCaptchaEnterpriseProvider },
+    const [{ initializeApp, getApps }, { initializeAppCheck, ReCaptchaEnterpriseProvider, getLimitedUseToken },
       { getAI, getGenerativeModel, GoogleAIBackend }] = await withTimeout(Promise.all([
       import(BASE + 'firebase-app.js'),
       import(BASE + 'firebase-app-check.js'),
@@ -32,10 +33,12 @@ async function model() {
     ]), 30000, 'Không tải được thư viện AI trong 30 giây. Hãy kiểm tra kết nối mạng.');
     const app = getApps().find(item => item.name === 'msnene-ai') ||
       initializeApp(cfg, 'msnene-ai');
-    initializeAppCheck(app, {
+    const appCheck = appCheckInstance || (appCheckInstance = initializeAppCheck(app, {
       provider: new ReCaptchaEnterpriseProvider(cfg.appCheckSiteKey),
       isTokenAutoRefreshEnabled: true
-    });
+    }));
+    await withTimeout(getLimitedUseToken(appCheck), 20000,
+      'Không xác minh được App Check sau 20 giây. Hãy kiểm tra khóa reCAPTCHA và tên miền web.');
     const ai = getAI(app, {
       backend: new GoogleAIBackend(),
       useLimitedUseAppCheckTokens: true
@@ -202,6 +205,18 @@ async function generatePart(aiModel, prompt, input, imageStart) {
   try { parsed = JSON.parse(raw); }
   catch { throw new Error('AI trả về JSON chưa đầy đủ. Hãy thử ít trang hơn hoặc chia PDF.'); }
   return normalizeQuiz(parsed);
+}
+
+export async function generateJson(prompt, timeoutMs = 20000) {
+  if (typeof prompt !== 'string' || !prompt.trim()) throw new Error('Thiếu nội dung cần AI xử lý.');
+  const aiModel = await model();
+  const result = await withTimeout(aiModel.generateContent([{ text: prompt.slice(0, 12000) }]), timeoutMs,
+    'AI chưa phản hồi. Hãy thử lại sau.');
+  const response = await withTimeout(result.response, 10000, 'AI chưa trả kết quả.');
+  const raw = response.text();
+  if (!raw) throw new Error('AI trả về nội dung rỗng.');
+  try { return JSON.parse(raw); }
+  catch { throw new Error('AI trả về dữ liệu sai định dạng.'); }
 }
 
 export async function generateQuiz(prompt, input, options = {}) {
