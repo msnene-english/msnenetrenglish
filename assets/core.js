@@ -1530,7 +1530,7 @@ function showReportCard(data) {
    HỆ THỐNG ĐÁNH GIÁ PHÁT ÂM TIẾNG ANH AI (AI PRONUNCIATION EVALUATION)
    ══════════════════════════════════════════════════════════════ */
 async function requestAIJson(prompt, timeoutMs = 20000) {
-  const ai = await import('./assets/ai-import.js?v=20261107-7');
+  const ai = await import('./assets/ai-import.js?v=20261107-8');
   return ai.generateJson(prompt, timeoutMs);
 }
 
@@ -1665,7 +1665,7 @@ Trả về strictly JSON:
 }`;
 
     try {
-      const aiJson = await requestAIJson(prompt, 15000);
+      const aiJson = await requestAIJson(prompt, 45000);
       return {
         score: typeof aiJson.score === 'number' ? Math.max(0, Math.min(100, aiJson.score)) : localRes.score,
         passed: typeof aiJson.score === 'number' ? aiJson.score >= 70 : localRes.passed,
@@ -1723,7 +1723,7 @@ Trả về STRICT JSON mảng:
 ]`;
 
   try {
-    const parsed = await requestAIJson(prompt, 25000);
+    const parsed = await requestAIJson(prompt, 60000);
     if (Array.isArray(parsed)) {
       parsed.forEach(resItem => {
         const matched = needsEnrich[resItem.id];
@@ -2110,7 +2110,7 @@ QUAN TRỌNG:
 ]`;
 
   try {
-    const parsed = await requestAIJson(prompt, 25000);
+    const parsed = await requestAIJson(prompt, 60000);
     if (Array.isArray(parsed)) {
       parsed.forEach(pItem => {
         const res = localResults[pItem.id];
