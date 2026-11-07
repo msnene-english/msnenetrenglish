@@ -2585,7 +2585,7 @@ if ($('inpFileDoc')) {
 
 async function processLoadQuiz(isTestMode) {
   const url = clean($('inpWebLink').value);
-  const pasteTxt = clean($('pTxt')?.value || '');
+  const pasteTxt = String($('pTxt')?.value || '').trim();
   const status = $('linkFetchStatus');
 
   if (!selectedPdf && !pastedImages.length && !url && !pasteTxt) {
