@@ -1529,17 +1529,10 @@ function showReportCard(data) {
 /* ══════════════════════════════════════════════════════════════
    HỆ THỐNG ĐÁNH GIÁ PHÁT ÂM TIẾNG ANH AI (AI PRONUNCIATION EVALUATION)
    ══════════════════════════════════════════════════════════════ */
-const DEFAULT_AI_KEY = '';
-let systemAiKey = DEFAULT_AI_KEY;
-if (typeof window !== 'undefined' && window.GAME_CONFIG && GAME_CONFIG.firebase && GAME_CONFIG.firebase.databaseURL) {
-  try {
-    fetch(window.GAME_CONFIG.firebase.databaseURL + '/system_config/gemini_key.json')
-      .then(r => r.json())
-      .then(k => { if (k && typeof k === 'string') systemAiKey = k; })
-      .catch(() => {});
-  } catch(e) {}
+async function requestAIJson(prompt, timeoutMs = 20000) {
+  const ai = await import('./assets/ai-import.js?v=20261107-7');
+  return ai.generateJson(prompt, timeoutMs);
 }
-function getAiKey() { return systemAiKey || DEFAULT_AI_KEY; }
 
 function levenshteinDist(s1, s2) {
   const m = s1.length, n = s2.length;
@@ -1651,8 +1644,7 @@ async function evaluatePronunciationAI(spoken, target, ipa) {
       (badWords.length ? ` Các từ chưa đạt: "${badWords.slice(0, 3).join('", "')}".` : '') + ' Hãy bấm "Nghe mẫu" để nghe lại nhé!';
   }
 
-  const key = getAiKey();
-  if (key && typeof fetch !== 'undefined' && spoken && spoken.trim()) {
+  if (spoken && spoken.trim()) {
     const prompt = `Bạn là giáo viên chuyên ngữ âm Tiếng Anh (English Phonetics Teacher).
 Nhiệm vụ: Nhận xét phát âm của học sinh dựa trên bản ghi âm chuyển chữ.
 Câu mẫu chuẩn: "${target}"
@@ -1672,38 +1664,19 @@ Trả về strictly JSON:
   "tips": "<mẹo phát âm âm khó>"
 }`;
 
-    const models = ['gemini-3.5-flash', 'gemini-3.8-flash', 'gemini-flash-latest', 'gemini-flash-lite-latest'];
-    for (const m of models) {
-      try {
-        const ctrl = new AbortController();
-        const tid = setTimeout(() => ctrl.abort(), 4000);
-        const resp = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${m}:generateContent?key=${key}`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            contents: [{ parts: [{ text: prompt }] }],
-            generationConfig: { responseMimeType: 'application/json', temperature: 0.2 }
-          }),
-          signal: ctrl.signal
-        });
-        clearTimeout(tid);
-        if (resp.ok) {
-          const data = await resp.json();
-          const txt = data.candidates?.[0]?.content?.parts?.[0]?.text;
-          if (txt) {
-            const aiJson = JSON.parse(txt);
-            return {
-              score: typeof aiJson.score === 'number' ? aiJson.score : localRes.score,
-              passed: aiJson.score != null ? aiJson.score >= 70 : localRes.passed,
-              feedback: aiJson.feedback || feedback,
-              tips: aiJson.tips || tips,
-              words: localRes.words,
-              spoken,
-              target
-            };
-          }
-        }
-      } catch (err) {}
+    try {
+      const aiJson = await requestAIJson(prompt, 15000);
+      return {
+        score: typeof aiJson.score === 'number' ? Math.max(0, Math.min(100, aiJson.score)) : localRes.score,
+        passed: typeof aiJson.score === 'number' ? aiJson.score >= 70 : localRes.passed,
+        feedback: aiJson.feedback || feedback,
+        tips: aiJson.tips || tips,
+        words: localRes.words,
+        spoken,
+        target
+      };
+    } catch (error) {
+      console.warn('AI nhận xét phát âm chưa khả dụng:', error);
     }
   }
 
@@ -1734,15 +1707,6 @@ async function enrichSpeakingQuestionsAI(qList) {
 
   if (!needsEnrich.length) return qList;
 
-  const key = getAiKey();
-  if (!key || typeof fetch === 'undefined') {
-    needsEnrich.forEach(({ idx }) => {
-      if (!qList[idx].q || qList[idx].q.startsWith('Câu hỏi') || qList[idx].q.includes('clearly:')) qList[idx].q = 'Listen to the audio or read aloud clearly:';
-      if (!qList[idx].e) qList[idx].e = 'Luyện đọc to, rõ ràng từng âm tiết và chú ý trọng âm của từ.';
-    });
-    return qList;
-  }
-
   const promptItems = needsEnrich.map((item, i) => ({ id: i, text: item.target }));
   const prompt = `Bạn là chuyên gia ngữ âm Tiếng Anh (English Phonetics Expert).
 Nhiệm vụ: Cung cấp phiên âm quốc tế IPA và mẹo phát âm thực tế cho danh sách từ/câu sau:
@@ -1758,44 +1722,22 @@ Trả về STRICT JSON mảng:
   { "id": 0, "ipa": "...", "tips": "...", "prompt": "..." }
 ]`;
 
-  const models = ['gemini-3.5-flash', 'gemini-3.8-flash', 'gemini-flash-latest', 'gemini-flash-lite-latest'];
-  for (const m of models) {
-    try {
-      const ctrl = new AbortController();
-      const tid = setTimeout(() => ctrl.abort(), 6000);
-      const resp = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${m}:generateContent?key=${key}`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          contents: [{ parts: [{ text: prompt }] }],
-          generationConfig: { responseMimeType: 'application/json', temperature: 0.1 }
-        }),
-        signal: ctrl.signal
-      });
-      clearTimeout(tid);
-
-      if (resp.ok) {
-        const data = await resp.json();
-        const txt = data.candidates?.[0]?.content?.parts?.[0]?.text;
-        if (txt) {
-          const parsed = JSON.parse(txt);
-          if (Array.isArray(parsed)) {
-            parsed.forEach(resItem => {
-              const matched = needsEnrich[resItem.id];
-              if (matched && qList[matched.idx]) {
-                const targetQ = qList[matched.idx];
-                if (!targetQ.ipa && resItem.ipa) targetQ.ipa = resItem.ipa;
-                if (!targetQ.e && resItem.tips) targetQ.e = resItem.tips;
-                if ((!targetQ.q || targetQ.q.includes('clearly:')) && resItem.prompt) targetQ.q = resItem.prompt;
-              }
-            });
-            return qList;
-          }
+  try {
+    const parsed = await requestAIJson(prompt, 25000);
+    if (Array.isArray(parsed)) {
+      parsed.forEach(resItem => {
+        const matched = needsEnrich[resItem.id];
+        if (matched && qList[matched.idx]) {
+          const targetQ = qList[matched.idx];
+          if (!targetQ.ipa && resItem.ipa) targetQ.ipa = String(resItem.ipa);
+          if (!targetQ.e && resItem.tips) targetQ.e = String(resItem.tips);
+          if ((!targetQ.q || targetQ.q.includes('clearly:')) && resItem.prompt) targetQ.q = String(resItem.prompt);
         }
-      }
-    } catch (err) {
-      console.warn(`Model ${m} enrich failed:`, err);
+      });
+      return qList;
     }
+  } catch (error) {
+    console.warn('AI tạo phiên âm chưa khả dụng:', error);
   }
 
   needsEnrich.forEach(({ idx }) => {
@@ -1810,15 +1752,6 @@ async function generateSingleSpeakingAI(targetText) {
   const cleanTarget = String(targetText || '').trim();
   if (!cleanTarget) return { ipa: '', tips: '', prompt: 'Read aloud clearly:' };
 
-  const key = getAiKey();
-  if (!key || typeof fetch === 'undefined') {
-    return {
-      ipa: '',
-      tips: 'Luyện đọc to, rõ ràng từng âm tiết và chú ý trọng âm của từ.',
-      prompt: 'Read aloud clearly:'
-    };
-  }
-
   const prompt = `Bạn là chuyên gia ngữ âm Tiếng Anh.
 Nhiệm vụ: Cung cấp phiên âm quốc tế IPA và mẹo phát âm tiếng Việt cho từ/câu: "${cleanTarget}"
 
@@ -1829,35 +1762,15 @@ Trả về STRICT JSON:
   "prompt": "<chỉ dẫn bài làm tiếng Anh ngắn>"
 }`;
 
-  const models = ['gemini-3.5-flash', 'gemini-3.8-flash', 'gemini-flash-latest', 'gemini-flash-lite-latest'];
-  for (const m of models) {
-    try {
-      const ctrl = new AbortController();
-      const tid = setTimeout(() => ctrl.abort(), 4000);
-      const resp = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${m}:generateContent?key=${key}`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          contents: [{ parts: [{ text: prompt }] }],
-          generationConfig: { responseMimeType: 'application/json', temperature: 0.1 }
-        }),
-        signal: ctrl.signal
-      });
-      clearTimeout(tid);
-
-      if (resp.ok) {
-        const data = await resp.json();
-        const txt = data.candidates?.[0]?.content?.parts?.[0]?.text;
-        if (txt) {
-          const parsed = JSON.parse(txt);
-          return {
-            ipa: parsed.ipa || '',
-            tips: parsed.tips || 'Luyện đọc to, rõ ràng từng âm tiết và chú ý trọng âm của từ.',
-            prompt: parsed.prompt || 'Read aloud clearly:'
-          };
-        }
-      }
-    } catch (err) {}
+  try {
+    const parsed = await requestAIJson(prompt, 15000);
+    return {
+      ipa: parsed.ipa || '',
+      tips: parsed.tips || 'Luyện đọc to, rõ ràng từng âm tiết và chú ý trọng âm của từ.',
+      prompt: parsed.prompt || 'Read aloud clearly:'
+    };
+  } catch (error) {
+    console.warn('AI tạo phiên âm chưa khả dụng:', error);
   }
 
   return {
@@ -2171,12 +2084,7 @@ async function checkEnglishStandardizationAI(items) {
     };
   });
 
-  // 2. Nếu có key AI, gửi Gemini để kiểm tra ngữ pháp sâu & ngữ cảnh
-  const key = getAiKey();
-  if (!key || typeof fetch === 'undefined') {
-    return localResults;
-  }
-
+  // 2. Dùng Firebase AI Logic để kiểm tra ngữ pháp sâu và ngữ cảnh.
   const promptItems = list.map(l => ({ id: l.id, text: l.original }));
   const prompt = `Bạn là chuyên gia thẩm định và chuẩn hóa chính tả, ngữ pháp Tiếng Anh (English Proofreader & Standardizer).
 Giáo viên đang soạn danh sách từ/câu để học sinh luyện đọc và phát âm:
@@ -2201,52 +2109,25 @@ QUAN TRỌNG:
   { "id": 0, "original": "...", "suggested": "...", "isMisspelled": true, "reason": "..." }
 ]`;
 
-  const models = ['gemini-3.5-flash', 'gemini-3.8-flash', 'gemini-flash-latest', 'gemini-flash-lite-latest'];
-  for (const m of models) {
-    try {
-      const ctrl = new AbortController();
-      const tid = setTimeout(() => ctrl.abort(), 6000);
-      const resp = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${m}:generateContent?key=${key}`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          contents: [{ parts: [{ text: prompt }] }],
-          generationConfig: { responseMimeType: 'application/json', temperature: 0.1 }
-        }),
-        signal: ctrl.signal
-      });
-      clearTimeout(tid);
-
-      if (resp.ok) {
-        const data = await resp.json();
-        const txt = data.candidates?.[0]?.content?.parts?.[0]?.text;
-        if (txt) {
-          const parsed = JSON.parse(txt);
-          if (Array.isArray(parsed)) {
-            parsed.forEach(pItem => {
-              const res = localResults[pItem.id];
-              if (res) {
-                if (pItem.isMisspelled && pItem.suggested && pItem.suggested.toLowerCase() !== res.original.toLowerCase()) {
-                  res.isMisspelled = true;
-                  res.suggested = pItem.suggested;
-                  res.reason = pItem.reason || res.reason || `Chuẩn hóa thành "${pItem.suggested}"`;
-                }
-              }
-            });
-            return localResults;
-          }
+  try {
+    const parsed = await requestAIJson(prompt, 25000);
+    if (Array.isArray(parsed)) {
+      parsed.forEach(pItem => {
+        const res = localResults[pItem.id];
+        if (res && pItem.isMisspelled && pItem.suggested &&
+            String(pItem.suggested).toLowerCase() !== res.original.toLowerCase()) {
+          res.isMisspelled = true;
+          res.suggested = String(pItem.suggested);
+          res.reason = pItem.reason || res.reason || `Chuẩn hóa thành "${pItem.suggested}"`;
         }
-      }
-    } catch (e) {
-      console.warn(`Model ${m} standardization check failed:`, e);
+      });
     }
+  } catch (error) {
+    console.warn('AI kiểm tra chính tả chưa khả dụng:', error);
   }
 
   return localResults;
 }
-
-
-
 
 /* ═════ COPY SỐ ĐIỆN THOẠI / ZALO CÔ CHÍ NÊN ═════ */
 function copyPhone() {
@@ -2263,5 +2144,5 @@ function copyPhone() {
 }
 if (typeof window !== 'undefined') window.copyPhone = copyPhone;
 
-return { $, copyPhone, shuffle, pick, clamp, esc, fmt, stamp, clean, rng, COLORS, BADGE, safe, normAns, checkTextAns, fromOld, prep, parseCSV, rowsToQs, parseText, parsePaste, sheetSets, sheetSet, sampleSet, packHw, unpackHw, tone, sfx, confetti, toast, rank, makeNet, music, saveCommunityQuiz, getCommunityLibrary, getQuizById, saveHwMeta, submitHwResult, getHwGradebook, showReportCard, downloadReportCard, getAiKey, diffPronunciation, speakText, evaluatePronunciationAI, enrichSpeakingQuestionsAI, generateSingleSpeakingAI, checkEnglishStandardizationLocal, checkEnglishStandardizationAI, COMMON_TYPOS, deleteCommunityQuiz, deleteHwSubmission , copy, copyText, sfxFiles, kvPut, kvGet, kvScan, live, liveWatch};
+return { $, copyPhone, shuffle, pick, clamp, esc, fmt, stamp, clean, rng, COLORS, BADGE, safe, normAns, checkTextAns, fromOld, prep, parseCSV, rowsToQs, parseText, parsePaste, sheetSets, sheetSet, sampleSet, packHw, unpackHw, tone, sfx, confetti, toast, rank, makeNet, music, saveCommunityQuiz, getCommunityLibrary, getQuizById, saveHwMeta, submitHwResult, getHwGradebook, showReportCard, downloadReportCard, diffPronunciation, speakText, evaluatePronunciationAI, enrichSpeakingQuestionsAI, generateSingleSpeakingAI, checkEnglishStandardizationLocal, checkEnglishStandardizationAI, COMMON_TYPOS, deleteCommunityQuiz, deleteHwSubmission , copy, copyText, sfxFiles, kvPut, kvGet, kvScan, live, liveWatch};
 })();
