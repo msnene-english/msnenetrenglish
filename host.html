@@ -2140,11 +2140,10 @@ function parseQuestionsUniversal(html) {
             if (Array.isArray(qList) && qList.length) {
               qList.forEach(item => {
                 const opts = (item.opts || []).map(o => (typeof o === 'string' ? o : (o.h || o.text || '')));
-                let correctIdx = 0;
-                if (item.opts && Array.isArray(item.opts)) {
-                  const found = item.opts.findIndex(o => typeof o === 'object' && (o.c === true || o.correct === true));
-                  if (found > -1) correctIdx = found;
-                }
+                const correctIdx = Array.isArray(item.opts)
+                  ? item.opts.findIndex(o => o && typeof o === 'object' && (o.c === true || o.correct === true))
+                  : -1;
+                if (correctIdx < 0 || opts.length < 2 || opts.some(o => !String(o).trim())) return;
                 extractedQs.push({
                   q: (item.sec ? '<b>[' + item.sec + ']</b><br>' : '') + (item.q || 'Chọn đáp án đúng:'),
                   o: opts,
@@ -2176,27 +2175,15 @@ function parseQuestionsUniversal(html) {
             secs.forEach(sec => {
               if (sec.type === 'mcq' && sec.items) {
                 sec.items.forEach(it => {
+                  if (!Array.isArray(it.opts) || it.opts.length < 2 ||
+                      !Number.isInteger(it.correct) || it.correct < 0 || it.correct >= it.opts.length) return;
                   extractedQs.push({
                     q: (sec.title ? '<b>' + sec.title + '</b><br>' : '') + (it.text || 'Chọn đáp án đúng:'),
                     o: it.opts || [],
-                    a: it.correct != null ? it.correct : 0,
+                    a: it.correct,
                     e: it.explain || '',
                     s: sec.short || sec.title || ''
                   });
-                });
-              } else if (sec.type === 'fill' && sec.items) {
-                sec.items.forEach(it => {
-                  const correctWord = it.ans && it.ans[0] ? it.ans[0][0] : '';
-                  if (correctWord) {
-                    const qPart = it.parts ? it.parts.filter(p => p.trim() && !p.startsWith('<input')).join(' ') : (it.text || sec.title);
-                    extractedQs.push({
-                      q: (sec.title ? '<b>' + sec.title + '</b><br>' : '') + qPart,
-                      o: [correctWord, 'Teacher', 'Student', 'School'],
-                      a: 0,
-                      e: it.explain || '',
-                      s: sec.short || ''
-                    });
-                  }
                 });
               }
             });
@@ -2623,12 +2610,15 @@ async function processLoadQuiz(isTestMode) {
     }
     // 2. Trường hợp có Link web
     else if (url) {
-      const res = await fetch(url);
+      const sourceUrl = new URL(url, location.href);
+      if (!['http:', 'https:'].includes(sourceUrl.protocol)) throw new Error('Link đề phải bắt đầu bằng http hoặc https.');
+      const res = await fetch(sourceUrl.href);
       if (!res.ok) throw new Error('Không mở được link (Mã lỗi ' + res.status + ')');
       const html = await res.text();
+      if (html.length > 2_000_000) throw new Error('Trang đề quá lớn (tối đa 2 MB).');
 
-      // Nếu tạo game và web có sẵn cấu trúc chuẩn: đọc siêu tốc
-      if (!isTestMode) {
+      // Chỉ chạy mã trích xuất từ trang cùng miền do chủ web kiểm soát.
+      if (!isTestMode && sourceUrl.origin === location.origin) {
         const parsed = parseQuestionsUniversal(html);
         if (parsed.questions && parsed.questions.length > 0) {
           extractedQs = parsed.questions;
