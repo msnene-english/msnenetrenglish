@@ -123,13 +123,22 @@ export function normalizeQuiz(payload) {
         result.a = 0;
       } else {
         const options = Array.isArray(item.o) ? item.o.map(normalizeText) : [];
-        const answer = typeof item.a === 'string' && /^\d+$/.test(item.a.trim())
+        const numericAnswer = typeof item.a === 'string' && /^\d+$/.test(item.a.trim())
           ? Number(item.a.trim()) : item.a;
+        const answerLetter = normalizeText(item.answerLetter).toUpperCase();
+        const letterAnswer = /^[A-F]$/.test(answerLetter)
+          ? answerLetter.charCodeAt(0) - 65 : null;
         if (options.length < 2 || options.length > 6 || options.some(value => !value) ||
             new Set(options.map(value => value.toLocaleLowerCase())).size !== options.length) {
           skipped.push(label + ': phương án thiếu, trùng hoặc sai định dạng.');
           return;
         }
+        if (letterAnswer !== null && Number.isInteger(numericAnswer) &&
+            letterAnswer !== numericAnswer) {
+          skipped.push(label + ': chữ cái và vị trí đáp án AI đưa ra không khớp.');
+          return;
+        }
+        const answer = letterAnswer !== null ? letterAnswer : numericAnswer;
         if (!Number.isInteger(answer) || answer < 0 || answer >= options.length) {
           skipped.push(label + ': thiếu hoặc sai vị trí đáp án đúng.');
           return;
