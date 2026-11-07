@@ -35,7 +35,7 @@ async function model() {
       generationConfig: {
         responseMimeType: 'application/json',
         temperature: 0.1,
-        maxOutputTokens: 8192
+        maxOutputTokens: 16384
       }
     });
   })();
@@ -65,7 +65,7 @@ async function filePart(file) {
     reader.onerror = () => reject(new Error('Không đọc được tệp PDF.'));
     reader.readAsDataURL(file);
   });
-  return dataUrlPart(dataUrl);
+  return dataUrlPart(dataUrl.replace(/^data:[^;]*/, 'data:application/pdf'));
 }
 
 export async function generateQuiz(prompt, input) {
@@ -74,6 +74,10 @@ export async function generateQuiz(prompt, input) {
     parts.push(await filePart(input));
   } else if (Array.isArray(input)) {
     if (input.length > 12) throw new Error('Tối đa 12 ảnh mỗi lần đọc đề.');
+    const totalLength = input.reduce((sum, value) => sum + value.length, 0);
+    if (totalLength > MAX_FILE_BYTES * 4 / 3 + input.length * 40) {
+      throw new Error('Tổng dung lượng ảnh quá lớn. Hãy chọn tối đa 15 MB ảnh.');
+    }
     input.forEach(value => parts.push(dataUrlPart(value)));
   } else if (typeof input === 'string' && input.startsWith('data:')) {
     parts.push(dataUrlPart(input));
