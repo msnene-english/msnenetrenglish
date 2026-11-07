@@ -24,7 +24,7 @@ Hệ thống trò chơi học tập tương tác thời gian thực (Gamified Li
    - AI dùng Firebase AI Logic và App Check; cần bật dịch vụ và điền khóa site reCAPTCHA Enterprise trong `assets/config.js`. Phần giới hạn Pro trên trang web hiện là kiểm tra ở giao diện, chưa phải giới hạn lượt gọi AI tại máy chủ.
 
    - Hỗ trợ câu hỏi phát âm: Giáo viên chỉ cần nhập từ/câu mẫu theo cú pháp `1. SPK: Good morning teacher`.
-   - Phần AI chấm phát âm vẫn cần chuyển từ luồng khóa cũ sang Firebase AI Logic; chấm phát âm cơ bản trên máy vẫn có thể dùng.
+   - Nhận xét phát âm, tạo IPA và kiểm tra chính tả dùng Firebase AI Logic; nếu dịch vụ AI chưa khả dụng, phần chấm cơ bản trên máy vẫn dùng được.
    - Học sinh bấm micro đọc câu, AI chấm điểm độ chính xác (0-100), chỉ rõ âm tiết đọc chuẩn/lệch màu sắc trực quan.
 
 3. **Thư viện đề thi chung (Shared Community Quiz Library)**:
