@@ -56,7 +56,7 @@ async function model() {
         thinkingConfig: { thinkingLevel: ThinkingLevel.LOW },
         maxOutputTokens: 16384
       }
-    });
+    }, { timeout: 300000 });
   })();
   try { return await modelPromise; }
   catch (error) { modelPromise = null; throw error; }
@@ -212,7 +212,7 @@ async function generatePart(aiModel, prompt, input, imageStart) {
     if (!quizFallbackModel) quizFallbackModel = makeModel(aiInstance, {
       model: 'gemini-3.5-flash-lite',
       generationConfig: { responseMimeType: 'application/json', maxOutputTokens: 16384 }
-    });
+    }, { timeout: 300000 });
     result = await withTimeout(quizFallbackModel.generateContent(parts), 300000,
       'Mô hình AI dự phòng chưa phản hồi sau 5 phút. Hãy thử lại với ít trang hơn.');
   }
