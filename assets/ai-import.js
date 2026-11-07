@@ -7,6 +7,7 @@ let appCheckInstance;
 let aiInstance;
 let makeModel;
 let fastModel;
+let quizFallbackModel;
 
 function withTimeout(promise, milliseconds, message) {
   let timer;
@@ -200,8 +201,21 @@ async function generatePart(aiModel, prompt, input, imageStart) {
   } else {
     throw new Error('Không có nội dung đề bài để AI đọc.');
   }
-  const result = await withTimeout(aiModel.generateContent(parts), 300000,
-    'AI chưa phản hồi sau 5 phút. Hãy thử lại với ít trang hơn.');
+  let result;
+  try {
+    result = await withTimeout(aiModel.generateContent(parts), 300000,
+      'AI chưa phản hồi sau 5 phút. Hãy thử lại với ít trang hơn.');
+  } catch (error) {
+    // Firebase AI Logic may return HTTP 500/503 when one model is temporarily overloaded.
+    // Keep the same document and prompt, and retry once with a supported Flash-Lite model.
+    if (!/\[50[023]\b|high demand|temporar/i.test(String(error?.message || error))) throw error;
+    if (!quizFallbackModel) quizFallbackModel = makeModel(aiInstance, {
+      model: 'gemini-3.5-flash-lite',
+      generationConfig: { responseMimeType: 'application/json', maxOutputTokens: 16384 }
+    });
+    result = await withTimeout(quizFallbackModel.generateContent(parts), 300000,
+      'Mô hình AI dự phòng chưa phản hồi sau 5 phút. Hãy thử lại với ít trang hơn.');
+  }
   const response = await withTimeout(result.response, 10000,
     'AI chưa trả kết quả. Hãy thử lại.');
   const raw = response.text();
