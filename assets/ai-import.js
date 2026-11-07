@@ -4,6 +4,16 @@ const BASE = 'https://www.gstatic.com/firebasejs/' + SDK + '/';
 const MAX_FILE_BYTES = 15 * 1024 * 1024;
 let modelPromise;
 
+function withTimeout(promise, milliseconds, message) {
+  let timer;
+  return Promise.race([
+    promise,
+    new Promise((_, reject) => {
+      timer = setTimeout(() => reject(new Error(message)), milliseconds);
+    })
+  ]).finally(() => clearTimeout(timer));
+}
+
 async function model() {
   if (modelPromise) return modelPromise;
   modelPromise = (async () => {
@@ -15,11 +25,11 @@ async function model() {
       throw new Error('Chưa cấu hình Firebase App Check cho tính năng AI.');
     }
     const [{ initializeApp, getApps }, { initializeAppCheck, ReCaptchaEnterpriseProvider },
-      { getAI, getGenerativeModel, GoogleAIBackend }] = await Promise.all([
+      { getAI, getGenerativeModel, GoogleAIBackend }] = await withTimeout(Promise.all([
       import(BASE + 'firebase-app.js'),
       import(BASE + 'firebase-app-check.js'),
       import(BASE + 'firebase-ai.js')
-    ]);
+    ]), 30000, 'Không tải được thư viện AI trong 30 giây. Hãy kiểm tra kết nối mạng.');
     const app = getApps().find(item => item.name === 'msnene-ai') ||
       initializeApp(cfg, 'msnene-ai');
     initializeAppCheck(app, {
@@ -182,8 +192,10 @@ async function generatePart(aiModel, prompt, input, imageStart) {
   } else {
     throw new Error('Không có nội dung đề bài để AI đọc.');
   }
-  const result = await aiModel.generateContent(parts);
-  const response = await result.response;
+  const result = await withTimeout(aiModel.generateContent(parts), 120000,
+    'AI chưa phản hồi sau 2 phút. Hãy kiểm tra Firebase App Check và thử lại.');
+  const response = await withTimeout(result.response, 10000,
+    'AI chưa trả kết quả. Hãy thử lại.');
   const raw = response.text();
   if (!raw) throw new Error('AI không trả về câu hỏi.');
   let parsed;
