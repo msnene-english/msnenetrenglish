@@ -944,15 +944,54 @@ function renderTable(list) {
             <button type="button" class="btn btn-outline btn-sm" style="color:${isAct ? '#d97706' : '#16a34a'}" onclick="toggleStatus(${esc(JSON.stringify(item.hash))}, ${esc(JSON.stringify(item.status))})" title="${isAct ? 'Tạm khóa key này' : 'Mở lại key này'}">
               ${isAct ? '⏸ Khóa' : '▶ Mở'}
             </button>
+            <button type="button" class="btn btn-outline btn-sm" onclick="showLicenseUsage(${esc(JSON.stringify(item.hash))})" title="Xem các trình duyệt đã dùng mã">
+              📈 Lượt dùng
+            </button>
             <button type="button" class="btn btn-danger btn-sm" onclick="deleteKey(${esc(JSON.stringify(item.hash))}, ${esc(JSON.stringify(keyVal))}, ${esc(JSON.stringify(item.owner || ''))})" title="Xóa vĩnh viễn khỏi Firebase">
               🗑 Xóa
             </button>
           </div>
         </td>
       </tr>
+      <tr id="licenseUsage_${esc(item.hash)}" style="display:none">
+        <td colspan="5" style="background:#f8fafc;padding:16px">
+          <div class="usage-content">Đang tải lượt dùng…</div>
+        </td>
+      </tr>
     `;
   });
   tbody.innerHTML = html;
+}
+
+async function showLicenseUsage(hash) {
+  const row = document.getElementById('licenseUsage_' + hash);
+  if (!row) return;
+  if (row.style.display !== 'none') { row.style.display = 'none'; return; }
+  row.style.display = 'table-row';
+  const box = row.querySelector('.usage-content');
+  box.textContent = '⏳ Đang tải lượt dùng mã…';
+  try {
+    const response = await FBA.request(getFbUrl() + '/license_usage/' + encodeURIComponent(hash) + '.json');
+    const data = await response.json();
+    const entries = Object.entries(data || {}).map(([uid, info]) => ({ uid, ...info }))
+      .sort((a, b) => (b.lastSeen || 0) - (a.lastSeen || 0));
+    if (!entries.length) {
+      box.textContent = 'Chưa ghi nhận lượt dùng. Lịch sử chỉ bắt đầu từ phiên bản mới.';
+      return;
+    }
+    const date = value => Number.isFinite(value) && value > 0
+      ? new Date(value).toLocaleString('vi-VN') : '—';
+    box.innerHTML = '<strong>Đã ghi nhận ' + entries.length + ' trình duyệt/phiên đăng nhập</strong>' +
+      '<div style="font-size:12px;color:#64748b;margin:5px 0 10px">Mã nhận diện có thể thay đổi nếu người dùng xóa dữ liệu trình duyệt hoặc đổi trình duyệt; đây không phải số máy vật lý.</div>' +
+      '<div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse;font-size:13px">' +
+      '<thead><tr><th>Mã trình duyệt</th><th>Thiết bị</th><th>Trình duyệt</th><th>Lần đầu</th><th>Gần nhất</th></tr></thead><tbody>' +
+      entries.map(item => '<tr><td title="' + esc(item.uid) + '">' + esc(item.uid.slice(0, 12)) + '…</td>' +
+        '<td>' + esc(item.platform || '—') + '</td><td>' + esc(item.browser || '—') + '</td>' +
+        '<td>' + esc(date(item.firstSeen)) + '</td><td>' + esc(date(item.lastSeen)) + '</td></tr>').join('') +
+      '</tbody></table></div>';
+  } catch (error) {
+    box.textContent = '❌ Không tải được lượt dùng: ' + error.message;
+  }
 }
 
 function copyText(txt) {
