@@ -1549,11 +1549,11 @@ function levenshteinDist(s1, s2) {
 }
 
 function diffPronunciation(spoken, target) {
-  const cleanStr = str => String(str || '').toLowerCase().replace(/[^\\w\\s']/g, ' ').replace(/\\s+/g, ' ').trim();
+  const cleanStr = str => String(str || '').toLowerCase().replace(/[^\w\s']/g, ' ').replace(/\s+/g, ' ').trim();
   const sWords = cleanStr(spoken).split(' ').filter(Boolean);
   const tWords = cleanStr(target).split(' ').filter(Boolean);
 
-  if (!tWords.length) return { score: 0, passed: false, words: [] };
+  if (!tWords.length) return { score: 0, passed: false, words: [], matchedCount: 0, totalWords: 0 };
 
   const results = [];
   let matchedWeight = 0;
