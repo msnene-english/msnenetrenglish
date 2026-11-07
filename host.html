@@ -2294,13 +2294,13 @@ CÁC NGUYÊN TẮC CỐT LÕI BẮT BUỘC CHO TEST MODE:
 3. TUYỆT ĐỐI KHÔNG ép bài thi về dạng điền từ ngô nghê với các đáp án tự bịa như 'Teacher', 'Student', 'School'. Phải dùng phương án và nội dung thực tế của đề thi.
 
 4. ĐÁP ÁN 'a':
-   Phải là số nguyên 0, 1, 2, 3 tương ứng với vị trí đúng trong mảng 'o'. Nếu đề có đáp án, chép đúng và đặt 'answerSource':'provided'. Nếu đề không có đáp án, chỉ tự giải khi có căn cứ rõ ràng, đặt 'answerSource':'inferred' và giải thích trong 'e'. Nếu không chắc, đặt 'answerSource':'unknown', 'a':null; không đoán bừa.
+   Phải là số nguyên 0, 1, 2, 3 tương ứng với vị trí đúng trong mảng 'o'; thêm 'answerLetter' là A, B, C hoặc D tương ứng. Nếu đề có đáp án, chép đúng và đặt 'answerSource':'provided'. Nếu đề không có đáp án, chỉ tự giải khi có căn cứ rõ ràng, đặt 'answerSource':'inferred' và giải thích trong 'e'. Nếu không chắc, đặt 'answerSource':'unknown', 'a':null; không đoán bừa.
 
 5. 'passage': Bài đọc đầy đủ (nếu bài đọc chung cho nhiều câu hỏi, giữ nguyên toàn bộ bài đọc ở trường 'passage' này; nếu không có bài đọc thì để rỗng ""). Giữ đúng thứ tự và số lượng câu trong tài liệu; không tạo câu hoặc phương án không có trong đề.
 
 Trả về strictly JSON danh sách:
 [
-  { "q": "...", "passage": "...", "o": ["...", "...", "...", "..."], "a": 0, "answerSource": "provided", "e": "...", "s": "..." }
+  { "q": "...", "passage": "...", "o": ["...", "...", "...", "..."], "a": 0, "answerLetter": "A", "answerSource": "provided", "e": "...", "s": "..." }
 ]`;
   } else {
     // Game mode: Áp dụng Giải pháp C - Context Focus (trích đoạn ngắn gọn cho game phản xạ nhanh)
@@ -2312,14 +2312,14 @@ QUY TẮC ĐẶC BIỆT:
 3. ÁP DỤNG GIẢI PHÁP C (Context Focus): Với bài đọc dài hoặc bài nối Matching, hãy trích đoạn ngữ cảnh trọng tâm (2-3 câu ngắn gọn chứa manh mối then chốt) ghép thẳng vào câu hỏi 'q' để học sinh dễ đọc nhanh trên điện thoại mà không bị tràn màn hình.
 4. 'q': Câu hỏi ngắn gọn (kèm ngữ cảnh ngắn nếu cần; giữ lại <u>, <b> nếu là câu phát âm/trọng âm).
 5. 'o': Mảng 4 phương án lựa chọn ["A", "B", "C", "D"].
-6. 'a': Chỉ số (0, 1, 2, 3) của đáp án đúng. Nếu đề có đáp án, đặt 'answerSource':'provided'. Nếu tự giải có căn cứ, đặt 'answerSource':'inferred' và giải thích trong 'e'. Nếu không chắc, đặt 'answerSource':'unknown', 'a':null; không đoán bừa.
+6. 'a': Chỉ số (0, 1, 2, 3) của đáp án đúng; thêm 'answerLetter' A, B, C hoặc D tương ứng. Nếu đề có đáp án, đặt 'answerSource':'provided'. Nếu tự giải có căn cứ, đặt 'answerSource':'inferred' và giải thích trong 'e'. Nếu không chắc, đặt 'answerSource':'unknown', 'a':null; không đoán bừa.
 7. 'e': Lời giải thích ngắn gọn, phiên âm IPA hoặc từ khóa đối chiếu.
 8. 's': Dạng bài (Pronunciation, Stress, Grammar, Vocabulary, Reading).
 9. Giữ đúng nội dung và thứ tự câu trong tài liệu; không tự bịa câu hoặc phương án. Không lặp câu.
 
 Trả về strictly JSON danh sách:
 [
-  { "q": "...", "o": ["...", "...", "...", "..."], "a": 0, "answerSource": "inferred", "e": "...", "s": "..." }
+  { "q": "...", "o": ["...", "...", "...", "..."], "a": 0, "answerLetter": "A", "answerSource": "inferred", "e": "...", "s": "..." }
 ]`;
   }
 
