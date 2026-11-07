@@ -2294,13 +2294,13 @@ CÁC NGUYÊN TẮC CỐT LÕI BẮT BUỘC CHO TEST MODE:
 3. TUYỆT ĐỐI KHÔNG ép bài thi về dạng điền từ ngô nghê với các đáp án tự bịa như 'Teacher', 'Student', 'School'. Phải dùng phương án và nội dung thực tế của đề thi.
 
 4. ĐÁP ÁN 'a':
-   Phải là số nguyên 0, 1, 2, 3 tương ứng với vị trí đúng trong mảng 'o' (0 cho A, 1 cho B, 2 cho C, 3 cho D). Phải suy luận học thuật chính xác 100%.
+   Phải là số nguyên 0, 1, 2, 3 tương ứng với vị trí đúng trong mảng 'o'. Nếu đề có đáp án, chép đúng và đặt 'answerSource':'provided'. Nếu đề không có đáp án, chỉ tự giải khi có căn cứ rõ ràng, đặt 'answerSource':'inferred' và giải thích trong 'e'. Nếu không chắc, đặt 'answerSource':'unknown', 'a':null; không đoán bừa.
 
-5. 'passage': Bài đọc đầy đủ (nếu bài đọc chung cho nhiều câu hỏi, giữ nguyên toàn bộ bài đọc ở trường 'passage' này; nếu không có bài đọc thì để rỗng "")
+5. 'passage': Bài đọc đầy đủ (nếu bài đọc chung cho nhiều câu hỏi, giữ nguyên toàn bộ bài đọc ở trường 'passage' này; nếu không có bài đọc thì để rỗng ""). Giữ đúng thứ tự và số lượng câu trong tài liệu; không tạo câu hoặc phương án không có trong đề.
 
 Trả về strictly JSON danh sách:
 [
-  { "q": "...", "passage": "...", "o": ["...", "...", "...", "..."], "a": 0, "e": "...", "s": "..." }
+  { "q": "...", "passage": "...", "o": ["...", "...", "...", "..."], "a": 0, "answerSource": "provided", "e": "...", "s": "..." }
 ]`;
   } else {
     // Game mode: Áp dụng Giải pháp C - Context Focus (trích đoạn ngắn gọn cho game phản xạ nhanh)
@@ -2312,13 +2312,14 @@ QUY TẮC ĐẶC BIỆT:
 3. ÁP DỤNG GIẢI PHÁP C (Context Focus): Với bài đọc dài hoặc bài nối Matching, hãy trích đoạn ngữ cảnh trọng tâm (2-3 câu ngắn gọn chứa manh mối then chốt) ghép thẳng vào câu hỏi 'q' để học sinh dễ đọc nhanh trên điện thoại mà không bị tràn màn hình.
 4. 'q': Câu hỏi ngắn gọn (kèm ngữ cảnh ngắn nếu cần; giữ lại <u>, <b> nếu là câu phát âm/trọng âm).
 5. 'o': Mảng 4 phương án lựa chọn ["A", "B", "C", "D"].
-6. 'a': Chỉ số (0, 1, 2, 3) của đáp án đúng.
+6. 'a': Chỉ số (0, 1, 2, 3) của đáp án đúng. Nếu đề có đáp án, đặt 'answerSource':'provided'. Nếu tự giải có căn cứ, đặt 'answerSource':'inferred' và giải thích trong 'e'. Nếu không chắc, đặt 'answerSource':'unknown', 'a':null; không đoán bừa.
 7. 'e': Lời giải thích ngắn gọn, phiên âm IPA hoặc từ khóa đối chiếu.
 8. 's': Dạng bài (Pronunciation, Stress, Grammar, Vocabulary, Reading).
+9. Giữ đúng nội dung và thứ tự câu trong tài liệu; không tự bịa câu hoặc phương án. Không lặp câu.
 
 Trả về strictly JSON danh sách:
 [
-  { "q": "...", "o": ["...", "...", "...", "..."], "a": 0, "e": "...", "s": "..." }
+  { "q": "...", "o": ["...", "...", "...", "..."], "a": 0, "answerSource": "inferred", "e": "...", "s": "..." }
 ]`;
   }
 
@@ -2333,8 +2334,11 @@ Trả về strictly JSON danh sách:
     aiInput = aiInput.replace(/\s+/g, ' ').trim().slice(0, 32000);
   }
   try {
-    const aiImport = await import('./assets/ai-import.js?v=20261107-3');
-    return await aiImport.generateQuiz(promptText, aiInput);
+    const aiImport = await import('./assets/ai-import.js?v=20261107-5');
+    const result = await aiImport.generateQuiz(promptText, aiInput, { isTestMode });
+    result.questions.skipped = result.skipped;
+    result.questions.inferredCount = result.inferredCount;
+    return result.questions;
   } catch (error) {
     throw new Error('Không đọc được đề bằng AI: ' + error.message);
   }
@@ -2659,8 +2663,11 @@ async function processLoadQuiz(isTestMode) {
 
     window.currentQuizType = isTestMode ? 'test' : 'game';
 
-    setQs(extractedQs, docTitle, []);
-    status.innerHTML = '🎉 <b>Thành công!</b> Đã nạp <b>' + extractedQs.length + ' câu hỏi</b> (' + (isTestMode ? '📝 Dạng Bài Test' : '🎮 Dạng Game') + ').';
+    setQs(extractedQs, docTitle, extractedQs.skipped || []);
+    status.innerHTML = '🎉 <b>Đã nạp ' + extractedQs.length + ' câu hỏi</b>' +
+      (extractedQs.skipped?.length ? ' · ⚠️ ' + extractedQs.skipped.length + ' câu cần xem lại/đã bỏ qua' : '') +
+      (extractedQs.inferredCount ? ' · ⚠️ ' + extractedQs.inferredCount + ' đáp án AI tự suy luận' : '') +
+      ' (' + (isTestMode ? '📝 Dạng Bài Test' : '🎮 Dạng Game') + ').';
     toast('🎉 Nạp thành công ' + extractedQs.length + ' câu hỏi!', 3500);
   } catch (err) {
     status.textContent = '❌ ' + err.message;
