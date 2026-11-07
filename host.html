@@ -676,7 +676,7 @@ Hoặc dán theo mẫu:
 <!-- SCRIPTS HỆ THỐNG -->
 <script src="assets/shield.js?v=2.4"></script>
 <script src="assets/qrcode.min.js"></script>
-<script src="assets/config.js?v=20261107-2"></script>
+<script src="assets/config.js?v=20261107-3"></script>
 <script src="assets/firebase-admin-auth.js?v=20261107-1"></script>
 <script src="assets/core.js?v=20261107-1"></script>
 <script src="assets/mau.js"></script>
@@ -2343,6 +2343,8 @@ Trả về strictly JSON danh sách:
 // Mảng lưu nhiều ảnh chụp màn hình từ Ctrl + V hoặc chọn file
 let pastedImages = [];
 let selectedPdf = null;
+$('inpWebLink').addEventListener('input', () => { selectedPdf = null; });
+$('pTxt').addEventListener('input', () => { selectedPdf = null; });
 
 function handleImageBlob(blob, filename) {
   if (!blob) return false;
@@ -2661,7 +2663,7 @@ async function processLoadQuiz(isTestMode) {
     status.innerHTML = '🎉 <b>Thành công!</b> Đã nạp <b>' + extractedQs.length + ' câu hỏi</b> (' + (isTestMode ? '📝 Dạng Bài Test' : '🎮 Dạng Game') + ').';
     toast('🎉 Nạp thành công ' + extractedQs.length + ' câu hỏi!', 3500);
   } catch (err) {
-    status.innerHTML = '❌ ' + err.message;
+    status.textContent = '❌ ' + err.message;
     toast('❌ ' + err.message, 3500);
   } finally {
     if ($('bLoadGame')) $('bLoadGame').disabled = false;
