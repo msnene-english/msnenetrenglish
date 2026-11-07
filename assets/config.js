@@ -18,6 +18,6 @@ window.GAME_CONFIG = {
     appId: "1:201737691060:web:6b9ffca2635d31c2595ce1",
     adminUid: "9eA5BZII0STtQwqox2XcBNEUfnE2",
     // Firebase App Check → Web app → reCAPTCHA Enterprise (public site key).
-    appCheckSiteKey: ""
+    appCheckSiteKey: "6LfRPRQuAAAAAFNmqtQo-4S0qo8hIwJyEzUp6XWK"
   }
 };
