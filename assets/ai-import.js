@@ -4,6 +4,9 @@ const BASE = 'https://www.gstatic.com/firebasejs/' + SDK + '/';
 const MAX_FILE_BYTES = 15 * 1024 * 1024;
 let modelPromise;
 let appCheckInstance;
+let aiInstance;
+let makeModel;
+let fastModel;
 
 function withTimeout(promise, milliseconds, message) {
   let timer;
@@ -26,7 +29,7 @@ async function model() {
       throw new Error('Chưa cấu hình Firebase App Check cho tính năng AI.');
     }
     const [{ initializeApp, getApps }, { initializeAppCheck, ReCaptchaEnterpriseProvider, getLimitedUseToken },
-      { getAI, getGenerativeModel, GoogleAIBackend }] = await withTimeout(Promise.all([
+      { getAI, getGenerativeModel, GoogleAIBackend, ThinkingLevel }] = await withTimeout(Promise.all([
       import(BASE + 'firebase-app.js'),
       import(BASE + 'firebase-app-check.js'),
       import(BASE + 'firebase-ai.js')
@@ -43,11 +46,13 @@ async function model() {
       backend: new GoogleAIBackend(),
       useLimitedUseAppCheckTokens: true
     });
+    aiInstance = ai;
+    makeModel = getGenerativeModel;
     return getGenerativeModel(ai, {
       model: 'gemini-3.8-flash',
       generationConfig: {
         responseMimeType: 'application/json',
-        temperature: 0.1,
+        thinkingConfig: { thinkingLevel: ThinkingLevel.LOW },
         maxOutputTokens: 16384
       }
     });
@@ -195,8 +200,8 @@ async function generatePart(aiModel, prompt, input, imageStart) {
   } else {
     throw new Error('Không có nội dung đề bài để AI đọc.');
   }
-  const result = await withTimeout(aiModel.generateContent(parts), 120000,
-    'AI chưa phản hồi sau 2 phút. Hãy kiểm tra Firebase App Check và thử lại.');
+  const result = await withTimeout(aiModel.generateContent(parts), 300000,
+    'AI chưa phản hồi sau 5 phút. Hãy thử lại với ít trang hơn.');
   const response = await withTimeout(result.response, 10000,
     'AI chưa trả kết quả. Hãy thử lại.');
   const raw = response.text();
@@ -209,8 +214,12 @@ async function generatePart(aiModel, prompt, input, imageStart) {
 
 export async function generateJson(prompt, timeoutMs = 20000) {
   if (typeof prompt !== 'string' || !prompt.trim()) throw new Error('Thiếu nội dung cần AI xử lý.');
-  const aiModel = await model();
-  const result = await withTimeout(aiModel.generateContent([{ text: prompt.slice(0, 12000) }]), timeoutMs,
+  await model();
+  if (!fastModel) fastModel = makeModel(aiInstance, {
+    model: 'gemini-3.5-flash-lite',
+    generationConfig: { responseMimeType: 'application/json', maxOutputTokens: 2048 }
+  });
+  const result = await withTimeout(fastModel.generateContent([{ text: prompt.slice(0, 12000) }]), timeoutMs,
     'AI chưa phản hồi. Hãy thử lại sau.');
   const response = await withTimeout(result.response, 10000, 'AI chưa trả kết quả.');
   const raw = response.text();
