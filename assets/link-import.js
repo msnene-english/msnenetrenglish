@@ -45,7 +45,7 @@ function sectionsToQuiz(secs){const questions=[],skipped=[];
    }else if(sec.type==='errfix'){
     if(!Number.isInteger(item.correct)||item.correct<0||item.correct>3)
      {skipped.push(prefix+'thiếu vị trí lỗi');return;}
-    questions.push({type:'mc',q:prefix+clean(item.text,1500)+' Chọn phần sai; xem cách sửa trong lời giải.',
+    questions.push({type:'mc',q:prefix+clean(item.text,1500).replace(/\s*Bấm chữ cái[^:]*:\s*/i,' ').trim()+' Chọn phần sai; xem cách sửa trong lời giải.',
      o:['A','B','C','D'],a:item.correct,e:(item.fix?'Sửa thành: '+answers(item.fix)+'. ':'')+e,s:label,passage:''});
    }else skipped.push(prefix+'dạng '+sec.type+' cần AI đọc');
   });
@@ -124,7 +124,7 @@ function passagesIn(html){
  if(typeof DOMParser==='undefined')return [];
  const doc=new DOMParser().parseFromString(html,'text/html');
  return [...doc.querySelectorAll('.pblk,.reading-text,.reading-passage,.passage')]
-  .map(el=>clean(el.textContent,7000)).filter(x=>x.length>30);
+  .map(el=>clean((el.querySelector('.paragraph,.reading-content,.passage-text')||el).textContent,7000)).filter(x=>x.length>30);
 }
 
 function optList(src){
