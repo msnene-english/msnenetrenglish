@@ -175,8 +175,15 @@ th{color:#7a6aa8;font-size:13px}
        <div style="font-size:12px;color:#6d28d9;margin:4px 0 8px">✨ AI đọc ảnh và PDF dành cho tài khoản Pro · PDF tối đa 15 MB · Kiểm tra lại đáp án trước khi giao.</div>
       <div style="display:flex;gap:8px;flex-wrap:wrap">
         <input id="inpWebLink" class="inp" style="flex:1;min-width:220px;padding:9px 12px;font-size:14px" placeholder="Dán link bài tập (test 1 p1.html, voca p2.html, matching p1.html...)">
+        <button class="btn g" id="bCatalog" type="button" style="font-size:13px;padding:9px 12px">📚 Link lớp 6</button>
         <button class="btn" id="bLoadGame" style="font-size:13px;padding:9px 14px;font-weight:800;background:#0284c7;color:#fff" title="AI trích đoạn trọng tâm (Context Focus) tối ưu cho Game đối kháng nhanh">🎮 Nạp đề tạo Game</button>
         <button class="btn g" id="bLoadTest" style="font-size:13px;padding:9px 14px;font-weight:800" title="Nạp đề thi đầy đủ mọi dạng bài (phát âm, trọng âm, ngữ pháp, bài đọc, từ vựng) cho bài kiểm tra chuẩn">📝 Nạp đề tạo Test</button>
+       </div>
+       <div id="linkCatalog" hidden style="margin-top:10px;padding:12px;background:#fff;border:1px solid #cbd5e1;border-radius:12px">
+        <div style="font-weight:800;margin-bottom:7px">📚 Link bài tập lớp 6 · chọn link rồi bấm Nạp đề tạo Game hoặc Test</div>
+        <input id="linkCatalogSearch" class="inp" style="width:100%;padding:9px" placeholder="Tìm Unit, tên bài, trang web...">
+        <div id="linkCatalogCount" style="font-size:12px;color:#64748b;margin:6px 0"></div>
+        <div id="linkCatalogList" style="max-height:300px;overflow:auto"></div>
        </div>
 
        <!-- VÙNG DÁN ẢNH CHỤP MÀN HÌNH / KÉO THẢ / CHỌN FILE -->
@@ -695,6 +702,7 @@ Hoặc dán theo mẫu:
 <script src="assets/hero.js"></script>
 <script src="assets/license.js?v=2.5"></script>
 <script src="assets/license-usage.js?v=20261107-1"></script>
+<script src="assets/link-import.js?v=20261108-1"></script>
 
 <script>
 const { $, esc, fmt, stamp, clean, toast, confetti, sfx } = GC;
@@ -2118,109 +2126,7 @@ $('bClose').onclick = async () => { await net.remove('rooms/' + code); showEnd.d
 
 // Hàm trích xuất Universal Parser (hỗ trợ Q, SECS, quizData, DOM)
 function parseQuestionsUniversal(html) {
-  let titleMatch = html.match(/<title>(.*?)<\/title>/i);
-  let title = titleMatch ? titleMatch[1].replace(/<[^>]+>/g, '').trim() : 'Bài tập tiếng Anh';
-  title = title.replace(/\|.*$/, '').replace(/–.*$/, '').replace(/-.*$/, '').trim();
-
-  let extractedQs = [];
-  const scriptMatches = html.match(/<script[^>]*>([\s\S]*?)<\/script>/gi) || [];
-
-  for (const scriptTag of scriptMatches) {
-    const code = scriptTag.replace(/<\/?script[^>]*>/gi, '');
-
-    // Định dạng 1: Q = [...] (đề thi cuối kỳ, giữa kỳ như test 1 p1.html)
-    if (/const\s+Q\s*=|let\s+Q\s*=|var\s+Q\s*=|Q\s*=\s*\[/.test(code)) {
-      const idx = code.search(/(?:const|let|var)?\s*Q\s*=\s*\[/);
-      if (idx > -1) {
-        const sub = code.substring(idx).replace(/(?:const|let|var)?\s*Q\s*=/, 'const Q_PARSED=');
-        const endIdx = sub.indexOf('];');
-        if (endIdx > -1) {
-          try {
-            const evalCode = sub.substring(0, endIdx + 2) + '; return Q_PARSED;';
-            const fn = new Function(evalCode);
-            const qList = fn();
-            if (Array.isArray(qList) && qList.length) {
-              qList.forEach(item => {
-                const opts = (item.opts || []).map(o => (typeof o === 'string' ? o : (o.h || o.text || '')));
-                const correctIdx = Array.isArray(item.opts)
-                  ? item.opts.findIndex(o => o && typeof o === 'object' && (o.c === true || o.correct === true))
-                  : -1;
-                if (correctIdx < 0 || opts.length < 2 || opts.some(o => !String(o).trim())) return;
-                extractedQs.push({
-                  q: (item.sec ? '<b>[' + item.sec + ']</b><br>' : '') + (item.q || 'Chọn đáp án đúng:'),
-                  o: opts,
-                  a: correctIdx,
-                  e: item.exp || item.explain || '',
-                  s: item.sec || ''
-                });
-              });
-              if (extractedQs.length) break;
-            }
-          } catch (e) {
-            console.error('Error evaluating Q:', e);
-          }
-        }
-      }
-    }
-
-    // Định dạng 2: SECS = [...] (bài tập Unit như voca p2.html)
-    if (/const\s+SECS\s*=|let\s+SECS\s*=|var\s+SECS\s*=|SECS\s*=\s*\[/.test(code)) {
-      const idx = code.search(/(?:const|let|var)?\s*SECS\s*=\s*\[/);
-      if (idx > -1) {
-        const sub = code.substring(idx).replace(/(?:const|let|var)?\s*SECS\s*=/, 'const SECS_PARSED=');
-        const endIdx = sub.indexOf('];');
-        if (endIdx > -1) {
-          try {
-            const evalCode = sub.substring(0, endIdx + 2) + '; return SECS_PARSED;';
-            const fn = new Function(evalCode);
-            const secs = fn();
-            secs.forEach(sec => {
-              if (sec.type === 'mcq' && sec.items) {
-                sec.items.forEach(it => {
-                  if (!Array.isArray(it.opts) || it.opts.length < 2 ||
-                      !Number.isInteger(it.correct) || it.correct < 0 || it.correct >= it.opts.length) return;
-                  extractedQs.push({
-                    q: (sec.title ? '<b>' + sec.title + '</b><br>' : '') + (it.text || 'Chọn đáp án đúng:'),
-                    o: it.opts || [],
-                    a: it.correct,
-                    e: it.explain || '',
-                    s: sec.short || sec.title || ''
-                  });
-                });
-              }
-            });
-            if (extractedQs.length) break;
-          } catch (e) {
-            console.error('Error evaluating SECS:', e);
-          }
-        }
-      }
-    }
-
-    // Định dạng 3: quizData = [...]
-    if (/const\s+quizData\s*=|let\s+quizData\s*=|var\s+quizData\s*=|quizData\s*=\s*\[/.test(code)) {
-      const idx = code.search(/(?:const|let|var)?\s*quizData\s*=\s*\[/);
-      if (idx > -1) {
-        const sub = code.substring(idx).replace(/(?:const|let|var)?\s*quizData\s*=/, 'const QUIZ_PARSED=');
-        const endIdx = sub.indexOf('];');
-        if (endIdx > -1) {
-          try {
-            const evalCode = sub.substring(0, endIdx + 2) + '; return QUIZ_PARSED;';
-            const fn = new Function(evalCode);
-            const qList = fn();
-            if (Array.isArray(qList) && qList.length) {
-              extractedQs = qList.map(GC.fromOld);
-              if (extractedQs.length) break;
-            }
-          } catch (e) {
-            console.error('Error evaluating quizData:', e);
-          }
-        }
-      }
-    }
-  }
-
-  return { title, questions: extractedQs };
+  return window.GCLink.parse(html);
 }
 
 // Hàm gọi AI Gemini đọc hiểu & trích xuất câu hỏi tự động (hỗ trợ nhiều ảnh chụp màn hình & văn bản)
@@ -2583,6 +2489,47 @@ if ($('inpFileDoc')) {
   };
 }
 
+let grade6Links = null;
+const foldLink = value => String(value || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
+function renderGrade6Links() {
+  const term = foldLink($('linkCatalogSearch').value.trim());
+  const found = (grade6Links || []).filter(item => foldLink(item.title + ' ' + item.url).includes(term));
+  $('linkCatalogCount').textContent = found.length + ' link phù hợp' + (found.length > 60 ? ' · đang hiện 60 link đầu, hãy gõ thêm để lọc' : '');
+  $('linkCatalogList').innerHTML = found.slice(0, 60).map(item => {
+    const index = grade6Links.indexOf(item);
+    return '<div style="display:flex;gap:8px;align-items:center;padding:7px 3px;border-top:1px solid #e2e8f0">' +
+      '<button type="button" class="btn g" data-link-index="' + index + '" style="padding:5px 9px;font-size:12px">Chọn</button>' +
+      '<div style="flex:1;min-width:0"><div style="font-weight:700;font-size:13px">' + esc(item.title) + '</div>' +
+      '<div style="font-size:11px;color:#64748b">' + (item.kind === 'bai-tap' ? 'Bài tập của cô · đọc trực tiếp khi có đáp án' : 'Trang ngoài · có thể chặn đọc trực tiếp') + '</div></div>' +
+      '<a href="' + esc(item.url) + '" target="_blank" rel="noopener noreferrer" style="font-size:12px">Mở ↗</a></div>';
+  }).join('') || '<div style="padding:12px;color:#64748b">Không có link phù hợp.</div>';
+}
+$('bCatalog').onclick = async () => {
+  const panel = $('linkCatalog');
+  panel.hidden = !panel.hidden;
+  if (panel.hidden) return;
+  if (!grade6Links) {
+    $('linkCatalogCount').textContent = '⏳ Đang tải danh sách link…';
+    try {
+      const res = await fetch('assets/grade6-links.json?v=20261108-1');
+      if (!res.ok) throw new Error('Không tải được danh sách link.');
+      grade6Links = (await res.json()).links || [];
+    } catch (error) { $('linkCatalogCount').textContent = '❌ ' + error.message; return; }
+  }
+  renderGrade6Links();
+  $('linkCatalogSearch').focus();
+};
+$('linkCatalogSearch').oninput = renderGrade6Links;
+$('linkCatalogList').onclick = event => {
+  const button = event.target.closest('button[data-link-index]');
+  if (!button) return;
+  const item = grade6Links[Number(button.dataset.linkIndex)];
+  if (!item) return;
+  $('inpWebLink').value = item.url;
+  $('linkCatalog').hidden = true;
+  $('linkFetchStatus').textContent = '🔗 Đã chọn: ' + item.title + '. Bấm Nạp đề tạo Game hoặc Test.';
+};
+
 async function processLoadQuiz(isTestMode) {
   const url = clean($('inpWebLink').value);
   const pasteTxt = String($('pTxt')?.value || '').trim();
@@ -2610,30 +2557,28 @@ async function processLoadQuiz(isTestMode) {
       extractedQs = await callGeminiAiExtract(pastedImages, isTestMode);
       docTitle = (isTestMode ? 'Bài kiểm tra' : 'Game') + ' (Từ ' + pastedImages.length + ' ảnh chụp)';
     }
-    // 2. Trường hợp có Link web
+    // 2. Đọc link: ưu tiên bộ câu hỏi có đáp án trong trang, không chạy mã nguồn của trang.
     else if (url) {
       const sourceUrl = new URL(url, location.href);
       if (!['http:', 'https:'].includes(sourceUrl.protocol)) throw new Error('Link đề phải bắt đầu bằng http hoặc https.');
-      const res = await fetch(sourceUrl.href);
-      if (!res.ok) throw new Error('Không mở được link (Mã lỗi ' + res.status + ')');
+      let res;
+      try { res = await fetch(sourceUrl.href); }
+      catch (_) { throw new Error('Trang ' + sourceUrl.hostname + ' không cho web đọc trực tiếp. Hãy mở link, sao chép đề vào ô văn bản hoặc chụp ảnh/PDF để AI đọc.'); }
+      if (!res.ok) throw new Error('Không mở được link ' + sourceUrl.hostname + ' (mã lỗi ' + res.status + ').');
       const html = await res.text();
       if (html.length > 2_000_000) throw new Error('Trang đề quá lớn (tối đa 2 MB).');
-
-      // Chỉ chạy mã trích xuất từ trang cùng miền do chủ web kiểm soát.
-      if (!isTestMode && sourceUrl.origin === location.origin) {
-        const parsed = parseQuestionsUniversal(html);
-        if (parsed.questions && parsed.questions.length > 0) {
-          extractedQs = parsed.questions;
-          if (parsed.title) docTitle = parsed.title;
-        }
-      }
-
-      // Nếu chưa có câu hỏi hoặc là chế độ Test (cần giữ trọn bài đọc/listening/matching): dùng AI
-      if (!extractedQs.length) {
-        status.innerHTML = '🧠 <b>AI Gemini đang đọc hiểu ngữ nghĩa & phân tích bài tập…</b>';
-        extractedQs = await callGeminiAiExtract(html, isTestMode);
-        const tm = html.match(/<title>(.*?)<\/title>/i);
-        if (tm) docTitle = tm[1].replace(/<[^>]+>/g, '').trim();
+      const parsed = parseQuestionsUniversal(html);
+      if (parsed.questions.length && (parsed.complete || !(window.LIC && window.LIC.isUnlocked()))) {
+        extractedQs = parsed.questions;
+        extractedQs.skipped = parsed.skipped;
+        docTitle = parsed.title || docTitle;
+        status.textContent = parsed.complete
+          ? '✅ Đã đọc ' + extractedQs.length + ' câu và đáp án trực tiếp từ link.'
+          : '⚠️ Đã đọc ' + extractedQs.length + ' câu; ' + parsed.skipped.length + ' câu chưa hỗ trợ. Dùng Pro để AI đọc phần còn lại.';
+      } else {
+        status.innerHTML = '🧠 <b>AI đang đọc dữ liệu bài tập từ link; có thể mất vài phút…</b>';
+        extractedQs = await callGeminiAiExtract(parsed.aiInput || html, isTestMode);
+        docTitle = parsed.title || docTitle;
       }
     }
     // 3. Trường hợp dán văn bản
