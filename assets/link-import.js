@@ -58,10 +58,22 @@ function compactSections(secs){return 'Dữ liệu đề gốc (giữ đáp án)
 }))).slice(0,30000);}
 function compactHtml(html,scripts){
  const visible=clean(html.replace(/<style\b[^>]*>[\s\S]*?<\/style>/gi,'')
-  .replace(/<script\b[^>]*>[\s\S]*?<\/script>/gi,''),10000);
- const data=scripts.filter(s=>/\b(?:QS|quizData|SECS|SECTIONS|QUESTIONS|ITEMS|AII_DATA|Q)\s*=|\b(?:mc|mcq|fill|Q\.push|ITEMS\.push)\s*\(/.test(s))
-  .map(s=>{const at=s.search(/\b(?:QS|quizData|SECS|SECTIONS|QUESTIONS|ITEMS|AII_DATA|Q)\s*=|\b(?:mc|mcq|fill|Q\.push|ITEMS\.push)\s*\(/);return s.slice(Math.max(0,at-100),at+21000);}).join('\n').slice(0,21000);
- return 'Nội dung trang:\n'+visible+'\n\nDữ liệu câu hỏi:\n'+data;
+  .replace(/<script\b[^>]*>[\s\S]*?<\/script>/gi,'')
+  .replace(/<(?:nav|header|footer)\b[^>]*>[\s\S]*?<\/(?:nav|header|footer)>/gi,''),7000);
+ const candidates=scripts.map((script,index)=>{
+  const terms=script.match(/\b(?:correct|answer|answers|opts|options|question|questions|quizData|SECS|QS|AII_DATA|mcq|fill|w20|w21)\b/gi)||[];
+  const calls=script.match(/\b(?:mcq|w20|w21|fill)\s*\(/g)||[];
+  const anchor=script.search(/\b(?:SECS|QS|QUESTIONS|quizData|AII_DATA)\s*=\s*\[|\b(?:mcq|w20|w21)\s*\(/);
+  return {script,index,score:terms.length+calls.length*3,anchor:Math.max(0,anchor)};
+ }).filter(x=>x.score>=3).sort((a,b)=>b.score-a.score);
+ let data='';
+ for(const item of candidates.slice(0,3)){
+  const budget=23000-data.length;if(budget<1000)break;
+  const start=Math.max(0,item.anchor-250);
+  data+='\n[Script dữ liệu '+(item.index+1)+']\n'+item.script.slice(start,start+budget);
+ }
+ return 'Nội dung bài tập (không thực thi mã trang):\n'+visible+
+  '\n\nDữ liệu câu hỏi và đáp án trong mã trang:\n'+data;
 }
 
 function jsArray(src,name){
