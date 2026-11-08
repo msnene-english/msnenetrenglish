@@ -175,17 +175,9 @@ th{color:#7a6aa8;font-size:13px}
        <div style="font-size:12px;color:#6d28d9;margin:4px 0 8px">✨ AI đọc ảnh và PDF dành cho tài khoản Pro · PDF tối đa 15 MB · Kiểm tra lại đáp án trước khi giao.</div>
       <div style="display:flex;gap:8px;flex-wrap:wrap">
         <input id="inpWebLink" class="inp" style="flex:1;min-width:220px;padding:9px 12px;font-size:14px" placeholder="Dán link bài tập (test 1 p1.html, voca p2.html, matching p1.html...)">
-        <button class="btn g" id="bCatalog" type="button" style="font-size:13px;padding:9px 12px">📚 Link lớp 6</button>
         <button class="btn" id="bLoadGame" style="font-size:13px;padding:9px 14px;font-weight:800;background:#0284c7;color:#fff" title="AI trích đoạn trọng tâm (Context Focus) tối ưu cho Game đối kháng nhanh">🎮 Nạp đề tạo Game</button>
         <button class="btn g" id="bLoadTest" style="font-size:13px;padding:9px 14px;font-weight:800" title="Nạp đề thi đầy đủ mọi dạng bài (phát âm, trọng âm, ngữ pháp, bài đọc, từ vựng) cho bài kiểm tra chuẩn">📝 Nạp đề tạo Test</button>
        </div>
-       <div id="linkCatalog" hidden style="margin-top:10px;padding:12px;background:#fff;border:1px solid #cbd5e1;border-radius:12px">
-        <div style="font-weight:800;margin-bottom:7px">📚 Link bài tập lớp 6 · chọn link rồi bấm Nạp đề tạo Game hoặc Test</div>
-        <input id="linkCatalogSearch" class="inp" style="width:100%;padding:9px" placeholder="Tìm Unit, tên bài, trang web...">
-        <div id="linkCatalogCount" style="font-size:12px;color:#64748b;margin:6px 0"></div>
-        <div id="linkCatalogList" style="max-height:300px;overflow:auto"></div>
-       </div>
-
        <!-- VÙNG DÁN ẢNH CHỤP MÀN HÌNH / KÉO THẢ / CHỌN FILE -->
        <div id="dropZoneImg" style="margin-top:10px;border:2px dashed #0284c7;border-radius:14px;background:#f0f9ff;padding:14px 16px;text-align:center;cursor:pointer;transition:all .2s">
         <div style="font-size:26px;margin-bottom:4px">📸</div>
@@ -702,7 +694,7 @@ Hoặc dán theo mẫu:
 <script src="assets/hero.js"></script>
 <script src="assets/license.js?v=2.5"></script>
 <script src="assets/license-usage.js?v=20261107-1"></script>
-<script src="assets/link-import.js?v=20261108-2"></script>
+<script src="assets/link-import.js?v=20261108-3"></script>
 
 <script>
 const { $, esc, fmt, stamp, clean, toast, confetti, sfx } = GC;
@@ -2130,7 +2122,7 @@ function parseQuestionsUniversal(html) {
 }
 
 // Hàm gọi AI Gemini đọc hiểu & trích xuất câu hỏi tự động (hỗ trợ nhiều ảnh chụp màn hình & văn bản)
-async function callGeminiAiExtract(contentOrImages, isTestMode) {
+async function callGeminiAiExtract(contentOrImages, isTestMode, preparedText = false) {
   if (!window.LIC || !window.LIC.isUnlocked()) {
     promptUnlockModal();
     throw new Error('Đọc đề bằng AI chỉ dành cho tài khoản Pro.');
@@ -2220,13 +2212,13 @@ Trả về strictly JSON danh sách:
 
   let aiInput = contentOrImages;
   if (typeof aiInput === 'string' && !aiInput.startsWith('data:')) {
-    if (aiInput.includes('<html') || aiInput.includes('<body') || aiInput.includes('</div>')) {
+    if (!preparedText && (aiInput.includes('<html') || aiInput.includes('<body') || aiInput.includes('</div>'))) {
       const d = document.createElement('div');
       d.innerHTML = aiInput;
       d.querySelectorAll('script, style, svg, iframe, noscript, nav, header, footer').forEach(e => e.remove());
       aiInput = d.innerText;
     }
-    aiInput = aiInput.replace(/\s+/g, ' ').trim().slice(0, 32000);
+    aiInput = aiInput.replace(/[^\S\r\n]+/g, ' ').replace(/\n{3,}/g, '\n\n').trim().slice(0, 32000);
   }
   try {
     const aiImport = await import('./assets/ai-import.js?v=20261108-10');
@@ -2489,47 +2481,6 @@ if ($('inpFileDoc')) {
   };
 }
 
-let grade6Links = null;
-const foldLink = value => String(value || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
-function renderGrade6Links() {
-  const term = foldLink($('linkCatalogSearch').value.trim());
-  const found = (grade6Links || []).filter(item => foldLink(item.title + ' ' + item.url).includes(term));
-  $('linkCatalogCount').textContent = found.length + ' link phù hợp' + (found.length > 60 ? ' · đang hiện 60 link đầu, hãy gõ thêm để lọc' : '');
-  $('linkCatalogList').innerHTML = found.slice(0, 60).map(item => {
-    const index = grade6Links.indexOf(item);
-    return '<div style="display:flex;gap:8px;align-items:center;padding:7px 3px;border-top:1px solid #e2e8f0">' +
-      '<button type="button" class="btn g" data-link-index="' + index + '" style="padding:5px 9px;font-size:12px">Chọn</button>' +
-      '<div style="flex:1;min-width:0"><div style="font-weight:700;font-size:13px">' + esc(item.title) + '</div>' +
-      '<div style="font-size:11px;color:#64748b">' + (item.kind === 'bai-tap' ? 'Bài tập của cô · đọc trực tiếp khi có đáp án' : 'Trang ngoài · có thể chặn đọc trực tiếp') + '</div></div>' +
-      '<a href="' + esc(item.url) + '" target="_blank" rel="noopener noreferrer" style="font-size:12px">Mở ↗</a></div>';
-  }).join('') || '<div style="padding:12px;color:#64748b">Không có link phù hợp.</div>';
-}
-$('bCatalog').onclick = async () => {
-  const panel = $('linkCatalog');
-  panel.hidden = !panel.hidden;
-  if (panel.hidden) return;
-  if (!grade6Links) {
-    $('linkCatalogCount').textContent = '⏳ Đang tải danh sách link…';
-    try {
-      const res = await fetch('assets/grade6-links.json?v=20261108-1');
-      if (!res.ok) throw new Error('Không tải được danh sách link.');
-      grade6Links = (await res.json()).links || [];
-    } catch (error) { $('linkCatalogCount').textContent = '❌ ' + error.message; return; }
-  }
-  renderGrade6Links();
-  $('linkCatalogSearch').focus();
-};
-$('linkCatalogSearch').oninput = renderGrade6Links;
-$('linkCatalogList').onclick = event => {
-  const button = event.target.closest('button[data-link-index]');
-  if (!button) return;
-  const item = grade6Links[Number(button.dataset.linkIndex)];
-  if (!item) return;
-  $('inpWebLink').value = item.url;
-  $('linkCatalog').hidden = true;
-  $('linkFetchStatus').textContent = '🔗 Đã chọn: ' + item.title + '. Bấm Nạp đề tạo Game hoặc Test.';
-};
-
 async function processLoadQuiz(isTestMode) {
   const url = clean($('inpWebLink').value);
   const pasteTxt = String($('pTxt')?.value || '').trim();
@@ -2577,7 +2528,7 @@ async function processLoadQuiz(isTestMode) {
           : '⚠️ Đã đọc ' + extractedQs.length + ' câu; ' + parsed.skipped.length + ' câu chưa hỗ trợ. Dùng Pro để AI đọc phần còn lại.';
       } else {
         status.innerHTML = '🧠 <b>AI đang đọc dữ liệu bài tập từ link; có thể mất vài phút…</b>';
-        extractedQs = await callGeminiAiExtract(parsed.aiInput || html, isTestMode);
+        extractedQs = await callGeminiAiExtract(parsed.aiInput || html, isTestMode, true);
         docTitle = parsed.title || docTitle;
       }
     }
