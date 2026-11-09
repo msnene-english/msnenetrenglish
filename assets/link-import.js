@@ -169,7 +169,11 @@ function parseSimple(raw,html){
   const rawQ=property(part,'qText')||property(part,'question')||property(part,'text')||
    property(part,'qHTML')||property(part,'qt')||property(part,'q');
   if(typeof rawQ==='string'&&/không có trong ảnh|vui lòng cung cấp.*ảnh/i.test(rawQ)){
-   skipped.push('Nguồn thiếu '+clean(property(part,'id')||'câu '+(i+1),60));return;}
+   const id=String(property(part,'id')||'câu '+(i+1));
+   const range=/^(\d+)\s*[-–]\s*(\d+)$/.exec(id);
+   if(range&&+range[2]>=+range[1]&&+range[2]-+range[1]<50){
+    for(let n=+range[1];n<=+range[2];n++)skipped.push('Nguồn thiếu câu '+n);
+   }else skipped.push('Nguồn thiếu '+clean(id,60));return;}
   const instruction=property(part,'instruction')||'';
   const opt=optList(property(part,'opts'));
   const optRaw=property(part,'options')||property(part,'opt')||property(part,'opts')||property(part,'o');
