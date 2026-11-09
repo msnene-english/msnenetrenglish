@@ -694,7 +694,7 @@ Hoặc dán theo mẫu:
 <script src="assets/hero.js"></script>
 <script src="assets/license.js?v=2.5"></script>
 <script src="assets/license-usage.js?v=20261107-1"></script>
-<script src="assets/link-import.js?v=20261108-3"></script>
+<script src="assets/link-import.js?v=20261109-1"></script>
 
 <script>
 const { $, esc, fmt, stamp, clean, toast, confetti, sfx } = GC;
@@ -2558,6 +2558,7 @@ async function processLoadQuiz(isTestMode) {
     window.currentQuizType = isTestMode ? 'test' : 'game';
 
     setQs(extractedQs, docTitle, extractedQs.skipped || []);
+    if (docTitle) $('gTitle').value = docTitle.replace(/<[^>]+>/g, '').slice(0, 60);
     status.innerHTML = '🎉 <b>Đã nạp ' + extractedQs.length + ' câu hỏi</b>' +
       (extractedQs.skipped?.length ? ' · ⚠️ ' + extractedQs.skipped.length + ' câu cần xem lại/đã bỏ qua' : '') +
       (extractedQs.inferredCount ? ' · ⚠️ ' + extractedQs.inferredCount + ' đáp án AI tự suy luận' : '') +

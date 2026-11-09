@@ -118,7 +118,8 @@ function property(obj,key){
  const pos=m.index+m[0].length,c=obj[pos];
  if(c==='"'||c==="'"||c.charCodeAt(0)===96)return quoted(obj,pos);
  if(c==='['){const end=jsArray('const X='+obj.slice(pos),'X');return end||null;}
- const n=/^-?\d+/.exec(obj.slice(pos));return n?Number(n[0]):null;
+ const tail=obj.slice(pos);if(/^true\b/.test(tail))return true;if(/^false\b/.test(tail))return false;
+ const n=/^-?\d+/.exec(tail);return n?Number(n[0]):null;
 }
 function stringList(src){
  if(typeof src!=='string'||src[0]!=='[')return [];
@@ -164,24 +165,179 @@ function optList(src){
 function parseSimple(raw,html){
  const parts=objectParts(raw),passages=passagesIn(html),questions=[],skipped=[];
  parts.forEach((part,i)=>{
-  const q=property(part,'qText')||property(part,'question')||property(part,'text')||property(part,'q');
+  if(property(part,'sectionTitle')&&!property(part,'question')&&!property(part,'q'))return;
+  const rawQ=property(part,'qText')||property(part,'question')||property(part,'text')||
+   property(part,'qHTML')||property(part,'qt')||property(part,'q');
+  if(typeof rawQ==='string'&&/không có trong ảnh|vui lòng cung cấp.*ảnh/i.test(rawQ)){
+   skipped.push('Nguồn thiếu '+clean(property(part,'id')||'câu '+(i+1),60));return;}
+  const instruction=property(part,'instruction')||'';
   const opt=optList(property(part,'opts'));
-  const o=opt?opt.options:stringList(property(part,'options'));
-  const key=property(part,'correctText')??property(part,'correct')??property(part,'answer');
-  let a=opt?opt.correct:(typeof key==='number'?key:-1);
-  if(typeof key==='string'){
+  const optRaw=property(part,'options')||property(part,'opt')||property(part,'opts')||property(part,'o');
+  const optionObjects=optRaw?objectParts(optRaw):[];
+  const o=opt?opt.options:(optionObjects.length
+   ? optionObjects.map(x=>property(x,'text')||property(x,'h')||property(x,'t')||'')
+   :stringList(optRaw));
+  const marked=optionObjects.map((x,j)=>property(x,'isCorrect')===true||property(x,'c')===1?j:-1).filter(j=>j>=0);
+  const key=property(part,'correctText')??property(part,'correct')??property(part,'answer')??
+   property(part,'ans')??property(part,'a');
+  let a=opt?opt.correct:(marked.length===1?marked[0]:(typeof key==='number'?key:-1));
+  if(typeof key==='string'&&a<0){
    a=o.findIndex(x=>clean(x).toLowerCase()===clean(key).toLowerCase());
    if(a<0&&/^[A-F]$/i.test(key))a=key.toUpperCase().charCodeAt(0)-65;
   }
-  if(!q||o.length<2||a<0||a>=o.length){skipped.push('Câu '+(i+1)+' chưa có đáp án rõ ràng');return;}
+  if(!rawQ||o.length<2||a<0||a>=o.length){skipped.push('Câu '+(i+1)+' chưa có đáp án rõ ràng');return;}
   const partNo=property(part,'part');
   const passage=passages.length===1?passages[0]:(Number.isInteger(partNo)?passages[partNo-1]||'':'');
-  const question=clean(q,1400);
+  let question=clean(rawQ,1400);
+  if(/^(?:question|câu)\s*\d+[:.]?$/i.test(question)&&instruction)
+   question=clean(instruction,500)+' · '+question;
+  if(/\$\{/.test(question)){skipped.push('Câu '+(i+1)+' dùng dữ liệu động');return;}
   if(/passage\s*\d/i.test(question)&&!passage){skipped.push('Câu '+(i+1)+' thiếu đoạn đọc');return;}
   questions.push({type:'mc',q:question,o:o.map(x=>clean(x,500)),a,
-   e:clean(property(part,'hint')||'',500),s:'',passage});
+   e:clean(property(part,'hint')||property(part,'exp')||'',500),s:'',passage});
  });
- return {questions,skipped,complete:!!parts.length&&!skipped.length};
+ return {questions,skipped,complete:!!parts.length&&!skipped.some(x=>!x.startsWith('Nguồn thiếu'))};
+}
+
+function callArgs(src,start){
+ let quote='',esc=false,line=false,block=false,paren=1,square=0,curly=0,part='',args=[];
+ for(let i=start;i<src.length;i++){const c=src[i],n=src[i+1];
+  if(line){part+=c;if(c==='\n')line=false;continue;}
+  if(block){part+=c;if(c==='*'&&n==='/'){part+=n;block=false;i++;}continue;}
+  if(quote){part+=c;if(esc)esc=false;else if(c==='\\')esc=true;else if(c===quote)quote='';continue;}
+  if(c==='/'&&n==='/'){line=true;part+=c+n;i++;continue;}
+  if(c==='/'&&n==='*'){block=true;part+=c+n;i++;continue;}
+  if(c==='"'||c==="'"||c.charCodeAt(0)===96){quote=c;part+=c;continue;}
+  if(c==='('){paren++;part+=c;continue;}
+  if(c===')'){if(--paren===0){args.push(part.trim());return {args,end:i};}part+=c;continue;}
+  if(c==='['){square++;part+=c;continue;}
+  if(c===']'){square--;part+=c;continue;}
+  if(c==='{'){curly++;part+=c;continue;}
+  if(c==='}'){curly--;part+=c;continue;}
+  if(c===','&&paren===1&&square===0&&curly===0){args.push(part.trim());part='';continue;}
+  part+=c;
+ }return null;
+}
+function literalString(value){
+ const text=String(value||'').trim();
+ if(!text)return null;
+ const c=text[0];return c==='"'||c==="'"||c.charCodeAt(0)===96?quoted(text,0):null;
+}
+function parseCalls(script){
+ const questions=[],skipped=[],re=/\b(mcq|fil)\s*\(/g;let m,calls=0;
+ while((m=re.exec(script))){
+  if(/\bfunction\s+$/.test(script.slice(Math.max(0,m.index-20),m.index)))continue;
+  const call=callArgs(script,re.lastIndex);if(!call)continue;
+  re.lastIndex=call.end+1;calls++;
+  const a=call.args,sec=literalString(a[0]),q=literalString(a[2]),key=literalString(a[3]);
+  if(!sec||!q||!key){skipped.push('Câu '+calls+' có dữ liệu động');continue;}
+  if(m[1]==='mcq'){
+   const options=stringList(a[4]),correct=options.findIndex(x=>clean(x).toLowerCase()===clean(key).toLowerCase());
+   if(options.length<2||correct<0){skipped.push('Câu '+calls+' thiếu phương án/đáp án');continue;}
+   questions.push({type:'mc',q:clean(q),o:options.map(x=>clean(x)),a:correct,e:'',s:clean(sec),passage:''});
+  }else{
+   const alternatives=stringList(a[4]).filter(x=>x&&x!==key);
+   questions.push({type:'text',q:clean(q),o:[],a:0,ansText:[key,...alternatives].join(' | '),e:'',s:clean(sec),passage:''});
+  }
+ }
+ return {questions,skipped,complete:calls>0&&!skipped.length};
+}
+
+
+function parseSectionFills(script){
+ const raw=jsArray(script,'SECTIONS');if(!raw)return null;
+ const sections=objectParts(raw),questions=[],skipped=[];let seen=0;
+ sections.forEach((section,si)=>{
+  const title=clean(property(section,'title')||'Phần '+(si+1),140);
+  const qraw=property(section,'questions');if(!qraw)return;
+  objectParts(qraw).forEach((item,ii)=>{
+   seen++;
+   const pre=property(item,'pre'),post=property(item,'post');
+   const answer=property(item,'key'),accepted=stringList(property(item,'answers'));
+   if(typeof pre!=='string'||typeof post!=='string'||(!answer&&!accepted.length)){
+    skipped.push('Câu '+seen+' thiếu dữ liệu');return;
+   }
+   const ans=[answer,...accepted].filter(Boolean);
+   questions.push({type:'text',q:clean(pre+' ______ '+post,1400),o:[],a:0,
+    ansText:[...new Set(ans)].join(' | '),e:'',s:title,passage:''});
+  });
+ });
+ return seen?{questions,skipped,complete:!skipped.length}:null;
+}
+
+
+function parseParts(script){
+ const raw=jsArray(script,'PARTS');if(!raw)return null;
+ const sections=objectParts(raw),questions=[],skipped=[];let seen=0;
+ sections.forEach((section,si)=>{
+  const title=clean(property(section,'t')||property(section,'s')||'Phần '+(si+1),150);
+  const qraw=property(section,'q');if(!qraw)return;
+  objectParts(qraw).forEach(item=>{
+   seen++;
+   const q=property(item,'q'),o=stringList(property(item,'o')),key=property(item,'a');
+   const a=typeof key==='number'?key:o.findIndex(x=>clean(x).toLowerCase()===clean(key).toLowerCase());
+   if(!q||o.length<2||a<0||a>=o.length){skipped.push('Câu '+seen+' thiếu đáp án');return;}
+   questions.push({type:'mc',q:clean(q,1400),o:o.map(x=>clean(x,500)),a,e:'',s:title,passage:''});
+  });
+ });
+ return seen?{questions,skipped,complete:!skipped.length}:null;
+}
+
+
+function parseUsedToCalls(script){
+ if(!/\bconst\s+b1\s*=/.test(script)||!/\bconst\s+b2\s*=/.test(script))return null;
+ const questions=[],skipped=[],re=/\b(b1|b2|b3)\s*\(/g;let m,calls=0;
+ while((m=re.exec(script))){
+  const call=callArgs(script,re.lastIndex);if(!call)continue;
+  re.lastIndex=call.end+1;calls++;
+  const args=call.args,name=m[1];
+  if(name==='b2'){
+   const q=literalString(args[1]),key=literalString(args[2]),o=stringList(args[3]);
+   const a=o.findIndex(x=>clean(x).toLowerCase()===clean(key).toLowerCase());
+   if(!q||!key||o.length<2||a<0){skipped.push('Câu '+calls+' thiếu dữ liệu');continue;}
+   questions.push({type:'mc',q:clean(q.replace(/<span\s+class=["']bl["']>\?<\/span>/gi,'______')),o:o.map(x=>clean(x)),a,e:'',s:'Used to',passage:''});
+  }else{
+   const given=literalString(args[1]),root=name==='b3'?literalString(args[2]):'';
+   const key=literalString(args[name==='b3'?3:4]);
+   const accepted=stringList(args[name==='b3'?4:5]);
+   if(!given||!key){skipped.push('Câu '+calls+' thiếu đáp án');continue;}
+   const mode=name==='b1'?literalString(args[3]):'';
+   const prefix=name==='b1'?'Viết lại câu '+(mode==='-'?'phủ định':mode==='?'?'nghi vấn':'khẳng định')+': ':'';
+   const q=prefix+given.replace(/<span\s+class=["']bl["']>\?<\/span>/gi,'______')+(root?' ('+root+')':'');
+   questions.push({type:'text',q:clean(q),o:[],a:0,ansText:[...new Set([key,...accepted])].join(' | '),
+    e:'',s:'Used to',passage:''});
+  }
+ }
+ return calls?{questions,skipped,complete:!skipped.length}:null;
+}
+
+
+function parsePushQs(script,html){
+ if(!/\b(?:const|let|var)\s+QS\s*=\s*\[\s*\]/.test(script))return null;
+ const passages={};
+ if(typeof DOMParser!=='undefined'){
+  const doc=new DOMParser().parseFromString(html,'text/html');let group='';
+  for(const block of doc.querySelectorAll('.lp .pc')){
+   const label=block.querySelector('.plbl')?.textContent||'';
+   const found=/\bEx\d+\b/i.exec(label);if(found)group=found[0].toLowerCase();
+   const line=block.querySelector('.pt')?.textContent?.trim();
+   if(group&&line)passages[group]=(passages[group]?passages[group]+'\n':'')+line;
+  }
+ }
+ const questions=[],skipped=[],re=/\bQS\.push\s*\(/g;let m,calls=0;
+ while((m=re.exec(script))){
+  const call=callArgs(script,re.lastIndex);if(!call)continue;
+  re.lastIndex=call.end+1;calls++;
+  const part=call.args[0],q=property(part,'qt')||property(part,'q'),sec=property(part,'sec')||'';
+  const opts=objectParts(property(part,'opts')||'[]');
+  const o=opts.map(x=>property(x,'t')||property(x,'text')||'');
+  const marked=opts.map((x,j)=>property(x,'c')===1?j:-1).filter(j=>j>=0);
+  const group=/\bEx\d+\b/i.exec(sec);
+  if(!q||o.length<2||marked.length!==1){skipped.push('Câu '+calls+' thiếu dữ liệu/đáp án');continue;}
+  questions.push({type:'mc',q:clean(q,1400),o:o.map(x=>clean(x,500)),a:marked[0],
+   e:clean(property(part,'ok')||'',500),s:clean(sec,140),passage:group?passages[group[0].toLowerCase()]||'':''});
+ }
+ return calls?{questions,skipped,complete:!skipped.length}:null;
 }
 
 function parse(html){
@@ -191,11 +347,16 @@ function parse(html){
   try{const secs=JSON.parse(raw);if(Array.isArray(secs)&&secs.length)
    return {title,...sectionsToQuiz(secs),aiInput:compactSections(secs),format:'SECS'};
   }catch(_){}}
- for(const script of scripts){for(const name of ['QS','QUESTIONS','quizData']){
+ for(const script of scripts){for(const name of ['QS','QUESTIONS','quizData','Qs']){
   const raw=jsArray(script,name);if(!raw)continue;
   const result=parseSimple(raw,html);
   if(result.questions.length)return {title,...result,aiInput:compactHtml(html,scripts),format:name};
  }}
+ for(const script of scripts){const result=parsePushQs(script,html);if(result?.questions.length)return {title,...result,aiInput:compactHtml(html,scripts),format:'QS.push'};}
+ for(const script of scripts){const result=parseUsedToCalls(script);if(result?.questions.length)return {title,...result,aiInput:compactHtml(html,scripts),format:'used-to-calls'};}
+ for(const script of scripts){const result=parseParts(script);if(result?.questions.length)return {title,...result,aiInput:compactHtml(html,scripts),format:'PARTS'};}
+ for(const script of scripts){const result=parseSectionFills(script);if(result?.questions.length)return {title,...result,aiInput:compactHtml(html,scripts),format:'SECTIONS-fill'};}
+ for(const script of scripts){const result=parseCalls(script);if(result.questions.length)return {title,...result,aiInput:compactHtml(html,scripts),format:'calls'};}
  return {title,questions:[],skipped:[],complete:false,aiInput:compactHtml(html,scripts),format:'other'};
 }
 root.GCLink={parse};
