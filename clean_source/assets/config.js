@@ -11,6 +11,13 @@ window.GAME_CONFIG = {
   
   // Cấu hình Firebase Realtime Database chính thức của Cô Chí Nên
   firebase: {
-    databaseURL: "https://game-762ed-default-rtdb.firebaseio.com"
+    databaseURL: "https://game-762ed-default-rtdb.firebaseio.com",
+    apiKey: "AIzaSyAhxgKCK8yQ10O9y2kddRR1bHaMGanPFno",
+    authDomain: "game-762ed.firebaseapp.com",
+    projectId: "game-762ed",
+    appId: "1:201737691060:web:6b9ffca2635d31c2595ce1",
+    adminUid: "9eA5BZII0STtQwqox2XcBNEUfnE2",
+    // Firebase App Check → Web app → reCAPTCHA Enterprise (public site key).
+    appCheckSiteKey: "6LfRPRQuAAAAAFNmqtQo-4S0qo8hIwJyEzUp6XWK"
   }
 };

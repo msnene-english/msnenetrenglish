@@ -357,8 +357,9 @@ function sfxFiles(map) {
 }
 function playBuf(k) {
   const s = SB[k]; if (!s) return false;
-  try { if (AC.state === 'suspended') AC.resume(); const src = AC.createBufferSource(), g = AC.createGain(); src.buffer = s.buf; g.gain.value = s.vol; src.connect(g); g.connect(AC.destination); src.start(0, s.a, s.d); return true } catch (e) { return false }
+  try { if (AC.state === 'suspended') AC.resume(); const src = AC.createBufferSource(), g = AC.createGain(); src.buffer = s.buf; g.gain.value = s.vol; src.connect(g); g.connect(AC.destination); src.start(0, s.a, s.d); s.src = src; return true } catch (e) { return false }
 }
+function sfxStop(k) { const s = SB[k]; if (s && s.src) try { s.src.stop() } catch (e) { } }   // dừng đoạn nhạc ngắn đang phát (tránh 2 bản chồng nhau)
 function sfx(k) {
   if (k in SB) { if (playBuf(k)) return; k = { mjump: 'jump', mpipe: 'pipe', mdeath: 'fall', tshot: 'fireball', bplace: 'bump', bboom: 'boom', bdie: 'hurt', bitem: 'grow', pdie: 'fall', pfruit: 'coin', tjump: 'jump', troar: 'roar', tscore: 'flag', tscream: 'fall', tsplat: 'hurt', tswish: 'pop', twoosh: 'pop', bdeath: 'fall' }[k] || k }   // file chưa tải xong → dùng tiếng 8-bit
   if (k === 'jump') tone(420, .14, 'square', .05, 760);
@@ -481,6 +482,19 @@ const music = (function () {
         [76, 79, 84, H, 83, 81, 79, H], [74, H, 79, H, 83, H, 86, H], [81, H, 77, H, 72, 74, 77, H], [79, H, H, H, 74, 76, 77, 79],
         [81, H, 84, 81, 76, H, 72, H], [79, H, 76, 79, 83, H, 79, H], [77, 81, 84, H, 81, 77, 72, H], [76, H, 79, H, 84, H, H, 0],
         [74, 77, 81, H, 77, 74, 69, H], [79, H, 83, H, 86, H, 83, 79], [84, H, 79, H, 76, H, 79, H], [84, H, H, H, 0, 0, 79, 83]] },
+    kb: { bpm: 150, duty: .25, drum: 'disco', bass: 'drive', arp: true, stab: false, st: .75,   // Knockback: nhạc đấu trường vũ trụ tự soạn
+      ch: ['Em', 'C', 'G', 'D', 'Em', 'C', 'Am', 'Bm', 'C', 'D', 'Bm', 'Em', 'Am', 'D', 'G', 'Bm'],
+      mel: [[76, H, 79, 83, 81, H, 79, H], [76, H, 72, 76, 79, H, H, 0], [74, 79, 83, H, 86, H, 83, H], [81, H, 78, H, 74, H, 78, 81],
+        [83, H, 88, H, 86, 83, 79, H], [84, H, 79, 76, 72, H, 76, H], [81, 84, 88, H, 84, H, 81, H], [83, H, 78, H, 74, H, 71, H],
+        [79, 84, 88, H, 91, H, 88, 84], [86, H, 81, H, 78, 81, 86, H], [83, 86, 90, H, 86, H, 83, 78], [88, H, H, H, 0, 0, 83, 86],
+        [88, H, 84, 81, 76, H, 81, H], [90, H, 86, 81, 78, H, 81, 86], [91, H, 86, 83, 79, H, 83, H], [90, H, H, H, 0, 0, 0, 0]] },
+    get garden() { return TRACKS.snow },   // Hoa Quả Nổi Giận: nhạc phát từ file (snd/garden-*.mp3)
+    snow: { bpm: 126, duty: .25, drum: 'bounce', bass: 'walk', arp: true, stab: false, st: .8,   // Đêm Tuyết Sinh Tồn: nhạc mùa đông tự soạn
+      ch: ['Am', 'F', 'C', 'G', 'Am', 'F', 'E', 'E', 'F', 'G', 'Em', 'Am', 'Dm', 'G', 'C', 'E'],
+      mel: [[81, H, 84, 81, 76, H, 79, 81], [77, H, 81, H, 84, H, 81, H], [79, 84, 88, H, 84, H, 79, H], [83, H, 79, H, 74, H, 79, 83],
+        [84, H, 81, 76, 72, H, 76, H], [77, 81, 84, H, 81, H, 77, H], [80, H, 76, H, 71, H, 76, 80], [83, H, H, H, 0, 0, 76, 80],
+        [81, 84, 89, H, 84, H, 81, H], [83, 86, 91, H, 86, H, 83, H], [79, 83, 88, H, 83, 79, 76, H], [81, H, 84, H, 88, H, 84, 81],
+        [86, H, 81, 77, 74, H, 77, H], [83, H, 86, H, 91, H, 86, H], [84, H, 88, H, 91, H, 88, 84], [88, H, H, H, 0, 0, 0, 0]] },
     tank: { bpm: 126, duty: .125, drum: 'march', bass: 'drive', arp: false, stab: false, st: .85,
       ch: ['Am', 'Am', 'F', 'G', 'Am', 'F', 'G', 'E', 'Am', 'C', 'G', 'Am', 'F', 'G', 'E', 'E'],
       mel: [[69, H, H, 72, 76, H, 72, H], [74, 72, 71, H, 69, H, H, 0], [72, H, H, 77, 81, H, 77, H], [79, 77, 76, H, 74, H, H, 0],
@@ -868,6 +882,39 @@ async function fireNet(cfg) {
   const app = firebase.apps.length ? firebase.app() : firebase.initializeApp(cfg), db = firebase.database(app);
   await ensureFirebaseAuth(/\/(?:host|play)\.html$/i.test(location.pathname));
   let off = 0; db.ref('.info/serverTimeOffset').on('value', s => off = s.val() || 0);
+  /* Kênh phụ MQTT tốc độ cao cho Đấu Trường Ngân Hà (kb) & Đêm Tuyết Sinh Tồn (snow) — chỉ kết nối khi trò chơi gọi onFast */
+  let fastCode = '', fastCl = null, fastConnecting = false;
+  const fastL = [];
+  function ensureFastMqtt() {
+    if (!fastCode || !fastL.length || fastCl || fastConnecting || !window.mqtt) return;
+    fastConnecting = true;
+    try {
+      const brokers = CFG().brokers || ['wss://broker.emqx.io:8084/mqtt', 'wss://broker.hivemq.com:8884/mqtt'];
+      let idx = 0;
+      const tryNext = () => {
+        if (!fastCode || !fastL.length) { fastConnecting = false; return; }
+        const url = brokers[idx % brokers.length];
+        const cl = mqtt.connect(url, { clientId: 'mnf_' + Math.random().toString(36).slice(2, 10), clean: true, connectTimeout: 6000, reconnectPeriod: 4000 });
+        let settled = false;
+        const t = setTimeout(() => { if (!settled) { settled = true; try { cl.end(true); } catch (e) {} idx++; if (idx < brokers.length) tryNext(); else fastConnecting = false; } }, 6500);
+        cl.on('connect', () => {
+          if (settled) { try { cl.end(true); } catch (e) {} return; }
+          settled = true; clearTimeout(t); fastCl = cl; fastConnecting = false;
+          try { cl.subscribe('msnene-fast/v1/' + fastCode + '/k'); } catch (e) {}
+        });
+        cl.on('message', (topic, buf) => {
+          try {
+            const msg = JSON.parse(new TextDecoder().decode(buf));
+            fastL.slice().forEach(cb => { try { cb(msg); } catch (e) {} });
+          } catch (e) {}
+        });
+        cl.on('error', () => {
+          if (!settled) { settled = true; clearTimeout(t); try { cl.end(true); } catch (e) {} idx++; if (idx < brokers.length) tryNext(); else fastConnecting = false; }
+        });
+      };
+      tryNext();
+    } catch (e) { fastConnecting = false; }
+  }
   return {
     mode: 'firebase', now: () => Date.now() + off, host: async () => { },
     newCode: async () => { for (; ;) { const c = randCode(1 + Math.floor(Math.random() * 9)); if (!(await db.ref('rooms/' + c + '/info').once('value')).val()) return c } },
@@ -876,7 +923,10 @@ async function fireNet(cfg) {
     on: (p, cb) => { const r = db.ref(p), h = s => cb(s.val()); r.on('value', h); return () => r.off('value', h) },
     onAdded: (p, cb) => { const r = db.ref(p), h = s => cb(s.key, s.val()); r.on('child_added', h); return () => r.off('child_added', h) },
     onDisconnect: (p, v) => db.ref(p).onDisconnect().update(v),
-    onConn: cb => db.ref('.info/connected').on('value', s => cb(!!s.val()))
+    onConn: cb => db.ref('.info/connected').on('value', s => cb(!!s.val())),
+    fastRoom: c => { fastCode = String(c || '').trim(); if (fastCl && fastCode) try { fastCl.subscribe('msnene-fast/v1/' + fastCode + '/k'); } catch (e) {} ensureFastMqtt(); },
+    fast: m => { try { if (fastCl && fastCl.connected && fastCode) fastCl.publish('msnene-fast/v1/' + fastCode + '/k', JSON.stringify(m), { qos: 0 }); } catch (e) {} },
+    onFast: cb => { if (typeof cb !== 'function') return () => {}; fastL.push(cb); ensureFastMqtt(); return () => { const i = fastL.indexOf(cb); if (i >= 0) fastL.splice(i, 1); }; }
   };
 }
 
@@ -896,6 +946,7 @@ async function saveCommunityQuiz(quiz) {
   if (!quiz.id) {
     quiz.id = 'MN-' + (globalThis.crypto?.randomUUID?.().slice(0, 8) || Math.random().toString(36).slice(2, 10)).toUpperCase();
   }
+  quiz.id = String(quiz.id).trim().toUpperCase();
   quiz.title = (quiz.title || '').trim() || (quiz.type === 'test' || quiz.m === 'test' ? 'Bài kiểm tra tiếng Anh' : 'Bài ôn tập tiếng Anh');
   quiz.type = quiz.type || (quiz.m === 'test' ? 'test' : 'game');
   quiz.m = quiz.m || (quiz.type === 'test' ? 'test' : 'climb');
@@ -903,22 +954,22 @@ async function saveCommunityQuiz(quiz) {
   quiz.author = (quiz.author || '').trim() || (window.GAME_CONFIG && window.GAME_CONFIG.teacher) || 'Cô Chí Nên';
 
   const cfg = window.GAME_CONFIG || {};
-  if (cfg.firebase && cfg.firebase.databaseURL) quiz.ownerUid = (await ensureFirebaseAuth(true)).uid;
+  // 1. Đồng bộ Firebase TRƯỚC nếu có cấu hình — tránh tình trạng máy GV có localStorage nhưng HS không mở được
+  if (cfg.firebase && cfg.firebase.databaseURL) {
+    quiz.ownerUid = (await ensureFirebaseAuth(true)).uid;
+    try {
+      const url = cfg.firebase.databaseURL.replace(/\/$/, '') + '/community_quizzes/' + encodeURIComponent(quiz.id) + '.json';
+      await authenticatedFirebaseRequest(url, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(quiz) });
+    } catch (e) { console.warn('Firebase sync warning:', e); throw e; }
+  }
 
-  // 1. Lưu local cache
+  // 2. Sau khi Firebase lưu thành công (hoặc chế độ offline), mới lưu local cache
   const list = getLocalCommunity();
   const existingIdx = list.findIndex(q => q.id === quiz.id);
   if (existingIdx >= 0) list[existingIdx] = quiz;
   else list.unshift(quiz);
   saveLocalCommunity(list);
 
-  // 2. Đồng bộ Firebase nếu có cấu hình
-  if (cfg.firebase && cfg.firebase.databaseURL) {
-    try {
-      const url = cfg.firebase.databaseURL.replace(/\/$/, '') + '/community_quizzes/' + quiz.id + '.json';
-      await authenticatedFirebaseRequest(url, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(quiz) });
-    } catch (e) { console.warn('Firebase sync warning:', e); throw e; }
-  }
   return quiz;
 }
 
@@ -1007,9 +1058,11 @@ async function deleteHwSubmission(hwId, subId) {
 
 async function getQuizById(id) {
   if (!id) return null;
-  id = String(id).trim().toUpperCase();
+  const rawId = String(id).trim().replace(/^[^A-Za-z0-9]+|[^A-Za-z0-9_-]+$/g, '');
+  id = rawId.toUpperCase();
+  if (!id) return null;
 
-  // Kiểm tra bundled
+  // 1. Kiểm tra bundled
   if (id === 'MN-ENG7' && window.SAMPLE_SETS && window.SAMPLE_SETS[0]) {
     const s = window.SAMPLE_SETS[0];
     return { id, title: s.title, author: 'Ms Nene English', qs: s.raw.map(fromOld) };
@@ -1019,21 +1072,35 @@ async function getQuizById(id) {
     return { id, title: s.title, author: 'Ms Nene English', qs: s.raw.map(fromOld) };
   }
 
-  // Kiểm tra local
-  const localList = getLocalCommunity();
-  const foundLocal = localList.find(q => q.id.toUpperCase() === id);
-  if (foundLocal) return foundLocal;
-
-  // Kiểm tra Firebase
+  // 2. Ưu tiên đọc từ Firebase TRƯỚC (với timeout 8s) để đảm bảo bản mới nhất giống nhau trên mọi máy
   const cfg = window.GAME_CONFIG || {};
   if (cfg.firebase && cfg.firebase.databaseURL) {
-    try {
-      const url = cfg.firebase.databaseURL.replace(/\/$/, '') + '/community_quizzes/' + id + '.json';
-      const res = await fetch(url);
-      const data = await res.json();
-      if (data) return data;
-    } catch (e) {}
+    const base = cfg.firebase.databaseURL.replace(/\/$/, '');
+    const tryIds = rawId && rawId !== id ? [id, rawId] : [id];
+    for (const candidate of tryIds) {
+      let timer = null;
+      try {
+        const ctrl = typeof AbortController === 'function' ? new AbortController() : null;
+        if (ctrl) timer = setTimeout(() => ctrl.abort(), 8000);
+        const url = base + '/community_quizzes/' + encodeURIComponent(candidate) + '.json';
+        const res = await fetch(url, ctrl ? { signal: ctrl.signal, cache: 'no-store' } : { cache: 'no-store' });
+        if (res.ok) {
+          const data = await res.json();
+          if (data && data.qs) return data;
+        }
+      } catch (e) {
+        console.warn('getQuizById Firebase fetch warn:', e);
+      } finally {
+        if (timer) clearTimeout(timer);
+      }
+    }
   }
+
+  // 3. Fallback đọc local cache (khi offline / không cấu hình Firebase)
+  const localList = getLocalCommunity();
+  const foundLocal = localList.find(q => String(q.id || '').toUpperCase() === id);
+  if (foundLocal) return foundLocal;
+
   return null;
 }
 
@@ -2144,5 +2211,5 @@ function copyPhone() {
 }
 if (typeof window !== 'undefined') window.copyPhone = copyPhone;
 
-return { $, copyPhone, shuffle, pick, clamp, esc, fmt, stamp, clean, rng, COLORS, BADGE, safe, normAns, checkTextAns, fromOld, prep, parseCSV, rowsToQs, parseText, parsePaste, sheetSets, sheetSet, sampleSet, packHw, unpackHw, tone, sfx, confetti, toast, rank, makeNet, music, saveCommunityQuiz, getCommunityLibrary, getQuizById, saveHwMeta, submitHwResult, getHwGradebook, showReportCard, downloadReportCard, diffPronunciation, speakText, evaluatePronunciationAI, enrichSpeakingQuestionsAI, generateSingleSpeakingAI, checkEnglishStandardizationLocal, checkEnglishStandardizationAI, COMMON_TYPOS, deleteCommunityQuiz, deleteHwSubmission , copy, copyText, sfxFiles, kvPut, kvGet, kvScan, live, liveWatch};
+return { $, copyPhone, shuffle, pick, clamp, esc, fmt, stamp, clean, rng, COLORS, BADGE, safe, normAns, checkTextAns, fromOld, prep, parseCSV, rowsToQs, parseText, parsePaste, sheetSets, sheetSet, sampleSet, packHw, unpackHw, tone, sfx, sfxStop, confetti, toast, rank, makeNet, music, saveCommunityQuiz, getCommunityLibrary, getQuizById, saveHwMeta, submitHwResult, getHwGradebook, showReportCard, downloadReportCard, diffPronunciation, speakText, evaluatePronunciationAI, enrichSpeakingQuestionsAI, generateSingleSpeakingAI, checkEnglishStandardizationLocal, checkEnglishStandardizationAI, COMMON_TYPOS, deleteCommunityQuiz, deleteHwSubmission , copy, copyText, sfxFiles, kvPut, kvGet, kvScan, live, liveWatch};
 })();

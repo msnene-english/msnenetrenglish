@@ -837,6 +837,7 @@ $('bForgotPassword').onclick = async () => {
     button.disabled = false;
   }
 };
+$('inpAdminEmail').onkeydown = e => { if (e.key === 'Enter') verifyMasterLogin(); };
 $('inpMasterKey').onkeydown = e => { if (e.key === 'Enter') verifyMasterLogin(); };
 
 $('bLogout').onclick = async () => {
@@ -1004,7 +1005,7 @@ function sendZalo(key, owner, expiresAt) {
   if (expiresAt && expiresAt > 0) {
     expText = `Đến ngày ${new Date(expiresAt).toLocaleDateString('vi-VN')}`;
   }
-  const msg = `Kính gửi ${owner || 'Cô'},\nMs Nene English xin gửi mã kích hoạt Bản quyền Pro Trọn bộ 10 Game & Phòng thi:\n\n🔑 MÃ KÍCH HOẠT: ${key}\n⏰ Thời hạn: ${expText}\n\n👉 Hướng dẫn kích hoạt:\n1. Mở trang quản trị game.\n2. Bấm vào biểu tượng ổ khóa bất kỳ hoặc nút "Kích hoạt bản quyền Pro".\n3. Nhập mã ${key} và bấm Kích hoạt.\n\nChúc cô có những giờ dạy vui vẻ và hiệu quả!`;
+  const msg = `Kính gửi ${owner || 'Cô'},\nMs Nene English xin gửi mã kích hoạt Bản quyền Pro Trọn bộ 20 Game & Phòng thi:\n\n🔑 MÃ KÍCH HOẠT: ${key}\n⏰ Thời hạn: ${expText}\n\n👉 Hướng dẫn kích hoạt:\n1. Mở trang quản trị game.\n2. Bấm vào biểu tượng ổ khóa bất kỳ hoặc nút "Kích hoạt bản quyền Pro".\n3. Nhập mã ${key} và bấm Kích hoạt.\n\nChúc cô có những giờ dạy vui vẻ và hiệu quả!`;
   navigator.clipboard.writeText(msg);
   toast('📋 Đã sao chép tin nhắn Zalo mẫu kèm mã kích hoạt!');
 }
@@ -1163,7 +1164,7 @@ $('bSaveEdit').onclick = async () => {
   }
 };
 
-$('bRefresh').onclick = loadLicenses;
+$('bRefresh').onclick = () => { loadLicenses(); loadAdminQuizzes(); };
 
 // Firebase Authentication xác định trạng thái đăng nhập sau khi trang tải.
 FBA.isAdmin().then(isAdmin => {

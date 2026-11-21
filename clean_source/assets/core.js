@@ -357,8 +357,9 @@ function sfxFiles(map) {
 }
 function playBuf(k) {
   const s = SB[k]; if (!s) return false;
-  try { if (AC.state === 'suspended') AC.resume(); const src = AC.createBufferSource(), g = AC.createGain(); src.buffer = s.buf; g.gain.value = s.vol; src.connect(g); g.connect(AC.destination); src.start(0, s.a, s.d); return true } catch (e) { return false }
+  try { if (AC.state === 'suspended') AC.resume(); const src = AC.createBufferSource(), g = AC.createGain(); src.buffer = s.buf; g.gain.value = s.vol; src.connect(g); g.connect(AC.destination); src.start(0, s.a, s.d); s.src = src; return true } catch (e) { return false }
 }
+function sfxStop(k) { const s = SB[k]; if (s && s.src) try { s.src.stop() } catch (e) { } }   // dừng đoạn nhạc ngắn đang phát (tránh 2 bản chồng nhau)
 function sfx(k) {
   if (k in SB) { if (playBuf(k)) return; k = { mjump: 'jump', mpipe: 'pipe', mdeath: 'fall', tshot: 'fireball', bplace: 'bump', bboom: 'boom', bdie: 'hurt', bitem: 'grow', pdie: 'fall', pfruit: 'coin', tjump: 'jump', troar: 'roar', tscore: 'flag', tscream: 'fall', tsplat: 'hurt', tswish: 'pop', twoosh: 'pop', bdeath: 'fall' }[k] || k }   // file chưa tải xong → dùng tiếng 8-bit
   if (k === 'jump') tone(420, .14, 'square', .05, 760);
@@ -481,6 +482,19 @@ const music = (function () {
         [76, 79, 84, H, 83, 81, 79, H], [74, H, 79, H, 83, H, 86, H], [81, H, 77, H, 72, 74, 77, H], [79, H, H, H, 74, 76, 77, 79],
         [81, H, 84, 81, 76, H, 72, H], [79, H, 76, 79, 83, H, 79, H], [77, 81, 84, H, 81, 77, 72, H], [76, H, 79, H, 84, H, H, 0],
         [74, 77, 81, H, 77, 74, 69, H], [79, H, 83, H, 86, H, 83, 79], [84, H, 79, H, 76, H, 79, H], [84, H, H, H, 0, 0, 79, 83]] },
+    kb: { bpm: 150, duty: .25, drum: 'disco', bass: 'drive', arp: true, stab: false, st: .75,   // Knockback: nhạc đấu trường vũ trụ tự soạn
+      ch: ['Em', 'C', 'G', 'D', 'Em', 'C', 'Am', 'Bm', 'C', 'D', 'Bm', 'Em', 'Am', 'D', 'G', 'Bm'],
+      mel: [[76, H, 79, 83, 81, H, 79, H], [76, H, 72, 76, 79, H, H, 0], [74, 79, 83, H, 86, H, 83, H], [81, H, 78, H, 74, H, 78, 81],
+        [83, H, 88, H, 86, 83, 79, H], [84, H, 79, 76, 72, H, 76, H], [81, 84, 88, H, 84, H, 81, H], [83, H, 78, H, 74, H, 71, H],
+        [79, 84, 88, H, 91, H, 88, 84], [86, H, 81, H, 78, 81, 86, H], [83, 86, 90, H, 86, H, 83, 78], [88, H, H, H, 0, 0, 83, 86],
+        [88, H, 84, 81, 76, H, 81, H], [90, H, 86, 81, 78, H, 81, 86], [91, H, 86, 83, 79, H, 83, H], [90, H, H, H, 0, 0, 0, 0]] },
+    get garden() { return TRACKS.snow },   // Hoa Quả Nổi Giận: nhạc phát từ file (snd/garden-*.mp3)
+    snow: { bpm: 126, duty: .25, drum: 'bounce', bass: 'walk', arp: true, stab: false, st: .8,   // Đêm Tuyết Sinh Tồn: nhạc mùa đông tự soạn
+      ch: ['Am', 'F', 'C', 'G', 'Am', 'F', 'E', 'E', 'F', 'G', 'Em', 'Am', 'Dm', 'G', 'C', 'E'],
+      mel: [[81, H, 84, 81, 76, H, 79, 81], [77, H, 81, H, 84, H, 81, H], [79, 84, 88, H, 84, H, 79, H], [83, H, 79, H, 74, H, 79, 83],
+        [84, H, 81, 76, 72, H, 76, H], [77, 81, 84, H, 81, H, 77, H], [80, H, 76, H, 71, H, 76, 80], [83, H, H, H, 0, 0, 76, 80],
+        [81, 84, 89, H, 84, H, 81, H], [83, 86, 91, H, 86, H, 83, H], [79, 83, 88, H, 83, 79, 76, H], [81, H, 84, H, 88, H, 84, 81],
+        [86, H, 81, 77, 74, H, 77, H], [83, H, 86, H, 91, H, 86, H], [84, H, 88, H, 91, H, 88, 84], [88, H, H, H, 0, 0, 0, 0]] },
     tank: { bpm: 126, duty: .125, drum: 'march', bass: 'drive', arp: false, stab: false, st: .85,
       ch: ['Am', 'Am', 'F', 'G', 'Am', 'F', 'G', 'E', 'Am', 'C', 'G', 'Am', 'F', 'G', 'E', 'E'],
       mel: [[69, H, H, 72, 76, H, 72, H], [74, 72, 71, H, 69, H, H, 0], [72, H, H, 77, 81, H, 77, H], [79, 77, 76, H, 74, H, H, 0],
@@ -827,12 +841,80 @@ async function mqttNet() {
   };
 }
 
+async function ensureFirebaseAuth(anonymous) {
+  const cfg = CFG().firebase;
+  if (!cfg || !cfg.apiKey || cfg.apiKey === 'PASTE_FIREBASE_WEB_API_KEY' || !cfg.appId || cfg.appId === 'PASTE_FIREBASE_WEB_APP_ID') {
+    throw new Error('Chưa cấu hình Firebase Web app.');
+  }
+  const version = '10.12.2';
+  if (!window.firebase || !firebase.initializeApp) {
+    await loadScript('https://www.gstatic.com/firebasejs/' + version + '/firebase-app-compat.js');
+  }
+  if (!firebase.auth) {
+    await loadScript('https://www.gstatic.com/firebasejs/' + version + '/firebase-auth-compat.js');
+  }
+  const app = firebase.apps.length ? firebase.app() : firebase.initializeApp(cfg);
+  const auth = firebase.auth(app);
+  await new Promise((resolve, reject) => {
+    const unsubscribe = auth.onAuthStateChanged(
+      () => { unsubscribe(); resolve(); },
+      reject
+    );
+  });
+  if (anonymous && !auth.currentUser) await auth.signInAnonymously();
+  return auth.currentUser;
+}
+
+async function authenticatedFirebaseRequest(url, options) {
+  const user = await ensureFirebaseAuth(true);
+  if (!user) throw new Error('Chưa có tài khoản Firebase cho phiên này.');
+  const target = new URL(url);
+  target.searchParams.set('auth', await user.getIdToken());
+  const response = await fetch(target.toString(), options);
+  if (!response.ok) throw new Error('Firebase từ chối thao tác (' + response.status + ').');
+  return response;
+}
+
 async function fireNet(cfg) {
   const V = '10.12.2';
   await loadScript('https://www.gstatic.com/firebasejs/' + V + '/firebase-app-compat.js');
   await loadScript('https://www.gstatic.com/firebasejs/' + V + '/firebase-database-compat.js');
   const app = firebase.apps.length ? firebase.app() : firebase.initializeApp(cfg), db = firebase.database(app);
+  await ensureFirebaseAuth(/\/(?:host|play)\.html$/i.test(location.pathname));
   let off = 0; db.ref('.info/serverTimeOffset').on('value', s => off = s.val() || 0);
+  /* Kênh phụ MQTT tốc độ cao cho Đấu Trường Ngân Hà (kb) & Đêm Tuyết Sinh Tồn (snow) — chỉ kết nối khi trò chơi gọi onFast */
+  let fastCode = '', fastCl = null, fastConnecting = false;
+  const fastL = [];
+  function ensureFastMqtt() {
+    if (!fastCode || !fastL.length || fastCl || fastConnecting || !window.mqtt) return;
+    fastConnecting = true;
+    try {
+      const brokers = CFG().brokers || ['wss://broker.emqx.io:8084/mqtt', 'wss://broker.hivemq.com:8884/mqtt'];
+      let idx = 0;
+      const tryNext = () => {
+        if (!fastCode || !fastL.length) { fastConnecting = false; return; }
+        const url = brokers[idx % brokers.length];
+        const cl = mqtt.connect(url, { clientId: 'mnf_' + Math.random().toString(36).slice(2, 10), clean: true, connectTimeout: 6000, reconnectPeriod: 4000 });
+        let settled = false;
+        const t = setTimeout(() => { if (!settled) { settled = true; try { cl.end(true); } catch (e) {} idx++; if (idx < brokers.length) tryNext(); else fastConnecting = false; } }, 6500);
+        cl.on('connect', () => {
+          if (settled) { try { cl.end(true); } catch (e) {} return; }
+          settled = true; clearTimeout(t); fastCl = cl; fastConnecting = false;
+          try { cl.subscribe('msnene-fast/v1/' + fastCode + '/k'); } catch (e) {}
+        });
+        cl.on('message', (topic, buf) => {
+          try {
+            const msg = JSON.parse(new TextDecoder().decode(buf));
+            fastL.slice().forEach(cb => { try { cb(msg); } catch (e) {} });
+          } catch (e) {}
+        });
+        cl.on('error', () => {
+          if (!settled) { settled = true; clearTimeout(t); try { cl.end(true); } catch (e) {} idx++; if (idx < brokers.length) tryNext(); else fastConnecting = false; }
+        });
+      };
+      tryNext();
+    } catch (e) { fastConnecting = false; }
+  }
   return {
     mode: 'firebase', now: () => Date.now() + off, host: async () => { },
     newCode: async () => { for (; ;) { const c = randCode(1 + Math.floor(Math.random() * 9)); if (!(await db.ref('rooms/' + c + '/info').once('value')).val()) return c } },
@@ -841,7 +923,10 @@ async function fireNet(cfg) {
     on: (p, cb) => { const r = db.ref(p), h = s => cb(s.val()); r.on('value', h); return () => r.off('value', h) },
     onAdded: (p, cb) => { const r = db.ref(p), h = s => cb(s.key, s.val()); r.on('child_added', h); return () => r.off('child_added', h) },
     onDisconnect: (p, v) => db.ref(p).onDisconnect().update(v),
-    onConn: cb => db.ref('.info/connected').on('value', s => cb(!!s.val()))
+    onConn: cb => db.ref('.info/connected').on('value', s => cb(!!s.val())),
+    fastRoom: c => { fastCode = String(c || '').trim(); if (fastCl && fastCode) try { fastCl.subscribe('msnene-fast/v1/' + fastCode + '/k'); } catch (e) {} ensureFastMqtt(); },
+    fast: m => { try { if (fastCl && fastCl.connected && fastCode) fastCl.publish('msnene-fast/v1/' + fastCode + '/k', JSON.stringify(m), { qos: 0 }); } catch (e) {} },
+    onFast: cb => { if (typeof cb !== 'function') return () => {}; fastL.push(cb); ensureFastMqtt(); return () => { const i = fastL.indexOf(cb); if (i >= 0) fastL.splice(i, 1); }; }
   };
 }
 
@@ -859,29 +944,32 @@ function saveLocalCommunity(list) {
 
 async function saveCommunityQuiz(quiz) {
   if (!quiz.id) {
-    quiz.id = 'MN-' + (Math.floor(1000 + Math.random() * 9000));
+    quiz.id = 'MN-' + (globalThis.crypto?.randomUUID?.().slice(0, 8) || Math.random().toString(36).slice(2, 10)).toUpperCase();
   }
+  quiz.id = String(quiz.id).trim().toUpperCase();
   quiz.title = (quiz.title || '').trim() || (quiz.type === 'test' || quiz.m === 'test' ? 'Bài kiểm tra tiếng Anh' : 'Bài ôn tập tiếng Anh');
   quiz.type = quiz.type || (quiz.m === 'test' ? 'test' : 'game');
   quiz.m = quiz.m || (quiz.type === 'test' ? 'test' : 'climb');
   quiz.date = quiz.date || new Date().toLocaleDateString('vi-VN');
   quiz.author = (quiz.author || '').trim() || (window.GAME_CONFIG && window.GAME_CONFIG.teacher) || 'Cô Chí Nên';
 
-  // 1. Lưu local cache
+  const cfg = window.GAME_CONFIG || {};
+  // 1. Đồng bộ Firebase TRƯỚC nếu có cấu hình — tránh tình trạng máy GV có localStorage nhưng HS không mở được
+  if (cfg.firebase && cfg.firebase.databaseURL) {
+    quiz.ownerUid = (await ensureFirebaseAuth(true)).uid;
+    try {
+      const url = cfg.firebase.databaseURL.replace(/\/$/, '') + '/community_quizzes/' + encodeURIComponent(quiz.id) + '.json';
+      await authenticatedFirebaseRequest(url, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(quiz) });
+    } catch (e) { console.warn('Firebase sync warning:', e); throw e; }
+  }
+
+  // 2. Sau khi Firebase lưu thành công (hoặc chế độ offline), mới lưu local cache
   const list = getLocalCommunity();
   const existingIdx = list.findIndex(q => q.id === quiz.id);
   if (existingIdx >= 0) list[existingIdx] = quiz;
   else list.unshift(quiz);
   saveLocalCommunity(list);
 
-  // 2. Đồng bộ Firebase nếu có cấu hình
-  const cfg = window.GAME_CONFIG || {};
-  if (cfg.firebase && cfg.firebase.databaseURL) {
-    try {
-      const url = cfg.firebase.databaseURL.replace(/\/$/, '') + '/community_quizzes/' + quiz.id + '.json';
-      await fetch(url, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(quiz) });
-    } catch (e) { console.warn('Firebase sync warning:', e); }
-  }
   return quiz;
 }
 
@@ -929,21 +1017,14 @@ async function getCommunityLibrary() {
 async function deleteCommunityQuiz(id) {
   if (!id) return false;
   id = String(id).trim();
-  // 1. Local deletion
-  const list = getLocalCommunity().filter(q => q.id !== id);
-  saveLocalCommunity(list);
-  if (typeof window !== 'undefined' && window.communityQuizzesCache) {
-    window.communityQuizzesCache = window.communityQuizzesCache.filter(q => q.id !== id);
-  }
-  // 2. Cloud server deletion
   const cfg = window.GAME_CONFIG || {};
   if (cfg.firebase && cfg.firebase.databaseURL) {
-    try {
-      const url = cfg.firebase.databaseURL.replace(/\/$/, '') + '/community_quizzes/' + encodeURIComponent(id) + '.json';
-      await fetch(url, { method: 'DELETE' });
-    } catch (e) {
-      console.warn('Delete quiz from server warn:', e);
-    }
+    const url = cfg.firebase.databaseURL.replace(/\/$/, '') + '/community_quizzes/' + encodeURIComponent(id) + '.json';
+    await window.FBA.request(url, { method: 'DELETE' });
+  }
+  saveLocalCommunity(getLocalCommunity().filter(q => q.id !== id));
+  if (typeof window !== 'undefined' && window.communityQuizzesCache) {
+    window.communityQuizzesCache = window.communityQuizzesCache.filter(q => q.id !== id);
   }
   return true;
 }
@@ -951,14 +1032,20 @@ async function deleteCommunityQuiz(id) {
 async function deleteHwSubmission(hwId, subId) {
   if (!hwId) return false;
   hwId = String(hwId).trim();
-  // 1. Local deletion
+  const cfg = window.GAME_CONFIG || {};
+  if (cfg.firebase && cfg.firebase.databaseURL) {
+    const base = cfg.firebase.databaseURL.replace(/\/$/, '');
+    if (subId) {
+      await window.FBA.request(base + '/hw_subs/' + encodeURIComponent(hwId) + '/' + encodeURIComponent(subId) + '.json', { method: 'DELETE' });
+    } else {
+      await window.FBA.request(base + '/hw_subs/' + encodeURIComponent(hwId) + '.json', { method: 'DELETE' });
+      await window.FBA.request(base + '/hw_meta/' + encodeURIComponent(hwId) + '.json', { method: 'DELETE' });
+    }
+  }
   const allSubs = getLocalHwSubs();
   if (allSubs[hwId]) {
-    if (subId) {
-      delete allSubs[hwId][subId];
-    } else {
-      delete allSubs[hwId];
-    }
+    if (subId) delete allSubs[hwId][subId];
+    else delete allSubs[hwId];
     saveLocalHwSubs(allSubs);
   }
   if (!subId) {
@@ -966,29 +1053,16 @@ async function deleteHwSubmission(hwId, subId) {
     delete metas[hwId];
     saveLocalHwMetas(metas);
   }
-  // 2. Cloud server deletion
-  const cfg = window.GAME_CONFIG || {};
-  if (cfg.firebase && cfg.firebase.databaseURL) {
-    const base = cfg.firebase.databaseURL.replace(/\/$/, '');
-    try {
-      if (subId) {
-        await fetch(base + '/hw_subs/' + encodeURIComponent(hwId) + '/' + encodeURIComponent(subId) + '.json', { method: 'DELETE' });
-      } else {
-        await fetch(base + '/hw_subs/' + encodeURIComponent(hwId) + '.json', { method: 'DELETE' });
-        await fetch(base + '/hw_meta/' + encodeURIComponent(hwId) + '.json', { method: 'DELETE' });
-      }
-    } catch (e) {
-      console.warn('Delete submission from server warn:', e);
-    }
-  }
   return true;
 }
 
 async function getQuizById(id) {
   if (!id) return null;
-  id = String(id).trim().toUpperCase();
+  const rawId = String(id).trim().replace(/^[^A-Za-z0-9]+|[^A-Za-z0-9_-]+$/g, '');
+  id = rawId.toUpperCase();
+  if (!id) return null;
 
-  // Kiểm tra bundled
+  // 1. Kiểm tra bundled
   if (id === 'MN-ENG7' && window.SAMPLE_SETS && window.SAMPLE_SETS[0]) {
     const s = window.SAMPLE_SETS[0];
     return { id, title: s.title, author: 'Ms Nene English', qs: s.raw.map(fromOld) };
@@ -998,21 +1072,35 @@ async function getQuizById(id) {
     return { id, title: s.title, author: 'Ms Nene English', qs: s.raw.map(fromOld) };
   }
 
-  // Kiểm tra local
-  const localList = getLocalCommunity();
-  const foundLocal = localList.find(q => q.id.toUpperCase() === id);
-  if (foundLocal) return foundLocal;
-
-  // Kiểm tra Firebase
+  // 2. Ưu tiên đọc từ Firebase TRƯỚC (với timeout 8s) để đảm bảo bản mới nhất giống nhau trên mọi máy
   const cfg = window.GAME_CONFIG || {};
   if (cfg.firebase && cfg.firebase.databaseURL) {
-    try {
-      const url = cfg.firebase.databaseURL.replace(/\/$/, '') + '/community_quizzes/' + id + '.json';
-      const res = await fetch(url);
-      const data = await res.json();
-      if (data) return data;
-    } catch (e) {}
+    const base = cfg.firebase.databaseURL.replace(/\/$/, '');
+    const tryIds = rawId && rawId !== id ? [id, rawId] : [id];
+    for (const candidate of tryIds) {
+      let timer = null;
+      try {
+        const ctrl = typeof AbortController === 'function' ? new AbortController() : null;
+        if (ctrl) timer = setTimeout(() => ctrl.abort(), 8000);
+        const url = base + '/community_quizzes/' + encodeURIComponent(candidate) + '.json';
+        const res = await fetch(url, ctrl ? { signal: ctrl.signal, cache: 'no-store' } : { cache: 'no-store' });
+        if (res.ok) {
+          const data = await res.json();
+          if (data && data.qs) return data;
+        }
+      } catch (e) {
+        console.warn('getQuizById Firebase fetch warn:', e);
+      } finally {
+        if (timer) clearTimeout(timer);
+      }
+    }
   }
+
+  // 3. Fallback đọc local cache (khi offline / không cấu hình Firebase)
+  const localList = getLocalCommunity();
+  const foundLocal = localList.find(q => String(q.id || '').toUpperCase() === id);
+  if (foundLocal) return foundLocal;
+
   return null;
 }
 
@@ -1044,16 +1132,17 @@ async function saveHwMeta(meta) {
     createdAt: meta.createdAt || Date.now(),
     date: stamp(meta.createdAt || Date.now())
   };
+  const cfg = window.GAME_CONFIG || {};
+  if (cfg.firebase && cfg.firebase.databaseURL) item.ownerUid = (await ensureFirebaseAuth(true)).uid;
   const metas = getLocalHwMetas();
   metas[item.id] = Object.assign(metas[item.id] || {}, item);
   saveLocalHwMetas(metas);
 
-  const cfg = window.GAME_CONFIG || {};
   if (cfg.firebase && cfg.firebase.databaseURL) {
     try {
       const url = cfg.firebase.databaseURL.replace(/\/$/, '') + '/hw_meta/' + encodeURIComponent(item.id) + '.json';
-      await fetch(url, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(item) });
-    } catch (e) { console.warn('saveHwMeta sync warn:', e); }
+      await authenticatedFirebaseRequest(url, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(item) });
+    } catch (e) { console.warn('saveHwMeta sync warn:', e); throw e; }
   }
   return item;
 }
@@ -1077,6 +1166,12 @@ async function submitHwResult(hwId, entry) {
     date: stamp(Date.now())
   };
 
+  // Gắn bài nộp với tài khoản ẩn danh của học sinh để Rules kiểm tra.
+  if (entry.cloud !== false) try {
+    const user = await ensureFirebaseAuth(true);
+    if (user) rec.uid = user.uid;
+  } catch (e) { console.warn('Firebase Authentication warning:', e); }
+
   // 1. Lưu local
   const allSubs = getLocalHwSubs();
   if (!allSubs[hwId]) allSubs[hwId] = {};
@@ -1091,20 +1186,25 @@ async function submitHwResult(hwId, entry) {
 
   // 2. Đồng bộ Firebase
   const cfg = window.GAME_CONFIG || {};
-  if (cfg.firebase && cfg.firebase.databaseURL) {
+  if (entry.cloud !== false && cfg.firebase && cfg.firebase.databaseURL) {
     const base = cfg.firebase.databaseURL.replace(/\/$/, '');
     try {
-      await fetch(base + '/hw_subs/' + encodeURIComponent(hwId) + '/' + subId + '.json', {
+      if (!rec.uid) throw new Error('Chưa đăng nhập Firebase cho học sinh.');
+      const idToken = await firebase.auth().currentUser.getIdToken();
+      const url = base + '/hw_subs/' + encodeURIComponent(hwId) + '/' + subId + '.json?auth=' + encodeURIComponent(idToken);
+      const response = await fetch(url, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(rec)
       });
-      await fetch(base + '/hw_meta/' + encodeURIComponent(hwId) + '.json', {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ id: hwId, title: rec.title, m: rec.m, updatedAt: rec.at, date: rec.date })
-      });
-    } catch (e) { console.warn('submitHwResult firebase warn:', e); }
+      if (!response.ok) throw new Error('Không lưu được bài nộp lên Firebase (' + response.status + ').');
+
+    } catch (e) {
+      console.warn('submitHwResult firebase warn:', e);
+      rec.syncError = e.message || 'Không gửi được bài nộp.';
+    }
+  } else if (entry.cloud !== false) {
+    rec.syncError = 'Chưa cấu hình Firebase.';
   }
   return rec;
 }
@@ -1121,21 +1221,32 @@ async function getHwGradebook() {
   if (cfg.firebase && cfg.firebase.databaseURL) {
     const base = cfg.firebase.databaseURL.replace(/\/$/, '');
     try {
-      const [mRes, sRes] = await Promise.all([
-        fetch(base + '/hw_meta.json').then(r => r.json()).catch(() => null),
-        fetch(base + '/hw_subs.json').then(r => r.json()).catch(() => null)
-      ]);
+      const user = await ensureFirebaseAuth(true);
+      const admin = user.uid === cfg.firebase.adminUid;
+      const mRes = await authenticatedFirebaseRequest(base + '/hw_meta.json').then(r => r.json());
       if (mRes && typeof mRes === 'object') {
         for (const [k, v] of Object.entries(mRes)) {
-          if (v && typeof v === 'object') metas[k] = Object.assign(metas[k] || {}, v);
+          if (v && typeof v === 'object' && (admin || v.ownerUid === user.uid)) {
+            metas[k] = Object.assign(metas[k] || {}, v);
+          }
         }
       }
-      if (sRes && typeof sRes === 'object') {
-        for (const [hid, map] of Object.entries(sRes)) {
-          if (map && typeof map === 'object') {
-            if (!subsByHw[hid]) subsByHw[hid] = {};
-            Object.assign(subsByHw[hid], map);
-          }
+      let entries;
+      if (admin) {
+        const allSubs = await authenticatedFirebaseRequest(base + '/hw_subs.json').then(r => r.json());
+        entries = Object.entries(allSubs || {});
+      } else {
+        entries = await Promise.all(Object.keys(metas).map(async hid => {
+          try {
+            const result = await authenticatedFirebaseRequest(base + '/hw_subs/' + encodeURIComponent(hid) + '.json');
+            return [hid, await result.json()];
+          } catch (error) { console.warn('Không đọc được bài nộp', hid, error); return [hid, null]; }
+        }));
+      }
+      for (const [hid, map] of entries) {
+        if (map && typeof map === 'object') {
+          if (!subsByHw[hid]) subsByHw[hid] = {};
+          Object.assign(subsByHw[hid], map);
         }
       }
     } catch (e) { console.warn('getHwGradebook warn:', e); }
@@ -1485,17 +1596,10 @@ function showReportCard(data) {
 /* ══════════════════════════════════════════════════════════════
    HỆ THỐNG ĐÁNH GIÁ PHÁT ÂM TIẾNG ANH AI (AI PRONUNCIATION EVALUATION)
    ══════════════════════════════════════════════════════════════ */
-const DEFAULT_AI_KEY = atob('QVEuQWI4Uk42SXY0Mm9BVTFySEFWNEItTVlMb0U2eThEaHFvd2pybFZ3QXVkbUEyQkxYOWc=');
-let systemAiKey = DEFAULT_AI_KEY;
-if (typeof window !== 'undefined' && window.firebaseConfig && window.firebaseConfig.databaseURL) {
-  try {
-    fetch(window.firebaseConfig.databaseURL + '/system_config/gemini_key.json')
-      .then(r => r.json())
-      .then(k => { if (k && typeof k === 'string') systemAiKey = k; })
-      .catch(() => {});
-  } catch(e) {}
+async function requestAIJson(prompt, timeoutMs = 20000) {
+  const ai = await import('./assets/ai-import.js?v=20261107-8');
+  return ai.generateJson(prompt, timeoutMs);
 }
-function getAiKey() { return systemAiKey || DEFAULT_AI_KEY; }
 
 function levenshteinDist(s1, s2) {
   const m = s1.length, n = s2.length;
@@ -1512,11 +1616,11 @@ function levenshteinDist(s1, s2) {
 }
 
 function diffPronunciation(spoken, target) {
-  const cleanStr = str => String(str || '').toLowerCase().replace(/[^\\w\\s']/g, ' ').replace(/\\s+/g, ' ').trim();
+  const cleanStr = str => String(str || '').toLowerCase().replace(/[^\w\s']/g, ' ').replace(/\s+/g, ' ').trim();
   const sWords = cleanStr(spoken).split(' ').filter(Boolean);
   const tWords = cleanStr(target).split(' ').filter(Boolean);
 
-  if (!tWords.length) return { score: 0, passed: false, words: [] };
+  if (!tWords.length) return { score: 0, passed: false, words: [], matchedCount: 0, totalWords: 0 };
 
   const results = [];
   let matchedWeight = 0;
@@ -1607,8 +1711,7 @@ async function evaluatePronunciationAI(spoken, target, ipa) {
       (badWords.length ? ` Các từ chưa đạt: "${badWords.slice(0, 3).join('", "')}".` : '') + ' Hãy bấm "Nghe mẫu" để nghe lại nhé!';
   }
 
-  const key = getAiKey();
-  if (key && typeof fetch !== 'undefined' && spoken && spoken.trim()) {
+  if (spoken && spoken.trim()) {
     const prompt = `Bạn là giáo viên chuyên ngữ âm Tiếng Anh (English Phonetics Teacher).
 Nhiệm vụ: Nhận xét phát âm của học sinh dựa trên bản ghi âm chuyển chữ.
 Câu mẫu chuẩn: "${target}"
@@ -1628,38 +1731,19 @@ Trả về strictly JSON:
   "tips": "<mẹo phát âm âm khó>"
 }`;
 
-    const models = ['gemini-3.5-flash', 'gemini-3.8-flash', 'gemini-flash-latest', 'gemini-flash-lite-latest'];
-    for (const m of models) {
-      try {
-        const ctrl = new AbortController();
-        const tid = setTimeout(() => ctrl.abort(), 4000);
-        const resp = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${m}:generateContent?key=${key}`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            contents: [{ parts: [{ text: prompt }] }],
-            generationConfig: { responseMimeType: 'application/json', temperature: 0.2 }
-          }),
-          signal: ctrl.signal
-        });
-        clearTimeout(tid);
-        if (resp.ok) {
-          const data = await resp.json();
-          const txt = data.candidates?.[0]?.content?.parts?.[0]?.text;
-          if (txt) {
-            const aiJson = JSON.parse(txt);
-            return {
-              score: typeof aiJson.score === 'number' ? aiJson.score : localRes.score,
-              passed: aiJson.score != null ? aiJson.score >= 70 : localRes.passed,
-              feedback: aiJson.feedback || feedback,
-              tips: aiJson.tips || tips,
-              words: localRes.words,
-              spoken,
-              target
-            };
-          }
-        }
-      } catch (err) {}
+    try {
+      const aiJson = await requestAIJson(prompt, 45000);
+      return {
+        score: typeof aiJson.score === 'number' ? Math.max(0, Math.min(100, aiJson.score)) : localRes.score,
+        passed: typeof aiJson.score === 'number' ? aiJson.score >= 70 : localRes.passed,
+        feedback: aiJson.feedback || feedback,
+        tips: aiJson.tips || tips,
+        words: localRes.words,
+        spoken,
+        target
+      };
+    } catch (error) {
+      console.warn('AI nhận xét phát âm chưa khả dụng:', error);
     }
   }
 
@@ -1690,15 +1774,6 @@ async function enrichSpeakingQuestionsAI(qList) {
 
   if (!needsEnrich.length) return qList;
 
-  const key = getAiKey();
-  if (!key || typeof fetch === 'undefined') {
-    needsEnrich.forEach(({ idx }) => {
-      if (!qList[idx].q || qList[idx].q.startsWith('Câu hỏi') || qList[idx].q.includes('clearly:')) qList[idx].q = 'Listen to the audio or read aloud clearly:';
-      if (!qList[idx].e) qList[idx].e = 'Luyện đọc to, rõ ràng từng âm tiết và chú ý trọng âm của từ.';
-    });
-    return qList;
-  }
-
   const promptItems = needsEnrich.map((item, i) => ({ id: i, text: item.target }));
   const prompt = `Bạn là chuyên gia ngữ âm Tiếng Anh (English Phonetics Expert).
 Nhiệm vụ: Cung cấp phiên âm quốc tế IPA và mẹo phát âm thực tế cho danh sách từ/câu sau:
@@ -1714,44 +1789,22 @@ Trả về STRICT JSON mảng:
   { "id": 0, "ipa": "...", "tips": "...", "prompt": "..." }
 ]`;
 
-  const models = ['gemini-3.5-flash', 'gemini-3.8-flash', 'gemini-flash-latest', 'gemini-flash-lite-latest'];
-  for (const m of models) {
-    try {
-      const ctrl = new AbortController();
-      const tid = setTimeout(() => ctrl.abort(), 6000);
-      const resp = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${m}:generateContent?key=${key}`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          contents: [{ parts: [{ text: prompt }] }],
-          generationConfig: { responseMimeType: 'application/json', temperature: 0.1 }
-        }),
-        signal: ctrl.signal
-      });
-      clearTimeout(tid);
-
-      if (resp.ok) {
-        const data = await resp.json();
-        const txt = data.candidates?.[0]?.content?.parts?.[0]?.text;
-        if (txt) {
-          const parsed = JSON.parse(txt);
-          if (Array.isArray(parsed)) {
-            parsed.forEach(resItem => {
-              const matched = needsEnrich[resItem.id];
-              if (matched && qList[matched.idx]) {
-                const targetQ = qList[matched.idx];
-                if (!targetQ.ipa && resItem.ipa) targetQ.ipa = resItem.ipa;
-                if (!targetQ.e && resItem.tips) targetQ.e = resItem.tips;
-                if ((!targetQ.q || targetQ.q.includes('clearly:')) && resItem.prompt) targetQ.q = resItem.prompt;
-              }
-            });
-            return qList;
-          }
+  try {
+    const parsed = await requestAIJson(prompt, 60000);
+    if (Array.isArray(parsed)) {
+      parsed.forEach(resItem => {
+        const matched = needsEnrich[resItem.id];
+        if (matched && qList[matched.idx]) {
+          const targetQ = qList[matched.idx];
+          if (!targetQ.ipa && resItem.ipa) targetQ.ipa = String(resItem.ipa);
+          if (!targetQ.e && resItem.tips) targetQ.e = String(resItem.tips);
+          if ((!targetQ.q || targetQ.q.includes('clearly:')) && resItem.prompt) targetQ.q = String(resItem.prompt);
         }
-      }
-    } catch (err) {
-      console.warn(`Model ${m} enrich failed:`, err);
+      });
+      return qList;
     }
+  } catch (error) {
+    console.warn('AI tạo phiên âm chưa khả dụng:', error);
   }
 
   needsEnrich.forEach(({ idx }) => {
@@ -1766,15 +1819,6 @@ async function generateSingleSpeakingAI(targetText) {
   const cleanTarget = String(targetText || '').trim();
   if (!cleanTarget) return { ipa: '', tips: '', prompt: 'Read aloud clearly:' };
 
-  const key = getAiKey();
-  if (!key || typeof fetch === 'undefined') {
-    return {
-      ipa: '',
-      tips: 'Luyện đọc to, rõ ràng từng âm tiết và chú ý trọng âm của từ.',
-      prompt: 'Read aloud clearly:'
-    };
-  }
-
   const prompt = `Bạn là chuyên gia ngữ âm Tiếng Anh.
 Nhiệm vụ: Cung cấp phiên âm quốc tế IPA và mẹo phát âm tiếng Việt cho từ/câu: "${cleanTarget}"
 
@@ -1785,35 +1829,15 @@ Trả về STRICT JSON:
   "prompt": "<chỉ dẫn bài làm tiếng Anh ngắn>"
 }`;
 
-  const models = ['gemini-3.5-flash', 'gemini-3.8-flash', 'gemini-flash-latest', 'gemini-flash-lite-latest'];
-  for (const m of models) {
-    try {
-      const ctrl = new AbortController();
-      const tid = setTimeout(() => ctrl.abort(), 4000);
-      const resp = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${m}:generateContent?key=${key}`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          contents: [{ parts: [{ text: prompt }] }],
-          generationConfig: { responseMimeType: 'application/json', temperature: 0.1 }
-        }),
-        signal: ctrl.signal
-      });
-      clearTimeout(tid);
-
-      if (resp.ok) {
-        const data = await resp.json();
-        const txt = data.candidates?.[0]?.content?.parts?.[0]?.text;
-        if (txt) {
-          const parsed = JSON.parse(txt);
-          return {
-            ipa: parsed.ipa || '',
-            tips: parsed.tips || 'Luyện đọc to, rõ ràng từng âm tiết và chú ý trọng âm của từ.',
-            prompt: parsed.prompt || 'Read aloud clearly:'
-          };
-        }
-      }
-    } catch (err) {}
+  try {
+    const parsed = await requestAIJson(prompt, 15000);
+    return {
+      ipa: parsed.ipa || '',
+      tips: parsed.tips || 'Luyện đọc to, rõ ràng từng âm tiết và chú ý trọng âm của từ.',
+      prompt: parsed.prompt || 'Read aloud clearly:'
+    };
+  } catch (error) {
+    console.warn('AI tạo phiên âm chưa khả dụng:', error);
   }
 
   return {
@@ -2127,12 +2151,7 @@ async function checkEnglishStandardizationAI(items) {
     };
   });
 
-  // 2. Nếu có key AI, gửi Gemini để kiểm tra ngữ pháp sâu & ngữ cảnh
-  const key = getAiKey();
-  if (!key || typeof fetch === 'undefined') {
-    return localResults;
-  }
-
+  // 2. Dùng Firebase AI Logic để kiểm tra ngữ pháp sâu và ngữ cảnh.
   const promptItems = list.map(l => ({ id: l.id, text: l.original }));
   const prompt = `Bạn là chuyên gia thẩm định và chuẩn hóa chính tả, ngữ pháp Tiếng Anh (English Proofreader & Standardizer).
 Giáo viên đang soạn danh sách từ/câu để học sinh luyện đọc và phát âm:
@@ -2157,52 +2176,25 @@ QUAN TRỌNG:
   { "id": 0, "original": "...", "suggested": "...", "isMisspelled": true, "reason": "..." }
 ]`;
 
-  const models = ['gemini-3.5-flash', 'gemini-3.8-flash', 'gemini-flash-latest', 'gemini-flash-lite-latest'];
-  for (const m of models) {
-    try {
-      const ctrl = new AbortController();
-      const tid = setTimeout(() => ctrl.abort(), 6000);
-      const resp = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${m}:generateContent?key=${key}`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          contents: [{ parts: [{ text: prompt }] }],
-          generationConfig: { responseMimeType: 'application/json', temperature: 0.1 }
-        }),
-        signal: ctrl.signal
-      });
-      clearTimeout(tid);
-
-      if (resp.ok) {
-        const data = await resp.json();
-        const txt = data.candidates?.[0]?.content?.parts?.[0]?.text;
-        if (txt) {
-          const parsed = JSON.parse(txt);
-          if (Array.isArray(parsed)) {
-            parsed.forEach(pItem => {
-              const res = localResults[pItem.id];
-              if (res) {
-                if (pItem.isMisspelled && pItem.suggested && pItem.suggested.toLowerCase() !== res.original.toLowerCase()) {
-                  res.isMisspelled = true;
-                  res.suggested = pItem.suggested;
-                  res.reason = pItem.reason || res.reason || `Chuẩn hóa thành "${pItem.suggested}"`;
-                }
-              }
-            });
-            return localResults;
-          }
+  try {
+    const parsed = await requestAIJson(prompt, 60000);
+    if (Array.isArray(parsed)) {
+      parsed.forEach(pItem => {
+        const res = localResults[pItem.id];
+        if (res && pItem.isMisspelled && pItem.suggested &&
+            String(pItem.suggested).toLowerCase() !== res.original.toLowerCase()) {
+          res.isMisspelled = true;
+          res.suggested = String(pItem.suggested);
+          res.reason = pItem.reason || res.reason || `Chuẩn hóa thành "${pItem.suggested}"`;
         }
-      }
-    } catch (e) {
-      console.warn(`Model ${m} standardization check failed:`, e);
+      });
     }
+  } catch (error) {
+    console.warn('AI kiểm tra chính tả chưa khả dụng:', error);
   }
 
   return localResults;
 }
-
-
-
 
 /* ═════ COPY SỐ ĐIỆN THOẠI / ZALO CÔ CHÍ NÊN ═════ */
 function copyPhone() {
@@ -2219,5 +2211,5 @@ function copyPhone() {
 }
 if (typeof window !== 'undefined') window.copyPhone = copyPhone;
 
-return { $, copyPhone, shuffle, pick, clamp, esc, fmt, stamp, clean, rng, COLORS, BADGE, safe, normAns, checkTextAns, fromOld, prep, parseCSV, rowsToQs, parseText, parsePaste, sheetSets, sheetSet, sampleSet, packHw, unpackHw, tone, sfx, confetti, toast, rank, makeNet, music, saveCommunityQuiz, getCommunityLibrary, getQuizById, saveHwMeta, submitHwResult, getHwGradebook, showReportCard, downloadReportCard, getAiKey, diffPronunciation, speakText, evaluatePronunciationAI, enrichSpeakingQuestionsAI, generateSingleSpeakingAI, checkEnglishStandardizationLocal, checkEnglishStandardizationAI, COMMON_TYPOS, deleteCommunityQuiz, deleteHwSubmission , copy, copyText, sfxFiles, kvPut, kvGet, kvScan, live, liveWatch};
+return { $, copyPhone, shuffle, pick, clamp, esc, fmt, stamp, clean, rng, COLORS, BADGE, safe, normAns, checkTextAns, fromOld, prep, parseCSV, rowsToQs, parseText, parsePaste, sheetSets, sheetSet, sampleSet, packHw, unpackHw, tone, sfx, sfxStop, confetti, toast, rank, makeNet, music, saveCommunityQuiz, getCommunityLibrary, getQuizById, saveHwMeta, submitHwResult, getHwGradebook, showReportCard, downloadReportCard, diffPronunciation, speakText, evaluatePronunciationAI, enrichSpeakingQuestionsAI, generateSingleSpeakingAI, checkEnglishStandardizationLocal, checkEnglishStandardizationAI, COMMON_TYPOS, deleteCommunityQuiz, deleteHwSubmission , copy, copyText, sfxFiles, kvPut, kvGet, kvScan, live, liveWatch};
 })();
