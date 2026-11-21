@@ -173,7 +173,10 @@ th{color:#7a6aa8;font-size:13px}
        </div>
 
        <!-- Ô dán link & 2 nút: Tạo Game vs Tạo Test -->
-       <div style="font-size:12px;color:#6d28d9;margin:4px 0 8px">✨ AI đọc ảnh và PDF dành cho tài khoản Pro · PDF tối đa 15 MB · Kiểm tra lại đáp án trước khi giao.</div>
+       <div style="font-size:12px;color:#6d28d9;margin:4px 0 4px">✨ AI đọc ảnh và PDF dành cho tài khoản Pro · PDF tối đa 15 MB · Kiểm tra lại đáp án trước khi giao.</div>
+       <label style="display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:700;color:#0369a1;margin:0 0 8px;cursor:pointer">
+        <input type="checkbox" id="chkAiFast" checked style="accent-color:#0284c7"> ⚡ Nạp siêu tốc (ưu tiên đọc nhanh, chỉ giữ lời giải có sẵn trong đề)
+       </label>
       <div style="display:flex;gap:8px;flex-wrap:wrap">
         <input id="inpWebLink" class="inp" style="flex:1;min-width:220px;padding:9px 12px;font-size:14px" placeholder="Dán link bài tập (test 1 p1.html, voca p2.html, matching p1.html...)">
         <button class="btn" id="bLoadGame" style="font-size:13px;padding:9px 14px;font-weight:800;background:#0284c7;color:#fff" title="AI trích đoạn trọng tâm (Context Focus) tối ưu cho Game đối kháng nhanh">🎮 Nạp đề tạo Game</button>
@@ -707,7 +710,7 @@ Hoặc dán theo mẫu:
 <script src="assets/hero.js"></script>
 <script src="assets/license.js?v=2.5"></script>
 <script src="assets/license-usage.js?v=20261107-1"></script>
-<script src="assets/link-import.js?v=20261109-2"></script>
+<script src="assets/link-import.js?v=20261121-2"></script>
 
 <script>
 const { $, esc, fmt, stamp, clean, toast, confetti, sfx } = GC;
@@ -2143,110 +2146,82 @@ function parseQuestionsUniversal(html) {
   return window.GCLink.parse(html);
 }
 
-// Hàm gọi AI Gemini đọc hiểu & trích xuất câu hỏi tự động (hỗ trợ nhiều ảnh chụp màn hình & văn bản)
-async function callGeminiAiExtract(contentOrImages, isTestMode, preparedText = false) {
+const AI_MOD_VER = './assets/ai-import.js?v=20261121-2';
+let aiModPromise = null;
+function loadAiMod() {
+  if (!aiModPromise) aiModPromise = import(AI_MOD_VER);
+  return aiModPromise;
+}
+function prewarmAi() {
+  try {
+    if (window.LIC && window.LIC.isUnlocked()) {
+      loadAiMod().then(m => m.prewarm && m.prewarm()).catch(() => {});
+    }
+  } catch (_) {}
+}
+async function compressImgDataUrl(dataUrl, maxSide = 1600, quality = 0.82) {
+  try {
+    const m = await loadAiMod();
+    if (m.compressImageDataUrl) return await m.compressImageDataUrl(dataUrl, maxSide, quality);
+  } catch (_) {}
+  return dataUrl;
+}
+
+// Hàm gọi AI Gemini đọc hiểu & trích xuất câu hỏi tự động (hỗ trợ PDF.js tách trang, ảnh nén song song & văn bản)
+async function callGeminiAiExtract(contentOrImages, isTestMode, optionsOrPrepared = false) {
   if (!window.LIC || !window.LIC.isUnlocked()) {
     promptUnlockModal();
     throw new Error('Đọc đề bằng AI chỉ dành cho tài khoản Pro.');
   }
+  const opts = (typeof optionsOrPrepared === 'object' && optionsOrPrepared)
+    ? optionsOrPrepared
+    : { preparedText: !!optionsOrPrepared };
+  const preparedText = !!opts.preparedText;
+  const fastExplain = opts.fastExplain ?? ($('chkAiFast')?.checked ?? true);
+
+  const expRule = fastExplain
+    ? "chỉ giữ lời giải sẵn trong đề (nếu 'provided' không có lời giải, để \"\" cho nhanh; chỉ viết 1 câu ngắn nếu 'inferred')"
+    : "viết lời giải ngắn gọn, phiên âm IPA hoặc từ khóa đối chiếu";
 
   let promptText = '';
   if (isTestMode) {
-    promptText = `Bạn là chuyên gia khảo thí và giáo viên Tiếng Anh xuất sắc (Cambridge / IELTS / THCS & THPT).
-Nhiệm vụ: Phân tích CỰC KỲ KỸ LƯỠNG tài liệu/ảnh chụp đề thi tiếng Anh đính kèm để trích xuất đầy đủ BẢN CHẤT VÀ CỐT LÕI CỦA TỪNG BÀI TẬP.
-
-CÁC NGUYÊN TẮC CỐT LÕI BẮT BUỘC CHO TEST MODE:
-1. Nhận diện dạng bài tập & Yêu cầu đề thi (Section Instructions):
-   - BÀI PHÁT ÂM (Pronunciation):
-     + 'q' PHẢI là chỉ dẫn bài làm: "Choose the word whose underlined part differs from the other three in pronunciation:"
-     + 'o': Giữ lại 4 phương án và BẮT BUỘC ĐÁNH DẤU CHÍNH XÁC PHẦN GẠCH CHÂN BẰNG THẺ HTML <u>...</u> (ví dụ: ["g<u>a</u>rbage", "<u>a</u>rtist", "m<u>a</u>ny", "h<u>a</u>ndcraft"] hoặc ["balanc<u>ed</u>", "research<u>ed</u>", "process<u>ed</u>", "manag<u>ed</u>"]). TUYỆT ĐỐI không bỏ sót phần gạch chân vì nếu không học sinh không biết đang hỏi chữ cái nào!
-     + 'e': Giải thích phiên âm IPA của âm gạch chân và lý do chọn đáp án đúng.
-     + 's': "Pronunciation"
-
-   - BÀI TRỌNG ÂM (Stress):
-     + 'q' PHẢI là chỉ dẫn bài làm: "Choose the word that differs from the other three in the position of primary stress:"
-     + 'o': 4 từ vựng lựa chọn của đề.
-     + 'e': Giải thích vị trí trọng âm (âm tiết 1, 2, 3...) của từng từ.
-     + 's': "Stress"
-
-   - BÀI ĐỌC HIỂU (Reading Comprehension / Cloze Test):
-     + 'passage': Lưu trọn vẹn văn bản bài đọc ngữ cảnh, không cắt xén.
-     + 'q': Câu hỏi cụ thể của bài đọc.
-     + 's': "Reading"
-
-   - BÀI NGỮ PHÁP / TỪ VỰNG / TÌM LỖI SAI:
-     + 'q': Toàn bộ câu hỏi / câu văn chứa chỗ trống (ví dụ: "She went to the market to buy some _______.")
-     + 's': "Grammar" hoặc "Vocabulary"
-
-   - BÀI NỐI THÔNG TIN (Matching):
-     + Mỗi câu hỏi là 1 người/đoạn cần ghép, 4 phương án là các đối tượng đối chiếu kèm tóm tắt nội dung.
-     + 's': "Matching"
-
-
-   - BÀI PHÁT ÂM NÓI / ĐỌC THÀNH TIẾNG (Speaking / Read Aloud / Pronunciation Evaluation):
-     + Nếu bài tập yêu cầu học sinh đọc to câu/từ hoặc kiểm tra kỹ năng Nói:
-     + Đặt "type": "speaking", "o": [], "a": 0.
-     + 'q': Lời nhắc bài làm (VD: "Read aloud the following sentence / word clearly:")
-     + 'targetText': Câu hoặc từ tiếng Anh chuẩn cần đọc.
-     + 'ipa': Phiên âm IPA chuẩn.
-     + 's': "Speaking"
-     + 'e': Lời khuyên phát âm, trọng âm và các âm đuôi cần lưu ý.
-
-   - BÀI TỰ LUẬN NGẮN / ĐIỀN TỪ / CHIA DẠNG TỪ / VIẾT LẠI CÂU (Short Answer / Word Form / Sentence Transformation - KHÔNG có A, B, C, D):
-     + Nếu bài gốc yêu cầu học sinh tự điền từ vào chỗ trống, chia động từ/từ loại trong ngoặc, hoặc viết lại câu (Sentence Rewrite) mà KHÔNG có 4 đáp án A, B, C, D:
-     + Đặt "type": "text", "o": [], "a": 0, và ghi đáp án đúng vào "ansText" (có thể ghi nhiều cách viết đúng cách nhau bởi dấu "/", ví dụ: "went / did go" hoặc "has lived / has been living").
-     + 's': "Word Form" hoặc "Rewrite" hoặc "Fill in the blank".
-
-2. TUYỆT ĐỐI KHÔNG BAO GIỜ đặt 'q' chỉ vỏn vẹn là "Question 1", "Question 2"!
-   Học sinh khi nhìn vào màn hình làm bài PHẢI ĐỌC ĐƯỢC RÕ RÀNG yêu cầu bài làm hoặc câu hỏi đề bài!
-
-3. TUYỆT ĐỐI KHÔNG ép bài thi về dạng điền từ ngô nghê với các đáp án tự bịa như 'Teacher', 'Student', 'School'. Phải dùng phương án và nội dung thực tế của đề thi.
-
-4. ĐÁP ÁN 'a':
-   Phải là số nguyên 0, 1, 2, 3 tương ứng với vị trí đúng trong mảng 'o'; thêm 'answerLetter' là A, B, C hoặc D tương ứng. Nếu đề có đáp án, chép đúng và đặt 'answerSource':'provided'. Nếu đề không có đáp án, chỉ tự giải khi có căn cứ rõ ràng, đặt 'answerSource':'inferred' và giải thích trong 'e'. Nếu không chắc, đặt 'answerSource':'unknown', 'a':null; không đoán bừa.
-
-5. 'passage': Bài đọc đầy đủ (nếu bài đọc chung cho nhiều câu hỏi, giữ nguyên toàn bộ bài đọc ở trường 'passage' này; nếu không có bài đọc thì để rỗng ""). Giữ đúng thứ tự và số lượng câu trong tài liệu; không tạo câu hoặc phương án không có trong đề.
-
-Trả về strictly JSON danh sách:
-[
-  { "q": "...", "passage": "...", "o": ["...", "...", "...", "..."], "a": 0, "answerLetter": "A", "answerSource": "provided", "e": "...", "s": "..." }
-]`;
+    promptText = `Bạn là chuyên gia khảo thí Tiếng Anh. Trích xuất CHÍNH XÁC từng câu hỏi từ tài liệu thành JSON theo schema { "passages": [{ "id": "p1", "text": "..." }], "questions": [...] }.
+QUY TẮC TEST MODE:
+1. Phân loại 'type': 'mc' (trắc nghiệm), 'text' (điền từ/tự luận ghi vào 'ansText', để 'o':[], 'a':0), 'speaking' (đọc to, ghi 'targetText' + 'ipa', 'o':[], 'a':0).
+2. Phát âm (Pronunciation): 'q' là câu yêu cầu phát âm; trong 'o' BẮT BUỘC giữ thẻ <u>...</u> đánh dấu âm gạch chân (VD: ["g<u>a</u>rbage", "<u>a</u>rtist", ...]). Trọng âm (Stress): ghi 's':"Stress".
+3. Bài đọc hiểu (Reading): ĐƯA ĐOẠN VĂN ĐỌC ĐẦY ĐỦ vào mảng "passages" với id ngắn ("p1", "p2"...) và gán "passageId":"p1" trên từng câu hỏi (KHÔNG lặp lại toàn bộ đoạn đọc trong mỗi câu).
+4. Không đặt 'q' chỉ là "Question 1". Dùng đúng nội dung đề gốc, không bịa phương án.
+5. Đáp án 'a': số nguyên 0..n-1 khớp với 'answerLetter' (A/B/C/D). Nếu đề có đáp án: 'answerSource':'provided'; tự giải rõ căn cứ: 'inferred'; không chắc: 'unknown' + 'a':null.
+6. 'e': ${expRule}. 's': tên dạng bài (Pronunciation, Stress, Grammar, Vocabulary, Reading, Writing).`;
   } else {
-    // Game mode: Áp dụng Giải pháp C - Context Focus (trích đoạn ngắn gọn cho game phản xạ nhanh)
-    promptText = `Bạn là chuyên gia giáo dục tiếng Anh. Dưới đây là nội dung bài tập (bằng ảnh chụp hoặc văn bản).
-Hãy trích xuất thành danh sách câu hỏi trắc nghiệm tiếng Anh TỐI ƯU CHO GAME ĐỐI KHÁNG NHANH (tối đa 25 câu).
-QUY TẮC ĐẶC BIỆT:
-1. TUYỆT ĐỐI KHÔNG BAO GIỜ đặt 'q' chỉ là "Question 1", "Question 2"! Phải ghi rõ câu hỏi hoặc yêu cầu bài làm.
-2. Với bài phát âm (Pronunciation): Trong 'o' PHẢI ĐÁNH DẤU PHẦN GẠCH CHÂN BẰNG THẺ HTML <u>...</u> (ví dụ: "g<u>a</u>rbage", "balanc<u>ed</u>").
-3. ÁP DỤNG GIẢI PHÁP C (Context Focus): Với bài đọc dài hoặc bài nối Matching, hãy trích đoạn ngữ cảnh trọng tâm (2-3 câu ngắn gọn chứa manh mối then chốt) ghép thẳng vào câu hỏi 'q' để học sinh dễ đọc nhanh trên điện thoại mà không bị tràn màn hình.
-4. 'q': Câu hỏi ngắn gọn (kèm ngữ cảnh ngắn nếu cần; giữ lại <u>, <b> nếu là câu phát âm/trọng âm).
-5. 'o': Mảng 4 phương án lựa chọn ["A", "B", "C", "D"].
-6. 'a': Chỉ số (0, 1, 2, 3) của đáp án đúng; thêm 'answerLetter' A, B, C hoặc D tương ứng. Nếu đề có đáp án, đặt 'answerSource':'provided'. Nếu tự giải có căn cứ, đặt 'answerSource':'inferred' và giải thích trong 'e'. Nếu không chắc, đặt 'answerSource':'unknown', 'a':null; không đoán bừa.
-7. 'e': Lời giải thích ngắn gọn, phiên âm IPA hoặc từ khóa đối chiếu.
-8. 's': Dạng bài (Pronunciation, Stress, Grammar, Vocabulary, Reading).
-9. Giữ đúng nội dung và thứ tự câu trong tài liệu; không tự bịa câu hoặc phương án. Không lặp câu.
-
-Trả về strictly JSON danh sách:
-[
-  { "q": "...", "o": ["...", "...", "...", "..."], "a": 0, "answerLetter": "A", "answerSource": "inferred", "e": "...", "s": "..." }
-]`;
+    promptText = `Bạn là giáo viên Tiếng Anh. Trích xuất tối đa 25 câu hỏi trắc nghiệm tối ưu cho Game nhanh thành JSON { "questions": [...] }.
+QUY TẮC GAME:
+1. Không đặt 'q' chỉ là "Question 1". Câu đọc hiểu tóm tắt manh mối ngắn (2-3 câu) vào thẳng 'q'.
+2. Phát âm: bắt buộc đánh dấu phần gạch chân bằng thẻ <u>...</u> trong 'o'.
+3. 'o': 4 phương án. 'a': chỉ số 0..3 kèm 'answerLetter' (A-D) và 'answerSource' ('provided' | 'inferred' | 'unknown').
+4. 'e': ${expRule}. 's': dạng bài. Không lặp câu, không bịa phương án.`;
   }
 
   let aiInput = contentOrImages;
   if (typeof aiInput === 'string' && !aiInput.startsWith('data:')) {
     if (!preparedText && (aiInput.includes('<html') || aiInput.includes('<body') || aiInput.includes('</div>'))) {
-      const d = document.createElement('div');
-      d.innerHTML = aiInput;
-      d.querySelectorAll('script, style, svg, iframe, noscript, nav, header, footer').forEach(e => e.remove());
-      aiInput = d.innerText;
+      const doc = new DOMParser().parseFromString(aiInput, 'text/html');
+      doc.querySelectorAll('script, style, svg, iframe, noscript, nav, header, footer').forEach(e => e.remove());
+      aiInput = (doc.body ? doc.body.textContent : '') || '';
     }
-    aiInput = aiInput.replace(/[^\S\r\n]+/g, ' ').replace(/\n{3,}/g, '\n\n').trim().slice(0, 32000);
+    aiInput = aiInput.replace(/[^\S\r\n]+/g, ' ').replace(/\n{3,}/g, '\n\n').trim().slice(0, 64000);
   }
   try {
-    const aiImport = await import('./assets/ai-import.js?v=20261108-10');
-    const result = await aiImport.generateQuiz(promptText, aiInput, { isTestMode });
+    const aiImport = await loadAiMod();
+    const result = await aiImport.generateQuiz(promptText, aiInput, {
+      isTestMode,
+      fast: !!opts.fast,
+      fastExplain,
+      onProgress: opts.onProgress
+    });
     result.questions.skipped = result.skipped;
     result.questions.inferredCount = result.inferredCount;
+    result.questions.fromCache = !!result.fromCache;
     return result.questions;
   } catch (error) {
     throw new Error('Không đọc được đề bằng AI: ' + error.message);
@@ -2256,14 +2231,17 @@ Trả về strictly JSON danh sách:
 // Mảng lưu nhiều ảnh chụp màn hình từ Ctrl + V hoặc chọn file
 let pastedImages = [];
 let selectedPdf = null;
+$('inpWebLink').addEventListener('focus', () => prewarmAi(), { once: true });
 $('inpWebLink').addEventListener('input', () => { selectedPdf = null; });
 $('pTxt').addEventListener('input', () => { selectedPdf = null; });
 
 function handleImageBlob(blob, filename) {
   if (!blob) return false;
+  prewarmAi();
   const reader = new FileReader();
-  reader.onload = evt => {
-    addPastedImage(evt.target.result);
+  reader.onload = async evt => {
+    const compressed = await compressImgDataUrl(evt.target.result, 1600, 0.82);
+    addPastedImage(compressed);
     toast('📸 Đã thêm ảnh chụp trang ' + pastedImages.length + '!', 2000);
   };
   reader.readAsDataURL(blob);
@@ -2456,10 +2434,12 @@ if ($('inpFileImg')) {
     const files = Array.from(e.target.files || []);
     if (files.length) {
       let loaded = 0;
+      prewarmAi();
       files.forEach(f => {
         const reader = new FileReader();
-        reader.onload = evt => {
-          addPastedImage(evt.target.result);
+        reader.onload = async evt => {
+          const compressed = await compressImgDataUrl(evt.target.result, 1600, 0.82);
+          addPastedImage(compressed);
           loaded++;
           if (loaded === files.length) {
             toast('📸 Đã thêm ' + files.length + ' ảnh chụp!', 2500);
@@ -2484,6 +2464,7 @@ if ($('inpFileDoc')) {
           return;
         }
         selectedPdf = file;
+        prewarmAi();
         clearAllPastedImages();
         $('pTxt').value = '';
         $('linkFetchStatus').textContent = '📄 Đã chọn PDF: ' + file.name + '. Bấm Nạp đề tạo Game hoặc Test để AI đọc (cần Pro).';
@@ -2516,21 +2497,23 @@ async function processLoadQuiz(isTestMode) {
   if ($('bLoadGame')) $('bLoadGame').disabled = true;
   if ($('bLoadTest')) $('bLoadTest').disabled = true;
 
+  const tStart = performance.now();
+  const onProgress = p => { if (p && p.message) status.textContent = p.message; };
   try {
     let extractedQs = [];
     let docTitle = isTestMode ? 'Bài kiểm tra tiếng Anh' : 'Game ôn tập tiếng Anh';
 
-    // 1. PDF hoặc ảnh được AI đọc trực tiếp.
+    // 1. PDF hoặc ảnh được AI đọc tối ưu (PDF.js tách text/trang + xử lý song song).
     if (selectedPdf) {
-      status.textContent = '🧠 AI đang đọc PDF ' + selectedPdf.name + ' (có thể mất vài phút)…';
-      extractedQs = await callGeminiAiExtract(selectedPdf, isTestMode);
+      status.textContent = '📄 Đang phân tích nhanh PDF ' + selectedPdf.name + '…';
+      extractedQs = await callGeminiAiExtract(selectedPdf, isTestMode, { fast: true, onProgress });
       docTitle = selectedPdf.name.replace(/\.pdf$/i, '');
     } else if (pastedImages.length > 0) {
-      status.innerHTML = '🧠 <b>AI Gemini đang đọc chữ và câu hỏi từ ' + pastedImages.length + ' ảnh chụp màn hình; có thể mất vài phút…</b>';
-      extractedQs = await callGeminiAiExtract(pastedImages, isTestMode);
+      status.innerHTML = '🧠 <b>AI đang đọc ' + pastedImages.length + ' ảnh (chạy song song)…</b>';
+      extractedQs = await callGeminiAiExtract(pastedImages, isTestMode, { fast: false, onProgress });
       docTitle = (isTestMode ? 'Bài kiểm tra' : 'Game') + ' (Từ ' + pastedImages.length + ' ảnh chụp)';
     }
-    // 2. Đọc link: ưu tiên bộ câu hỏi có đáp án trong trang, không chạy mã nguồn của trang.
+    // 2. Đọc link: ưu tiên bộ câu hỏi có đáp án trong trang (0ms), không chạy mã nguồn của trang.
     else if (url) {
       const sourceUrl = new URL(url, location.href);
       if (!['http:', 'https:'].includes(sourceUrl.protocol)) throw new Error('Link đề phải bắt đầu bằng http hoặc https.');
@@ -2541,17 +2524,35 @@ async function processLoadQuiz(isTestMode) {
       const html = await res.text();
       if (html.length > 2_000_000) throw new Error('Trang đề quá lớn (tối đa 2 MB).');
       const parsed = parseQuestionsUniversal(html);
+      if (parsed.placeholder) {
+        throw new Error('Link bài tập này đang hiển thị "Đang hoàn thiện / chưa có câu hỏi".');
+      }
+      docTitle = parsed.title || docTitle;
       if (parsed.questions.length && (parsed.complete || !(window.LIC && window.LIC.isUnlocked()))) {
         extractedQs = parsed.questions;
         extractedQs.skipped = parsed.skipped;
-        docTitle = parsed.title || docTitle;
-        status.textContent = parsed.complete
-          ? '✅ Đã đọc ' + extractedQs.length + ' câu và đáp án trực tiếp từ link.'
-          : '⚠️ Đã đọc ' + extractedQs.length + ' câu; ' + parsed.skipped.length + ' câu chưa hỗ trợ. Dùng Pro để AI đọc phần còn lại.';
+      } else if (parsed.questions.length && !parsed.complete) {
+        // Hybrid: giữ toàn bộ câu đã đọc chuẩn, chỉ nhờ AI đọc bổ sung nếu cần
+        extractedQs = parsed.questions.slice();
+        let extraSkipped = parsed.skipped ? parsed.skipped.slice() : [];
+        if (parsed.skipped?.length && parsed.aiSkippedInput) {
+          try {
+            status.innerHTML = '⚡ Đã đọc nhanh <b>' + parsed.questions.length + ' câu</b>, AI đang đọc bổ sung phần còn thiếu…';
+            const aiMore = await callGeminiAiExtract(parsed.aiSkippedInput, isTestMode, { preparedText: true, fast: true, onProgress });
+            const seenSig = new Set(extractedQs.map(q => (q.q + '|' + (q.o || []).join('|') + '|' + (q.ansText || '')).toLowerCase().replace(/\s+/g, ' ')));
+            for (const q of aiMore) {
+              const sig = (q.q + '|' + (q.o || []).join('|') + '|' + (q.ansText || '')).toLowerCase().replace(/\s+/g, ' ');
+              if (!seenSig.has(sig)) { seenSig.add(sig); extractedQs.push(q); }
+            }
+            extraSkipped = aiMore.skipped || [];
+          } catch (hybridErr) {
+            console.warn('Hybrid AI supplement skipped:', hybridErr);
+          }
+        }
+        extractedQs.skipped = extraSkipped;
       } else {
-        status.innerHTML = '🧠 <b>AI đang đọc dữ liệu bài tập từ link; có thể mất vài phút…</b>';
-        extractedQs = await callGeminiAiExtract(parsed.aiInput || html, isTestMode, true);
-        docTitle = parsed.title || docTitle;
+        status.innerHTML = '🧠 <b>AI đang đọc dữ liệu bài tập từ link…</b>';
+        extractedQs = await callGeminiAiExtract(parsed.aiInput || html, isTestMode, { preparedText: true, fast: !!parsed.aiInput, onProgress });
       }
     }
     // 3. Trường hợp dán văn bản
@@ -2561,8 +2562,8 @@ async function processLoadQuiz(isTestMode) {
         extractedQs = parsed.qs;
         status.textContent = '✅ Đã đọc câu hỏi và đáp án từ văn bản.';
       } else {
-        status.innerHTML = '🧠 <b>AI đang phân tích văn bản; có thể mất vài phút…</b>';
-        extractedQs = await callGeminiAiExtract(pasteTxt, isTestMode);
+        status.innerHTML = '🧠 <b>AI đang phân tích nhanh văn bản…</b>';
+        extractedQs = await callGeminiAiExtract(pasteTxt, isTestMode, { fast: true, onProgress });
       }
     }
 
@@ -2581,7 +2582,9 @@ async function processLoadQuiz(isTestMode) {
 
     setQs(extractedQs, docTitle, extractedQs.skipped || []);
     if (docTitle) $('gTitle').value = docTitle.replace(/<[^>]+>/g, '').slice(0, 60);
-    status.innerHTML = '🎉 <b>Đã nạp ' + extractedQs.length + ' câu hỏi</b>' +
+    const elapsedSec = ((performance.now() - tStart) / 1000).toFixed(2);
+    status.innerHTML = '🎉 <b>Đã nạp ' + extractedQs.length + ' câu hỏi</b> trong <b>' + elapsedSec + 's</b>' +
+      (extractedQs.fromCache ? ' ⚡ (bộ nhớ đệm)' : '') +
       (extractedQs.skipped?.length ? ' · ⚠️ ' + extractedQs.skipped.length + ' câu cần xem lại/đã bỏ qua' : '') +
       (extractedQs.inferredCount ? ' · ⚠️ ' + extractedQs.inferredCount + ' đáp án AI tự suy luận' : '') +
       ' (' + (isTestMode ? '📝 Dạng Bài Test' : '🎮 Dạng Game') + ').';
