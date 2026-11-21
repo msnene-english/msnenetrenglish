@@ -16,6 +16,7 @@
   function clean(v, n = 3000) {
     return decodeEntities(
       String(v == null ? '' : v)
+        .replace(/\{blank\}/gi, '______')
         .replace(/<\s*br\s*\/?\s*>/gi, ' ')
         .replace(/<\s*\/\s*u\s*>/gi, '\uE001')
         .replace(/<\s*u(?:\s[^>]*)?>/gi, '\uE000')
@@ -39,6 +40,47 @@
   function answers(v) {
     const a = Array.isArray(v) ? v.flat(Infinity) : [v];
     return [...new Set(a.map(x => cleanPlain(x, 250)).filter(Boolean))].join(' | ');
+  }
+
+  function extractSvgDataUrl(raw) {
+    if (typeof raw !== 'string') return '';
+    const m = /<svg\b[\s\S]*?<\/svg>/i.exec(raw);
+    if (!m) return '';
+    let svg = m[0];
+    if (!/\bxmlns=/.test(svg)) svg = svg.replace(/^<svg\b/i, '<svg xmlns="http://www.w3.org/2000/svg"');
+    return 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svg).replace(/'/g, '%27');
+  }
+
+  function applyMarkText(options, markText) {
+    if (!markText || options.some(o => /<u>/i.test(o))) return options;
+    const um = /<u>([^<]+)<\/u>/i.exec(String(markText));
+    const needle = (um ? um[1] : String(markText).replace(/<[^>]+>/g, '')).trim();
+    if (!needle || needle.length > 5) return options;
+    const escRe = needle.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    const re = new RegExp(escRe, 'i');
+    return options.map(opt => {
+      const m = /^([A-F][.)]\s*)?([\s\S]+)$/.exec(opt);
+      if (!m) return opt;
+      const prefix = m[1] || '';
+      const word = m[2];
+      return re.test(word) ? prefix + word.replace(re, hit => '<u>' + hit + '</u>') : opt;
+    });
+  }
+
+  function stripOptionSpoilers(options) {
+    if (options.length < 2) return options;
+    const rx = /^(.+?)\s*\([a-zA-Z0-9.+/\s-]{1,12}\)\s*:\s*.+$/;
+    const glossRx = /^([^:()]{1,40}?)\s*:\s*.*[\u00C0-\u1EF9].*$/;
+    let tagCount = 0;
+    const heads = options.map(o => {
+      const m = rx.exec(o);
+      if (m) { tagCount++; return m[1].trim(); }
+      const gm = glossRx.exec(o);
+      return gm ? gm[1].trim() : null;
+    });
+    if (tagCount < 2 || heads.some(h => !h)) return options;
+    if (new Set(heads.map(h => h.toLowerCase())).size !== heads.length) return options;
+    return heads;
   }
 
   function skipWsAndComments(src, i) {
@@ -185,7 +227,7 @@
         key = q.value;
         i = q.end;
       } else {
-        const km = /^[A-Za-z_$][\w$]*/.exec(objText.slice(i));
+        const km = /^(?:[A-Za-z_$][\w$]*|\d+)/.exec(objText.slice(i));
         if (!km) { i++; continue; }
         key = km[0];
         i += key.length;
@@ -357,38 +399,62 @@
   function passagesIn(html) {
     const out = [];
     const byId = Object.create(null);
+    const cleanedHtml = html
+      .replace(/<(div|button)\b[^>]*class=["'][^"']*\b(?:trans(?:-content|-btn)?|gloss|tv|tbtn|btr|viet-trans)\b[^"']*["'][^>]*>[\s\S]*?<\/\1>/gi, '');
+
     if (typeof DOMParser !== 'undefined') {
-      const doc = new DOMParser().parseFromString(html, 'text/html');
-      doc.querySelectorAll('.pblk,.reading-text,.reading-passage,.passage,.passage-box,.read-box,.story-box,.text-box,[id^="qp"]').forEach(el => {
-        const txt = clean((el.querySelector('.paragraph,.reading-content,.passage-text') || el).textContent, 7000);
-        if (txt.length > 30) {
+      const doc = new DOMParser().parseFromString(cleanedHtml, 'text/html');
+      doc.querySelectorAll('.pblk,.reading-text,.reading-passage,.reading-pane,.text-block,.passage-body,.article-box,.passage,.passage-box,.read-box,.story-box,.text-box,[id^="qp"]').forEach(el => {
+        const clone = el.cloneNode(true);
+        clone.querySelectorAll('.trans,.trans-content,.trans-btn,.gloss,.tv,.tbtn,.btr,.viet-trans,button').forEach(x => x.remove());
+        const txt = clean((clone.querySelector('.paragraph,.reading-content,.passage-text') || clone).textContent, 7000);
+        if (txt.length > 30 && !out.some(x => x === txt || x.includes(txt))) {
           out.push(txt);
           if (el.id) byId[el.id] = txt;
         }
       });
+      if (!out.length) {
+        const pbs = [...doc.querySelectorAll('.pblock')].map(el => {
+          const clone = el.cloneNode(true);
+          clone.querySelectorAll('.trans,.trans-content,.trans-btn,.gloss,.tv,.tbtn,.btr,button').forEach(x => x.remove());
+          return clean(clone.textContent, 2000);
+        }).filter(x => x.length > 20);
+        if (pbs.length) out.push(pbs.join('\n\n').slice(0, 7000));
+      }
       return { list: out, byId };
     }
-    const re = /<(div|section|article)\b([^>]*\b(?:class|id)=["'][^"']*(?:pblk|reading-text|reading-passage|passage|passage-box|read-box|story-box|qp[A-Z0-9]+)[^"']*["'][^>]*)>/gi;
+
+    const re = /<(div|section|article)\b([^>]*\b(?:class|id)=["'][^"']*(?:pblk|reading-text|reading-passage|reading-pane|text-block|passage-body|article-box|passage|passage-box|read-box|story-box|qp[A-Z0-9]+)[^"']*["'][^>]*)>/gi;
     let m;
-    while ((m = re.exec(html))) {
+    while ((m = re.exec(cleanedHtml))) {
       const startTagEnd = m.index + m[0].length;
       const tag = m[1].toLowerCase();
       let depth = 1, pos = startTagEnd;
       const tagRe = new RegExp('<(\\/?)' + tag + '\\b[^>]*>', 'gi');
       tagRe.lastIndex = startTagEnd;
       let tm;
-      while ((tm = tagRe.exec(html))) {
+      while ((tm = tagRe.exec(cleanedHtml))) {
         if (tm[1] === '/') { if (--depth === 0) { pos = tm.index; break; } }
         else depth++;
       }
       if (depth === 0 && pos > startTagEnd) {
-        const txt = clean(html.slice(startTagEnd, pos), 7000);
-        if (txt.length > 40 && !out.includes(txt)) {
+        const txt = clean(cleanedHtml.slice(startTagEnd, pos), 7000);
+        if (txt.length > 40 && !out.some(x => x === txt || x.includes(txt))) {
           out.push(txt);
           const idm = /\bid=["']([^"']+)["']/i.exec(m[2]);
           if (idm) byId[idm[1]] = txt;
         }
       }
+    }
+    if (!out.length && /class=["'][^"']*\bpblock\b/i.test(cleanedHtml)) {
+      const pRe = /<div\b[^>]*class=["'][^"']*\bpblock\b[^"']*["'][^>]*>([\s\S]*?)<\/div>\s*(?=<div\b|<\/div>)/gi;
+      const pbs = [];
+      let pm;
+      while ((pm = pRe.exec(cleanedHtml))) {
+        const t = clean(pm[1], 2000);
+        if (t.length > 20) pbs.push(t);
+      }
+      if (pbs.length) out.push(pbs.join('\n\n').slice(0, 7000));
     }
     return { list: out, byId };
   }
@@ -450,7 +516,71 @@
 
     if (get('sectionTitle') && !get('question', 'q', 'text', 'txt', 'qText', 'stem', 'qt')) return null;
 
+    // Inline segment arrays (`EX7`, `EX9` with `s: ["My ", { a:[...], o?:[...] }, " bike."]`)
+    const segRaw = obj.s;
+    if ((typeof segRaw === 'string' && segRaw.trim().startsWith('[')) || Array.isArray(segRaw)) {
+      const segParts = Array.isArray(segRaw) ? segRaw : (() => {
+        const out = [];
+        const sTxt = segRaw.trim();
+        let i = 1;
+        while (i < sTxt.length - 1) {
+          i = skipWsAndComments(sTxt, i);
+          if (sTxt[i] === ',') { i++; continue; }
+          if (sTxt[i] === '"' || sTxt[i] === "'" || sTxt.charCodeAt(i) === 96) {
+            const q = readQuoted(sTxt, i);
+            if (!q) break;
+            out.push(q.value);
+            i = q.end;
+          } else if (sTxt[i] === '{') {
+            const b = extractBalanced(sTxt, i, '{', '}');
+            if (!b) break;
+            out.push(parseObjectProps(b.text));
+            i = b.end;
+          } else break;
+        }
+        return out;
+      })();
+      const blanks = [];
+      const sentence = segParts.map(p => {
+        if (typeof p === 'string') return p;
+        blanks.push(p);
+        return ' ______ ';
+      }).join('');
+      if (blanks.length === 1) {
+        const bm = blanks[0];
+        const bGet = (...ks) => Object.getPrototypeOf(bm) === null ? prop(bm, vars, ...ks) : ks.map(k => bm[k]).find(v => v !== undefined);
+        const ansRaw = bm.a || bm.ans || bm.correct;
+        const ansList = Array.isArray(ansRaw) ? ansRaw : (typeof ansRaw === 'string' && ansRaw.startsWith('[') ? stringList(ansRaw, vars) : [bGet('a', 'ans', 'correct')].filter(Boolean));
+        const optsRaw = bm.o || bm.opts || bm.options;
+        const optArr = Array.isArray(optsRaw) ? optsRaw : (typeof optsRaw === 'string' && optsRaw.startsWith('[') ? stringList(optsRaw, vars) : []);
+        const cueW = get('w');
+        const qStr = clean(sentence + (typeof cueW === 'string' && !sentence.toLowerCase().includes(cueW.toLowerCase()) ? ` (${cueW})` : ''), 1400);
+        const exp = extractExplanation([get('vi'), get('an'), get('exp')].filter(Boolean).join(' '), vars);
+        if (optArr.length >= 2 && ansList.length) {
+          const aIdx = findMatchingOptionIndex(optArr, ansList[0]);
+          if (aIdx >= 0) {
+            return { question: { type: 'mc', q: qStr, o: optArr.map(x => clean(x, 500)), a: aIdx, e: exp, s: cleanPlain(fallbackSection || '', 120), passage: '' } };
+          }
+        }
+        const ansText = answers(ansList);
+        if (qStr && ansText) {
+          return { question: { type: 'text', q: qStr, o: [], a: 0, ansText, e: exp, s: cleanPlain(fallbackSection || '', 120), passage: '' } };
+        }
+      }
+    }
+
+    const customHtmlField = get('customHTML', 'signHtml', 'signSvg', 'svg');
+    const htmlField = get('html');
+    const svgSource = [customHtmlField, get('qHTML'), htmlField, obj.q, obj.text, obj.question].find(v => typeof v === 'string' && /<svg\b/i.test(v));
+    const imgUrl = svgSource ? extractSvgDataUrl(svgSource) : '';
+
     let rawQ = get('qText', 'question', 'text', 'txt', 'qHTML', 'qt', 'stem', 'q', 'prompt', 'cue');
+    if (typeof rawQ !== 'string' && typeof customHtmlField === 'string' && customHtmlField.trim()) {
+      rawQ = clean(customHtmlField, 900) || (imgUrl ? 'Read the sign/notice and choose the correct answer:' : '');
+    } else if (typeof rawQ === 'string' && typeof customHtmlField === 'string' && customHtmlField.trim() && !/<svg\b/i.test(customHtmlField)) {
+      const signTxt = cleanPlain(customHtmlField, 400);
+      if (signTxt) rawQ = rawQ + ' [Sign: ' + signTxt + ']';
+    }
     const passageHtmlField = get('passageHTML');
     if (typeof rawQ === 'string' && typeof passageHtmlField === 'string' && passageHtmlField.trim()) {
       rawQ = rawQ + ' ' + clean(passageHtmlField, 900);
@@ -473,7 +603,7 @@
       return { skip: 'Nguồn thiếu ' + cleanPlain(id, 60) };
     }
 
-    const hasExplicitCorrect = obj.correctIndex !== undefined || obj.correctText !== undefined || obj.correct !== undefined || obj.answer !== undefined || obj.a !== undefined || obj.key !== undefined;
+    const hasExplicitCorrect = obj.correctIndex !== undefined || obj.correctId !== undefined || obj.correctText !== undefined || obj.correct !== undefined || obj.answer !== undefined || obj.a !== undefined || obj.key !== undefined;
     const rawOptsField = obj.options || obj.opts || obj.opt || obj.o || obj.choices || obj.analysis || (hasExplicitCorrect && obj.answers ? obj.answers : undefined);
     let o = [];
     let markedCorrect = -1;
@@ -533,7 +663,7 @@
     }
 
     const instruction = get('instruction') || '';
-    const rawCorrect = get('correctIndex', 'correctText', 'correct', 'answer', 'ans', 'ansExact', 'acceptedAnswers', 'answers', 'acc', 'show', 'a', 'key');
+    const rawCorrect = get('correctIndex', 'correctId', 'correctText', 'correct', 'answer', 'ans', 'ansExact', 'acceptedAnswers', 'answers', 'acc', 'show', 'a', 'key');
     const ansArray = Array.isArray(rawCorrect)
       ? rawCorrect
       : (typeof rawCorrect === 'string' && rawCorrect.startsWith('[') ? stringList(rawCorrect, vars) : null);
@@ -552,14 +682,14 @@
       const acceptList = Array.isArray(acceptRaw) ? acceptRaw : (typeof acceptRaw === 'string' && acceptRaw.startsWith('[') ? stringList(acceptRaw, vars) : []);
       const combinedAns = ansArray && ansArray.length ? [...ansArray, ...acceptList] : (typeof firstKey === 'string' && !/^[A-F]$/i.test(firstKey) ? [firstKey, ...acceptList] : []);
       const ansText = answers(combinedAns);
-      if (ansText && (scramble || !o.length || rawType === 'fill' || rawType === 'write' || rawType === 'rewrite' || rawType === 'text' || o.every(x => /\([a-z]+\)\s*:/i.test(x)))) {
+      if (ansText && (scramble || !o.length || rawType === 'fill' || rawType === 'write' || rawType === 'rewrite' || rawType === 'text')) {
         let question = clean(rawQ, 1400);
         if (/\$\{/.test(question)) return { skip: 'Câu ' + (i + 1) + ' dùng dữ liệu động' };
         if (scramble) question += ' [' + cleanPlain(scramble, 300) + ']';
         const secLabel = cleanPlain(get('sec', 'part', 's', 'badge', 'section') || fallbackSection || '', 140);
         const exp = extractExplanation(get('hint', 'exp', 'expl', 'explanation', 'note', 'whyC', 'ok', 'an', 'vi'), vars);
         return {
-          question: { type: 'text', q: question, o: [], a: 0, ansText, e: exp, s: secLabel, passage: '' }
+          question: { type: 'text', q: question, o: [], a: 0, ansText, e: exp, s: secLabel, passage: '', ...(imgUrl ? { img: imgUrl } : {}) }
         };
       }
     }
@@ -581,14 +711,28 @@
     if (/\$\{/.test(question)) return { skip: 'Câu ' + (i + 1) + ' dùng dữ liệu động' };
     if (/passage\s*\d/i.test(question) && !passage) return { skip: 'Câu ' + (i + 1) + ' thiếu đoạn đọc' };
 
-    const cleanedOpts = o.map(x => clean(x, 500));
+    let cleanedOpts = o.map(x => clean(x, 500));
     if (cleanedOpts.some(x => !x)) return { skip: 'Câu ' + (i + 1) + ' có phương án rỗng' };
+
+    // Apply `markText` `<u>...</u>` underlines when source separates highlighted letters
+    const markTextField = get('markText');
+    if (markTextField) cleanedOpts = applyMarkText(cleanedOpts, markTextField);
+
+    // Strip `(pos): Vietnamese explanation` spoilers from options (`Mix HTĐ & HTTD`)
+    cleanedOpts = stripOptionSpoilers(cleanedOpts);
+
+    // Replace EX2-style stem that just repeats `"A. w1 B. w2 C. w3 D. w4"`
+    if (/^A\.\s+\S+[\s\S]*\bB\.\s+\S+[\s\S]*\bC\.\s+\S+/.test(question) && question.length < 120) {
+      question = cleanedOpts.some(x => /<u>/i.test(x))
+        ? 'Choose the word whose underlined part differs from the other three in pronunciation:'
+        : 'Choose the word that differs from the other three in the position of primary stress:';
+    }
 
     const secLabel = cleanPlain(get('sec', 's', 'badge', 'section') || (typeof partVal === 'string' && !passages.byId[partVal] ? partVal : '') || fallbackSection || '', 140);
     const exp = extractExplanation(get('hint', 'exp', 'expl', 'explanation', 'note', 'whyC', 'ok', 'an'), vars);
 
     return {
-      question: { type: 'mc', q: question, o: cleanedOpts, a, e: exp, s: secLabel, passage }
+      question: { type: 'mc', q: question, o: cleanedOpts, a, e: exp, s: secLabel, passage, ...(imgUrl ? { img: imgUrl } : {}) }
     };
   }
 
@@ -665,7 +809,7 @@
         } else if (sec.type === 'fill') {
           const parts = Array.isArray(item.parts) ? item.parts.map(x => clean(x, 900)) : [];
           const a = Array.isArray(item.ans) ? item.ans : [];
-          if (!a.length || (parts.length !== a.length + 1 && parts.length !== a.length)) {
+          if (!a.length || parts.length < 2 || (parts.length !== a.length + 1 && parts.length !== a.length && parts.length !== a.length + 2)) {
             skipped.push(prefix + 'số ô trống không khớp đáp án'); return;
           }
           const sentence = parts.map((p, i) => p + (i < a.length ? ' [' + (i + 1) + '] ______ ' : '')).join('');
@@ -943,30 +1087,95 @@
 
   function parsePushQs(script, html, wbank, vars) {
     if (!/\bQS\.push\s*\(/.test(script)) return null;
-    const passages = Object.create(null);
+    const pcGroups = [];
+    const pushPc = (label, text) => {
+      const lbl = cleanPlain(label || '', 200);
+      const txt = String(text || '').replace(/\r/g, '').replace(/[ \t]+\n/g, '\n').replace(/\n{3,}/g, '\n\n').trim();
+      if (!txt) return;
+      if (lbl && (!pcGroups.length || pcGroups[pcGroups.length - 1].label !== lbl)) {
+        pcGroups.push({ label: lbl, text: txt });
+      } else if (!lbl && !pcGroups.length) {
+        pcGroups.push({ label: '', text: txt });
+      } else {
+        pcGroups[pcGroups.length - 1].text += '\n' + txt;
+      }
+    };
     if (typeof DOMParser !== 'undefined') {
       const doc = new DOMParser().parseFromString(html, 'text/html');
-      let group = '';
       for (const block of doc.querySelectorAll('.lp .pc')) {
         const label = block.querySelector('.plbl')?.textContent || '';
-        const found = /\bEx\d+\b/i.exec(label);
-        if (found) group = found[0].toLowerCase();
-        const line = block.querySelector('.pt')?.textContent?.trim();
-        if (group && line) passages[group] = (passages[group] ? passages[group] + '\n' : '') + line;
+        const clone = block.cloneNode(true);
+        clone.querySelectorAll('.plbl, .tv, .btr, button, .trans, .gloss, .vi, .viet-trans').forEach(el => el.remove());
+        const pts = [...clone.querySelectorAll('.pt')]
+          .map(el => el.textContent.replace(/\s+/g, ' ').trim())
+          .filter(Boolean);
+        const text = pts.length ? pts.join('\n') : clone.textContent.replace(/\s+/g, ' ').trim();
+        pushPc(label, text);
       }
     } else {
-      // Lightweight fallback for .lp .pc blocks in Node
+      const stripPcNoise = s => String(s || '')
+        .replace(/<button\b[\s\S]*?<\/button>/gi, ' ')
+        .replace(/<(span|div|p)\b[^>]*class=["'][^"']*\b(?:tv|btr|trans|gloss|viet-trans)\b[^"']*["'][^>]*>[\s\S]*?<\/\1>/gi, ' ');
       const parts = html.split(/class=["'][^"']*\bpc\b[^"']*["']/i).slice(1);
-      let group = '';
       for (const blk of parts) {
         const lm = /class=["'][^"']*plbl[^"']*["'][^>]*>([\s\S]*?)<\/div>/i.exec(blk);
-        const found = lm ? /\bEx\d+\b/i.exec(lm[1]) : null;
-        if (found) group = found[0].toLowerCase();
-        const pm = /class=["'][^"']*\bpt\b[^"']*["'][^>]*>([\s\S]*?)<\/div>/i.exec(blk);
-        const line = pm ? cleanPlain(pm[1], 1000) : '';
-        if (group && line) passages[group] = (passages[group] ? passages[group] + '\n' : '') + line;
+        const label = lm ? lm[1] : '';
+        const cleanedBlk = stripPcNoise(blk);
+        const ptMatches = [...cleanedBlk.matchAll(/class=["'][^"']*\bpt\b[^"']*["'][^>]*>([\s\S]*?)<\/div>/gi)];
+        const lines = ptMatches.map(m => cleanPlain(m[1], 1200)).filter(Boolean);
+        pushPc(label, lines.join('\n'));
       }
     }
+    if (!pcGroups.length) {
+      for (const pTxt of passagesIn(html).list) {
+        pushPc(pTxt.split('\n')[0].slice(0, 140), pTxt);
+      }
+    }
+    const getExNum = s => (/\bex(?:ercise)?\s*0?(\d+)\b/i.exec(s || '') || [])[1] || '';
+    const getBaiNum = s => (/(?:bài|bai)\s*0?(\d+)\b/i.exec(s || '') || [])[1] || '';
+    const getPartNum = s => (/(?:đoạn|doan|passage|text|part)\s*0?(\d+)\b/i.exec(s || '') || [])[1] || '';
+    const getRoman = s => (/(?:^|\b(?:Part|Phần|Section)\s+|\s)(X|IX|VIII|VII|VI|IV|V|III|II|I)(?=\s*[.):\-–—]|$)/.exec(s || '') || [])[1] || '';
+    const pcStop = new Set(['the','and','for','with','from','that','this','read','reading','passage','text','part','exercise','choose','answer','questions','question','bai','doc','doan','chon','dap','cau','bài','đọc','đoạn','chọn','đáp','án','câu']);
+    const pcWords = s => new Set((String(s || '').toLowerCase().normalize('NFC').match(/[a-z0-9à-ỹ]{3,}/g) || []).filter(w => !pcStop.has(w)));
+    const matchPcPassage = sec => {
+      if (!pcGroups.length) return '';
+      const bai = getBaiNum(sec);
+      let pool = pcGroups;
+      if (bai) {
+        const baiPool = pcGroups.filter(x => getBaiNum(x.label) === bai);
+        if (baiPool.length) pool = baiPool;
+      }
+      const ex = getExNum(sec);
+      if (ex) {
+        const g = pool.find(x => getExNum(x.label) === ex);
+        if (g) return g.text;
+        if (pool.some(x => getExNum(x.label))) return '';
+      }
+      const pNum = getPartNum(sec);
+      if (pNum) {
+        const g = pool.find(x => getPartNum(x.label) === pNum || new RegExp('^\\s*0?' + pNum + '\\s*[.):\\-–—]').test(x.label));
+        if (g) return g.text;
+        if (pool.some(x => getPartNum(x.label))) return '';
+      }
+      const rom = getRoman(sec);
+      if (rom) {
+        const g = pool.find(x => getRoman(x.label) === rom);
+        if (g) return g.text;
+        if (pool.some(x => getRoman(x.label))) return '';
+      }
+      const sw = pcWords(sec);
+      if (sw.size) {
+        let best = null, bestScore = 0;
+        for (const g of pool) {
+          let score = 0;
+          for (const w of pcWords(g.label)) if (sw.has(w)) score++;
+          if (score > bestScore) { bestScore = score; best = g; }
+        }
+        if (best && bestScore >= 1) return best.text;
+      }
+      if (pool.length === 1) return pool[0].text;
+      return pool.map(g => (g.label ? g.label + '\n' : '') + g.text).join('\n\n');
+    };
     const questions = [], skipped = [];
     const re = /\bQS\.push\s*\(/g;
     let m, calls = 0;
@@ -1013,7 +1222,6 @@
         }
       }
 
-      const group = /\bEx\d+\b/i.exec(sec);
       if (!q || o.length < 2 || correctIdx < 0 || correctIdx >= o.length) {
         skipped.push('Câu ' + calls + ' thiếu dữ liệu/đáp án'); continue;
       }
@@ -1021,14 +1229,165 @@
         type: 'mc', q: clean(q, 1400), o: o.map(x => clean(x, 500)), a: correctIdx,
         e: clean(prop(pm, vars, 'ok', 'tr', 'exp') || '', 500),
         s: cleanPlain(sec, 140),
-        passage: group ? passages[group[0].toLowerCase()] || '' : ''
+        passage: matchPcPassage(sec)
       });
     }
     return calls ? { questions, skipped, complete: !!questions.length && !skipped.length } : null;
   }
 
+  function extractEndingSetQuestions(script) {
+    const sets = Object.create(null);
+    const re = /\b(S_WORDS|Z_WORDS|IZ_WORDS)\s*=\s*new\s+Set\s*\(\s*\[/g;
+    let m;
+    while ((m = re.exec(script))) {
+      const openPos = m.index + m[0].length - 1;
+      const res = extractBalanced(script, openPos, '[', ']');
+      if (!res) continue;
+      re.lastIndex = res.end;
+      const list = stringList(res.text);
+      if (list.length) sets[m[1]] = list;
+    }
+    const sList = sets.S_WORDS || [];
+    const zList = sets.Z_WORDS || [];
+    const izList = sets.IZ_WORDS || [];
+    const nonEmpty = (sList.length ? 1 : 0) + (zList.length ? 1 : 0) + (izList.length ? 1 : 0);
+    if (nonEmpty < 2 || sList.length + zList.length + izList.length < 4) return [];
+
+    const explByWord = Object.create(null);
+    const em = /\b(?:const|let|var)?\s*WORD_EXPL\s*=\s*\{/.exec(script);
+    if (em) {
+      const er = extractBalanced(script, em.index + em[0].length - 1, '{', '}');
+      if (er) {
+        const top = parseObjectProps(er.text);
+        for (const k of Object.keys(top)) {
+          const raw = top[k];
+          if (typeof raw === 'string' && raw[0] === '{') {
+            const sub = parseObjectProps(raw);
+            const rule = prop(sub, null, 'rule', 'e', 'expl', 'tip');
+            if (rule) explByWord[k] = clean(String(rule), 400);
+          } else {
+            const txt = decodeExpr(raw, null);
+            if (typeof txt === 'string') explByWord[k] = clean(txt, 400);
+          }
+        }
+      }
+    }
+
+    const opts = izList.length ? ['/s/', '/z/', '/ɪz/'] : ['/s/', '/z/'];
+    const out = [];
+    const seen = new Set();
+    const pushBucket = (arr, ansIdx) => {
+      for (const word of arr) {
+        const w = cleanPlain(word, 80);
+        if (!w || seen.has(w.toLowerCase())) continue;
+        seen.add(w.toLowerCase());
+        out.push({
+          type: 'mc',
+          q: 'Choose the "-s/-es" ending sound of "' + w + '":',
+          o: opts.slice(),
+          a: ansIdx,
+          e: explByWord[word] || explByWord[w] || '',
+          s: 'Phát âm đuôi -s/-es',
+          passage: ''
+        });
+      }
+    };
+    pushBucket(sList, 0);
+    pushBucket(zList, 1);
+    pushBucket(izList, 2);
+    return out;
+  }
+
+  function extractMatchingSetQuestions(script) {
+    const out = [];
+    const re = /\b(?:const|let|var)\s+matchQs(\w*)\s*=\s*\[/g;
+    let m;
+    while ((m = re.exec(script))) {
+      const suf = m[1] || '';
+      const qRes = extractBalanced(script, m.index + m[0].length - 1, '[', ']');
+      if (!qRes) continue;
+      re.lastIndex = qRes.end;
+
+      const asRe = new RegExp('\\b(?:const|let|var)\\s+matchAs' + suf + '\\s*=\\s*\\[');
+      const asM = asRe.exec(script);
+      const cmRe = new RegExp('\\b(?:const|let|var)\\s+correctMatch' + suf + '\\s*=\\s*\\{');
+      const cmM = cmRe.exec(script);
+      if (!asM || !cmM) continue;
+
+      const aRes = extractBalanced(script, asM.index + asM[0].length - 1, '[', ']');
+      const cRes = extractBalanced(script, cmM.index + cmM[0].length - 1, '{', '}');
+      if (!aRes || !cRes) continue;
+
+      const asList = [];
+      const asMap = Object.create(null);
+      for (const part of objectParts(aRes.text)) {
+        const pm = parseObjectProps(part);
+        const id = prop(pm, null, 'id', 'key', 'letter', 'k');
+        const txt = prop(pm, null, 'text', 'a', 'ans', 'right');
+        if (id == null || typeof txt !== 'string' || !txt.trim()) continue;
+        const cTxt = clean(txt, 400);
+        const k = String(id).trim();
+        asMap[k] = cTxt;
+        asList.push({ id: k, text: cTxt });
+      }
+      if (asList.length < 2) continue;
+
+      const cmProps = parseObjectProps(cRes.text);
+      const explMap = Object.create(null);
+      const explRe = new RegExp('\\b(?:const|let|var)\\s+matchExplData(?:' + suf + ')?\\s*=\\s*\\{');
+      const explM = explRe.exec(script);
+      if (explM) {
+        const eRes = extractBalanced(script, explM.index + explM[0].length - 1, '{', '}');
+        if (eRes) {
+          const ep = parseObjectProps(eRes.text);
+          for (const k of Object.keys(ep)) {
+            const v = decodeExpr(ep[k], null);
+            if (typeof v === 'string' && v.trim()) explMap[k] = clean(v, 500);
+          }
+        }
+      }
+
+      const qParts = objectParts(qRes.text);
+      let qi = 0;
+      for (const part of qParts) {
+        const pm = parseObjectProps(part);
+        const id = prop(pm, null, 'id', 'num', 'n');
+        const qTxt = prop(pm, null, 'text', 'q', 'prompt', 'w', 'left');
+        if (id == null || typeof qTxt !== 'string' || !qTxt.trim()) continue;
+        const kId = String(id).trim();
+        const rightIdVal = kId in cmProps ? decodeExpr(cmProps[kId], null) : undefined;
+        if (rightIdVal == null) continue;
+        const rightId = String(rightIdVal).trim();
+        const rightText = asMap[rightId];
+        if (!rightText) continue;
+
+        const others = asList.filter(x => x.id !== rightId && x.text && x.text !== rightText).map(x => x.text);
+        if (!others.length) continue;
+        const rotated = [];
+        for (let d = 0; d < Math.min(3, others.length); d++) {
+          rotated.push(others[(qi + d) % others.length]);
+        }
+        const ansIdx = qi % (rotated.length + 1);
+        rotated.splice(ansIdx, 0, rightText);
+        qi++;
+
+        out.push({
+          type: 'mc',
+          q: 'Match with the best response: ' + clean(qTxt, 500),
+          o: rotated,
+          a: ansIdx,
+          e: explMap[kId] || '',
+          s: suf ? 'Matching (Ex ' + suf + ')' : 'Matching',
+          passage: ''
+        });
+      }
+    }
+    return out;
+  }
+
   function parseDomQuestions(html) {
     const passages = passagesIn(html);
+    const fallbackPassage = passages.list.length ? passages.list.join('\n\n').slice(0, 7000) : '';
     const questions = [], skipped = [];
 
     if (typeof DOMParser !== 'undefined') {
@@ -1054,7 +1413,7 @@
         const expEl = card.querySelector('.exp-box, .expl-box, .explanation');
         const e = expEl ? clean(expEl.innerHTML, 900) : '';
         const pEl = card.closest('.reading-section')?.querySelector('.reading-text, .reading-passage, .passage');
-        const passage = pEl ? clean(pEl.textContent, 7000) : (passages.list.length === 1 ? passages.list[0] : '');
+        const passage = pEl ? clean(pEl.textContent, 7000) : fallbackPassage;
         questions.push({ type: 'mc', q, o, a: marked[0], e, s: '', passage });
       });
       return questions.length ? { questions, skipped, complete: !skipped.length } : null;
@@ -1079,7 +1438,7 @@
         return;
       }
       const em = /<div\b[^>]*class=["'][^"']*(?:exp-box|expl-box|explanation)[^"']*["'][^>]*>([\s\S]*?)<\/div>/i.exec(blk);
-      questions.push({ type: 'mc', q, o, a: marked[0], e: em ? clean(em[1], 900) : '', s: '', passage: passages.list.length === 1 ? passages.list[0] : '' });
+      questions.push({ type: 'mc', q, o, a: marked[0], e: em ? clean(em[1], 900) : '', s: '', passage: fallbackPassage });
     });
     return questions.length ? { questions, skipped, complete: !skipped.length } : null;
   }
@@ -1162,6 +1521,16 @@
         mergedQs.push(...pCalls.questions);
         mergedSkips.push(...pCalls.skipped);
         formats.push('calls');
+      }
+      const pEndSets = extractEndingSetQuestions(script);
+      if (pEndSets.length) {
+        mergedQs.push(...pEndSets);
+        formats.push('ending-sets');
+      }
+      const pMatchSets = extractMatchingSetQuestions(script);
+      if (pMatchSets.length) {
+        mergedQs.push(...pMatchSets);
+        formats.push('matching-sets');
       }
     }
 
