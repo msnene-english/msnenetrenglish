@@ -16,6 +16,7 @@ body{background:linear-gradient(160deg,#ffe4f2,#e6efff 45%,#efe6ff);height:auto;
 .badge.ok{color:#1d8a5a;background:#e3f9ee}.badge.warn{color:#b0670b;background:#fff7e0}
 .panel{background:#fff;border-radius:22px;padding:18px;box-shadow:0 8px 26px #5b4bb022;min-width:0}
 .grid2{display:grid;grid-template-columns:1.25fr 1fr;gap:16px}
+.grid2.bank-wide{grid-template-columns:1fr}
 @media(max-width:900px){.grid2{grid-template-columns:1fr}}
 h2{font:800 20px 'Baloo 2',Nunito,sans-serif;margin-bottom:10px;color:#2d2350}
 .tabs{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px}
@@ -99,9 +100,27 @@ table{width:100%;border-collapse:collapse;font-weight:700}
 th,td{padding:8px 10px;text-align:left;border-bottom:2px solid #f0ebff;white-space:nowrap}
 th{color:#7a6aa8;font-size:13px}
 .tw{overflow-x:auto}
-.bank-item{display:flex;justify-content:space-between;align-items:center;background:#f6f3ff;border-radius:12px;padding:10px 14px;font-weight:800;margin-bottom:8px}
-.bank-item .binfo{cursor:pointer;flex:1}
-.bank-item .bacts{display:flex;gap:6px}
+.bank-search-wrap{position:relative;flex:1;min-width:180px;display:flex;align-items:center}
+.bank-search-clear{position:absolute;right:8px;border:0;background:transparent;color:#7a6aa8;font-size:15px;font-weight:800;cursor:pointer;padding:2px 6px;border-radius:8px;line-height:1}
+.bank-search-clear:hover{background:#efe8ff;color:#5b4bb0}
+.bank-head{display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap;margin:10px 0 6px}
+.bank-scroll{margin-top:6px;max-height:clamp(340px,52vh,540px);overflow-y:auto;padding-right:4px;scrollbar-color:#7c67c9 #f3eeff;scrollbar-width:thin;overscroll-behavior:contain}
+.bank-scroll.local-scroll{max-height:clamp(200px,30vh,320px)}
+.grid2.bank-wide .bank-scroll{max-height:clamp(420px,64vh,680px)}
+.bank-list{display:grid;grid-template-columns:1fr;gap:8px}
+.bank-list.cols2{grid-template-columns:repeat(2,minmax(0,1fr));align-items:stretch}
+@media(max-width:760px){.bank-list.cols2{grid-template-columns:1fr}}
+@supports not (scrollbar-color: auto){
+ .bank-scroll{scrollbar-width:auto}
+ .bank-scroll::-webkit-scrollbar{width:8px;height:8px}
+ .bank-scroll::-webkit-scrollbar-track{background:#f3eeff;border-radius:8px}
+ .bank-scroll::-webkit-scrollbar-thumb{background:#7c67c9;border-radius:8px}
+}
+.bank-item{display:flex;justify-content:space-between;align-items:center;gap:10px;background:#faf8ff;border:1.5px solid #e9e2ff;border-radius:14px;padding:11px 14px;font-weight:800;margin-bottom:0;transition:.15s;min-width:0;content-visibility:auto;contain-intrinsic-size:auto 76px}
+.bank-item:hover{border-color:#c4b5fd;background:#f5f0ff}
+.bank-item .binfo{cursor:pointer;flex:1;min-width:0;overflow-wrap:anywhere}
+.bank-item .bacts{display:flex;gap:6px;flex-wrap:wrap;flex-shrink:0;justify-content:flex-end}
+@media(max-width:560px){.bank-item{flex-direction:column;align-items:stretch}.bank-item .bacts{justify-content:flex-start}}
 .review-box{background:#fff8f0;border:2px solid #ffcb80;border-radius:18px;padding:16px;margin:18px 0}
 .mistake-row{background:#fff;border-radius:12px;padding:10px 14px;margin-top:8px;display:flex;justify-content:space-between;align-items:center;font-weight:800}
 .mistake-row b{color:#c23a55}
@@ -158,7 +177,6 @@ th{color:#7a6aa8;font-size:13px}
     <h2>① Quản lý Bộ câu hỏi</h2>
     <div class="tabs">
      <button class="tab on" data-t="paste">📋 Dán câu hỏi</button>
-     <button class="tab" data-t="mau">⭐ Bộ đề mẫu</button>
      <button class="tab" data-t="bank">📚 Thư viện đề thi</button>
     </div>
 
@@ -246,31 +264,37 @@ Cách 3 — Dán câu luyện phát âm (tự động điền IPA & mẹo):
      </div>
     </div>
 
-    <!-- TAB 2: BỘ ĐỀ MẪU CÓ SẴN (ĐỀ CŨ LỚP 7 + IELTS) -->
-    <div id="tMau" hidden>
-     <div id="mList" class="prev"></div>
-    </div>
-
-    <!-- TAB 3: KHO ĐỀ CỦA CÔ (LƯU LOCAL + EXPORT/IMPORT FILE + CLOUD) -->
+    <!-- TAB 2: THƯ VIỆN ĐỀ THI (THƯ VIỆN CHUNG + KHO ĐỀ RIÊNG + EXPORT/IMPORT FILE) -->
     <div id="tBank" hidden>
      <div style="display:flex;gap:8px;margin-bottom:10px;flex-wrap:wrap;align-items:center">
-      <input id="searchBank" class="inp" style="flex:1;min-width:160px;padding:7px 12px;font-size:13px" placeholder="🔍 Tìm kiếm đề thi...">
-      <button class="btn b" id="bRefreshBank" type="button" style="font-size:12px;padding:7px 11px">🔄 Làm mới thư viện</button>
+      <div class="bank-search-wrap">
+       <input id="searchBank" class="inp" style="padding:8px 34px 8px 12px;font-size:13px" placeholder="🔍 Tìm theo tên đề, mã đề, tác giả...">
+       <button type="button" id="bClearSearchBank" class="bank-search-clear" title="Xóa từ khóa" hidden>✕</button>
+      </div>
+      <button class="btn w" id="bExpandBank" type="button" style="font-size:12px;padding:7px 11px" title="Mở rộng khung thư viện đề">⤢ Mở rộng khung</button>
+      <button class="btn b" id="bRefreshBank" type="button" style="font-size:12px;padding:7px 11px">🔄 Làm mới</button>
       <button class="btn g" id="bExportBank" style="font-size:12px;padding:7px 10px">⬇️ Xuất file</button>
       <label class="btn w" style="font-size:12px;padding:7px 10px;cursor:pointer">
        ⬆️ Nạp file
        <input type="file" id="fImportBank" accept=".json" hidden>
       </label>
      </div>
-     <div style="display:flex;gap:6px;margin:8px 0">
+     <div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center;margin:8px 0">
        <button class="btn g" id="bFiltAll" style="padding:4px 10px;font-size:12px">Tất cả đề</button>
        <button class="btn w" id="bFiltGame" style="padding:4px 10px;font-size:12px">🎮 Chỉ Game</button>
        <button class="btn w" id="bFiltTest" style="padding:4px 10px;font-size:12px">📝 Chỉ Bài Test</button>
+       <span id="bankFilterStat" class="hint" style="margin:0 0 0 auto;font-size:12px"></span>
       </div>
-      <div style="font-weight:800;font-size:13px;color:#5b4bb0;margin:6px 0">🌐 THƯ VIỆN ĐỀ CHUNG (Mọi thầy cô đều dùng được)</div>
-     <div id="commBankList" class="prev" style="max-height:220px"></div>
-     <div style="font-weight:800;font-size:13px;color:#7a6aa8;margin:12px 0 6px">🔒 KHO ĐỀ RIÊNG CỦA MÁY NÀY</div>
-     <div id="bankList" class="prev" style="max-height:160px"></div>
+      <div class="bank-head">
+       <div style="font-weight:800;font-size:13px;color:#5b4bb0">🌐 THƯ VIỆN ĐỀ CHUNG (Mọi thầy cô đều dùng được)</div>
+       <span id="commBankCount" class="hint" style="margin:0;font-size:12px"></span>
+      </div>
+     <div id="commBankList" class="bank-list bank-scroll"></div>
+     <div class="bank-head" style="margin-top:14px">
+      <div style="font-weight:800;font-size:13px;color:#7a6aa8">🔒 KHO ĐỀ RIÊNG CỦA MÁY NÀY</div>
+      <span id="localBankCount" class="hint" style="margin:0;font-size:12px"></span>
+     </div>
+     <div id="bankList" class="bank-list bank-scroll local-scroll"></div>
     </div>
 
     <div class="stat" id="qStat"></div>
@@ -297,7 +321,7 @@ Cách 3 — Dán câu luyện phát âm (tự động điền IPA & mẹo):
 
     <div class="steps">
      <div class="sh">🚀 4 bước tổ chức chơi</div>
-     <div><b>1</b><span>Chọn <i>bộ câu hỏi</i>: dán từ Word/Excel, chọn bộ mẫu, hoặc mở từ Kho đề</span></div>
+     <div><b>1</b><span>Chọn <i>bộ câu hỏi</i>: dán từ Word/Excel, nhập từ link/PDF, hoặc mở từ Thư viện đề thi</span></div>
      <div><b>2</b><span>Chọn <i>game</i> (Leo núi / Mario / Xe tăng / Đặt bom), độ khó, thời gian và năng lượng</span></div>
      <div><b>3</b><span>Bấm <i>Mở phòng</i> → chiếu mã QR lên bảng, học sinh quét là vào chơi</span></div>
      <div><b>4</b><span>Theo dõi BXH trực tiếp · bấm <i>⏹ Kết thúc cả lớp</i> khi đủ giờ</span></div>
@@ -504,7 +528,8 @@ Cách 3 — Dán câu luyện phát âm (tự động điền IPA & mẹo):
  <div class="sub" id="hwSum"></div>
  <div class="two">
   <div><div class="lab">⏰ Hạn nộp</div><input type="datetime-local" id="hwDl" class="inp"></div>
-  <div><div class="lab">⏱ Thời gian mỗi lượt chơi</div><select id="hwDur" class="inp"><option value="5">5 phút</option><option value="10" selected>10 phút</option><option value="15">15 phút</option><option value="20">20 phút</option><option value="30">30 phút</option><option value="0">Không giới hạn</option></select></div>
+  <div id="hwDurWrap"><div class="lab">⏱ Thời gian mỗi lượt chơi</div><select id="hwDur" class="inp"><option value="5">5 phút</option><option value="10" selected>10 phút</option><option value="15">15 phút</option><option value="20">20 phút</option><option value="30">30 phút</option><option value="0">Không giới hạn</option></select></div>
+  <div id="hwTestDurNote" class="hint" style="display:none;background:#f5f3ff;padding:8px 10px;border-radius:10px;border:1.5px solid #ddd6fe;color:#5b4bb0;align-self:end"></div>
  </div>
  <label class="sw" style="margin-top:10px"><input type="checkbox" id="hwNoDl"><span>Không đặt hạn nộp</span></label>
  <label class="sw"><input type="checkbox" id="hwExp" checked><span>Kèm lời giải thích sau mỗi câu<small>Bỏ tick nếu link dài quá</small></span></label>
@@ -708,8 +733,7 @@ Hoặc dán theo mẫu:
 <script src="assets/qrcode.min.js"></script>
 <script src="assets/config.js?v=20261121-1"></script>
 <script src="assets/firebase-admin-auth.js?v=20261107-1"></script>
-<script src="assets/core.js?v=20261122-1"></script>
-<script src="assets/mau.js"></script>
+<script src="assets/core.js?v=20261122-2"></script>
 <script src="assets/climb.js?v=20261121-1"></script>
 <script src="assets/climb2.js?v=20261121-1"></script>
 <script src="assets/climb2b.js?v=20261121-1"></script>
@@ -736,7 +760,7 @@ Hoặc dán theo mẫu:
 <script>
 const { $, esc, fmt, stamp, clean, toast, confetti, sfx } = GC;
 const C = window.GAME_CONFIG || {};
-let net = null, src = 'paste', qs = [], code = '', info = null, players = {}, TOP = 1, offs = [], timerI = 0, mauI = -1;
+let net = null, src = 'paste', qs = [], code = '', info = null, players = {}, TOP = 1, offs = [], timerI = 0, bankExpanded = false;
 let mistakeStats = {}; // Theo dõi thống kê câu làm sai
 let mistakeDetail = {}; // Chi tiết học sinh làm sai từng câu
 let hwCustomQs = null, hwCustomTitle = null;
@@ -749,13 +773,34 @@ const store = {
 };
 
 /* ═════ ① QUẢN LÝ BỘ CÂU HỎI ═════ */
+function setBankExpanded(expanded) {
+  bankExpanded = !!expanded;
+  const g2 = document.querySelector('#vSetup .grid2');
+  const cb = $('commBankList');
+  const lb = $('bankList');
+  const btn = $('bExpandBank');
+  const activeWide = bankExpanded && src === 'bank';
+  if (g2) g2.classList.toggle('bank-wide', activeWide);
+  if (cb) cb.classList.toggle('cols2', activeWide);
+  if (lb) lb.classList.toggle('cols2', activeWide);
+  if (btn) {
+    btn.textContent = bankExpanded ? '⤡ Thu gọn khung' : '⤢ Mở rộng khung';
+    btn.className = 'btn ' + (bankExpanded ? 'g' : 'w');
+  }
+}
+
 document.querySelectorAll('.tab').forEach(b => b.onclick = () => {
   document.querySelectorAll('.tab').forEach(x => x.classList.toggle('on', x === b));
   src = b.dataset.t;
   $('tPaste').hidden = src !== 'paste';
-  $('tMau').hidden = src !== 'mau';
   $('tBank').hidden = src !== 'bank';
-  if (src === 'bank') renderBank(true);
+  if (src === 'bank') {
+    setBankExpanded(bankExpanded);
+    renderBank(true);
+  } else {
+    const g2 = document.querySelector('#vSetup .grid2');
+    if (g2) g2.classList.remove('bank-wide');
+  }
 });
 
 function refreshQsPreviewOnly() {
@@ -1266,16 +1311,7 @@ $('pTxt').oninput = () => {
 
 $('bClearPaste').onclick = () => { $('pTxt').value = ''; selectedPdf = null; clearAllPastedImages(); setQs([], '', []); };
 
-/* Render danh sách đề mẫu (Đề người trước tạo) */
-$('mList').innerHTML = (window.SAMPLE_SETS || []).map((s, i) =>
-  '<div><label style="cursor:pointer;display:block"><input type="radio" name="mau" value="' + i + '"> <b>' + esc(s.title) + '</b> (' + (s.raw ? s.raw.length : 0) + ' câu)</label></div>'
-).join('');
-
-$('mList').onchange = e => {
-  mauI = +e.target.value;
-  const s = GC.sampleSet(mauI);
-  if (s) setQs(s.qs, s.title, []);
-};
+/* Danh sách đề thi được đồng bộ trong Thư viện chung & Kho đề riêng */
 
 /* ═════ THƯ VIỆN ĐỀ THI (CHIA SẺ CỘNG ĐỒNG + KHO RIÊNG) ═════ */
 let cachedCommunity = [];
@@ -1327,6 +1363,8 @@ if ($('testDurInp')) {
   };
 }
 
+const stripAccents = s => String(s || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/đ/g, 'd').replace(/Đ/g, 'D').toLowerCase();
+
 async function renderBank(forceCloud) {
   if (forceCloud || !window.communityQuizzesCache) {
     if ($('commBankList')) {
@@ -1342,21 +1380,42 @@ async function renderBank(forceCloud) {
     }
   }
 
-  const query = clean($('searchBank') ? $('searchBank').value : '').toLowerCase();
+  const rawQuery = clean($('searchBank') ? $('searchBank').value : '');
+  const queryNorm = stripAccents(rawQuery);
+  if ($('bClearSearchBank')) $('bClearSearchBank').hidden = !rawQuery;
+
+  const commAll = (window.communityQuizzesCache || []).filter(q => q && !q.isBundled);
+  const bank = getBank();
+  const isItemTest = q => !!(q && (q.type === 'test' || q.m === 'test'));
+  const totalAll = commAll.length + bank.length;
+  const totalTest = commAll.filter(isItemTest).length + bank.filter(isItemTest).length;
+  const totalGame = totalAll - totalTest;
+  if ($('bFiltAll')) $('bFiltAll').textContent = 'Tất cả đề (' + totalAll + ')';
+  if ($('bFiltGame')) $('bFiltGame').textContent = '🎮 Chỉ Game (' + totalGame + ')';
+  if ($('bFiltTest')) $('bFiltTest').textContent = '📝 Chỉ Bài Test (' + totalTest + ')';
 
   // 1. Render Thư viện chung
-  let commList = (window.communityQuizzesCache || []).slice();
-  if (bankFilter === 'game') commList = commList.filter(q => q.type !== 'test' && q.m !== 'test');
-  if (bankFilter === 'test') commList = commList.filter(q => q.type === 'test' || q.m === 'test');
-  if (query) {
-    commList = commList.filter(q => (q.title || '').toLowerCase().includes(query) || (q.author || '').toLowerCase().includes(query) || (q.id || '').toLowerCase().includes(query));
+  let commList = commAll.slice();
+  if (bankFilter === 'game') commList = commList.filter(q => !isItemTest(q));
+  if (bankFilter === 'test') commList = commList.filter(isItemTest);
+  if (queryNorm) {
+    commList = commList.filter(q =>
+      stripAccents(q.title || '').includes(queryNorm) ||
+      stripAccents(q.author || '').includes(queryNorm) ||
+      stripAccents(q.id || '').includes(queryNorm)
+    );
+  }
+  if ($('commBankCount')) {
+    $('commBankCount').textContent = commList.length === commAll.length
+      ? (commAll.length + ' đề')
+      : (commList.length + ' / ' + commAll.length + ' đề');
   }
 
   if (!commList.length) {
-    $('commBankList').innerHTML = '<div class="hint" style="text-align:center;padding:16px">Không tìm thấy bộ đề nào phù hợp. Cô hãy bấm <b>"🔄 Làm mới thư viện"</b> hoặc tạo đề mới nhé!</div>';
+    $('commBankList').innerHTML = '<div class="hint" style="text-align:center;padding:16px">Không tìm thấy bộ đề nào phù hợp. Cô hãy bấm <b>"🔄 Làm mới"</b> hoặc tạo đề mới nhé!</div>';
   } else {
     $('commBankList').innerHTML = commList.map(item => {
-      const isTest = item.type === 'test' || item.m === 'test';
+      const isTest = isItemTest(item);
       const badgeHtml = isTest 
         ? '<span style="background:#8b5cf6;color:#fff;font-size:11px;font-weight:800;padding:2px 6px;border-radius:6px;margin-right:6px">📝 BÀI TEST</span>'
         : '<span style="background:#0284c7;color:#fff;font-size:11px;font-weight:800;padding:2px 6px;border-radius:6px;margin-right:6px">🎮 GAME</span>';
@@ -1373,48 +1432,58 @@ async function renderBank(forceCloud) {
         <div class="bacts">
           <button class="btn g" style="padding:5px 9px;font-size:12px" title="Dùng đề này mở phòng" onclick="loadQuizData(${idArg})">${isTest ? '📝 Mở phòng thi' : '🎯 Mở phòng'}</button>
           <button class="btn w" style="padding:5px 9px;font-size:12px" title="Giao bài" onclick="assignHwFor(${idArg})">${isTest ? '📋 Giao bài test' : '📚 Giao bài'}</button>
-          
         </div>
       </div>
       `;
     }).join('');
   }
 
-  // 2. Render Kho riêng
-  const bank = getBank();
-  let localFiltered = bank;
-  if (bankFilter === 'game') localFiltered = localFiltered.filter(q => q.type !== 'test' && q.m !== 'test');
-  if (bankFilter === 'test') localFiltered = localFiltered.filter(q => q.type === 'test' || q.m === 'test');
-  if (query) {
-    localFiltered = localFiltered.filter(q => (q.title || '').toLowerCase().includes(query));
+  // 2. Render Kho riêng (giữ đúng origIdx theo mảng gốc trong localStorage khi lọc/tìm)
+  let localFiltered = bank.map((item, origIdx) => ({ item, origIdx }));
+  if (bankFilter === 'game') localFiltered = localFiltered.filter(({ item }) => !isItemTest(item));
+  if (bankFilter === 'test') localFiltered = localFiltered.filter(({ item }) => isItemTest(item));
+  if (queryNorm) {
+    localFiltered = localFiltered.filter(({ item }) => stripAccents(item.title || '').includes(queryNorm));
+  }
+  if ($('localBankCount')) {
+    $('localBankCount').textContent = localFiltered.length === bank.length
+      ? (bank.length + ' đề')
+      : (localFiltered.length + ' / ' + bank.length + ' đề');
+  }
+  if ($('bankFilterStat')) {
+    $('bankFilterStat').textContent = (rawQuery || bankFilter !== 'all')
+      ? ('Đang hiện ' + (commList.length + localFiltered.length) + ' đề phù hợp')
+      : '';
   }
   if (!localFiltered.length) {
-    $('bankList').innerHTML = '<div class="hint" style="text-align:center;padding:10px">Kho riêng trên máy này chưa có đề nào.</div>';
+    $('bankList').innerHTML = '<div class="hint" style="text-align:center;padding:10px">' + (bank.length ? 'Không có đề riêng nào khớp bộ lọc.' : 'Kho riêng trên máy này chưa có đề nào.') + '</div>';
   } else {
-    $('bankList').innerHTML = localFiltered.map((item, idx) => {
-      const isTest = item.type === 'test' || item.m === 'test';
+    $('bankList').innerHTML = localFiltered.map(({ item, origIdx }) => {
+      const isTest = isItemTest(item);
       const badgeHtml = isTest 
         ? '<span style="background:#8b5cf6;color:#fff;font-size:11px;font-weight:800;padding:2px 6px;border-radius:6px;margin-right:6px">📝 TEST</span>'
         : '<span style="background:#0284c7;color:#fff;font-size:11px;font-weight:800;padding:2px 6px;border-radius:6px;margin-right:6px">🎮 GAME</span>';
 
       return `
       <div class="bank-item">
-        <div class="binfo" onclick="loadFromBank(${idx})">
+        <div class="binfo" onclick="loadFromBank(${origIdx})">
           <span style="font-size:15px">${badgeHtml}🔒 ${esc(item.title)}</span>
-          <span style="font-size:12px;color:#7a6aa8;display:block">${item.qs.length} câu · ${esc(item.date || '')}</span>
+          <span style="font-size:12px;color:#7a6aa8;display:block">${item.qs ? item.qs.length : 0} câu · ${esc(item.date || '')}</span>
         </div>
         <div class="bacts">
-          <button class="btn" style="padding:4px 8px;font-size:12px" onclick="loadFromBank(${idx})">Chọn đề</button>
-          <button class="btn g" style="padding:4px 8px;font-size:12px" title="Chia sẻ lên Thư viện chung" onclick="shareLocalToCommunity(${idx})">🌐 Chia sẻ</button>
-          <button class="btn r" style="padding:4px 8px;font-size:12px" onclick="deleteFromBank(${idx})">✕</button>
+          <button class="btn" style="padding:4px 8px;font-size:12px" onclick="loadFromBank(${origIdx})">Chọn đề</button>
+          <button class="btn g" style="padding:4px 8px;font-size:12px" title="Chia sẻ lên Thư viện chung" onclick="shareLocalToCommunity(${origIdx})">🌐 Chia sẻ</button>
+          <button class="btn r" style="padding:4px 8px;font-size:12px" onclick="deleteFromBank(${origIdx})">✕</button>
         </div>
       </div>
       `;
     }).join('');
   }
+  setBankExpanded(bankExpanded);
 }
 
 // Bắt sự kiện bộ lọc đề
+if ($('bExpandBank')) $('bExpandBank').onclick = () => setBankExpanded(!bankExpanded);
 if ($('bRefreshBank')) $('bRefreshBank').onclick = () => { toast('🔄 Đang đồng bộ lại thư viện từ máy chủ…', 1500); renderBank(true); };
 if ($('bFiltAll')) $('bFiltAll').onclick = () => { bankFilter = 'all'; updateFilterButtons(); renderBank(); };
 if ($('bFiltGame')) $('bFiltGame').onclick = () => { bankFilter = 'game'; updateFilterButtons(); renderBank(); };
@@ -1426,8 +1495,17 @@ function updateFilterButtons() {
   if ($('bFiltTest')) $('bFiltTest').className = 'btn ' + (bankFilter === 'test' ? 'g' : 'w');
 }
 
-if ($('searchBank'))if ($('searchBank')) {
+if ($('searchBank')) {
   $('searchBank').oninput = () => renderBank();
+}
+if ($('bClearSearchBank')) {
+  $('bClearSearchBank').onclick = () => {
+    if ($('searchBank')) {
+      $('searchBank').value = '';
+      $('searchBank').focus();
+    }
+    renderBank();
+  };
 }
 
 function applyLoadedQs(newList, docTitle, errs) {
@@ -1509,6 +1587,15 @@ window.assignHwFor = async function(id) {
   const quiz = await GC.getQuizById(id);
   if (quiz && quiz.qs) {
     setQs(quiz.qs, quiz.title, []);
+    const isTestQuiz = quiz.type === 'test' || quiz.m === 'test';
+    const targetMode = isTestQuiz ? 'test' : (quiz.m && MNAME[quiz.m] ? quiz.m : (gMode === 'test' ? 'climb' : gMode));
+    if (window.LIC && !window.LIC.allowed(targetMode)) {
+      promptUnlockModal(targetMode);
+      return;
+    }
+    if (targetMode !== gMode && typeof selectMode === 'function') {
+      selectMode(targetMode);
+    }
     $('bSolo').click();
   }
 };
@@ -1527,15 +1614,18 @@ window.shareLocalToCommunity = async function(idx) {
   const item = bank[idx];
   if (!item) return;
   const author = prompt('Nhập tên giáo viên / nguồn đề chia sẻ:', 'Cô Chí Nên') || 'Cô Chí Nên';
+  const itemType = item.type || (item.m === 'test' ? 'test' : 'game');
   const saved = await GC.saveCommunityQuiz({
     title: item.title,
     author,
     qs: item.qs,
-    m: gMode,
+    m: item.m || (itemType === 'test' ? 'test' : gMode),
+    type: itemType,
+    theme: item.theme || $('testTheme')?.value || 'cambridge',
     lv: +$('gLv').value
   });
   toast('🎉 Đã chia sẻ đề "' + item.title + '" lên Thư viện chung với mã: ' + saved.id, 3500);
-  renderBank();
+  renderBank(true);
   } catch (e) { toast('❌ Không thể chia sẻ đề: ' + e.message, 3500); }
 };
 
@@ -1554,6 +1644,7 @@ window.deleteFromBank = function(idx) {
     const bank = getBank();
     bank.splice(idx, 1);
     saveBank(bank);
+    renderBank();
     toast('🗑 Đã xóa bộ đề');
   }
 };
@@ -1575,7 +1666,7 @@ $('bSaveToBank').onclick = async () => {
     lv: +$('gLv').value
   });
   toast('🎉 Đã lưu & chia sẻ thành công lên Thư viện chung! Mã đề: ' + saved.id, 3500);
-  renderBank();
+  renderBank(true);
   } catch (e) { toast('❌ Không thể lưu đề: ' + e.message, 3500); }
 };
 
@@ -1596,6 +1687,7 @@ if ($('bSaveLocal')) {
       date: d.toLocaleDateString('vi-VN')
     });
     saveBank(bank);
+    renderBank();
     toast('🔒 Đã lưu đề vào kho riêng trên máy này!', 2500);
   };
 }
@@ -1644,10 +1736,21 @@ $('bSolo').onclick = () => {
   }
   hwCustomQs = null;
   hwCustomTitle = null;
+  const isTest = gMode === 'test';
   const d = new Date(); d.setDate(d.getDate() + 1); d.setHours(21, 0, 0, 0);
   const p2 = x => String(x).padStart(2, '0');
   if (!$('hwDl').value) $('hwDl').value = d.getFullYear() + '-' + p2(d.getMonth() + 1) + '-' + p2(d.getDate()) + 'T21:00';
-  $('hwSum').textContent = '📘 ' + (clean($('gTitle').value) || 'Bài ôn tập') + ' · ' + MNAME[gMode] + ' · ' + LVN[$('gLv').value] + ' · ' + qs.length + ' câu';
+  if ($('hwDurWrap')) $('hwDurWrap').hidden = isTest;
+  if ($('hwTestDurNote')) {
+    const td = getTestDurMinutes();
+    $('hwTestDurNote').style.display = isTest ? 'block' : 'none';
+    if (isTest) $('hwTestDurNote').textContent = '⏱ Thời gian làm bài Test: ' + (td > 0 ? td + ' phút' : '♾ Không giới hạn');
+  }
+  const titleTxt = clean($('gTitle').value) || (isTest ? 'Bài kiểm tra tiếng Anh' : 'Bài ôn tập');
+  const metaTxt = isTest
+    ? ((getTestDurMinutes() > 0 ? getTestDurMinutes() + ' phút' : '♾ Tự do'))
+    : LVN[$('gLv').value];
+  $('hwSum').textContent = (isTest ? '📝 ' : '📘 ') + titleTxt + ' · ' + MNAME[gMode] + ' · ' + metaTxt + ' · ' + qs.length + ' câu';
   $('hwOut').hidden = true; $('ovHw').classList.add('on');
 };
 $('hwNoDl').onchange = () => { $('hwDl').disabled = $('hwNoDl').checked };
@@ -1682,6 +1785,8 @@ $('bHwMake').onclick = async () => {
     lic: 'Cô Chí Nên (Ms Nene)',
     qs: activeQs.map(q => ({
       type: q.type || 'mc',
+      targetText: q.targetText || '',
+      ipa: q.ipa || '',
       ansText: q.ansText || '',
       q: q.q,
       o: q.o,
@@ -1724,7 +1829,7 @@ $('bHwMake').onclick = async () => {
     su.searchParams.set('quiz', saved.id);
     hwShortLink = su.href;
     toast('🌐 Đã lưu & chia sẻ vào Thư viện chung với mã: ' + saved.id, 3500);
-    renderBank();
+    renderBank(true);
   }
 
   const u = new URL('play.html', location.href);
@@ -1734,7 +1839,7 @@ $('bHwMake').onclick = async () => {
   const finalLink = hwShortLink || hwLink;
   if (isTest) {
     hwText = `📝 BÀI KIỂM TRA — Ms Nene English\n` +
-      `📘 ` + title + `\n` +
+      `📘 ` + title + ` · ` + activeQs.length + ` câu\n` +
       `⏱ Thời gian làm bài: ` + (dur ? dur + ' phút' : 'không giới hạn') + `\n` +
       `⏰ Hạn nộp: ` + (dl ? stamp(dl) : 'không đặt hạn') + `\n` +
       `👉 Link vào thi: ` + finalLink + `\n\n` +
@@ -1742,7 +1847,7 @@ $('bHwMake').onclick = async () => {
   } else {
     hwText = `📚 BÀI TẬP VỀ NHÀ — Ms Nene English\n` +
       `📘 ` + title + `\n` +
-      `🎮 Game: ` + (MNAME[gMode] || 'Trò chơi') + ` · độ khó ` + (LVN[payload.lv] || 'Vừa') + ` · ` + qs.length + ` câu\n` +
+      `🎮 Game: ` + (MNAME[gMode] || 'Trò chơi') + ` · độ khó ` + (LVN[payload.lv] || 'Vừa') + ` · ` + activeQs.length + ` câu\n` +
       `⏱ Mỗi lượt chơi: ` + (dur ? dur + ' phút' : 'không giới hạn') + `\n` +
       `⏰ Hạn nộp: ` + (dl ? stamp(dl) : 'không đặt hạn') + `\n` +
       `👉 Link vào làm: ` + finalLink + `\n\n` +
@@ -1956,6 +2061,8 @@ $('bOpen').onclick = async () => {
 let joinUrl = '';
 function enterRoom() {
   mistakeStats = {};
+  mistakeDetail = {};
+  showEnd.done = 0;
   if (typeof Climb !== 'undefined' && Climb.setPart) Climb.setPart(info.m === 'climb2' ? 2 : 1);
   TOP = info.m === 'test' ? 100 : ((info.m === 'brick' ? Brick : info.m === 'brick2' ? Brick2 : info.m === 'tank' ? Tank : info.m === 'bomb' ? Bomb : (info.m === 'bomb2' || info.m === 'bomb3') ? Bomb2 : info.m === 'pac' ? Pac : info.m === 'race' ? Race : (info.m === 'temple' || info.m === 'temple2') ? Temple : (info.m === 'bounce' || info.m === 'bounce2') ? Bounce : (info.m === 'adv' || info.m === 'adv2') ? Adv : info.m === 'peng' ? Peng : info.m === 'kb' ? Knock : info.m === 'snow' ? Snow : info.m === 'garden' ? Garden : Climb).measure(info.seed, info.lv || 2) || 1);
   offs.forEach(f => f()); offs = [];
@@ -1968,9 +2075,23 @@ function enterRoom() {
 
   offs.push(net.on('rooms/' + code + '/info', v => {
     if (!v) return; info = v;
-    $('vEn').textContent = '⚡ ' + (v.eq || 100) + '/câu · 🔋 ' + (v.em ? 'đầy ' + v.em : 'không giới hạn');
+    const isTest = v.m === 'test';
+    $('vEn').textContent = isTest
+      ? ((v.dur > 0 ? ('⏱ ' + v.dur + ' phút') : '♾ Tự do') + ' · 📝 ' + (qs.length || 0) + ' câu')
+      : ('⚡ ' + (v.eq || 100) + '/câu · 🔋 ' + (v.em ? 'đầy ' + v.em : 'không giới hạn'));
+    if ($('bPlus')) $('bPlus').hidden = !(v.dur > 0);
+    if ($('bMusic')) $('bMusic').hidden = isTest;
     if (v.st === 'lobby') show('vLobby');
-    else if (v.st === 'play') { show('vLive'); tick(); const mTrack = v.m === 'temple2' ? 'temple' : v.m === 'bounce2' ? 'bounce' : v.m === 'brick2' ? 'brick' : v.m === 'climb2' ? 'climb' : (v.m === 'bomb2' || v.m === 'bomb3') ? 'bomb' : (v.m || 'climb'); GC.music.start(false, mTrack); paintMusic(); }
+    else if (v.st === 'play') {
+      show('vLive');
+      tick();
+      if (isTest) { GC.music.stop(); }
+      else {
+        const mTrack = v.m === 'temple2' ? 'temple' : v.m === 'bounce2' ? 'bounce' : v.m === 'brick2' ? 'brick' : v.m === 'climb2' ? 'climb' : (v.m === 'bomb2' || v.m === 'bomb3') ? 'bomb' : (v.m || 'climb');
+        GC.music.start(false, mTrack);
+        paintMusic();
+      }
+    }
     else if (v.st === 'end') { GC.music.stop(); showEnd(); }
   }));
   offs.push(net.on('rooms/' + code + '/players', v => { players = v || {}; if (info && info.m === 'snow' && info.st === 'play') { const on = Object.values(players).filter(p => p && p.on); if (on.length >= 2 && on.every(p => p.cur)) { net.update('rooms/' + code + '/info', { ew: 'cursed' }); endGame(); toast('🧟 Cả lớp đã bị yểm — phe xác ướp thắng! Trò chơi kết thúc', 4000); } } renderLobby(); renderBoard(); if (info && info.st === 'end') showEnd(); }));
@@ -1991,24 +2112,31 @@ function renderLobby() {
   $('lList').innerHTML = L.map(([id, p]) => '<span class="pp' + (p.on ? '' : ' off') + '"><i class="dot" style="background:' + esc(p.c) + '"></i>' + esc(p.n) + '<button title="Mời ra khỏi phòng" onclick="kick(\'' + esc(id) + '\')">✕</button></span>').join('');
 }
 function kick(id) { net.remove('rooms/' + code + '/players/' + id) }
-$('bStart').onclick = () => { const now = net.now(), up = { st: 'play', sa: now, ea: now + info.dur * 60000 }; if (info.m === 'snow') { const ids = Object.keys(players).filter(id => players[id] && players[id].on).sort(() => Math.random() - .5), k = ids.length >= 2 ? Math.max(1, Math.round(ids.length / 4)) : 0; up.cu = Object.fromEntries(ids.slice(0, k).map(id => [id, 1])); } net.update('rooms/' + code + '/info', up); sfx('cp'); };
+$('bStart').onclick = () => { const now = net.now(), up = { st: 'play', sa: now, ea: info.dur > 0 ? (now + info.dur * 60000) : 0 }; if (info.m === 'snow') { const ids = Object.keys(players).filter(id => players[id] && players[id].on).sort(() => Math.random() - .5), k = ids.length >= 2 ? Math.max(1, Math.round(ids.length / 4)) : 0; up.cu = Object.fromEntries(ids.slice(0, k).map(id => [id, 1])); } net.update('rooms/' + code + '/info', up); sfx('cp'); };
 $('bCancel').onclick = async () => { await net.remove('rooms/' + code); leave() };
 function leave() { GC.music.stop(); offs.forEach(f => f()); offs = []; clearInterval(timerI); store.set('gHost', null); code = ''; players = {}; $('feed').innerHTML = ''; show('vSetup'); checkResume() }
 
 /* ═════ ③ ĐANG CHƠI ═════ */
 function tick() {
   if (!info || info.st !== 'play') return;
-  const left = info.ea - net.now();
-  $('tLeft').textContent = fmt(left);
-  $('tLeft').classList.toggle('low', left < 60000);
+  const hasLimit = info.ea > 0;
+  let left = Infinity;
+  if (hasLimit) {
+    left = info.ea - net.now();
+    $('tLeft').textContent = fmt(left);
+    $('tLeft').classList.toggle('low', left < 60000);
+  } else {
+    $('tLeft').textContent = '♾ Tự do';
+    $('tLeft').classList.remove('low');
+  }
   const L = Object.values(players);
-  if (left <= 0 || (L.length && L.every(p => p.tt || p.st === 'submitted'))) endGame();
+  if ((hasLimit && left <= 0) || (L.length && L.every(p => p.tt || p.st === 'submitted'))) endGame();
 }
 function renderBoard() {
   if (!info || info.st === 'lobby') return;
   const isTest = info.m === 'test';
   const now = net.now(), cps = [1, 2, 3, 4].map(i => i / 5 * 100);
-  $('board').innerHTML = GC.rank(players).map(([id, p], i) => {
+  $('board').innerHTML = GC.rank(players, isTest).map(([id, p], i) => {
     if (isTest) {
       const tot = p.tot || qs.length || 1;
       const ans = p.ans || 0;
@@ -2045,7 +2173,7 @@ $('bInvite').onclick = () => {
   $('ovInv').classList.add('on');
 };
 $('ovInv').onclick = e => { if (e.target.id === 'ovInv') $('ovInv').classList.remove('on') };
-$('bPlus').onclick = () => { net.update('rooms/' + code + '/info', { ea: info.ea + 60000 }); toast('➕ Thêm 1 phút cho cả lớp!') };
+$('bPlus').onclick = () => { if (!info || !(info.ea > 0)) { toast('♾ Phòng đang để thời gian tự do (không giới hạn)!', 2200); return; } net.update('rooms/' + code + '/info', { ea: info.ea + 60000 }); toast('➕ Thêm 1 phút cho cả lớp!') };
 $('bEnd').onclick = () => $('cEnd').classList.add('on');
 $('bEndNo').onclick = () => $('cEnd').classList.remove('on');
 $('bEndYes').onclick = () => { $('cEnd').classList.remove('on'); endGame() };
@@ -2055,8 +2183,8 @@ function endGame() { if (info && info.st !== 'end') { net.update('rooms/' + code
 function showEnd() {
   show('vEnd'); clearInterval(timerI);
   if (!showEnd.done) { showEnd.done = code; sfx('fanfare'); confetti(120); }
-  const R = GC.rank(players);
   const isTest = info && info.m === 'test';
+  const R = GC.rank(players, isTest);
   const totQ = qs.length || 1;
   $('eTitle').textContent = (isTest ? '📝 ' : '📘 ') + info.t + ' · ' + R.length + ' bạn tham gia';
   const H = [150, 115, 90], COL = ['#f5b942', '#a7a7c9', '#e39a6a'];
@@ -2156,7 +2284,7 @@ window.showExplanation = function(qNum) {
     passageHtml = `
       <div style="background:#fff;border:1.5px solid #cbd5e1;border-radius:12px;padding:12px;margin-bottom:12px;font-size:14px;line-height:1.7;color:#334155">
         <b style="color:#5b4bb0;display:block;margin-bottom:6px">📖 Đoạn văn bài đọc (Reading Passage):</b>
-        ${q.passage}
+        ${GC.safe(q.passage)}
       </div>
     `;
   }
@@ -2187,7 +2315,7 @@ window.showExplanation = function(qNum) {
           return `
             <div style="display:flex;align-items:center;gap:10px;padding:10px 14px;border-radius:12px;border:2px solid ${isRight ? '#10b981' : '#e2e8f0'};background:${isRight ? '#ecfdf5' : '#fff'};font-weight:700">
               <span style="width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:900;background:${isRight ? '#10b981' : '#f1f5f9'};color:${isRight ? '#fff' : '#475569'}">${'ABCD'[oi]}</span>
-              <span style="flex:1;font-size:15px;color:${isRight ? '#065f46' : '#1e293b'}">${optText}</span>
+              <span style="flex:1;font-size:15px;color:${isRight ? '#065f46' : '#1e293b'}">${GC.safe(optText)}</span>
               ${isRight ? '<span style="background:#10b981;color:#fff;font-size:12px;font-weight:900;padding:3px 10px;border-radius:12px">✅ ĐÁP ÁN ĐÚNG</span>' : ''}
             </div>
           `;
@@ -2196,7 +2324,7 @@ window.showExplanation = function(qNum) {
     `;
   }
 
-  const expText = q.e ? q.e : ('Đáp án chính xác là <b>' + correctLabel + '</b>. Học sinh cần chú ý cấu trúc ngữ pháp và từ khóa quan trọng của câu này.');
+  const expText = q.e ? GC.safe(q.e) : ('Đáp án chính xác là <b>' + correctLabel + '</b>. Học sinh cần chú ý cấu trúc ngữ pháp và từ khóa quan trọng của câu này.');
 
   $('expBody').innerHTML = `
     ${passageHtml}
@@ -2214,8 +2342,7 @@ window.showExplanation = function(qNum) {
 };
 
 $('bCsv').onclick = () => {
-  const R = GC.rank(players), q = s => '"' + String(s).replace(/"/g, '""') + '"';
-  const isTest = info && info.m === 'test';
+  const isTest = info && info.m === 'test', R = GC.rank(players, isTest), q = s => '"' + String(s).replace(/"/g, '""') + '"';
   const totQ = qs.length || 1;
   const rows = isTest
     ? [['Hạng', 'Họ tên', 'Trạng thái', 'Điểm (thang 100)', 'Số câu đúng', 'Đã làm', 'Tổng số câu', 'Rời tab']].concat(
@@ -2289,7 +2416,7 @@ function getLiveEndMistakes() {
   });
 }
 if ($('bCopyZaloRes')) $('bCopyZaloRes').onclick = () => {
-  const R = GC.rank(players), isTest = info && info.m === 'test', totQ = qs.length || 1;
+  const isTest = info && info.m === 'test', R = GC.rank(players, isTest), totQ = qs.length || 1;
   const rows = R.map(([, p]) => {
     const tot = p.tot || totQ;
     const sc = isTest ? (p.score ?? Math.round((p.ok || 0) / tot * 100)) : (p.ans ? Math.round((p.ok || 0) / p.ans * 100) : 0);
@@ -2305,7 +2432,7 @@ if ($('bCopyZaloRes')) $('bCopyZaloRes').onclick = () => {
   navigator.clipboard.writeText(msg).then(() => toast('📋 Đã copy báo cáo lớp — dán vào nhóm Zalo phụ huynh nhé!', 2800)).catch(() => prompt('Copy báo cáo Zalo:', msg));
 };
 if ($('bPrintRes')) $('bPrintRes').onclick = () => {
-  const R = GC.rank(players), isTest = info && info.m === 'test', totQ = qs.length || 1;
+  const isTest = info && info.m === 'test', R = GC.rank(players, isTest), totQ = qs.length || 1;
   const avg = R.length ? Math.round(R.reduce((s, [, p]) => {
     const tot = p.tot || totQ;
     return s + (isTest ? (p.score ?? Math.round((p.ok || 0) / tot * 100)) : (p.ans ? Math.round((p.ok || 0) / p.ans * 100) : 0));

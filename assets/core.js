@@ -657,10 +657,21 @@ const music = (function () {
   return { start, stop, duck, toggle, pref, files, scene, hush, engine, motor, get now() { return (fcur && !fcur.paused ? scn + ':' + fcur.src.split('/').pop() + '@' + fcur.currentTime.toFixed(1) : '(im)') + (synthing ? ' synth' : '') + ' eng=' + engSt }, get playing() { return playing }, get track() { return cur } };
 })();
 
-/* ── xếp hạng: về đích trước → cao hơn → đúng nhiều hơn ── */
-function rank(players) {
+/* ── xếp hạng: Bài test ưu tiên điểm cao → đúng nhiều → nộp sớm; Game ưu tiên về đích trước → cao hơn → đúng nhiều ── */
+function rank(players, isTest) {
   return Object.entries(players || {}).sort((A, B) => {
-    const a = A[1], b = B[1];
+    const a = A[1] || {}, b = B[1] || {};
+    if (isTest) {
+      const aSc = a.score != null ? Number(a.score) : (a.tot ? Math.round((a.ok || 0) / a.tot * 100) : (a.alt || 0));
+      const bSc = b.score != null ? Number(b.score) : (b.tot ? Math.round((b.ok || 0) / b.tot * 100) : (b.alt || 0));
+      if (bSc !== aSc) return bSc - aSc;
+      if ((b.ok || 0) !== (a.ok || 0)) return (b.ok || 0) - (a.ok || 0);
+      const aSub = a.st === 'submitted' || !!a.tt;
+      const bSub = b.st === 'submitted' || !!b.tt;
+      if (aSub !== bSub) return aSub ? -1 : 1;
+      if (a.tt && b.tt && a.tt !== b.tt) return a.tt - b.tt;
+      return (b.ans || 0) - (a.ans || 0);
+    }
     if (!!a.tt !== !!b.tt) return a.tt ? -1 : 1;
     if (a.tt && b.tt) return a.tt - b.tt;
     return (b.alt || 0) - (a.alt || 0) || (b.ok || 0) - (a.ok || 0);
@@ -995,6 +1006,7 @@ async function saveCommunityQuiz(quiz) {
   quiz.type = quiz.type || (quiz.m === 'test' ? 'test' : 'game');
   quiz.m = quiz.m || (quiz.type === 'test' ? 'test' : 'climb');
   quiz.date = quiz.date || new Date().toLocaleDateString('vi-VN');
+  quiz.createdAt = Date.now();
   quiz.author = (quiz.author || '').trim() || (window.GAME_CONFIG && window.GAME_CONFIG.teacher) || 'Cô Chí Nên';
 
   const cfg = window.GAME_CONFIG || {};
@@ -1017,22 +1029,18 @@ async function saveCommunityQuiz(quiz) {
   return quiz;
 }
 
-async function getCommunityLibrary() {
-  // Bắt đầu với các bộ đề mẫu có sẵn
-  const bundled = [];
-  if (window.SAMPLE_SETS) {
-    window.SAMPLE_SETS.forEach((s, idx) => {
-      bundled.push({
-        id: idx === 0 ? 'MN-ENG7' : 'MN-IELTS7',
-        title: s.title,
-        author: 'Ms Nene English',
-        date: 'Có sẵn',
-        qs: s.raw ? s.raw.map(fromOld) : [],
-        isBundled: true
-      });
-    });
-  }
+function quizTimeMs(q) {
+  if (!q) return 0;
+  const ts = Number(q.updatedAt || q.createdAt || 0);
+  if (ts > 0) return ts;
+  const d = String(q.date || '').trim();
+  const m = d.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
+  if (m) return new Date(Number(m[3]), Number(m[2]) - 1, Number(m[1])).getTime() || 0;
+  const parsed = Date.parse(d);
+  return Number.isFinite(parsed) ? parsed : 0;
+}
 
+async function getCommunityLibrary() {
   let cloudList = [];
   const cfg = window.GAME_CONFIG || {};
   if (cfg.firebase && cfg.firebase.databaseURL) {
@@ -1048,13 +1056,12 @@ async function getCommunityLibrary() {
 
   const localList = getLocalCommunity();
 
-  // Gộp danh sách: cloudList + localList + bundled (tránh trùng id)
+  // Gộp danh sách: cloudList + localList (tránh trùng id, loại bỏ bộ đề mẫu cũ), sắp xếp mới nhất trước
   const map = new Map();
-  bundled.forEach(q => map.set(q.id, q));
-  cloudList.forEach(q => map.set(q.id, q));
-  localList.forEach(q => map.set(q.id, q));
+  cloudList.forEach(q => { if (q && q.id && !q.isBundled) map.set(q.id, q); });
+  localList.forEach(q => { if (q && q.id && !q.isBundled) map.set(q.id, q); });
 
-  return Array.from(map.values());
+  return Array.from(map.values()).sort((a, b) => quizTimeMs(b) - quizTimeMs(a));
 }
 
 

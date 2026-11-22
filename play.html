@@ -615,7 +615,7 @@ html,body{display:flex;flex-direction:column;overflow-x:hidden !important;overfl
 <script src="assets/mqtt.min.js"></script>
 <script src="assets/shield.js?v=2.4"></script>
 <script src="assets/config.js?v=20261121-1"></script>
-<script src="assets/core.js?v=20261122-1"></script>
+<script src="assets/core.js?v=20261122-2"></script>
 <script src="assets/mau.js"></script>
 <script src="assets/climb.js?v=20261121-1"></script>
 <script src="assets/climb2.js?v=20261121-1"></script>
@@ -961,7 +961,7 @@ function startTestMode() {
   trIgnoreBlurUntil = 0;
   trTimerTicks = 0;
 
-  const durMinutes = (info && info.dur) || (HW && HW.dur) || 45;
+  const durMinutes = (info && info.dur != null) ? Number(info.dur) : ((HW && HW.dur != null) ? Number(HW.dur) : 45);
   trTimeRemaining = durMinutes > 0 ? durMinutes * 60 : 0;
 
   const draft = loadTestDraft();
@@ -979,7 +979,7 @@ function startTestMode() {
       setTimeout(() => toast('💾 Đã khôi phục bài làm trước đó (' + restoredCount + '/' + QS.length + ' câu)', 3200), 250);
     }
   }
-  if (!SOLO && info && info.ea && net) {
+  if (!SOLO && info && info.ea > 0 && net) {
     trTimeRemaining = Math.max(5, Math.floor((info.ea - net.now()) / 1000));
   }
 
@@ -1325,12 +1325,6 @@ function renderTestQuestion() {
         </div>
       `;
     }).join('');
-    $('trResReviewBox').querySelectorAll('.spk-rev-listen').forEach(btn => {
-      btn.onclick = () => {
-        const qq = QS[+btn.dataset.spkIdx];
-        if (qq) GC.speakText(qq.targetText || qq.ansText || qq.q);
-      };
-    });
   }
 
   // 7. Progress text
@@ -1412,7 +1406,7 @@ if ($('bTrNext')) {
 
 if ($('bTrSubmit')) {
   $('bTrSubmit').onclick = () => {
-    const ansCount = Object.keys(trAnswers).length;
+    const ansCount = Object.values(trAnswers).filter(v => v !== undefined && String(v).trim() !== '').length;
     const unanswered = QS.length - ansCount;
     let msg = 'Em đã làm ' + ansCount + '/' + QS.length + ' câu.';
     if (unanswered > 0) {
@@ -1994,7 +1988,7 @@ function listen() {
     if (!v) {
       if (!over) {
         over = true; S.running = false;
-        if (MODE === 'test') { if (!trSubmitted) submitTestExam(true); }
+        if (MODE === 'test' && started) { if (!trSubmitted) submitTestExam(true); }
         else showRes('gone');
       }
       return;
@@ -2134,7 +2128,7 @@ function onFrame(ts) {
   $('hStreak').textContent = '🔥 ' + streak; $('hAlt').textContent = Climb.hud ? Climb.hud() : '⛰ ' + Climb.alt() + ' m'; $('hOk').textContent = '✅ ' + okN + '/' + ans;
   if (!SOLO && joined) { const r = GC.rank(players).findIndex(([id]) => id === pid); $('hRank').textContent = '🏅 #' + (r + 1) + '/' + Object.keys(players).length }
   if (!started) return;
-  if (!SOLO && info && info.ea) {
+  if (!SOLO && info && info.ea > 0) {
     const left = info.ea - net.now(); $('hTime').textContent = '⏳ ' + fmt(left);
     if (left <= 0 && !over) finish('time');
   } else if (HW && HW.dur) {   // bài tập về nhà: đếm ngược thời gian mỗi lượt
