@@ -7,7 +7,8 @@
 <link rel="stylesheet" href="assets/fonts.css">
 <link rel="stylesheet" href="assets/game.css">
 <style>
-body{background:linear-gradient(160deg,#ffe4f2,#e6efff 45%,#efe6ff);min-height:100%;overflow-x:hidden}
+html{height:auto;min-height:100%;background:#efe6ff}
+body{background:linear-gradient(160deg,#ffe4f2,#e6efff 45%,#efe6ff);height:auto;min-height:100dvh;overflow-x:clip}
 .wrap{max-width:1180px;margin:0 auto;padding:18px max(16px,env(safe-area-inset-right,0px)) 40px max(16px,env(safe-area-inset-left,0px))}
 .top{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:14px}
 .top h1{font:800 30px/1.1 'Baloo 2',Nunito,sans-serif;color:#5b4bb0}
@@ -311,27 +312,27 @@ Cách 3 — Dán câu luyện phát âm (tự động điền IPA & mẹo):
 
     <div class="lab">Kiểu game &amp; Kiểm tra (2 chế độ miễn phí · các chế độ khác cần Pro)</div>
     <div class="modes" id="gModes">
-     <button class="mode on" data-m="climb"><b>🧗</b><span>Leo núi<small>Leo đỉnh · cứu công chúa</small></span></button>
-     <button class="mode" data-m="climb2"><b>🏔</b><span>Leo núi P2<small>1200 m · 14 vùng mới · Quỷ Vương</small></span></button>
-     <button class="mode" data-m="brick"><b>🍄</b><span>Nấm Mario<small>5 màn · biển sâu · rồng</small></span></button>
-     <button class="mode" data-m="brick2"><b>🍄</b><span>Nấm Mario P2<small>7 màn · leo mây · biển sâu · Vua Rùa</small></span></button>
-     <button class="mode" data-m="tank"><b>🛡</b><span>Xe tăng<small>4 stage · bảo vệ cứ điểm</small></span></button>
-     <button class="mode" data-m="bomb"><b>💣</b><span>Bomberman<small>8 màn · cổ điển</small></span></button>
-     <button class="mode" data-m="bomb2"><b>🤴</b><span>Bomberman P2<small>4 màn mới · vũ khí lạ · Hoàng Tử Bom</small></span></button>
-     <button class="mode" data-m="bomb3"><b>👑</b><span>Bomberman P3<small>5 màn cuối · quái khó · Vua Bom</small></span></button>
-     <button class="mode" data-m="pac"><b>🟡</b><span>Pac-Man<small>5 mê cung · quái lạ</small></span></button>
-     <button class="mode" data-m="race"><b>🏎</b><span>Đua xe<small>5 chặng · cảnh đẹp</small></span></button>
-     <button class="mode" data-m="temple"><b>🏃</b><span>Temple Run P1<small>5 màn · xe goòng · quái vật</small></span></button>
-     <button class="mode" data-m="temple2"><b>🏃</b><span>Temple Run P2<small>5 màn · khó hơn · mỏ pha lê</small></span></button>
-     <button class="mode" data-m="bounce"><b>🔴</b><span>Bounce Tales<small>6 màn · lăn bóng · trứng vàng</small></span></button>
-     <button class="mode" data-m="bounce2"><b>🐸</b><span>Bounce Tales P2<small>6 màn · lá nảy · đáy biển · trùm ếch</small></span></button>
-     <button class="mode" data-m="adv"><b>🏝</b><span>Đảo phiêu lưu P1<small>6 màn · rìu đá · trái cây · Vua Quỷ</small></span></button>
-     <button class="mode" data-m="adv2"><b>🦖</b><span>Đảo phiêu lưu P2<small>6 màn · cưỡi khủng long · Vua Mèo</small></span></button>
-     <button class="mode" data-m="peng"><b>🐧</b><span>Chim cánh cụt<small>7 chặng · Nam Cực · bắt cá · né nứt</small></span></button>
-     <button class="mode" data-m="kb"><b>🌌</b><span>Đấu Trường Ngân Hà<small>5 khu · nhảy thanh · bắn văng bạn</small></span></button>
-     <button class="mode" data-m="garden"><b>🌻</b><span>Hoa Quả Nổi Giận<small>trồng cây giữ nhà · 6 màn · nghĩa địa</small></span></button>
-     <button class="mode" data-m="snow"><b>❄️</b><span>Đêm Tuyết Sinh Tồn<small>xác ướp đuổi bắt · ném tuyết · 6 khu</small></span></button>
-     <button class="mode" data-m="test" style="border:2px solid #8b5cf6"><b>📝</b><span>Bài kiểm tra<small>Đề thi tổng hợp · Khảo thí</small></span></button>
+     <button type="button" class="mode on" data-m="climb"><b>🧗</b><span>Leo núi<small>Leo đỉnh · cứu công chúa</small></span></button>
+     <button type="button" class="mode" data-m="climb2"><b>🏔</b><span>Leo núi P2<small>1200 m · 14 vùng mới · Quỷ Vương</small></span></button>
+     <button type="button" class="mode" data-m="brick"><b>🍄</b><span>Nấm Mario<small>5 màn · biển sâu · rồng</small></span></button>
+     <button type="button" class="mode" data-m="brick2"><b>🍄</b><span>Nấm Mario P2<small>7 màn · leo mây · biển sâu · Vua Rùa</small></span></button>
+     <button type="button" class="mode" data-m="tank"><b>🛡</b><span>Xe tăng<small>4 stage · bảo vệ cứ điểm</small></span></button>
+     <button type="button" class="mode" data-m="bomb"><b>💣</b><span>Bomberman<small>8 màn · cổ điển</small></span></button>
+     <button type="button" class="mode" data-m="bomb2"><b>🤴</b><span>Bomberman P2<small>4 màn mới · vũ khí lạ · Hoàng Tử Bom</small></span></button>
+     <button type="button" class="mode" data-m="bomb3"><b>👑</b><span>Bomberman P3<small>5 màn cuối · quái khó · Vua Bom</small></span></button>
+     <button type="button" class="mode" data-m="pac"><b>🟡</b><span>Pac-Man<small>5 mê cung · quái lạ</small></span></button>
+     <button type="button" class="mode" data-m="race"><b>🏎</b><span>Đua xe<small>5 chặng · cảnh đẹp</small></span></button>
+     <button type="button" class="mode" data-m="temple"><b>🏃</b><span>Temple Run P1<small>5 màn · xe goòng · quái vật</small></span></button>
+     <button type="button" class="mode" data-m="temple2"><b>🏃</b><span>Temple Run P2<small>5 màn · khó hơn · mỏ pha lê</small></span></button>
+     <button type="button" class="mode" data-m="bounce"><b>🔴</b><span>Bounce Tales<small>6 màn · lăn bóng · trứng vàng</small></span></button>
+     <button type="button" class="mode" data-m="bounce2"><b>🐸</b><span>Bounce Tales P2<small>6 màn · lá nảy · đáy biển · trùm ếch</small></span></button>
+     <button type="button" class="mode" data-m="adv"><b>🏝</b><span>Đảo phiêu lưu P1<small>6 màn · rìu đá · trái cây · Vua Quỷ</small></span></button>
+     <button type="button" class="mode" data-m="adv2"><b>🦖</b><span>Đảo phiêu lưu P2<small>6 màn · cưỡi khủng long · Vua Mèo</small></span></button>
+     <button type="button" class="mode" data-m="peng"><b>🐧</b><span>Chim cánh cụt<small>7 chặng · Nam Cực · bắt cá · né nứt</small></span></button>
+     <button type="button" class="mode" data-m="kb"><b>🌌</b><span>Đấu Trường Ngân Hà<small>5 khu · nhảy thanh · bắn văng bạn</small></span></button>
+     <button type="button" class="mode" data-m="garden"><b>🌻</b><span>Hoa Quả Nổi Giận<small>trồng cây giữ nhà · 6 màn · nghĩa địa</small></span></button>
+     <button type="button" class="mode" data-m="snow"><b>❄️</b><span>Đêm Tuyết Sinh Tồn<small>xác ướp đuổi bắt · ném tuyết · 6 khu</small></span></button>
+     <button type="button" class="mode" data-m="test" style="border:2px solid #8b5cf6"><b>📝</b><span>Bài kiểm tra<small>Đề thi tổng hợp · Khảo thí</small></span></button>
     </div>
 
     <!-- CẤU HÌNH 1: DÀNH CHO GAME ARCADE (LEO NÚI, MARIO, XE TĂNG, ĐẶT BOM) -->
@@ -1900,6 +1901,7 @@ $('gModes').onclick = e => {
   }
   selectMode(m);
 };
+renderModesLockState();
 
 /* ═════ ② MỞ PHÒNG CHƠI CHUNG ═════ *//* ═════ ② MỞ PHÒNG CHƠI CHUNG ═════ */
 $('bOpen').onclick = async () => {
