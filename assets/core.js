@@ -26,18 +26,25 @@ const BADGE = ['#ff7eb6', '#5ab0ff', '#3fbf86', '#9b7bff'];
 
 /* ── làm sạch HTML trong câu hỏi: chỉ giữ thẻ định dạng, bỏ mọi thuộc tính trừ class ── */
 const OKTAG = /^(B|STRONG|I|EM|U|BR|SUB|SUP|SPAN|SMALL|P|DIV|UL|OL|LI|MARK)$/;
+const DROP_TAG = /^(SCRIPT|STYLE|IFRAME|OBJECT|EMBED|NOSCRIPT|SVG|MATH|TEMPLATE|TEXTAREA|TITLE)$/;
 function safe(html) {
   const t = document.createElement('template'); t.innerHTML = String(html == null ? '' : html);
   (function walk(n) {
     [...n.childNodes].forEach(c => {
       if (c.nodeType === 3) return;
       if (c.nodeType !== 1) { c.remove(); return }
+      if (DROP_TAG.test(c.tagName)) { c.remove(); return }
       walk(c);
       if (!OKTAG.test(c.tagName)) { c.replaceWith(...c.childNodes); return }
       [...c.attributes].forEach(a => { if (!(a.name === 'class' && /^[\w\s-]*$/.test(a.value))) c.removeAttribute(a.name) });
     })
   })(t.content);
   return t.innerHTML;
+}
+function safeMediaUrl(url) {
+  const u = String(url == null ? '' : url).trim();
+  if (!u || /[\s"'<>]/.test(u)) return '';
+  return /^(?:https?:\/\/|data:(?:image|audio)\/(?:png|jpe?g|gif|webp|svg\+xml|mpeg|mp3|wav|ogg|webm);)/i.test(u) ? u : '';
 }
 
 /* ── câu hỏi chuẩn: {q, o:[...], a: chỉ số đáp án đúng, e: giải thích, s: dạng bài} ── */
@@ -88,13 +95,37 @@ function fromOld(x) {
     s: (x.type && x.type !== 'text' && x.type !== 'mc' && x.type !== 'speaking' ? x.type : '') || x.sec || x.s || (isSpeaking ? 'Speaking / Pronunciation' : '')
   };
 }
-function prep(list, noShuffle) {   // trước khi chơi: bỏ câu hỏng, làm sạch, xáo đáp án 1 lần
-  return (list || []).filter(x => {
+function shuffleWith(a, rand) {
+  a = a.slice();
+  const r = typeof rand === 'function' ? rand : Math.random;
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(r() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+function hashSeedStr(str) {
+  let h = 2166136261;
+  const s = String(str || '');
+  for (let i = 0; i < s.length; i++) {
+    h ^= s.charCodeAt(i);
+    h = Math.imul(h, 16777619);
+  }
+  return (h >>> 0) || 1;
+}
+function prep(list, noShuffleOrOpts) {   // trước khi chơi: bỏ câu hỏng, làm sạch, xáo đáp án 1 lần
+  const opts = (typeof noShuffleOrOpts === 'object' && noShuffleOrOpts !== null) ? noShuffleOrOpts : { noShuffle: !!noShuffleOrOpts };
+  const noShuffle = !!opts.noShuffle;
+  const shuffleQuestions = !!opts.shuffleQuestions;
+  const randFn = (opts.seed !== undefined && opts.seed !== null && opts.seed !== '') ? rng(hashSeedStr(opts.seed)) : Math.random;
+  const out = (list || []).filter(x => {
     if (!x || !x.q) return false;
     if (x.type === 'speaking' || x.targetText) return !!clean(x.targetText || x.ansText || x.q || '');
     if (x.type === 'text' || (x.ansText && (!x.o || x.o.length < 2))) return !!clean(x.ansText || (x.o && x.o[0]) || '');
     return x.o && x.o.length >= 2 && x.a >= 0 && x.a < x.o.length;
   }).map((x, i) => {
+    const mediaImg = x.img ? safeMediaUrl(x.img) : '';
+    const mediaAudio = x.audio ? safeMediaUrl(x.audio) : '';
     if (x.type === 'speaking' || x.targetText) {
       const target = clean((x.targetText || x.ansText || x.q || '').replace(/<[^>]+>/g, ''));
       return {
@@ -105,8 +136,8 @@ function prep(list, noShuffle) {   // trước khi chơi: bỏ câu hỏng, làm
         ipa: x.ipa ? esc(x.ipa) : '',
         s: esc(x.s || 'Speaking / Pronunciation'),
         passage: x.passage ? safe(x.passage) : '',
-        audio: x.audio ? esc(x.audio) : '',
-        img: x.img ? esc(x.img) : '',
+        audio: mediaAudio,
+        img: mediaImg,
         o: [],
         a: 0,
         ansText: target,
@@ -122,15 +153,15 @@ function prep(list, noShuffle) {   // trước khi chơi: bỏ câu hỏng, làm
         ansText: clean(x.ansText || (x.o && x.o[0]) || ''),
         s: esc(x.s || 'Tự luận / Điền từ'),
         passage: x.passage ? safe(x.passage) : '',
-        audio: x.audio ? esc(x.audio) : '',
-        img: x.img ? esc(x.img) : '',
+        audio: mediaAudio,
+        img: mediaImg,
         o: [],
         a: 0,
         e: safe(x.e || '')
       };
     }
     let idx = x.o.map((_, k) => k);
-    if (!noShuffle && !NOSHUF.test((x.s || '') + ' ' + x.q)) idx = shuffle(idx);
+    if (!noShuffle && !NOSHUF.test((x.s || '') + ' ' + x.q)) idx = shuffleWith(idx, randFn);
     return {
       n: i + 1,
       type: 'mc',
@@ -138,13 +169,26 @@ function prep(list, noShuffle) {   // trước khi chơi: bỏ câu hỏng, làm
       q: safe(x.q),
       s: esc(x.s || ''),
       passage: x.passage ? safe(x.passage) : '',
-      audio: x.audio ? esc(x.audio) : '',
-      img: x.img ? esc(x.img) : '',
+      audio: mediaAudio,
+      img: mediaImg,
       o: idx.map(k => safe(x.o[k])),
       a: idx.indexOf(x.a),
       e: safe(x.e || '')
     };
   });
+  if (shuffleQuestions && !noShuffle && out.length > 1) {
+    const blocks = [];
+    for (const item of out) {
+      const p = (item.passage || '').trim();
+      if (p && blocks.length && blocks[blocks.length - 1].p === p) {
+        blocks[blocks.length - 1].items.push(item);
+      } else {
+        blocks.push({ p, items: [item] });
+      }
+    }
+    return shuffleWith(blocks, randFn).flatMap(b => b.items);
+  }
+  return out;
 }
 
 /* ── đọc bảng (CSV từ Google Sheet, hoặc dán từ Excel/Sheet = TSV) ── */
@@ -1162,6 +1206,7 @@ async function submitHwResult(hwId, entry) {
     tot: entry.tot ?? 0,
     m: entry.m || 'climb',
     durText: entry.durText || '00:00',
+    tabSw: Math.max(0, Number(entry.tabSw) || 0),
     at: Date.now(),
     date: stamp(Date.now())
   };
@@ -2211,5 +2256,5 @@ function copyPhone() {
 }
 if (typeof window !== 'undefined') window.copyPhone = copyPhone;
 
-return { $, copyPhone, shuffle, pick, clamp, esc, fmt, stamp, clean, rng, COLORS, BADGE, safe, normAns, checkTextAns, fromOld, prep, parseCSV, rowsToQs, parseText, parsePaste, sheetSets, sheetSet, sampleSet, packHw, unpackHw, tone, sfx, sfxStop, confetti, toast, rank, makeNet, music, saveCommunityQuiz, getCommunityLibrary, getQuizById, saveHwMeta, submitHwResult, getHwGradebook, showReportCard, downloadReportCard, diffPronunciation, speakText, evaluatePronunciationAI, enrichSpeakingQuestionsAI, generateSingleSpeakingAI, checkEnglishStandardizationLocal, checkEnglishStandardizationAI, COMMON_TYPOS, deleteCommunityQuiz, deleteHwSubmission , copy, copyText, sfxFiles, kvPut, kvGet, kvScan, live, liveWatch};
+return { $, copyPhone, shuffle, pick, clamp, esc, fmt, stamp, clean, rng, COLORS, BADGE, safe, safeMediaUrl, normAns, checkTextAns, fromOld, prep, parseCSV, rowsToQs, parseText, parsePaste, sheetSets, sheetSet, sampleSet, packHw, unpackHw, tone, sfx, sfxStop, confetti, toast, rank, makeNet, music, saveCommunityQuiz, getCommunityLibrary, getQuizById, saveHwMeta, submitHwResult, getHwGradebook, showReportCard, downloadReportCard, diffPronunciation, speakText, evaluatePronunciationAI, enrichSpeakingQuestionsAI, generateSingleSpeakingAI, checkEnglishStandardizationLocal, checkEnglishStandardizationAI, COMMON_TYPOS, deleteCommunityQuiz, deleteHwSubmission , copy, copyText, sfxFiles, kvPut, kvGet, kvScan, live, liveWatch};
 })();

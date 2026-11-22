@@ -31,8 +31,11 @@ select,.inp{width:100%;border:2px solid var(--line);border-radius:12px;padding:9
 .prev div{background:#f6f3ff;border-radius:12px;padding:8px 12px;font-size:14px;font-weight:700}
 .prev div:nth-child(3n+1){background:#ffeef6}.prev div:nth-child(3n+2){background:#eaf4ff}
 .lab{font-weight:800;font-size:14px;color:#7a6aa8;margin:12px 0 6px}
-.modes{display:grid;grid-template-columns:repeat(2,1fr);gap:8px}
-.mode{display:flex;align-items:center;gap:10px;text-align:left;border:3px solid transparent;border-radius:16px;padding:10px 12px;font-weight:800;font-size:16px;cursor:pointer;color:#2d2350;box-shadow:0 3px 0 #5b4bb022;transition:.15s}
+.modes{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+@media(max-width:440px){.modes{grid-template-columns:1fr}}
+.mode{display:flex;align-items:center;gap:10px;text-align:left;border:3px solid transparent;border-radius:16px;padding:10px 12px;font-weight:800;font-size:16px;cursor:pointer;color:#2d2350;box-shadow:0 3px 0 #5b4bb022;transition:.15s;min-width:0;overflow-wrap:anywhere}
+.mix-bar{display:flex;gap:6px;flex-wrap:wrap;align-items:center;margin-top:8px;padding:8px 10px;background:#faf5ff;border:1.5px solid #ddd6fe;border-radius:12px}
+.mix-bar[hidden]{display:none}
 .mode b{font-size:30px;line-height:1;flex:none}
 .mode[data-m=climb],.mode[data-m=climb2]{background:linear-gradient(135deg,#e3f6ff,#efe6ff)}.mode[data-m=brick],.mode[data-m=brick2]{background:linear-gradient(135deg,#fff3e0,#ffe4f2)}
 .mode[data-m=adv],.mode[data-m=adv2]{background:linear-gradient(135deg,#fef3c7,#f0fdf4)}
@@ -174,9 +177,14 @@ th{color:#7a6aa8;font-size:13px}
 
        <!-- Ô dán link & 2 nút: Tạo Game vs Tạo Test -->
        <div style="font-size:12px;color:#6d28d9;margin:4px 0 4px">✨ AI đọc ảnh và PDF dành cho tài khoản Pro · PDF tối đa 15 MB · Kiểm tra lại đáp án trước khi giao.</div>
-       <label style="display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:700;color:#0369a1;margin:0 0 8px;cursor:pointer">
-        <input type="checkbox" id="chkAiFast" checked style="accent-color:#0284c7"> ⚡ Nạp siêu tốc (ưu tiên đọc nhanh, chỉ giữ lời giải có sẵn trong đề)
-       </label>
+       <div style="display:flex;gap:12px;flex-wrap:wrap;align-items:center;margin:0 0 8px">
+        <label style="display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:700;color:#0369a1;cursor:pointer">
+         <input type="checkbox" id="chkAiFast" checked style="accent-color:#0284c7"> ⚡ Nạp siêu tốc (ưu tiên đọc nhanh, chỉ giữ lời giải có sẵn trong đề)
+        </label>
+        <label style="display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:700;color:#6d28d9;cursor:pointer" title="Giữ bộ đề hiện có và gộp thêm câu hỏi từ link hoặc kho đề tiếp theo">
+         <input type="checkbox" id="chkAppendQs" style="accent-color:#7c3aed"> ➕ Gộp thêm vào bộ đề hiện có (trộn nhiều link/đề)
+        </label>
+       </div>
       <div style="display:flex;gap:8px;flex-wrap:wrap">
         <input id="inpWebLink" class="inp" style="flex:1;min-width:220px;padding:9px 12px;font-size:14px" placeholder="Dán link bài tập (test 1 p1.html, voca p2.html, matching p1.html...)">
         <button class="btn" id="bLoadGame" style="font-size:13px;padding:9px 14px;font-weight:800;background:#0284c7;color:#fff" title="AI trích đoạn trọng tâm (Context Focus) tối ưu cho Game đối kháng nhanh">🎮 Nạp đề tạo Game</button>
@@ -275,6 +283,14 @@ Cách 3 — Dán câu luyện phát âm (tự động điền IPA & mẹo):
      <button class="btn w" type="button" id="bAddTextQ" style="padding:7px 10px;font-size:12px" title="Thêm 1 câu hỏi tự luận ngắn / điền từ / viết lại câu">✍️ Câu Tự luận / Điền từ</button>
      <button class="btn w" type="button" id="bAddSpeakingQ" style="padding:7px 10px;font-size:12px;background:#fdf2f8;border-color:#f472b6;color:#9d174d" title="Thêm 1 câu hỏi phát âm tiếng Anh (chấm điểm ngữ âm tự động)">🗣 Câu Phát âm (Speaking)</button>
      <button class="btn b" type="button" id="bOpenQuickSpkModal" style="padding:7px 12px;font-size:12px;background:linear-gradient(135deg,#7c3aed,#db2777);color:#fff;border:none;box-shadow:0 2px 8px rgba(124,58,237,0.3)" title="Soạn danh sách từ/câu cần phát âm, hệ thống sẽ tự động điền phiên âm IPA và mẹo">⚡ Tạo nhanh bài Phát âm tự động</button>
+    </div>
+    <div id="mixTools" class="mix-bar" hidden>
+     <button class="btn w" type="button" id="bShuffleQs" style="padding:5px 10px;font-size:12px">🔀 Trộn ngẫu nhiên thứ tự</button>
+     <span style="display:inline-flex;align-items:center;gap:5px;font-size:12px;font-weight:800;color:#5b21b6">
+      🎲 Rút <input type="number" id="inpSampleN" min="1" max="200" value="15" style="width:62px;padding:4px 6px;font-size:13px;font-weight:800;border:2px solid var(--line);border-radius:10px;text-align:center"> câu
+      <button class="btn b" type="button" id="bSampleQs" style="padding:5px 10px;font-size:12px">Lấy ngẫu nhiên</button>
+     </span>
+     <button class="btn w" type="button" id="bRestoreQs" hidden style="padding:5px 10px;font-size:12px;color:#047857">↩️ Khôi phục đủ</button>
     </div>
     <div id="qVisualEditor" hidden style="max-height:520px;overflow:auto;margin-top:8px;padding:8px;background:#f5f0ff;border:2px solid #d8ccff;border-radius:14px"></div>
 
@@ -462,6 +478,8 @@ Cách 3 — Dán câu luyện phát âm (tự động điền IPA & mẹo):
 
    <div class="tw"><table id="eTable"></table></div>
    <div class="row" style="margin-top:20px">
+    <button class="btn" id="bCopyZaloRes" style="background:#0068ff;color:#fff">💬 Copy báo cáo Zalo</button>
+    <button class="btn b" id="bPrintRes">🖨️ In / Lưu PDF</button>
     <button class="btn g" id="bCsv">⬇️ Tải bảng điểm (Excel)</button>
     <button class="btn" id="bAgain">🔁 Chơi lại bộ này</button>
     <button class="btn w" id="bClose">🧹 Xoá phòng · về trang đầu</button>
@@ -633,6 +651,8 @@ Hoặc dán theo mẫu:
   <select id="gbSelect" class="sel" style="flex:1;min-width:220px"></select>
   <button class="btn b" type="button" id="bGbRefresh" style="padding:9px 12px;font-size:13px">🔄 Làm mới</button>
   <button class="btn b" type="button" id="bGbAnalytics" style="padding:9px 12px;font-size:13px;background:#ede9fe;color:#6d28d9;border:1.5px solid #c4b5fd">📊 Phân tích câu sai</button>
+  <button class="btn" type="button" id="bGbZalo" style="padding:9px 12px;font-size:13px;background:#0068ff;color:#fff">💬 Báo cáo Zalo</button>
+  <button class="btn b" type="button" id="bGbPrint" style="padding:9px 12px;font-size:13px">🖨️ In / PDF</button>
   <button class="btn g" type="button" id="bGbCsv" style="padding:9px 12px;font-size:13px">⬇️ Xuất Excel</button>
   <button class="btn r" type="button" id="bGbDeleteHw" style="padding:9px 12px;font-size:13px;background:#fef2f2;color:#dc2626;border:1.5px solid #fecaca" title="Xóa toàn bộ bài tập đang chọn (Dành cho Quản trị viên)">🗑️ Xóa bài này</button>
  </div>
@@ -687,7 +707,7 @@ Hoặc dán theo mẫu:
 <script src="assets/qrcode.min.js"></script>
 <script src="assets/config.js?v=20261121-1"></script>
 <script src="assets/firebase-admin-auth.js?v=20261107-1"></script>
-<script src="assets/core.js?v=20261121-1"></script>
+<script src="assets/core.js?v=20261122-1"></script>
 <script src="assets/mau.js"></script>
 <script src="assets/climb.js?v=20261121-1"></script>
 <script src="assets/climb2.js?v=20261121-1"></script>
@@ -710,7 +730,7 @@ Hoặc dán theo mẫu:
 <script src="assets/hero.js"></script>
 <script src="assets/license.js?v=2.5"></script>
 <script src="assets/license-usage.js?v=20261107-1"></script>
-<script src="assets/link-import.js?v=20261121-3"></script>
+<script src="assets/link-import.js?v=20261122-1"></script>
 
 <script>
 const { $, esc, fmt, stamp, clean, toast, confetti, sfx } = GC;
@@ -719,6 +739,7 @@ let net = null, src = 'paste', qs = [], code = '', info = null, players = {}, TO
 let mistakeStats = {}; // Theo dõi thống kê câu làm sai
 let mistakeDetail = {}; // Chi tiết học sinh làm sai từng câu
 let hwCustomQs = null, hwCustomTitle = null;
+let qsFullBackup = null;
 
 const show = v => ['vSetup', 'vLobby', 'vLive', 'vEnd'].forEach(id => $(id).hidden = id !== v);
 const store = {
@@ -748,6 +769,12 @@ function refreshQsPreviewOnly() {
       : isText ? ('✍️ [Tự luận] ' + esc(q.ansText || '')) : GC.safe((q.o && q.o[q.a]) || '');
     return '<div>' + (i + 1) + '. ' + GC.safe(q.q).replace(/<br>/g, ' ') + ' <span style="color:#1d8a5a;font-weight:800">→ ' + ansLabel + '</span></div>';
   }).join('');
+  if ($('mixTools')) $('mixTools').hidden = list.length < 2;
+  if ($('bRestoreQs')) {
+    const canRestore = Array.isArray(qsFullBackup) && qsFullBackup.length > list.length;
+    $('bRestoreQs').hidden = !canRestore;
+    if (canRestore) $('bRestoreQs').textContent = '↩️ Khôi phục đủ (' + qsFullBackup.length + ' câu)';
+  }
   if ($('bToggleVisualEditor')) {
     const isOpen = !$('qVisualEditor').hidden;
     $('bToggleVisualEditor').textContent = (isOpen ? '🔽 Thu gọn trình sửa câu hỏi (' : '✏️ Sửa chi tiết từng câu (') + list.length + ')';
@@ -838,7 +865,7 @@ function renderVisualEditor() {
           <div style="font-size:12px;color:#92400e;font-weight:700">
             💡 Gợi ý chuẩn hóa: <span style="text-decoration:line-through;color:#dc2626">${esc(targetSpeech)}</span> ➔ <b style="color:#16a34a">${esc(stdCheck.suggested)}</b>
           </div>
-          <button type="button" class="btn w" style="padding:2px 10px;font-size:11px;background:#fef3c7;border-color:#f59e0b;color:#b45309;font-weight:900;white-space:nowrap" onclick="veApplyStdSingle(${idx}, '${esc(stdCheck.suggested).replace(/'/g, "\\'")}')">✨ Chuẩn hóa ngay</button>
+          <button type="button" class="btn w" style="padding:2px 10px;font-size:11px;background:#fef3c7;border-color:#f59e0b;color:#b45309;font-weight:900;white-space:nowrap" data-suggest="${esc(stdCheck.suggested)}" onclick="veApplyStdSingle(${idx}, this.dataset.suggest)">✨ Chuẩn hóa ngay</button>
         </div>
       ` : '';
       optsHtml = `
@@ -1402,14 +1429,75 @@ if ($('searchBank'))if ($('searchBank')) {
   $('searchBank').oninput = () => renderBank();
 }
 
+function applyLoadedQs(newList, docTitle, errs) {
+  const incoming = Array.isArray(newList) ? newList : [];
+  if ($('chkAppendQs')?.checked && qs.length > 0) {
+    const sig = q => (String(q.q || '') + '|' + (q.o || []).join('|') + '|' + String(q.ansText || '')).toLowerCase().replace(/\s+/g, ' ');
+    const seen = new Set(qs.map(sig));
+    const fresh = [];
+    for (const q of incoming) {
+      const k = sig(q);
+      if (!seen.has(k)) { seen.add(k); fresh.push(q); }
+    }
+    const merged = qs.concat(fresh);
+    qsFullBackup = null;
+    const keepTitle = clean($('gTitle').value) || docTitle;
+    setQs(merged, keepTitle, errs || []);
+    return { merged: true, added: fresh.length, total: qs.length };
+  }
+  qsFullBackup = null;
+  setQs(incoming, docTitle, errs || []);
+  return { merged: false, added: qs.length, total: qs.length };
+}
+function shufflePassagesPreserved(list) {
+  const blocks = [];
+  for (const item of list) {
+    const p = (item.passage || '').trim();
+    if (p && blocks.length && blocks[blocks.length - 1].p === p) {
+      blocks[blocks.length - 1].items.push(item);
+    } else {
+      blocks.push({ p, items: [item] });
+    }
+  }
+  return GC.shuffle(blocks).flatMap(b => b.items);
+}
+if ($('bShuffleQs')) $('bShuffleQs').onclick = () => {
+  if (qs.length < 2) return;
+  qs = shufflePassagesPreserved(qs);
+  refreshQsPreviewOnly();
+  if ($('qVisualEditor') && !$('qVisualEditor').hidden) renderVisualEditor();
+  toast('🔀 Đã trộn ngẫu nhiên thứ tự ' + qs.length + ' câu!', 2200);
+};
+if ($('bSampleQs')) $('bSampleQs').onclick = () => {
+  if (qs.length < 2) return;
+  const n = Math.max(1, Math.floor(+$('inpSampleN').value || 0));
+  if (!n || n >= qs.length) return toast('⚠️ Nhập số câu cần rút nhỏ hơn tổng số câu hiện có (' + qs.length + ').', 2500);
+  if (!qsFullBackup || qsFullBackup.length < qs.length) qsFullBackup = qs.slice();
+  const basePool = qsFullBackup.length >= n ? qsFullBackup : qs;
+  qs = shufflePassagesPreserved(basePool).slice(0, n);
+  refreshQsPreviewOnly();
+  if ($('qVisualEditor') && !$('qVisualEditor').hidden) renderVisualEditor();
+  toast('🎲 Đã rút ngẫu nhiên ' + n + '/' + basePool.length + ' câu! Có thể bấm Khôi phục đủ bất kỳ lúc nào.', 2800);
+};
+if ($('bRestoreQs')) $('bRestoreQs').onclick = () => {
+  if (!Array.isArray(qsFullBackup) || !qsFullBackup.length) return;
+  qs = qsFullBackup.slice();
+  qsFullBackup = null;
+  refreshQsPreviewOnly();
+  if ($('qVisualEditor') && !$('qVisualEditor').hidden) renderVisualEditor();
+  toast('↩️ Đã khôi phục đủ ' + qs.length + ' câu hỏi!', 2200);
+};
+
 window.loadQuizData = async function(id) {
   toast('⏳ Đang tải bộ đề ' + id + '…', 1500);
   const quiz = await GC.getQuizById(id);
   if (quiz && quiz.qs) {
     const isTest = quiz.type === 'test' || quiz.m === 'test';
-    selectMode(isTest ? 'test' : (quiz.m || 'climb'));
-    setQs(quiz.qs, quiz.title || id, []);
-    toast('✅ Đã nạp đề: ' + (quiz.title || id) + ' (' + quiz.qs.length + ' câu) ' + (isTest ? '📝 Bài Test' : '🎮 Game'), 2800);
+    if (!($('chkAppendQs')?.checked && qs.length > 0)) selectMode(isTest ? 'test' : (quiz.m || 'climb'));
+    const res = applyLoadedQs(quiz.qs, quiz.title || id, []);
+    toast(res.merged
+      ? ('➕ Đã gộp thêm ' + res.added + ' câu từ [' + id + '] → tổng ' + res.total + ' câu!')
+      : ('✅ Đã nạp đề: ' + (quiz.title || id) + ' (' + quiz.qs.length + ' câu) ' + (isTest ? '📝 Bài Test' : '🎮 Game')), 2800);
   } else {
     toast('❌ Không tải được nội dung câu hỏi của mã đề ' + id, 3000);
   }
@@ -1453,8 +1541,10 @@ window.shareLocalToCommunity = async function(idx) {
 window.loadFromBank = function(idx) {
   const bank = getBank();
   if (bank[idx]) {
-    setQs(bank[idx].qs, bank[idx].title, []);
-    toast('✅ Đã nạp đề từ kho riêng: ' + bank[idx].title);
+    const res = applyLoadedQs(bank[idx].qs, bank[idx].title, []);
+    toast(res.merged
+      ? ('➕ Đã gộp thêm ' + res.added + ' câu từ kho riêng → tổng ' + res.total + ' câu!')
+      : ('✅ Đã nạp đề từ kho riêng: ' + bank[idx].title));
   }
 };
 
@@ -1843,6 +1933,8 @@ $('bOpen').onclick = async () => {
     };
     const clean_qs = qs.map(q => ({
       type: q.type || 'mc',
+      targetText: q.targetText || '',
+      ipa: q.ipa || '',
       ansText: q.ansText || '',
       q: q.q,
       o: q.o,
@@ -1922,7 +2014,8 @@ function renderBoard() {
       const icons = (p.st === 'submitted' ? '✅' : '✍️') + (p.on ? '' : ' 💤');
       const sc = p.score ?? Math.round((p.ok || 0) / tot * 100);
       const statusTxt = p.st === 'submitted' ? ('✅ Đã nộp · ' + sc + ' điểm') : ('✍️ Đang làm ' + ans + '/' + tot + ' câu');
-      return '<div class="lr"><div class="rk">' + (['🥇', '🥈', '🥉'][i] || i + 1) + '</div><div class="nm"><i class="dot" style="background:' + esc(p.c) + '"></i> ' + esc(p.n) + ' ' + icons + '</div>' +
+      const tabBadge = p.tabSw > 0 ? ' <span style="background:#fef3c7;color:#b45309;border:1px solid #f59e0b;border-radius:8px;padding:1px 6px;font-size:11px;font-weight:800">⚠️ Rời tab: ' + p.tabSw + '</span>' : '';
+      return '<div class="lr"><div class="rk">' + (['🥇', '🥈', '🥉'][i] || i + 1) + '</div><div class="nm"><i class="dot" style="background:' + esc(p.c) + '"></i> ' + esc(p.n) + ' ' + icons + tabBadge + '</div>' +
         '<div class="bar"><i style="width:' + pct + '%;background:linear-gradient(90deg,' + esc(p.c) + ',#10b981)"></i></div>' +
         '<div class="meta">' + statusTxt + ' · 🎯 Đúng ' + (p.ok || 0) + '/' + tot + '</div></div>';
     }
@@ -1936,7 +2029,7 @@ function renderBoard() {
 setInterval(() => { if (info && info.st === 'play') renderBoard() }, 1000);
 
 function feedLine(e) {
-  const t = e.ty === 'cp' ? '🚩 ' + e.nm + ' lên Trạm ' + e.n : e.ty === 'lv' ? '🏁 ' + e.nm + (e.k === 'stage' ? ' qua Stage ' : ' qua Màn ') + e.n : e.ty === 'win' ? (info && info.m === 'test' ? '📥 ' + e.nm + ' đã nộp bài kiểm tra (' + (e.score ?? 0) + ' điểm)!' : '👸 ' + e.nm + ' đã giải cứu công chúa!') : e.ty === 'fz' ? '❄️ ' + e.nm + ' đóng băng ' + e.tn : e.ty === 'st' ? '🧲 ' + e.nm + ' hút ⚡ của ' + e.tn : e.ty === 'blk' ? '🛡 ' + e.nm + ' chặn được chiêu trêu' : e.ty === 'ko' ? '💥 ' + e.nm + ' hạ gục ' + e.tn + (e.n ? ' · ⭐ ' + e.n : '') : e.ty === 'cu' ? '🧟 ' + e.nm + ' đã yểm ' + e.tn : '';
+  const t = e.ty === 'cp' ? '🚩 ' + e.nm + ' lên Trạm ' + e.n : e.ty === 'lv' ? '🏁 ' + e.nm + (e.k === 'stage' ? ' qua Stage ' : ' qua Màn ') + e.n : e.ty === 'win' ? (info && info.m === 'test' ? '📥 ' + e.nm + ' đã nộp bài kiểm tra (' + (e.score ?? 0) + ' điểm)!' : '👸 ' + e.nm + ' đã giải cứu công chúa!') : e.ty === 'fz' ? '❄️ ' + e.nm + ' đóng băng ' + e.tn : e.ty === 'st' ? '🧲 ' + e.nm + ' hút ⚡ của ' + e.tn : e.ty === 'blk' ? '🛡 ' + e.nm + ' chặn được chiêu trêu' : e.ty === 'ko' ? '💥 ' + e.nm + ' hạ gục ' + e.tn + (e.n ? ' · ⭐ ' + e.n : '') : e.ty === 'cu' ? '🧟 ' + e.nm + ' đã yểm ' + e.tn : e.ty === 'tab' ? '⚠️ ' + e.nm + ' rời màn hình làm bài (lần ' + (e.n || 1) + ')' : '';
   if (!t) return; const d = document.createElement('div'); d.textContent = t; $('feed').prepend(d); while ($('feed').children.length > 40) $('feed').lastChild.remove();
   if (e.ty === 'win') { sfx('fanfare'); confetti(60); }
 }
@@ -1989,11 +2082,12 @@ function showEnd() {
     });
   };
   if (isTest) {
-    $('eTable').innerHTML = '<tr><th>Hạng</th><th>Họ tên</th><th>Trạng thái</th><th>Điểm số</th><th>Số câu đúng</th><th>Đã làm</th><th>Thao tác</th></tr>' +
+    $('eTable').innerHTML = '<tr><th>Hạng</th><th>Họ tên</th><th>Trạng thái</th><th>Điểm số</th><th>Số câu đúng</th><th>Đã làm</th><th>Rời tab</th><th>Thao tác</th></tr>' +
       R.map(([idKey, p], i) => {
         const tot = p.tot || totQ;
         const sc = p.score ?? Math.round((p.ok || 0) / tot * 100);
-        return '<tr><td>' + (i + 1) + '</td><td>' + esc(p.n) + '</td><td>' + (p.st === 'submitted' ? '✅ Đã nộp bài' : '⏳ Chưa nộp') + '</td><td><b>' + sc + ' / 100</b></td><td>' + (p.ok || 0) + ' / ' + tot + '</td><td>' + (p.ans || 0) + ' / ' + tot + '</td><td><button class="btn b" style="padding:4px 10px;font-size:12px" onclick="exportPlayerReport(\'' + esc(idKey) + '\')">🏅 Phiếu điểm</button></td></tr>';
+        const ts = p.tabSw > 0 ? '<span style="background:#fef3c7;color:#b45309;padding:2px 7px;border-radius:8px;font-weight:800;font-size:12px">⚠️ ' + p.tabSw + '</span>' : '<span style="color:#64748b">0</span>';
+        return '<tr><td>' + (i + 1) + '</td><td>' + esc(p.n) + '</td><td>' + (p.st === 'submitted' ? '✅ Đã nộp bài' : '⏳ Chưa nộp') + '</td><td><b>' + sc + ' / 100</b></td><td>' + (p.ok || 0) + ' / ' + tot + '</td><td>' + (p.ans || 0) + ' / ' + tot + '</td><td>' + ts + '</td><td><button class="btn b" style="padding:4px 10px;font-size:12px" onclick="exportPlayerReport(\'' + esc(idKey) + '\')">🏅 Phiếu điểm</button></td></tr>';
       }).join('');
   } else {
     $('eTable').innerHTML = '<tr><th>Hạng</th><th>Họ tên</th><th>Tiến độ</th><th>Đúng</th><th>% đúng</th><th>🔥 Chuỗi</th><th>🍄 Giẫm</th><th>😱 Rơi</th><th>Thao tác</th></tr>' +
@@ -2050,7 +2144,6 @@ window.showExplanation = function(qNum) {
   const isSpeaking = q.type === 'speaking';
   const isText = !isSpeaking && (q.type === 'text' || (!!q.ansText && (!q.o || q.o.length < 2)));
   const target = q.targetText || q.ansText || q.q;
-  const safeTarget = esc(target).replace(/'/g, "\\'");
   const correctLabel = isSpeaking
     ? ('🗣 “' + esc(target) + '”' + (q.ipa ? ' ' + esc(q.ipa) : ''))
     : isText ? esc(q.ansText) : (q.o ? ('ABCD'[q.a] + '. ' + GC.safe(q.o[q.a])) : 'Chưa rõ');
@@ -2073,7 +2166,7 @@ window.showExplanation = function(qNum) {
         <div style="font-weight:800;color:#9d174d;margin-bottom:4px">🗣 Dạng câu phát âm tiếng Anh (Speaking):</div>
         <div style="font-size:16px;color:#831843;font-weight:900">Câu chuẩn: “${GC.safe(target)}”</div>
         ${q.ipa ? `<div style="font-size:13px;color:#be185d;font-family:monospace;margin-top:4px">Phiên âm IPA: ${GC.safe(q.ipa)}</div>` : ''}
-        <button type="button" class="btn w" style="margin-top:8px;padding:4px 10px;font-size:12px" onclick="GC.speakText('${safeTarget}')">🔊 Nghe thử giọng đọc mẫu</button>
+        <button type="button" id="expSpkBtn" class="btn w" style="margin-top:8px;padding:4px 10px;font-size:12px">🔊 Nghe thử giọng đọc mẫu</button>
       </div>
     `;
   } else if (isText) {
@@ -2114,6 +2207,7 @@ window.showExplanation = function(qNum) {
       <div style="font-size:15px;color:#1e293b;line-height:1.6">${expText}</div>
     </div>
   `;
+  if ($('expSpkBtn')) $('expSpkBtn').onclick = () => GC.speakText(target);
   $('ovExp').classList.add('on');
 };
 
@@ -2122,17 +2216,114 @@ $('bCsv').onclick = () => {
   const isTest = info && info.m === 'test';
   const totQ = qs.length || 1;
   const rows = isTest
-    ? [['Hạng', 'Họ tên', 'Trạng thái', 'Điểm (thang 100)', 'Số câu đúng', 'Đã làm', 'Tổng số câu']].concat(
+    ? [['Hạng', 'Họ tên', 'Trạng thái', 'Điểm (thang 100)', 'Số câu đúng', 'Đã làm', 'Tổng số câu', 'Rời tab']].concat(
         R.map(([, p], i) => {
           const tot = p.tot || totQ;
           const sc = p.score ?? Math.round((p.ok || 0) / tot * 100);
-          return [i + 1, p.n, p.st === 'submitted' ? 'Đã nộp bài' : 'Chưa nộp', sc, p.ok || 0, p.ans || 0, tot];
+          return [i + 1, p.n, p.st === 'submitted' ? 'Đã nộp bài' : 'Chưa nộp', sc, p.ok || 0, p.ans || 0, tot, p.tabSw || 0];
         })
       )
     : [['Hạng', 'Họ tên', 'Về đích', 'Tiến độ', 'Đúng', 'Đã trả lời', '% đúng', 'Chuỗi dài nhất', 'Giẫm bẹp', 'Số lần rơi']].concat(
         R.map(([, p], i) => [i + 1, p.n, p.tt ? 'Có' : '', p.tt ? 'Phá đảo' : p.lb || (p.alt || 0) + ' m', p.ok || 0, p.ans || 0, p.ans ? Math.round(p.ok / p.ans * 100) : 0, p.bs || 0, p.sp || 0, p.fl || 0]));
   const blob = new Blob(['\ufeff' + 'Bộ đề:,' + q(info.t) + ',Ngày:,' + q(stamp(info.en || Date.now())) + '\n' + rows.map(r => r.map(q).join(',')).join('\n')], { type: 'text/csv;charset=utf-8' });
   const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'Bang diem - ' + info.t.replace(/[\\/:*?"<>|]/g, '') + ' - ' + code + '.csv'; a.click();
+};
+function buildZaloClassSummary({ title, rows, isTest, mistakes }) {
+  const total = rows.length;
+  const avg = total ? Math.round(rows.reduce((s, r) => s + (Number(r.score) || 0), 0) / total) : 0;
+  const lines = [
+    '📊 BÁO CÁO KẾT QUẢ LỚP HỌC — ' + (title || 'Ms Nene English'),
+    '🗓 ' + stamp(Date.now()) + ' · 👥 Sĩ số nộp/chơi: ' + total + ' học sinh · 🎯 Trung bình: ' + avg + (isTest ? '/100đ' : '%'),
+    ''
+  ];
+  if (rows.length) {
+    lines.push('🏆 TOP HỌC SINH XUẤT SẮC:');
+    rows.slice(0, 5).forEach((r, i) => {
+      const medal = ['🥇', '🥈', '🥉', '4.', '5.'][i];
+      lines.push(medal + ' ' + r.name + ' — ' + r.scoreTxt + ' (' + r.detail + ')');
+    });
+  }
+  if (mistakes && mistakes.length) {
+    lines.push('', '⚠️ CÂU CẢ LỚP HAY LÀM SAI (cần ôn thêm):');
+    mistakes.slice(0, 5).forEach(m => {
+      lines.push('• Câu ' + m.num + ' (' + m.count + ' lượt sai): ' + m.preview);
+    });
+  }
+  const tabAlerts = rows.filter(r => (r.tabSw || 0) > 0);
+  if (tabAlerts.length) {
+    lines.push('', '🔔 Lưu ý rời màn hình làm bài: ' + tabAlerts.map(r => r.name + ' (' + r.tabSw + ' lần)').join(', '));
+  }
+  lines.push('', '💬 Phụ huynh & các con xem kỹ phần giải thích để rút kinh nghiệm cho buổi sau nhé!');
+  return lines.join('\n');
+}
+function openPrintableReport({ title, subtitle, summaryItems, headers, rows, mistakes }) {
+  const w = window.open('', '_blank', 'width=980,height=720');
+  if (!w) return toast('⚠️ Trình duyệt đang chặn cửa sổ in — hãy cho phép popup để in / lưu PDF!', 3500);
+  const sumHtml = (summaryItems || []).map(it => '<div class="chip"><b>' + esc(it.k) + ':</b> ' + esc(it.v) + '</div>').join('');
+  const thHtml = (headers || []).map(h => '<th>' + esc(h) + '</th>').join('');
+  const tbHtml = (rows || []).map(r => '<tr>' + r.map(c => '<td>' + esc(c) + '</td>').join('') + '</tr>').join('');
+  const misHtml = (mistakes && mistakes.length)
+    ? '<h3>⚠️ Thống kê câu làm sai nhiều</h3><ul>' + mistakes.slice(0, 8).map(m => '<li><b>Câu ' + esc(m.num) + '</b> (' + esc(m.count) + ' lượt sai): ' + esc(m.preview) + '</li>').join('') + '</ul>'
+    : '';
+  w.document.open();
+  w.document.write('<!DOCTYPE html><html lang="vi"><head><meta charset="utf-8"><title>' + esc(title) + '</title>' +
+    '<style>body{font-family:Nunito,Arial,sans-serif;padding:24px;color:#1e293b}h1{font-size:22px;margin:0 0 4px;color:#4c1d95}.sub{color:#64748b;font-size:13px;margin-bottom:14px}.chips{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:16px}.chip{background:#f5f3ff;border:1px solid #ddd6fe;border-radius:10px;padding:6px 12px;font-size:13px}table{width:100%;border-collapse:collapse;font-size:13px;margin-bottom:16px}th,td{border:1px solid #cbd5e1;padding:7px 9px;text-align:left}th{background:#f1f5f9;font-weight:800}h3{font-size:15px;color:#b45309;margin:12px 0 6px}ul{margin:0;padding-left:20px;font-size:13px;line-height:1.6}@media print{body{padding:10px}.noprint{display:none}}</style>' +
+    '</head><body><h1>' + esc(title) + '</h1><div class="sub">' + esc(subtitle) + '</div>' +
+    '<div class="chips">' + sumHtml + '</div>' +
+    '<table><thead><tr>' + thHtml + '</tr></thead><tbody>' + tbHtml + '</tbody></table>' +
+    misHtml +
+    '<div class="noprint" style="margin-top:14px"><button onclick="window.print()" style="padding:8px 16px;font-weight:700;cursor:pointer">🖨️ In / Lưu PDF</button></div>' +
+    '</body></html>');
+  w.document.close();
+  w.focus();
+  setTimeout(() => { try { w.print(); } catch (_) {} }, 250);
+}
+function getLiveEndMistakes() {
+  return Object.entries(mistakeStats || {}).sort((a, b) => b[1] - a[1]).map(([qIdx, count]) => {
+    const qNum = +qIdx;
+    const question = qs[qNum - 1] || qs[qNum] || { q: 'Câu hỏi ' + qNum };
+    const plain = clean((question.q || '').replace(/<[^>]+>/g, ' ')).slice(0, 90);
+    return { num: qNum, count, preview: plain };
+  });
+}
+if ($('bCopyZaloRes')) $('bCopyZaloRes').onclick = () => {
+  const R = GC.rank(players), isTest = info && info.m === 'test', totQ = qs.length || 1;
+  const rows = R.map(([, p]) => {
+    const tot = p.tot || totQ;
+    const sc = isTest ? (p.score ?? Math.round((p.ok || 0) / tot * 100)) : (p.ans ? Math.round((p.ok || 0) / p.ans * 100) : 0);
+    return {
+      name: p.n,
+      score: sc,
+      scoreTxt: isTest ? (sc + ' điểm') : (sc + '% đúng'),
+      detail: isTest ? ((p.ok || 0) + '/' + tot + ' câu') : ((p.ok || 0) + '/' + (p.ans || 0) + ' câu · ' + (p.alt || 0) + 'm'),
+      tabSw: p.tabSw || 0
+    };
+  });
+  const msg = buildZaloClassSummary({ title: info ? info.t : 'Kết quả lớp học', rows, isTest, mistakes: getLiveEndMistakes() });
+  navigator.clipboard.writeText(msg).then(() => toast('📋 Đã copy báo cáo lớp — dán vào nhóm Zalo phụ huynh nhé!', 2800)).catch(() => prompt('Copy báo cáo Zalo:', msg));
+};
+if ($('bPrintRes')) $('bPrintRes').onclick = () => {
+  const R = GC.rank(players), isTest = info && info.m === 'test', totQ = qs.length || 1;
+  const avg = R.length ? Math.round(R.reduce((s, [, p]) => {
+    const tot = p.tot || totQ;
+    return s + (isTest ? (p.score ?? Math.round((p.ok || 0) / tot * 100)) : (p.ans ? Math.round((p.ok || 0) / p.ans * 100) : 0));
+  }, 0) / R.length) : 0;
+  const headers = isTest
+    ? ['Hạng', 'Họ tên', 'Trạng thái', 'Điểm (100)', 'Số câu đúng', 'Đã làm', 'Rời tab']
+    : ['Hạng', 'Họ tên', 'Tiến độ', 'Số câu đúng', '% đúng', 'Chuỗi tối đa'];
+  const rows = R.map(([, p], i) => {
+    const tot = p.tot || totQ;
+    const sc = isTest ? (p.score ?? Math.round((p.ok || 0) / tot * 100)) : (p.ans ? Math.round((p.ok || 0) / p.ans * 100) : 0);
+    return isTest
+      ? [i + 1, p.n, p.st === 'submitted' ? 'Đã nộp' : 'Chưa nộp', sc, (p.ok || 0) + '/' + tot, (p.ans || 0) + '/' + tot, p.tabSw || 0]
+      : [i + 1, p.n, p.tt ? 'Hoàn thành' : (p.lb || (p.alt || 0) + 'm'), (p.ok || 0) + '/' + (p.ans || 0), sc + '%', p.bs || 0];
+  });
+  openPrintableReport({
+    title: 'Bảng điểm: ' + (info ? info.t : 'Ms Nene English'),
+    subtitle: 'Mã phòng: ' + code + ' · Ngày: ' + stamp(info?.en || Date.now()),
+    summaryItems: [{ k: 'Sĩ số', v: R.length + ' HS' }, { k: 'Điểm TB', v: avg + (isTest ? '/100' : '%') }, { k: 'Tổng câu', v: totQ }],
+    headers, rows, mistakes: getLiveEndMistakes()
+  });
 };
 $('bAgain').onclick = async () => { const saved = JSON.parse(store.get('gHost') || '{}'); qs = saved.qs || qs; showEnd.done = 0; await net.remove('rooms/' + code); leave(); if (qs.length) { $('bOpen').disabled = false; $('bOpen').click() } };
 $('bClose').onclick = async () => { await net.remove('rooms/' + code); showEnd.done = 0; leave() };
@@ -2571,19 +2762,20 @@ async function processLoadQuiz(isTestMode) {
       throw new Error('Không trích xuất được câu hỏi nào từ nội dung.');
     }
 
-    // Tự động chuyển mode nếu chọn Test
-    if (isTestMode) {
-      selectMode('test');
-    } else if (gMode === 'test') {
-      selectMode('climb');
+    const appending = !!($('chkAppendQs')?.checked && qs.length > 0);
+    if (!appending) {
+      if (isTestMode) selectMode('test');
+      else if (gMode === 'test') selectMode('climb');
+      window.currentQuizType = isTestMode ? 'test' : 'game';
     }
 
-    window.currentQuizType = isTestMode ? 'test' : 'game';
-
-    setQs(extractedQs, docTitle, extractedQs.skipped || []);
-    if (docTitle) $('gTitle').value = docTitle.replace(/<[^>]+>/g, '').slice(0, 60);
+    const applyRes = applyLoadedQs(extractedQs, docTitle, extractedQs.skipped || []);
+    if (docTitle && !appending) $('gTitle').value = docTitle.replace(/<[^>]+>/g, '').slice(0, 60);
     const elapsedSec = ((performance.now() - tStart) / 1000).toFixed(2);
-    status.innerHTML = '🎉 <b>Đã nạp ' + extractedQs.length + ' câu hỏi</b> trong <b>' + elapsedSec + 's</b>' +
+    const countPhrase = applyRes.merged
+      ? ('Đã gộp thêm ' + applyRes.added + ' câu → tổng ' + applyRes.total + ' câu hỏi')
+      : ('Đã nạp ' + extractedQs.length + ' câu hỏi');
+    status.innerHTML = '🎉 <b>' + countPhrase + '</b> trong <b>' + elapsedSec + 's</b>' +
       (extractedQs.fromCache ? ' ⚡ (bộ nhớ đệm)' : '') +
       (extractedQs.skipped?.length ? ' · ⚠️ ' + extractedQs.skipped.length + ' câu cần xem lại/đã bỏ qua' : '') +
       (extractedQs.inferredCount ? ' · ⚠️ ' + extractedQs.inferredCount + ' đáp án AI tự suy luận' : '') +
@@ -2679,7 +2871,7 @@ function renderGradebookTable() {
   $('gbTbody').innerHTML = rows.map((r, i) => `
     <tr>
       <td><b>#${i + 1}</b></td>
-      <th>${esc(r.n)}</th>
+      <th>${esc(r.n)}${r.tabSw > 0 ? '<div style="font-size:11px;color:#b45309;font-weight:800">⚠️ Rời tab: ' + r.tabSw + '</div>' : ''}</th>
       <td>${esc(r.title || r.hwId)}</td>
       <td>${r.m === 'test' ? '📝 Bài kiểm tra' : '🎮 Game'}</td>
       <td><b style="color:${(r.score || 0) >= 80 ? '#047857' : (r.score || 0) >= 50 ? '#1d4ed8' : '#dc2626'}">${r.score ?? 0} / 100</b></td>
@@ -2850,13 +3042,46 @@ if ($('bGbAnalytics')) {
   };
 }
 
+if ($('bGbZalo')) {
+  $('bGbZalo').onclick = () => {
+    if (!gbCurrentRows.length) return toast('⚠️ Chưa có dữ liệu nộp bài để tạo báo cáo!', 2200);
+    const selOpt = $('gbSelect')?.selectedOptions?.[0]?.textContent || 'Bài tập về nhà';
+    const sorted = gbCurrentRows.slice().sort((a, b) => (b.score || 0) - (a.score || 0));
+    const msg = buildZaloClassSummary({
+      title: selOpt,
+      isTest: true,
+      rows: sorted.map(r => ({
+        name: r.n,
+        score: r.score ?? 0,
+        scoreTxt: (r.score ?? 0) + ' điểm',
+        detail: (r.ok ?? 0) + '/' + (r.tot ?? 0) + ' câu',
+        tabSw: r.tabSw || 0
+      }))
+    });
+    navigator.clipboard.writeText(msg).then(() => toast('📋 Đã copy báo cáo Sổ điểm gửi Zalo!', 2800)).catch(() => prompt('Copy báo cáo Zalo:', msg));
+  };
+}
+if ($('bGbPrint')) {
+  $('bGbPrint').onclick = () => {
+    if (!gbCurrentRows.length) return toast('⚠️ Chưa có dữ liệu để in!', 2200);
+    const selOpt = $('gbSelect')?.selectedOptions?.[0]?.textContent || 'Sổ điểm BTVN';
+    const avg = Math.round(gbCurrentRows.reduce((s, r) => s + (r.score || 0), 0) / gbCurrentRows.length);
+    openPrintableReport({
+      title: 'Sổ Điểm: ' + selOpt,
+      subtitle: 'Xuất lúc ' + stamp(Date.now()),
+      summaryItems: [{ k: 'Tổng bài nộp', v: gbCurrentRows.length }, { k: 'Điểm TB', v: avg + ' / 100' }],
+      headers: ['Hạng', 'Họ tên', 'Bài tập', 'Hình thức', 'Điểm (100)', 'Số câu đúng', 'Thời gian', 'Nộp lúc', 'Rời tab'],
+      rows: gbCurrentRows.map((r, i) => [i + 1, r.n, r.title || r.hwId, r.m === 'test' ? 'Bài kiểm tra' : 'Game', r.score ?? 0, (r.ok ?? 0) + '/' + (r.tot ?? 0), r.durText || '—', r.date || '', r.tabSw || 0])
+    });
+  };
+}
 if ($('bGbCsv')) {
   $('bGbCsv').onclick = () => {
     if (!gbCurrentRows.length) return toast('⚠️ Chưa có dữ liệu để xuất Excel', 2200);
     const q = s => '"' + String(s ?? '').replace(/"/g, '""') + '"';
-    const header = ['Hạng', 'Họ tên học sinh', 'Mã bài', 'Tên bài tập', 'Hình thức', 'Điểm (thang 100)', 'Số câu đúng', 'Tổng số câu', 'Thời gian làm', 'Thời điểm nộp'];
+    const header = ['Hạng', 'Họ tên học sinh', 'Mã bài', 'Tên bài tập', 'Hình thức', 'Điểm (thang 100)', 'Số câu đúng', 'Tổng số câu', 'Thời gian làm', 'Thời điểm nộp', 'Rời tab'];
     const csvRows = [header].concat(gbCurrentRows.map((r, i) => [
-      i + 1, r.n, r.hwId, r.title, r.m === 'test' ? 'Bài kiểm tra' : 'Game', r.score ?? 0, r.ok ?? 0, r.tot ?? 0, r.durText || '', r.date || ''
+      i + 1, r.n, r.hwId, r.title, r.m === 'test' ? 'Bài kiểm tra' : 'Game', r.score ?? 0, r.ok ?? 0, r.tot ?? 0, r.durText || '', r.date || '', r.tabSw || 0
     ]));
     const blob = new Blob(['\ufeff' + csvRows.map(r => r.map(q).join(',')).join('\n')], { type: 'text/csv;charset=utf-8' });
     const a = document.createElement('a');

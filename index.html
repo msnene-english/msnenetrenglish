@@ -9,12 +9,13 @@
 <link rel="stylesheet" href="assets/game.css">
 <style>
 body {
-  min-height: 100vh;
+  min-height: 100dvh;
   display: flex;
-  align-items: center;
+  align-items: safe center;
   justify-content: center;
   background: linear-gradient(160deg, #ffe4f2, #e6efff 45%, #efe6ff);
-  padding: 20px;
+  padding: 16px;
+  overflow-x: clip;
 }
 .portal-card {
   background: #fff;
@@ -22,6 +23,8 @@ body {
   padding: 36px 28px;
   max-width: 680px;
   width: 100%;
+  min-width: 0;
+  margin: auto;
   box-shadow: 0 16px 40px rgba(91, 75, 176, 0.18);
   border-top: 8px solid var(--purple);
   text-align: center;
@@ -42,12 +45,9 @@ body {
 }
 .role-grid {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 16px;
   margin-bottom: 24px;
-}
-@media (max-width: 580px) {
-  .role-grid { grid-template-columns: 1fr; }
 }
 .role-box {
   background: #faf8ff;
@@ -61,6 +61,14 @@ body {
   display: flex;
   flex-direction: column;
   align-items: center;
+  min-width: 0;
+  width: 100%;
+}
+@media (max-width: 580px) {
+  body { align-items: flex-start; padding: 12px; }
+  .portal-card { padding: 20px 14px; border-radius: 22px; }
+  .role-grid { grid-template-columns: 1fr; }
+  .role-box { padding: 18px 14px; }
 }
 .role-box:hover {
   transform: translateY(-4px);
@@ -126,11 +134,11 @@ body {
       <div class="role-icon">🎒</div>
       <div class="role-name">Dành cho Học sinh</div>
       <div class="role-desc">Nhập mã PIN 6 số của cô để vào phòng ngay, hoặc mở trang trò chơi.</div>
-      <div style="margin-top:12px;display:flex;gap:8px" onclick="event.stopPropagation()">
-        <input id="idxPin" type="text" inputmode="numeric" maxlength="6" placeholder="Mã PIN 6 số (VD: 210437)"
-               style="flex:1;min-width:0;padding:10px 12px;border:2px solid #cbd5e1;border-radius:12px;font-size:15px;font-weight:800;letter-spacing:1.5px;text-align:center;outline:none"
+      <div style="margin-top:12px;display:flex;gap:8px;width:100%;max-width:100%;min-width:0" onclick="event.stopPropagation()">
+        <input id="idxPin" type="text" inputmode="numeric" maxlength="6" placeholder="Mã PIN 6 số"
+               style="flex:1;min-width:0;padding:10px 10px;border:2px solid #cbd5e1;border-radius:12px;font-size:15px;font-weight:800;letter-spacing:1.5px;text-align:center;outline:none"
                onkeydown="if(event.key==='Enter')joinWithPin()">
-        <button class="btn b" type="button" onclick="joinWithPin()" style="white-space:nowrap;padding:10px 16px;font-size:14px">Vào ngay</button>
+        <button class="btn b" type="button" onclick="joinWithPin()" style="white-space:nowrap;padding:10px 14px;font-size:14px;flex-shrink:0">Vào ngay</button>
       </div>
       <a href="play.html" style="display:inline-block;margin-top:10px;font-size:13px;font-weight:700;color:#6366f1;text-decoration:none">Hoặc mở trang chơi không cần nhập mã &rarr;</a>
     </div>
@@ -155,9 +163,13 @@ body {
         location.href = 'play.html';
       }
     }
-    // Tự động chuyển tiếp vào play.html nếu URL có mã phòng
+    // Tự động chuyển tiếp vào play.html nếu URL có mã phòng / BTVN / bài tự luyện
     (function() {
       const p = new URLSearchParams(location.search);
+      if (p.has('hw') || p.has('quiz') || p.has('solo')) {
+        location.replace('play.html' + location.search + location.hash);
+        return;
+      }
       const candidateKeys = ['room', 'code', 'pin', 'r'];
       let found = '';
       for (const [k, v] of p.entries()) {
@@ -176,7 +188,12 @@ body {
         if (hashMatch) found = hashMatch[0];
       }
       if (found) {
-        location.replace('play.html?room=' + found);
+        const next = new URL('play.html', location.href);
+        for (const k of ['m', 'theme', 'name']) {
+          if (p.has(k) && p.get(k)) next.searchParams.set(k, p.get(k));
+        }
+        next.searchParams.set('room', found);
+        location.replace(next.href);
       }
     })();
   </script>

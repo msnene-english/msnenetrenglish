@@ -421,6 +421,15 @@
         }).filter(x => x.length > 20);
         if (pbs.length) out.push(pbs.join('\n\n').slice(0, 7000));
       }
+      if (!out.length) {
+        const pcs = [...doc.querySelectorAll('.lp .pc')].map(el => {
+          const clone = el.cloneNode(true);
+          clone.querySelectorAll('.btr,.tv,.gl,.gtb,.trans,.trans-content,.trans-btn,button,.plbl').forEach(x => x.remove());
+          const sub = [...clone.querySelectorAll('.paragraph,.pt')];
+          return clean(sub.length ? sub.map(p => p.textContent).join('\n\n') : clone.textContent, 3000);
+        }).filter(x => x.length > 20);
+        if (pcs.length) out.push(pcs.join('\n\n').slice(0, 7000));
+      }
       return { list: out, byId };
     }
 
@@ -455,6 +464,19 @@
         if (t.length > 20) pbs.push(t);
       }
       if (pbs.length) out.push(pbs.join('\n\n').slice(0, 7000));
+    }
+    if (!out.length && /class=["'][^"']*\bpc\b/i.test(cleanedHtml) && /class=["'][^"']*\b(?:paragraph|pt)\b/i.test(cleanedHtml)) {
+      const pcCleaned = cleanedHtml
+        .replace(/<button\b[\s\S]*?<\/button>/gi, ' ')
+        .replace(/<(div|span|p)\b[^>]*class=["'][^"']*\b(?:btr|tv|gl|gtb|trans(?:-content|-btn)?|gloss|viet-trans)\b[^"']*["'][^>]*>[\s\S]*?<\/\1>/gi, ' ');
+      const pRe = /<(div|p)\b[^>]*class=["'][^"']*\b(?:paragraph|pt)\b[^"']*["'][^>]*>([\s\S]*?)<\/\1>/gi;
+      const pcs = [];
+      let pm;
+      while ((pm = pRe.exec(pcCleaned))) {
+        const t = clean(pm[2], 3000);
+        if (t.length > 20) pcs.push(t);
+      }
+      if (pcs.length) out.push(pcs.join('\n\n').slice(0, 7000));
     }
     return { list: out, byId };
   }
@@ -543,18 +565,23 @@
       const blanks = [];
       const sentence = segParts.map(p => {
         if (typeof p === 'string') return p;
+        const bIdx = blanks.length;
         blanks.push(p);
-        return ' ______ ';
+        return '__BLK_' + bIdx + '__';
       }).join('');
-      if (blanks.length === 1) {
-        const bm = blanks[0];
+      const parseSegBlank = bm => {
         const bGet = (...ks) => Object.getPrototypeOf(bm) === null ? prop(bm, vars, ...ks) : ks.map(k => bm[k]).find(v => v !== undefined);
         const ansRaw = bm.a || bm.ans || bm.correct;
         const ansList = Array.isArray(ansRaw) ? ansRaw : (typeof ansRaw === 'string' && ansRaw.startsWith('[') ? stringList(ansRaw, vars) : [bGet('a', 'ans', 'correct')].filter(Boolean));
         const optsRaw = bm.o || bm.opts || bm.options;
         const optArr = Array.isArray(optsRaw) ? optsRaw : (typeof optsRaw === 'string' && optsRaw.startsWith('[') ? stringList(optsRaw, vars) : []);
+        return { ansList, optArr };
+      };
+      if (blanks.length === 1) {
+        const { ansList, optArr } = parseSegBlank(blanks[0]);
         const cueW = get('w');
-        const qStr = clean(sentence + (typeof cueW === 'string' && !sentence.toLowerCase().includes(cueW.toLowerCase()) ? ` (${cueW})` : ''), 1400);
+        const filled = sentence.replace('__BLK_0__', ' ______ ');
+        const qStr = clean(filled + (typeof cueW === 'string' && !filled.toLowerCase().includes(cueW.toLowerCase()) ? ` (${cueW})` : ''), 1400);
         const exp = extractExplanation([get('vi'), get('an'), get('exp')].filter(Boolean).join(' '), vars);
         if (optArr.length >= 2 && ansList.length) {
           const aIdx = findMatchingOptionIndex(optArr, ansList[0]);
@@ -565,6 +592,41 @@
         const ansText = answers(ansList);
         if (qStr && ansText) {
           return { question: { type: 'text', q: qStr, o: [], a: 0, ansText, e: exp, s: cleanPlain(fallbackSection || '', 120), passage: '' } };
+        }
+      } else if (blanks.length > 1 && blanks.length <= 4) {
+        const parsedBlanks = blanks.map(parseSegBlank);
+        if (parsedBlanks.every(b => b.ansList.length >= 1)) {
+          let filled = sentence;
+          parsedBlanks.forEach((_, k) => { filled = filled.replace('__BLK_' + k + '__', ' (' + (k + 1) + ') ______ '); });
+          const cueW = get('w');
+          const qStr = clean(filled + (typeof cueW === 'string' && !filled.toLowerCase().includes(cueW.toLowerCase()) ? ` (${cueW})` : ''), 1400);
+          const exp = extractExplanation([get('vi'), get('an'), get('exp')].filter(Boolean).join(' '), vars);
+          const rightParts = parsedBlanks.map(b => cleanPlain(b.ansList[0], 80));
+          const correctCombo = rightParts.join(' / ');
+          if (parsedBlanks.every(b => b.optArr.length >= 2)) {
+            const distractors = [];
+            for (let bIdx = 0; bIdx < parsedBlanks.length && distractors.length < 3; bIdx++) {
+              const rightW = rightParts[bIdx];
+              for (const cand of parsedBlanks[bIdx].optArr) {
+                const cw = cleanPlain(cand, 80);
+                if (!cw || cw.toLowerCase() === rightW.toLowerCase()) continue;
+                const combo = rightParts.map((w, j) => j === bIdx ? cw : w).join(' / ');
+                if (combo !== correctCombo && !distractors.includes(combo)) {
+                  distractors.push(combo);
+                  if (distractors.length >= 3) break;
+                }
+              }
+            }
+            if (distractors.length >= 1) {
+              const ansIdx = i % (distractors.length + 1);
+              const opts = distractors.slice();
+              opts.splice(ansIdx, 0, correctCombo);
+              return { question: { type: 'mc', q: qStr, o: opts, a: ansIdx, e: exp, s: cleanPlain(fallbackSection || '', 120), passage: '' } };
+            }
+          }
+          if (qStr && correctCombo) {
+            return { question: { type: 'text', q: qStr, o: [], a: 0, ansText: correctCombo, e: exp, s: cleanPlain(fallbackSection || '', 120), passage: '' } };
+          }
         }
       }
     }
@@ -669,6 +731,21 @@
       : (typeof rawCorrect === 'string' && rawCorrect.startsWith('[') ? stringList(rawCorrect, vars) : null);
 
     const rawType = String(get('type', 't') || '').toLowerCase();
+    const wordsRaw = obj.words;
+    const correctStr = get('correctStr', 'correctSentence', 'sentence', 'answer', 'ans');
+    if (rawType === 'reorder' || (wordsRaw && typeof correctStr === 'string' && correctStr.trim())) {
+      const wordsArr = Array.isArray(wordsRaw) ? wordsRaw : (typeof wordsRaw === 'string' && wordsRaw.trim().startsWith('[') ? stringList(wordsRaw, vars) : []);
+      const ansSentence = typeof correctStr === 'string' ? cleanPlain(correctStr, 500) : '';
+      if (wordsArr.length >= 2 && ansSentence) {
+        const qPrompt = clean('Rearrange the words to make a correct sentence: ' + wordsArr.map(w => cleanPlain(w, 80)).join(' / '), 1400);
+        const secLabel = cleanPlain(get('part', 'sec', 's', 'badge', 'section') || fallbackSection || 'Sắp xếp câu', 140);
+        const exp = extractExplanation(get('explain', 'hint', 'exp', 'expl', 'explanation', 'note', 'whyC', 'ok', 'an', 'vi'), vars);
+        return {
+          question: { type: 'text', q: qPrompt, o: [], a: 0, ansText: ansSentence, e: exp, s: secLabel, passage: '', ...(imgUrl ? { img: imgUrl } : {}) }
+        };
+      }
+    }
+
     const firstKey = ansArray && ansArray.length === 1 ? ansArray[0] : (ansArray && ansArray.length > 1 ? ansArray.join(' / ') : (typeof rawCorrect === 'string' || typeof rawCorrect === 'number' ? rawCorrect : undefined));
 
     let a = markedCorrect;

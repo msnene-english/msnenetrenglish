@@ -66,8 +66,14 @@ html,body{display:flex;flex-direction:column;overflow-x:hidden !important;overfl
 @keyframes fin{from{opacity:0;transform:translateX(-20px)}}
 .lab{font-weight:800;font-size:14px;color:#7a6aa8;margin:12px 0 6px}
 .cols{display:flex;gap:10px;flex-wrap:wrap;justify-content:center}
-.cols button{width:44px;height:44px;border-radius:50%;border:4px solid #fff;box-shadow:0 0 0 2px #e4dcff;cursor:pointer}
-.cols button.on{box-shadow:0 0 0 4px #2d2350}
+.cols button{width:44px;height:44px;border-radius:50%;border:3px solid #fff;box-shadow:0 2px 6px rgba(45,35,80,0.22),0 0 0 2px #d8ccff;cursor:pointer;position:relative;transition:transform .15s,box-shadow .15s}
+.cols button.on{transform:scale(1.08);box-shadow:0 0 0 4px #2d2350}
+.cols button.on::after{content:'✓';color:#fff;font-weight:900;font-size:18px;text-shadow:0 1px 2px rgba(0,0,0,0.45)}
+.qpass{background:#f8fafc;border:1.5px solid #cbd5e1;border-radius:12px;padding:8px 12px;margin-bottom:10px;font-size:14px;line-height:1.55;color:#334155}
+.qpass summary{cursor:pointer;font-weight:800;color:#5b4bb0}
+.qpass-body{max-height:145px;overflow-y:auto;overscroll-behavior:contain;margin-top:6px;white-space:pre-line}
+.qimg-wrap{text-align:center;margin-bottom:10px}
+.qimg{display:block;margin:0 auto;max-height:180px;max-width:100%;border-radius:10px;border:1.5px solid #e2e8f0;cursor:zoom-in}
 .rules{list-style:none;display:grid;gap:6px;margin:14px 0 4px}
 .rules li{border-radius:12px;padding:7px 11px;font-weight:700;font-size:14px;background:#f6f3ff}
 .rules li:nth-child(4n+1){background:#ffeef6}.rules li:nth-child(4n+2){background:#eaf4ff}.rules li:nth-child(4n+3){background:#e8f8f0}
@@ -609,7 +615,7 @@ html,body{display:flex;flex-direction:column;overflow-x:hidden !important;overfl
 <script src="assets/mqtt.min.js"></script>
 <script src="assets/shield.js?v=2.4"></script>
 <script src="assets/config.js?v=20261121-1"></script>
-<script src="assets/core.js?v=20261121-1"></script>
+<script src="assets/core.js?v=20261122-1"></script>
 <script src="assets/mau.js"></script>
 <script src="assets/climb.js?v=20261121-1"></script>
 <script src="assets/climb2.js?v=20261121-1"></script>
@@ -835,6 +841,75 @@ let trAnswers = {}; // { qIndex: selectedOptIndex }
 let trTimerInterval = null;
 let trTimeRemaining = 2700; // 45 phút mặc định
 let trSubmitted = false;
+let trTabSwitches = 0, trLastSwitchAt = 0, trIgnoreBlurUntil = 0, trAntiCheatBound = false, trTimerTicks = 0;
+
+function getTestDraftKey() {
+  const roomOrHw = code || QUIZ_ID || (HW && HW.id) || SOLO || 'solo';
+  return 'msnene_test_draft_' + roomOrHw + '_' + (clean(nameV).toLowerCase() || 'hs').slice(0, 40);
+}
+function saveTestDraft() {
+  if (MODE !== 'test' || trSubmitted || !QS.length) return;
+  try {
+    localStorage.setItem(getTestDraftKey(), JSON.stringify({
+      savedAt: Date.now(),
+      qCount: QS.length,
+      sig: (QS[0]?.q || '').slice(0, 60),
+      trIndex,
+      trAnswers,
+      trTimeRemaining,
+      t0,
+      tabSw: trTabSwitches
+    }));
+  } catch (_) {}
+}
+function loadTestDraft() {
+  try {
+    const raw = localStorage.getItem(getTestDraftKey());
+    return raw ? JSON.parse(raw) : null;
+  } catch (_) { return null; }
+}
+function clearTestDraft() {
+  try { localStorage.removeItem(getTestDraftKey()); } catch (_) {}
+}
+function openImgPreview(src) {
+  const safeSrc = GC.safeMediaUrl(src);
+  if (!safeSrc) return;
+  const ov = document.createElement('div');
+  ov.style.cssText = 'position:fixed;inset:0;z-index:260;background:rgba(15,23,42,0.88);display:flex;align-items:center;justify-content:center;padding:16px;cursor:zoom-out';
+  const img = document.createElement('img');
+  img.src = safeSrc;
+  img.alt = 'Xem ảnh phóng to';
+  img.style.cssText = 'max-width:96vw;max-height:92vh;border-radius:12px;background:#fff;box-shadow:0 12px 40px rgba(0,0,0,0.4)';
+  ov.appendChild(img);
+  ov.onclick = () => ov.remove();
+  document.body.appendChild(ov);
+}
+function updateTrStudentLabel() {
+  if (!$('trStudentName')) return;
+  $('trStudentName').textContent = 'Học sinh: ' + (nameV || 'Em') + (trTabSwitches > 0 ? ' · ⚠️ Rời tab: ' + trTabSwitches : '');
+}
+function bindTestAntiCheat() {
+  if (trAntiCheatBound) return;
+  trAntiCheatBound = true;
+  const onLeave = () => {
+    if (MODE !== 'test' || trSubmitted) return;
+    const app = $('testApp');
+    if (!app || app.hidden) return;
+    const now = Date.now();
+    if (now < trIgnoreBlurUntil || now - trLastSwitchAt < 1800) return;
+    trLastSwitchAt = now;
+    trTabSwitches++;
+    updateTrStudentLabel();
+    saveTestDraft();
+    toast('⚠️ Lưu ý: Em vừa rời khỏi màn hình làm bài (lần ' + trTabSwitches + '). Hãy tập trung làm bài nhé!', 3000);
+    syncTestProgressLive();
+    if (net && evp) {
+      try { net.push(evp, { ty: 'tab', fr: pid, nm: nameV, n: trTabSwitches, t: net.now() }); } catch (_) {}
+    }
+  };
+  document.addEventListener('visibilitychange', () => { if (document.hidden) onLeave(); });
+  window.addEventListener('blur', onLeave);
+}
 
 
 window.cycleTestTheme = function() {
@@ -878,21 +953,48 @@ function startTestMode() {
 
   const testTitle = (info && info.t) || (HW && HW.t) || 'Bài kiểm tra tiếng Anh';
   $('trTitle').textContent = '📝 ' + testTitle;
-  $('trStudentName').textContent = 'Học sinh: ' + (nameV || 'Em');
 
-  // Đặt thời gian làm bài
+  trIndex = 0;
+  trAnswers = {};
+  trSubmitted = false;
+  trTabSwitches = 0;
+  trIgnoreBlurUntil = 0;
+  trTimerTicks = 0;
+
   const durMinutes = (info && info.dur) || (HW && HW.dur) || 45;
+  trTimeRemaining = durMinutes > 0 ? durMinutes * 60 : 0;
+
+  const draft = loadTestDraft();
+  if (draft && draft.qCount === QS.length && draft.sig === (QS[0]?.q || '').slice(0, 60) && (Date.now() - (draft.savedAt || 0)) < 6 * 3600 * 1000) {
+    trAnswers = (draft.trAnswers && typeof draft.trAnswers === 'object') ? draft.trAnswers : {};
+    trIndex = Math.max(0, Math.min(QS.length - 1, +draft.trIndex || 0));
+    trTabSwitches = Math.max(0, Number(draft.tabSw) || 0);
+    if (draft.t0) t0 = draft.t0;
+    if (durMinutes > 0 && Number.isFinite(draft.trTimeRemaining)) {
+      const elapsedSinceSave = Math.max(0, Math.floor((Date.now() - (draft.savedAt || Date.now())) / 1000));
+      trTimeRemaining = Math.max(5, Math.min(durMinutes * 60, draft.trTimeRemaining - elapsedSinceSave));
+    }
+    const restoredCount = Object.values(trAnswers).filter(v => v !== undefined && String(v).trim() !== '').length;
+    if (restoredCount > 0) {
+      setTimeout(() => toast('💾 Đã khôi phục bài làm trước đó (' + restoredCount + '/' + QS.length + ' câu)', 3200), 250);
+    }
+  }
+  if (!SOLO && info && info.ea && net) {
+    trTimeRemaining = Math.max(5, Math.floor((info.ea - net.now()) / 1000));
+  }
+
+  updateTrStudentLabel();
+  bindTestButtons();
+  bindTestAntiCheat();
+
   if (durMinutes > 0) {
-    trTimeRemaining = durMinutes * 60;
+    const m0 = Math.floor(trTimeRemaining / 60), s0 = trTimeRemaining % 60;
+    $('trTimer').textContent = '⏱ ' + String(m0).padStart(2, '0') + ':' + String(s0).padStart(2, '0');
     startTestTimer();
   } else {
     $('trTimer').textContent = '⏱ Tự do';
   }
 
-  bindTestButtons();
-  trIndex = 0;
-  trAnswers = {};
-  trSubmitted = false;
   renderTestQuestion();
 }
 
@@ -901,6 +1003,8 @@ function startTestTimer() {
   trTimerInterval = setInterval(() => {
     if (trSubmitted) { clearInterval(trTimerInterval); return; }
     trTimeRemaining--;
+    trTimerTicks++;
+    if (trTimerTicks % 10 === 0) saveTestDraft();
     if (trTimeRemaining <= 0) {
       clearInterval(trTimerInterval);
       $('trTimer').textContent = '⏱ Hết giờ!';
@@ -970,6 +1074,7 @@ window.simulateSpeakingInput = async function(spokenText) {
   const evalRes = await GC.evaluatePronunciationAI(spokenText, targetText, ipa);
   renderSpeakingResultUI(evalRes, true);
   trAnswers[trIndex] = evalRes;
+  saveTestDraft();
   const pills = $('trPills') ? $('trPills').children : [];
   if (pills[trIndex]) pills[trIndex].classList.add('answered');
   const ansCount = Object.values(trAnswers).filter(v => v !== undefined && String(v).trim() !== '').length;
@@ -1067,6 +1172,7 @@ window.toggleSpeakingRecord = function(targetText, ipa, isTestMode) {
 
       if (isTestMode) {
         trAnswers[trIndex] = evalRes;
+        saveTestDraft();
         const pills = $('trPills') ? $('trPills').children : [];
         if (pills[trIndex]) pills[trIndex].classList.add('answered');
         const ansCount = Object.values(trAnswers).filter(v => v !== undefined && String(v).trim() !== '').length;
@@ -1147,9 +1253,11 @@ function renderTestQuestion() {
 
   // 4. Render Image (nếu có)
   const imgBox = $('trImgBox');
-  if (q.img && q.img.trim()) {
+  const safeImg = GC.safeMediaUrl(q.img);
+  if (safeImg) {
     imgBox.hidden = false;
-    $('trImg').src = q.img;
+    $('trImg').src = safeImg;
+    $('trImg').onclick = () => openImgPreview(safeImg);
   } else {
     imgBox.hidden = true;
   }
@@ -1166,8 +1274,6 @@ function renderTestQuestion() {
     const existingVal = trAnswers[trIndex];
     const target = q.targetText || q.ansText || q.q;
     const ipa = q.ipa || '';
-    const safeTarget = esc(target).replace(/'/g, "\\'");
-    const safeIpa = esc(ipa).replace(/'/g, "\\'");
     optsBox.innerHTML = `
       <div class="spk-box">
         <div style="font-size:13px;font-weight:800;color:#6b21a8;text-transform:uppercase;letter-spacing:0.5px">🗣 Bài tập phát âm Tiếng Anh:</div>
@@ -1175,10 +1281,10 @@ function renderTestQuestion() {
         ${ipa ? `<div class="spk-ipa">Phiên âm IPA: ${GC.safe(ipa)}</div>` : ''}
         
         <div class="spk-btns">
-          <button type="button" class="spk-listen-btn" onclick="GC.speakText('${safeTarget}')">
+          <button type="button" id="spkListenBtn" class="spk-listen-btn">
             🔊 Nghe giọng mẫu
           </button>
-          <button type="button" id="spkMicBtn" class="spk-mic-btn" onclick="toggleSpeakingRecord('${safeTarget}', '${safeIpa}', true)">
+          <button type="button" id="spkMicBtn" class="spk-mic-btn">
             🎙 Bấm để phát âm
           </button>
         </div>
@@ -1193,6 +1299,8 @@ function renderTestQuestion() {
         <div id="trSpkFeedback" ${existingVal ? '' : 'hidden'}></div>
       </div>
     `;
+    if ($('spkListenBtn')) $('spkListenBtn').onclick = () => GC.speakText(target);
+    if ($('spkMicBtn')) $('spkMicBtn').onclick = () => { trIgnoreBlurUntil = Date.now() + 3000; toggleSpeakingRecord(target, ipa, true); };
 
     if (existingVal) {
       setTimeout(() => renderSpeakingResultUI(existingVal, true), 50);
@@ -1217,6 +1325,12 @@ function renderTestQuestion() {
         </div>
       `;
     }).join('');
+    $('trResReviewBox').querySelectorAll('.spk-rev-listen').forEach(btn => {
+      btn.onclick = () => {
+        const qq = QS[+btn.dataset.spkIdx];
+        if (qq) GC.speakText(qq.targetText || qq.ansText || qq.q);
+      };
+    });
   }
 
   // 7. Progress text
@@ -1248,13 +1362,15 @@ function syncTestProgressLive() {
     tot: QS.length,
     st: 'playing',
     alt: Math.round(ansCount / QS.length * 100),
-    score: Math.round(correctCount / QS.length * 100)
+    score: Math.round(correctCount / QS.length * 100),
+    tabSw: trTabSwitches
   }).catch(() => {});
 }
 
 window.selectTestOpt = function(optIdx) {
   if (trSubmitted) return;
   trAnswers[trIndex] = optIdx;
+  saveTestDraft();
   renderTestQuestion();
   syncTestProgressLive();
 };
@@ -1263,6 +1379,7 @@ window.typeTestAns = function(val) {
   if (trSubmitted) return;
   if (String(val || '').trim() === '') delete trAnswers[trIndex];
   else trAnswers[trIndex] = val;
+  saveTestDraft();
   const pills = $('trPills') ? $('trPills').children : [];
   if (pills[trIndex]) pills[trIndex].classList.toggle('answered', trAnswers[trIndex] !== undefined);
   const ansCount = Object.values(trAnswers).filter(v => v !== undefined && String(v).trim() !== '').length;
@@ -1274,6 +1391,7 @@ function testNoBack() { const cfg = info || HW || {}; return cfg.testReview === 
 window.jumpTestQ = function(idx) {
   if (testNoBack() && idx < trIndex) return toast('🔒 Bài này không cho quay lại câu trước', 1800);
   trIndex = idx;
+  saveTestDraft();
   renderTestQuestion();
 };
 
@@ -1283,12 +1401,12 @@ function bindTestButtons() {
 if ($('bTrPrev')) {
   $('bTrPrev').onclick = () => {
     if (testNoBack()) return toast('🔒 Bài này không cho quay lại câu trước', 1800);
-    if (trIndex > 0) { trIndex--; renderTestQuestion(); }
+    if (trIndex > 0) { trIndex--; saveTestDraft(); renderTestQuestion(); }
   };
 }
 if ($('bTrNext')) {
   $('bTrNext').onclick = () => {
-    if (trIndex < QS.length - 1) { trIndex++; renderTestQuestion(); }
+    if (trIndex < QS.length - 1) { trIndex++; saveTestDraft(); renderTestQuestion(); }
   };
 }
 
@@ -1302,6 +1420,7 @@ if ($('bTrSubmit')) {
     } else {
       msg += ' Em có muốn nộp bài thi ngay bây giờ không?';
     }
+    trIgnoreBlurUntil = Date.now() + 4000;
     if (confirm(msg)) {
       submitTestExam(false);
     }
@@ -1312,6 +1431,7 @@ if ($('bTrSubmit')) {
 function submitTestExam(auto) {
   if (trSubmitted) return;
   trSubmitted = true;
+  clearTestDraft();
   if (trTimerInterval) clearInterval(trTimerInterval);
 
   let correctCount = 0;
@@ -1333,6 +1453,7 @@ function submitTestExam(auto) {
       st: 'submitted',
       score: score,
       alt: score,
+      tabSw: trTabSwitches,
       tt: Math.max(1, nowT - (t0 || nowT)),
       submittedAt: nowT
     }).catch(() => {});
@@ -1340,7 +1461,7 @@ function submitTestExam(auto) {
       net.push(evp, { ty: 'win', fr: pid, nm: nameV, score, t: nowT });
       for (let i = 0; i < QS.length; i++) {
         if (!isTestQCorrect(QS[i], trAnswers[i])) {
-          net.push(evp, { ty: 'wrong', q: QS[i].id || (i + 1), fr: pid, nm: nameV, t: nowT });
+          net.push(evp, { ty: 'wrong', q: QS[i].n || (i + 1), fr: pid, nm: nameV, t: nowT });
         }
       }
     }
@@ -1357,6 +1478,7 @@ function submitTestExam(auto) {
       ans: ansCount,
       tot: QS.length,
       m: 'test',
+      tabSw: trTabSwitches,
       cloud: SOLO === 'hw',
       durText: elapsedTxt
     }));
@@ -1394,7 +1516,6 @@ function submitTestExam(auto) {
       if (isSpeaking) {
         const spk = (userChoice && typeof userChoice === 'object') ? userChoice : { spoken: String(userChoice || ''), score: isOk ? 100 : 0, feedback: '' };
         const target = q.targetText || q.ansText || q.q;
-        const safeTarget = esc(target).replace(/'/g, "\\'");
         return `
           <div style="border-bottom:1.5px solid #e2e8f0;padding:12px 0">
             <div style="font-weight:900;font-size:15px;color:#1e1b4b">
@@ -1402,16 +1523,16 @@ function submitTestExam(auto) {
             </div>
             <div style="margin:8px 0;background:#faf5ff;border:1.5px solid #d8b4fe;border-radius:12px;padding:12px">
               <div style="font-size:12px;font-weight:800;color:#6b21a8">CÂU MẪU CẦN PHÁT ÂM:</div>
-              <div style="font-size:16px;font-weight:900;color:#581c87;margin:3px 0">“${target}”</div>
+              <div style="font-size:16px;font-weight:900;color:#581c87;margin:3px 0">“${GC.safe(target)}”</div>
               ${q.ipa ? `<div style="font-size:12px;color:#9333ea;font-family:monospace">IPA: ${q.ipa}</div>` : ''}
-              <button type="button" class="btn w" style="margin-top:6px;padding:4px 10px;font-size:12px" onclick="GC.speakText('${safeTarget}')">🔊 Nghe mẫu</button>
+              <button type="button" class="btn w spk-rev-listen" data-spk-idx="${idx}" style="margin-top:6px;padding:4px 10px;font-size:12px">🔊 Nghe mẫu</button>
               <div style="font-size:13px;margin-top:8px;color:#334155">
-                Phần phát âm của em: <b style="color:${isOk ? '#16a34a' : '#dc2626'}">“${spk.spoken || 'Chưa phát âm'}”</b>
+                Phần phát âm của em: <b style="color:${isOk ? '#16a34a' : '#dc2626'}">“${GC.safe(spk.spoken || 'Chưa phát âm')}”</b>
                 <span style="display:inline-block;margin-left:8px;font-size:12px;font-weight:900;padding:2px 8px;border-radius:10px;background:${isOk ? '#dcfce7' : '#fee2e2'};color:${isOk ? '#166534' : '#991b1b'}">
                   ${spk.score != null ? spk.score + '%' : (isOk ? '100%' : '0%')} - ${isOk ? '✅ ĐẠT' : '❌ CHƯA ĐẠT'}
                 </span>
               </div>
-              ${spk.feedback ? `<div style="font-size:13px;color:#581c87;margin-top:6px;background:#f3e8ff;padding:6px 10px;border-radius:8px">👩‍🏫 <b>Nhận xét:</b> ${spk.feedback}</div>` : ''}
+              ${spk.feedback ? `<div style="font-size:13px;color:#581c87;margin-top:6px;background:#f3e8ff;padding:6px 10px;border-radius:8px">👩‍🏫 <b>Nhận xét:</b> ${GC.safe(spk.feedback)}</div>` : ''}
             </div>
             <div style="font-size:13px;color:#1e293b;background:#f3f4f6;padding:8px 12px;border-radius:10px;margin-top:6px;border-left:4px solid #8b5cf6">
               💡 <b>Quy tắc phát âm &amp; Giải thích:</b> ${q.e ? q.e : 'Học sinh chú ý đọc to, rõ ràng từng âm tiết và đúng trọng âm.'}
@@ -1454,6 +1575,12 @@ function submitTestExam(auto) {
         </div>
       `;
     }).join('');
+    $('trResReviewBox').querySelectorAll('.spk-rev-listen').forEach(btn => {
+      btn.onclick = () => {
+        const qq = QS[+btn.dataset.spkIdx];
+        if (qq) GC.speakText(qq.targetText || qq.ansText || qq.q);
+      };
+    });
   }
 
   $('ovTestResult').classList.add('on');
@@ -1686,7 +1813,13 @@ async function joinSolo() {
   if (!set || !set.qs.length) throw new Error('Không tìm thấy bộ câu hỏi này. Em báo cô kiểm tra lại link nhé!');
   const P = HW || { eq: U.get('eq'), em: U.get('em'), lv: U.get('lv'), m: U.get('m') };
   setGain(P.eq, P.em); LVL = +P.lv || 2; MODE = GKEY(P.m);
-  QS = GC.prep(set.qs, MODE === 'test' && P.testShuffle === false); setTitle = set.title;
+  if (MODE === 'test') {
+    const draftSeed = (QUIZ_ID || (HW && HW.id) || SOLO || 'solo') + '|' + clean(nameV).toLowerCase();
+    QS = GC.prep(set.qs, { noShuffle: P.testShuffle === false, seed: draftSeed, shuffleQuestions: P.testShuffle !== false });
+  } else {
+    QS = GC.prep(set.qs, false);
+  }
+  setTitle = set.title;
   boot(20261019);
   begin();
 }
@@ -1724,7 +1857,13 @@ async function joinRoom() {
     timeoutPromise(timeoutMs, 'Hết thời gian tải câu hỏi của phòng. Em bấm Vào chơi lại nhé!')
   ]);
 
-  QS = GC.prep(Array.isArray(raw) ? raw : Object.values(raw || {}), info.m === 'test' && info.testShuffle === false);
+  const rawList = Array.isArray(raw) ? raw : Object.values(raw || {});
+  if (info.m === 'test') {
+    const draftSeed = code + '|' + clean(nameV).toLowerCase();
+    QS = GC.prep(rawList, { noShuffle: info.testShuffle === false, seed: draftSeed, shuffleQuestions: info.testShuffle !== false });
+  } else {
+    QS = GC.prep(rawList, false);
+  }
   if (!QS.length) throw new Error('Phòng chưa có câu hỏi.');
 
   pid = myPid(code);
@@ -2017,16 +2156,21 @@ function openQ() {
   c.classList.remove('shake'); c.style.borderTopColor = col;
   const target = q.targetText || q.ansText || q.q;
   const ipa = q.ipa || '';
-  const safeTarget = esc(target).replace(/'/g, "\\'");
-  const safeIpa = esc(ipa).replace(/'/g, "\\'");
+  const safeQImg = GC.safeMediaUrl(q.img);
+  const passHtml = (q.passage && q.passage.trim())
+    ? '<details class="qpass" open><summary>📖 Đoạn văn bài đọc (bấm để thu gọn)</summary><div class="qpass-body">' + q.passage + '</div></details>'
+    : '';
+  const imgHtml = safeQImg
+    ? '<div class="qimg-wrap"><img id="qImgEl" class="qimg" alt="Hình minh họa câu hỏi" title="Bấm để xem ảnh lớn"></div>'
+    : '';
   const bodyHtml = isSpeaking
     ? `<div class="spk-box" style="margin:10px 0;padding:14px;text-align:center">
          <div style="font-size:12px;font-weight:800;color:#6b21a8;text-transform:uppercase">🗣 Phát âm đúng để nhận năng lượng:</div>
          <div class="spk-target" style="font-size:18px;margin:8px 0">“${GC.safe(target)}”</div>
          ${ipa ? `<div class="spk-ipa" style="margin-bottom:8px">Phiên âm: ${GC.safe(ipa)}</div>` : ''}
          <div class="spk-btns" style="margin-bottom:8px">
-           <button type="button" class="spk-listen-btn" style="padding:7px 14px;font-size:13px" onclick="GC.speakText('${safeTarget}')">🔊 Nghe mẫu</button>
-           <button type="button" id="spkMicBtn" class="spk-mic-btn" style="padding:9px 18px;font-size:14px" onclick="toggleSpeakingRecord('${safeTarget}', '${safeIpa}', false)">🎙 Bấm để nói</button>
+           <button type="button" id="qSpkListenBtn" class="spk-listen-btn" style="padding:7px 14px;font-size:13px">🔊 Nghe mẫu</button>
+           <button type="button" id="spkMicBtn" class="spk-mic-btn" style="padding:9px 18px;font-size:14px">🎙 Bấm để nói</button>
          </div>
          <div id="spkStatus" style="font-size:12px;font-weight:700;color:#64748b">⚪ Sẵn sàng: Bấm nút micro và đọc to câu trên</div>
          <div id="spkLiveTranscript" style="font-size:13px;color:#475569;font-style:italic;margin-top:2px"></div>
@@ -2037,7 +2181,13 @@ function openQ() {
     : '<div class="opts' + (long ? ' one' : '') + '">' + q.o.map((o, i) => '<button class="op" onclick="answer(' + i + ')"><span class="lt c' + i + '">' + 'ABCD'[i] + '</span><span>' + o + '</span></button>').join('') + '</div>';
   c.innerHTML = '<div class="qtop"><span class="qn" style="background:' + col + '">Câu ' + q.n + '</span>' + (q.s ? '<span class="qsec">' + q.s + '</span>' : '') +
     '<span class="qsec">🔥 ' + streak + '</span>' + (full ? '<span class="qsec">🔋 Bình đầy — trả lời để luyện, ⚡ không tăng</span>' : '<span class="qsec">⚡ +' + GAIN.correct + '</span>') + '<button class="qx" title="Đóng" onclick="closeQ()">✕</button></div>' +
-    '<div class="qtext">' + q.q + '</div>' + bodyHtml + '<div class="fb" id="fb"></div>';
+    passHtml + imgHtml + '<div class="qtext">' + q.q + '</div>' + bodyHtml + '<div class="fb" id="fb"></div>';
+  if (safeQImg && $('qImgEl')) {
+    $('qImgEl').src = safeQImg;
+    $('qImgEl').onclick = () => openImgPreview(safeQImg);
+  }
+  if ($('qSpkListenBtn')) $('qSpkListenBtn').onclick = () => GC.speakText(target);
+  if (isSpeaking && $('spkMicBtn')) $('spkMicBtn').onclick = () => toggleSpeakingRecord(target, ipa, false);
   $('ovQ').classList.add('on'); c.scrollTop = 0;
   if (isText && $('qTextInp')) setTimeout(() => $('qTextInp')?.focus(), 80);
 }

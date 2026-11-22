@@ -21,14 +21,16 @@
       ".read": true,
       ".write": "auth != null && auth.uid === '9eA5BZII0STtQwqox2XcBNEUfnE2'",
       "$quizId": {
-        ".write": "auth != null && ((!data.exists() && newData.exists() && newData.child('ownerUid').val() === auth.uid) || (data.child('ownerUid').val() === auth.uid && (!newData.exists() || newData.child('ownerUid').val() === auth.uid)))"
+        ".write": "auth != null && ((!data.exists() && newData.exists() && newData.child('ownerUid').val() === auth.uid) || (data.child('ownerUid').val() === auth.uid && (!newData.exists() || newData.child('ownerUid').val() === auth.uid)))",
+        ".validate": "newData.hasChildren(['id', 'title', 'qs', 'ownerUid']) && newData.child('title').isString() && newData.child('title').val().length <= 200"
       }
     },
     "hw_meta": {
       ".read": true,
       ".write": "auth != null && auth.uid === '9eA5BZII0STtQwqox2XcBNEUfnE2'",
       "$hwId": {
-        ".write": "auth != null && ((!data.exists() && newData.exists() && newData.child('ownerUid').val() === auth.uid) || (data.child('ownerUid').val() === auth.uid && (!newData.exists() || newData.child('ownerUid').val() === auth.uid)))"
+        ".write": "auth != null && ((!data.exists() && newData.exists() && newData.child('ownerUid').val() === auth.uid) || (data.child('ownerUid').val() === auth.uid && (!newData.exists() || newData.child('ownerUid').val() === auth.uid)))",
+        ".validate": "newData.hasChildren(['id', 'title', 'ownerUid']) && newData.child('title').isString() && newData.child('title').val().length <= 200"
       }
     },
     "hw_subs": {
@@ -37,7 +39,8 @@
       "$hwId": {
         ".read": "auth != null && root.child('hw_meta').child($hwId).child('ownerUid').val() === auth.uid",
         "$submissionId": {
-          ".write": "auth != null && root.child('hw_meta').child($hwId).exists() && !data.exists() && newData.exists() && newData.child('uid').val() === auth.uid && newData.child('hwId').val() === $hwId && newData.child('id').val() === $submissionId"
+          ".write": "auth != null && root.child('hw_meta').child($hwId).exists() && !data.exists() && newData.exists() && newData.child('uid').val() === auth.uid && newData.child('hwId').val() === $hwId && newData.child('id').val() === $submissionId",
+          ".validate": "newData.hasChildren(['id', 'hwId', 'n', 'score', 'uid']) && newData.child('n').isString() && newData.child('n').val().length <= 80 && newData.child('score').isNumber() && newData.child('score').val() >= 0 && newData.child('score').val() <= 100 && (!newData.child('tabSw').exists() || (newData.child('tabSw').isNumber() && newData.child('tabSw').val() >= 0))"
         }
       }
     },
@@ -45,14 +48,17 @@
       "$roomCode": {
         ".read": "auth != null",
         ".write": "auth != null && (auth.uid === '9eA5BZII0STtQwqox2XcBNEUfnE2' || (!data.exists() && newData.exists() && newData.child('ownerUid').val() === auth.uid && newData.hasChildren(['info', 'qs'])) || (data.child('ownerUid').val() === auth.uid && (!newData.exists() || newData.child('ownerUid').val() === auth.uid)))",
+        ".validate": "!newData.child('info').exists() || (newData.child('info').child('t').isString() && newData.child('info').child('t').val().length <= 200)",
         "players": {
           "$playerId": {
-            ".write": "auth != null && root.child('rooms').child($roomCode).child('info').exists() && auth.uid === $playerId && newData.exists()"
+            ".write": "auth != null && root.child('rooms').child($roomCode).child('info').exists() && auth.uid === $playerId && newData.exists()",
+            ".validate": "!newData.child('n').exists() || (newData.child('n').isString() && newData.child('n').val().length <= 80)"
           }
         },
         "ev": {
           "$eventId": {
-            ".write": "auth != null && root.child('rooms').child($roomCode).child('info').exists() && !data.exists() && newData.exists() && newData.child('fr').val() === auth.uid"
+            ".write": "auth != null && root.child('rooms').child($roomCode).child('info').exists() && !data.exists() && newData.exists() && newData.child('fr').val() === auth.uid",
+            ".validate": "newData.hasChildren(['ty', 't']) && newData.child('ty').isString() && newData.child('ty').val().length <= 20"
           }
         }
       }
